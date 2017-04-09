@@ -1,0 +1,183 @@
+body
+{
+	background-color: lightyellow;	
+	font-family: Georgia, Serif;
+	font-size: 18px;
+	line-height: 30px;
+}
+
+h1 
+{
+	font-size: 24px;
+	line-height: 42px;
+}
+
+h1, h2, h3, h4, h5 {  }
+
+del 
+{
+	color: red;
+}
+ins 
+{
+	color: green; text-decoration: none;
+}
+
+a
+{
+	color: gray;
+}
+
+a.invalid
+{
+	color: red;
+}
+
+span.error 
+{
+	color: red;
+}
+span.found 
+{
+	color: green;
+}
+
+#info
+{
+	color: gray;
+	font-size: 80%;
+	padding-top: 32px;
+} 
+
+#header
+{
+	color: gray;
+	position: absolute;
+	left: 40px;
+	top: 10px;
+}
+
+#header a
+{
+	text-decoration: none;
+}
+
+#help
+{
+	background-color: lightgreen;
+} 
+
+#editmenu
+{
+	padding: 5px;
+	// background-color: lightgray;
+} 
+
+#editmenu a
+{
+	color: black;
+} 
+
+#editmenu0
+{
+	background-color: none;
+} 
+
+#editmenu0 a
+{
+	color: gray;
+} 
+
+
+#langmenu
+{
+	text-align: right;
+	width: 760px;
+	color: gray; 
+	font-size: 80%;
+	//font-family: Helvetica, Arial, Sans-Serif;
+	
+	left: 10px;
+	top: 0px;
+	background-color: none;
+} 
+
+#langmenu a
+{
+	color: gray;
+} 
+
+
+#menu
+{
+	width: 220px;
+	color: gray; 
+	font-size: 80%;
+	//font-family: Helvetica, Arial, Sans-Serif;
+	position: absolute;
+	left: 580px;
+	top: 120px;
+} 
+
+
+
+#menu a
+{
+	color: gray;
+} 
+
+#search
+{
+	color: gray; 
+	font-size: 80%;
+	font-family: Helvetica, Arial, Sans-Serif;
+	
+	
+	text-align: right;
+	position: absolute;
+	left: 600px;
+	top: 50px;
+	
+} 
+
+#title
+{
+	width: 600px;
+	left: 40px;
+	top: 50px;
+	position: absolute;
+}
+
+#content
+{
+	width: 480px;
+	left: 40px;
+	top: 120px;
+	position: absolute;
+}
+
+#footer
+{
+	
+}
+
+iframe.youtube
+{
+	width: 640px;
+	height: 385px;
+}
+
+video.yfrog
+{
+	width: 640px;
+	height: 360px;
+}
+
+img.yfrog
+{
+	width: 640px;
+}
+
+
+
+td { vertical-align: top;  width: 50% }

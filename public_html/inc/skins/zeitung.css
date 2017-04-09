@@ -1,0 +1,136 @@
+BODY        { color: black; background-color: white}
+A: link     { color: Teal }
+A: visited  { color: Blue }
+A: active   { color: Red }
+PRE, TT, CODE     { font-family: Courier, monospace }
+BODY, P, BLOCKQUOTE, LI, OL, UL    {font-size: 14px; font-family: Courier, monospace}
+H1, H2, H3, H4, H5, STRONG, ADDRESS  {font-family: Times, Serif}
+H1 {letter-spacing: 1}
+H5 {font-weight: lighter; font-size: small}
+STRONG      { font-weight: bold; color: gray }
+EM   { font-weight: bold ; font-style: normal}
+ADDRESS     {font-style: normal; text-indent: 50% }
+P.small {font-size: 12px }
+P.changelinks {font-size: 12px; text-align: right }
+P.kopf {text-align: center }
+P.enhanced {font-weight: bold; color: red }
+P.verband {text-align: right}
+P.textfeld {text-align: left}
+P.photo {text-align: center}
+P.datum {font-size: 12px ; color: #008000}
+TD.menu {background-color: #CCCCCC}
+TD.menuenhanced {background-color: #EEEEFF}
+TABLE.menu {background-color: #CCCCCC}
+SPAN.datum {font-size: 12px ; color: #008000}
+SPAN.small {font-size: 12px }
+SPAN.normal {font-size: 100% }
+
+td {vertical-align: top;}
+
+table.border
+{
+	margin: 10px;
+	border-bottom: 1px gray solid;
+	border-collapse:collapse;
+}
+
+table.border tr { } 
+
+table.border tr td
+{
+	vertical-align: top;
+	border-top: 1px gray solid;
+	margin: 0px;
+	padding: 5px;
+}
+
+
+ol li { list-style-type: decimal; }
+
+#header { position: absolute; left: 170px;  top: 0px; height: 120px;  width:600px  }
+
+#header-elem { position: absolute; bottom: 0px; }
+
+#content { position: absolute; left: 170px;  top: 10px; width:600px  }
+
+#footer { position: absolute; left: 25px;  width:130px; top: 600px;  }
+
+#body { height: 100% }
+
+#footer2
+{
+	width: 100%;
+	clear: both;
+	
+}
+
+
+#info
+{
+	color: gray;
+	font-style: italic;
+} 
+
+#help
+{
+	background-color: lightgreen;
+} 
+
+
+#menu
+{
+	position: absolute;
+	left: 25px;
+	top: 10px;
+	width: 130px;
+	overflow: hidden;
+} 
+
+#menu a
+{
+	color: gray;
+} 
+
+#search
+{
+	float: right
+} 
+
+
+del 
+{
+	color: red;
+}
+ins 
+{
+	color: green; text-decoration: none;
+}
+a.invalid
+{
+	color: red;
+}
+span.error 
+{
+	color: red;
+}
+span.found 
+{
+	color: green;
+}
+
+iframe.youtube
+{
+	width: 640px;
+	height: 385px;
+}
+
+video.yfrog
+{
+	width: 640px;
+	height: 360px;
+}
+
+img.yfrog
+{
+	width: 640px;
+}

@@ -1,0 +1,159 @@
+body
+{
+    
+    COLOR: black;
+    BACKGROUND-COLOR: white;
+}
+h1, h2, h3, h4, h5, p, a { font-family: Helvetica, Arial, Sans-Serif; }
+b { FONT-FAMILY: helvetica; sans-serif }
+h3, h4, p { text-align: left; }
+
+p { FONT-FAMILY: Times; serif; text-align: justify}
+
+p.lead { font-family: helvetica, sans-serif; font-size: 100%;  font-weight: bold; line-height: 110% } 
+p.auteur { font-family: helvetica, sans-serif; font-size: 90% } 
+p.rubrique { font-style: italic } 
+p.small { font-size: 11pt; }
+p.short { font-family: Helvetica; font-size: 80%; text-align: left}
+p.menu { font-family: Helvetica; font-size: 80%; text-align: left }
+p.link { font-family: Helvetica; font-size: 80%; text-align: left }
+
+h5 { font-style: italic; font-size: 100%; font-weight: normal; }
+
+EM { font-style: italic; }
+SPAN.small { font-size: 11px; }
+span.menubig { font-family: Helvetica; font-size: 125%; text-align: left ; font-weight: bold; }
+span.priv {  COLOR: #BF6666;}
+
+a:link
+{
+    COLOR: #BF0000;
+}
+a:visited
+{
+    COLOR: #BF0000;
+}
+a:active
+{
+    COLOR: #BF0000;
+}
+
+#menu1
+{
+	background: white;
+	width: 160px;
+	position: absolute;
+	left: 10px;
+	line-height: 13pt;
+}
+#menu2 { background: white; width: 160px;  position: absolute; right: 10px;}
+#cadre { background: white; padding: 20px; border:1px solid #000;}
+#contenu { background: white; position:absolute; left: 180px; right: 190px;}
+#contenu2 { background: white; position:absolute; left: 180px; right: 10px;}
+
+#content a { font-size: 100%;  }
+
+
+
+#info
+{
+	color: gray;
+	font-style: italic;
+} 
+
+#help
+{
+	FONT-FAMILY: helvetica; sans-serif ;
+	background-color: lightgray;
+	padding: 10px; 
+	margin-top: 5px;
+	margin-bottom: 5px;
+	font-style: italic;
+} 
+
+
+#menu
+{
+	color: gray;
+} 
+
+#menu a
+{
+	color: gray;
+} 
+
+#search
+{
+	float: right;
+} 
+
+del 
+{
+	color: red;
+}
+ins 
+{
+	color: green; text-decoration: none;
+}
+a.invalid
+{
+	
+	color: gray;
+}
+#error
+{
+	FONT-FAMILY: helvetica; sans-serif ;
+	padding: 10px;
+	background: lightgray;
+	color: red;
+}
+#editzone
+{
+	FONT-FAMILY: helvetica; sans-serif ;
+	font-size: 10pt;
+	
+}
+
+span.found 
+{
+	color: green;
+}
+
+li
+{
+	padding: 3px;
+	font-size: 13pt;
+	line-height: 16pt;
+	
+}
+
+#parsedContent
+{
+	line-height: 16pt;
+	
+}
+
+h1
+{
+	text-align: left;
+}
+
+#content {  text-align: justify;} 
+
+iframe.youtube
+{
+	width: 640px;
+	height: 385px;
+}
+
+video.yfrog
+{
+	width: 640px;
+	height: 360px;
+}
+
+img.yfrog
+{
+	width: 640px;
+}
+

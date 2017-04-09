@@ -1,0 +1,165 @@
+body
+{
+	background-color: #eee;
+	font-family: Sans-Serif;
+	font-size: 13px;
+	line-height: 19px;
+}
+
+
+h1
+{
+	font-size: 26px;
+    line-height: 30px;
+	font-weight: normal;
+	padding-bottom: 6px;
+	border-bottom: 1px solid gray;
+
+}
+
+del 
+{
+	color: red;
+}
+ins 
+{
+	color: green; text-decoration: none;
+}
+
+a.invalid
+{
+	color: red;
+}
+
+span.error 
+{
+	color: red;
+}
+span.found 
+{
+	color: green;
+}
+
+#info
+{
+	padding: 20px;
+} 
+
+#header
+{	
+	width: 120px;
+	position: absolute;
+	left: 10px;
+	top: 10px;
+}
+
+#help
+{
+	background-color: lightgreen;
+} 
+
+#editmenu
+{
+	padding: 5px;
+
+	
+} 
+
+#editmenu a
+{
+	text-decoration: none;
+} 
+
+#editmenu0
+{
+	background-color: none;
+} 
+
+#editmenu0 a
+{
+} 
+
+
+#langmenu
+{
+	text-align: right;
+	width: 760px;
+	
+	left: 10px;
+	top: 0px;
+	background-color: none;
+} 
+
+#langmenu a
+{
+	text-decoration: none;
+} 
+
+
+#menu
+{
+	width: 120px;
+	position: absolute;
+	left: 10px;
+	top: 140px;
+} 
+
+#menu a
+{
+	text-decoration: none;
+} 
+
+#search
+{
+	color: gray; 
+	font-size: 80%;
+	font-family: Sans-Serif;
+	
+	text-align: right;
+	position: absolute;
+	left: 600px;
+	top: 50px;
+	
+} 
+
+#title
+{
+	
+}
+
+#content
+{
+	
+	background-color: white;
+	padding: 20px;
+}
+
+#main
+{
+	width: 600px;
+	left: 160px;
+	top: 40px;
+	position: absolute;
+}
+
+
+iframe.youtube
+{
+	width: 640px;
+	height: 385px;
+}
+
+video.yfrog
+{
+	width: 640px;
+	height: 360px;
+}
+
+img.yfrog
+{
+	width: 640px;
+}
+
+
+
+td { vertical-align: top;  width: 50% }
