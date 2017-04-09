@@ -1,0 +1,6 @@
+DirectoryIndex index.php
+
+<Files ~ ".txt$">
+Order allow,deny
+Allow from all
+</Files>
