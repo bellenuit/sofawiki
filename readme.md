@@ -1,8 +1,9 @@
-Sofawiki
+# Sofawiki
 
 SofaWiki is a filebased CMS built on PHP. It uses concepts of MediaWiki, but without MySQL which makes it extremely portable. Pages written in SofaWiki can also have freely defined fields from which relational database queries can be built.
 
-Features:
+# Features:
+
 - Complete Version control with history on each page and diff tool
 - Compatible to MediaWiki Syntax, so you can migrate to MediaWiki as a fallback.
 - Fine grained User Rights
@@ -15,11 +16,10 @@ Features:
 - Semantic fields make SofaWiki a searchable database 
 - Open Source, free license
 
-Documentation
+# Documentation
 
 http://www.sofawiki.com
 http://www.sofawiki.com/sofawiki-database-primer
 
 matti@belle-nuit.com
 2012-2017
-
