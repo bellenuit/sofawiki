@@ -167,6 +167,8 @@ class swRecord extends swPersistance
 		
 		if ($this->persistance && $this->revision) // allready open
 		{
+			if (!preg_match('//u', $this->name)) // check valid utf8 string
+			$this->name =  swNameURL($this->name);
 			return;
 		}
 		
@@ -179,6 +181,11 @@ class swRecord extends swPersistance
 			{
 				$db->currentbitmap->setbit($this->revision);
 			}
+			
+			if (!preg_match('//u', $this->name)) // check valid utf8 string
+			$this->name =  swNameURL($this->name);
+
+						
 			return;
 			
 		}
@@ -228,6 +235,8 @@ class swRecord extends swPersistance
 			}
 			
 			
+			
+			
 			$this->error = ''; 
 			
 			$this->revision = swGetValue($s,"_revision");
@@ -272,6 +281,14 @@ class swRecord extends swPersistance
 			$this->name = str_replace($t156, "oe", $this->name);
 			$this->comment = str_replace($t156, "oe", $this->comment);
 			$this->content = str_replace($t156, "oe", $this->content);
+						
+			if (!preg_match('//u', $this->name))// check valid utf8 string
+			{
+				$this->name =  swNameURL($this->name);
+				echotime($s);
+			}
+
+			
 			
 			$this->internalfields = swGetAllFields($this->content, true);
 			

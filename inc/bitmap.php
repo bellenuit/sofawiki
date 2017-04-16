@@ -46,7 +46,7 @@ class swBitmap extends swPersistance
 			
 		// we need a special operation on the last current byte
 		
-		for ($i = $oldlength; $i < (($oldlength >> 3)+1) << 3; $i++)
+		for ($i = $oldlength; $i < ((($oldlength-1) >> 3)+1) << 3; $i++)
 		{
 			if ($default)
 				$this->setbit($i);

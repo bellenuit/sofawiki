@@ -9,6 +9,9 @@ $submitreplacepreview = swGetArrayValue($_REQUEST,'submitreplacepreview');
 if (isset($_REQUEST['searchnames'])) { $searchnames = "1"; $searchnameschecked = ' CHECKED';}
 else 
 { $searchnames = 0;  $searchnameschecked = '';}
+if (isset($_REQUEST['searchliteral'])) { $searchliteral = "1"; $searchliteralchecked = ' CHECKED';}
+else 
+{ $searchliteral = 0;  $searchliteralchecked = '';}
 
 $swMaxRelaxedSearchTime *=5;   
 $swMaxOverallSearchTime *=5;  
@@ -28,10 +31,15 @@ $regexerror = false;
 
 if ($query)
 {
+
 	$ch0 = substr($query,0,1);
 	$ch1 = substr($query,-1,1);
-	if ($ch0 == $ch1)
+	
+	
+	if ($ch0 == $ch1 || $searchliteral)
 	{
+		
+		
 		if (isset($_REQUEST['searchnames']))
 			$q = 'SELECT _revision WHERE _name r= '.$query;
 		else
@@ -42,16 +50,38 @@ if ($query)
 		{
 			if (isset($_REQUEST['searchnames']))
 			{
-				$qhint = 'SELECT _revision, _name WHERE _name *~* '.$hint;
-				$q = 'WHERE _name r= '.$query;
+				if ($searchliteral)
+				{
+					$qhint = 'SELECT _revision, _name WHERE _name *=* '.$hint;
+					$q = '';
+				}
+				else
+				{
+					$qhint = 'SELECT _revision, _name WHERE _name *~* '.$hint;
+					$q = 'WHERE _name r= '.$query;
+				}
 				
 			}
 			else
 			{
-				$qhint = 'SELECT _revision, _content WHERE _content *~* '.$hint;
-				$q = 'WHERE _content r= '.$query;	
+				if ($searchliteral)
+				{
+					$qhint = 'SELECT _revision, _content WHERE _content *=* '.$hint;
+					$q = '';	
+				}
+				else
+				{
+					$qhint = 'SELECT _revision, _content WHERE _content *~* '.$hint;
+					$q = 'WHERE _content r= '.$query;	
+				}
 			}
+			
+			$old_error = error_reporting(0); // Turn off error reporting
+
 			$revisions = swQuery(array($qhint, $q));
+			
+			error_reporting($old_error);
+			
 		}
 		else
 			$revisions = swFilter($q,'*');
@@ -103,9 +133,15 @@ foreach ($revisions as $k=>$v)
 	
 	$t = '';
 	if (($submitreplacepreview || $submitreplace) && $replace)
-		$t = preg_replace($query,'<del>$0</del><ins>'.$replace.'</ins>',$record->content);
+			if ($searchliteral)
+				$t = str_replace($hint,'<del>'.$hint.'</del><ins>'.$replace.'</ins>',$record->content);
+			else
+				$t = preg_replace($query,'<del>$0</del><ins>'.$replace.'</ins>',$record->content);
 	else
-		$t = preg_replace($query,'<ins>$0</ins>',$record->content);
+			if ($searchliteral)
+				$t = str_replace($hint,'<ins>'.$hint.'</ins>',$record->content);
+			else
+				$t = preg_replace($query,'<ins>$0</ins>',$record->content);
 		
 	$ts = explode("\n",$t);
 	
@@ -119,13 +155,16 @@ foreach ($revisions as $k=>$v)
 	$t = join("\n",$tlines);
 	
 	
-	if ($submitreplace && $_REQUEST['revision'.$record->revision])
+	if ($submitreplace && @$_REQUEST['revision'.$record->revision])
 	{
 		if ($record->status == 'protected')
 			$replaced = 'protected';
 		elseif ($record->status == 'ok' && $user->hasright('modify', $record->name))
 		{
-			$record->content = preg_replace($query,$replace,$record->content);
+			if ($searchliteral)
+				$record->content = str_replace($hint,$replace,$record->content);
+			else
+				$record->content = preg_replace($query,$replace,$record->content);
 			$record->comment = 'regex find '.$query.' replace '.$replace;
 			$record->insert();
 			$replaced = 'replaced';
@@ -149,14 +188,15 @@ if(!$query) $query="//";
 $swParsedContent .= '<div id="editzone"><form method="post" action="index.php">
 		<p>
 		<input type="hidden" name="name" value="special:regex" />
-		<input type="text" name="query" value="'.$query.'" />
-		Hint <input type="text" name="hint" value="'.$hint.'" />
+		<input type="text" size=40 name="query" value="'.$query.'" />
+		Hint <input type="text" size=40 name="hint" value="'.$hint.'" />
 		<input type="submit" name="submit" value="'.swSystemMessage('Search',$lang).'" />
-		<input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'>'.swSystemMessage('Search Names',$lang);
+		<input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'>'.swSystemMessage('Search Names',$lang).
+		'<input type="checkbox" name="searchliteral" value="'.$searchliteral.'" / '. $searchliteralchecked.'>'.swSystemMessage('Search Literal',$lang);
 		
-if (!isset($_REQUEST['searchnames']) && $query != '//')
+if (!isset($_REQUEST['searchnames']) && ($query != '//' || $searchliteral))
 $swParsedContent .= '
-		<input type="text" name="replace" value="'.$replace.'" />
+		<input type="text" size=40 name="replace" value="'.$replace.'" />
 		<input type="submit" name="submitreplacepreview" value="'.swSystemMessage('Replace Preview',$lang).'" />';
 		
 if (!isset($_REQUEST['searchnames']) && $submitreplacepreview &&!isset($swOvertime) && !$regexerror && count($revisions)>0)
@@ -175,6 +215,7 @@ $swParsedContent .= '</p><p><i>Note: You need to use Perl style delimiters at th
 <br>* 0+ + 1 ? 0-1 {n} n times {n,m} n to m times *? mutliple not greedy
 <br>/exp/i case insensitive /^exp/ beginning of string /exp$/ end of string
 <br>The Hint field allows you to enter a string that must be present as url form in the page. This can improve the performance of the regex.
+<br>Search literal translates a literal query in a regex.
 	</i>'.$regexerror.$arraylimited;
 
 $swParsedContent .= '<ul>'.join("\n",$searchtexts).'</ul>';
