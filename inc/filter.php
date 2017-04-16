@@ -51,8 +51,10 @@ function swFilterCompare($operator,$values,$term)
 				   {	if (substr($v,0,strlen($term))==$term) return true; } break;
 		case '*=': foreach($valuelist as $v)
 				   {	if (substr($v,-strlen($term))==$term) return true; } break;
-		case '*=*': foreach($valuelist as $v)
-				   {	 if (stripos($v,$term) !== FALSE) return true; } break;
+		case '*=*': 
+						foreach($valuelist as $v)
+				   { if (stripos($v,$term) !== FALSE) return true; } 
+				   break;
 		case '<<': foreach($valuelist as $v)
 				   {	if ($v<$term) return true; } break;
 		case '>>': foreach($valuelist as $v)
@@ -890,7 +892,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 							$swOvertime=true;
 					break;
 				}
-					
 				$record = new swRecord;
 				$record->revision = $k;
 				$record->lookup();
@@ -972,6 +973,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 					unset($keys);
 					
 					if (!isset($fieldlist[$field])) { $bitmap->unsetbit($k); continue; }
+					
+					//echotime($operator.' '.$term);
 					
 					$row = swQueryFieldlistCompare($k,$fieldlist,$fields,$field,$operator,$term,$comparefields);
 					if (isset($row['_error'])) return $row;

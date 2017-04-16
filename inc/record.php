@@ -292,6 +292,8 @@ class swRecord extends swPersistance
 			
 			$this->internalfields = swGetAllFields($this->content, true);
 			
+			//echotime($this->content);
+			
 			if ($hasshort) return;
 			
 			$db->updateIndexes($this->revision);

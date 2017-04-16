@@ -12,13 +12,17 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 function array_sort_func($a,$b=NULL) { 
    static $keys; 
    if($b===NULL) return $keys=$a; 
-   
+      
    foreach($keys as $k) 
    { 
       $numeric = false;
       $desc = false;
+      $familyname = false;
+      $url = false;
       if (stristr($k,'#')) { $numeric = true; $k = str_replace('#','',$k);}
       if (stristr($k,'!')) { $desc = true;  $k = str_replace('!','',$k) ;}
+      if (stristr($k,'?')) { $familyname = true;  $k = str_replace('?','',$k) ;}
+      if (stristr($k,'@')) { $url = true;  $k = str_replace('@','',$k) ;}
       
       if ($numeric)
       {
@@ -31,12 +35,28 @@ function array_sort_func($a,$b=NULL) {
       }
       else
       {
-      	if(@$a[$k]!==@$b[$k]) 
+      	if ($familyname)
+      	{
+      		$ca = swGetFamilyname(@$a[$k]);
+      		$cb = swGetFamilyname(@$b[$k]);
+      	}
+      	elseif ($url)
+      	{
+      		$ca = swNameURL(@$a[$k]);
+      		$cb = swNameURL(@$b[$k]);
+      	}
+      	else
+      	{
+      		$ca = @$a[$k];
+      		$cb = @$b[$k];
+      	}
+      	
+      	if($ca !== $cb) 
       
          if ($desc)
-         	return strcmp(@$b[$k],@$a[$k]); 
+         	return strcmp($cb,$ca); 
          else
-         	return strcmp(@$a[$k],@$b[$k]); 
+         	return strcmp($ca,$cb); 
       }
     } 
    return 0; 
@@ -44,7 +64,6 @@ function array_sort_func($a,$b=NULL) {
 
 function array_sort($keys) { 
 
-   //$array = @$keys[0]; 
    $array = reset($keys);
    if (!is_array($array)) $array = array();
    array_shift($keys); 
@@ -522,6 +541,10 @@ class swQueryFunction extends swFunction
 										$key = '!'.$key;
 									if (stristr($o,'NUMERIC'))
 										$key = '#'.$key;
+									if (stristr($o,'FAMILYNAME'))
+										$key = '?'.$key;
+									if (stristr($o,'URL'))
+										$key = '@'.$key;
 									
 									$keys[] = $key;
 								}

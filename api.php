@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.7.3';   
+$swVersion = '1.7.4';   
 $swMainName = 'Main';
 $swOldFilter = false;
 $swUseSemaphore = true;
@@ -65,6 +65,8 @@ include_once $swRoot.'/inc/functions/nameurl.php';
 include_once $swRoot.'/inc/functions/prettydate.php';
 include_once $swRoot.'/inc/functions/calc.php';
 include_once $swRoot.'/inc/functions/css.php';
+include_once $swRoot.'/inc/functions/familyname.php';
+
 
 // parsers
 $swParsers = array();
