@@ -8,6 +8,7 @@ class swUser extends swRecord
 	var $username;
 	var $pass;
 	var $ppass;
+	var $ipuser;
 	var $rights;
 	var $session;
 		
@@ -89,6 +90,10 @@ class swUser extends swRecord
 		if (isset($this->ppass) && $this->ppass != '')
 			if ($this->ppass == $this->pass)
 				return true;
+		
+		
+		if ($this->ipuser)
+			return true;
 		
 		$this->readHeader(); // force read original name
 		

@@ -419,7 +419,7 @@ class swRecord extends swPersistance
 		$this->revision = $db->GetLastRevisionFolderItem()+1;
 		
 		//never overwrite an existing file!
-		while (file_exists(swGetPath($this->revision)))
+		while ($this->revision<1 || file_exists(swGetPath($this->revision)))
 		{	
 			$this->revision++;
 		}

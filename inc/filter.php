@@ -551,7 +551,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 
 	$maxlastrevision = $db->lastrevision;
 	$indexedbitmap = $db->indexedbitmap->duplicate();
-	if ($indexedbitmap->length < $maxlastrevision) RebuildIndexes($indexedbitmap->length); // fallback
+	if ($indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($indexedbitmap->length); // fallback
 	$bitmap->redim($maxlastrevision,false);
 	$checkedbitmap->redim($maxlastrevision,false);
 	$currentbitmap = $db->currentbitmap->duplicate();
