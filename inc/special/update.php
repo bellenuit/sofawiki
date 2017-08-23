@@ -72,7 +72,7 @@ $file = swGetArrayValue($_REQUEST,'file');
 $n = "";
 if (swGetArrayValue($_REQUEST,'submitdownload',false) && $file !='')
 {
-	$serverfile = 'http://www.sofawiki.com/site/files/'.$file;
+	$serverfile = 'https://www.sofawiki.com/site/files/'.$file;
 	$localfile = $swRoot.'/'.$file;
 	wgets($serverfile,$localfile);
 	$n = 'downloaded '.$file;
@@ -145,7 +145,7 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 
 $swParsedName = 'Special:Update '.$n; 
 
-$swParsedContent = '<p>Update SofaWiki version from http://www.sofawiki.com/';
+$swParsedContent = '<p>Update SofaWiki version from https://www.sofawiki.com/';
 $swParsedContent .= '<br/>Use with care</p>';
 
 $swParsedContent .= '<p>The update has 3 steps:
@@ -158,7 +158,7 @@ and delete the install folder
 
 $swParsedContent .= '<p>Available versions</p>';
 
-$serverfile = "http://www.sofawiki.com/site/files/snapshot.txt";
+$serverfile = "https://www.sofawiki.com/site/files/snapshot.txt";
 $localfile = $swRoot.'/snapshot.txt';
 
 wgets($serverfile,$localfile);
