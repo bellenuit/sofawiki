@@ -23,7 +23,7 @@ class swRecord extends swPersistance
 	{
 		
 		$this->status = "ok";
-		$this->writefile($silent);
+		$this->writefile();
 	}
 		
 	function delete()
