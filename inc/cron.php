@@ -9,7 +9,6 @@ function swCron()
 	global $action; 
 	global $swIndexError;
 	global $swRoot;
-	global $swUseTrigram;
 	
 	$db->init(true);
 	if ($action == 'indexerror' || $swIndexError) return;
@@ -23,9 +22,7 @@ function swCron()
 		switch(rand(0,6))
 		{
 			case 0: echotime('cron index'); $db->init(true); return 'cron index'; // rebuild indexes 
-			
-			case 1: echotime('cron trigram'); if (@$swUseTrigram) swIndexTrigram(); return 'cron trigram';  
-			
+						
 			case 2: echotime('cron bitmap'); $db->rebuildBitmaps(); return 'cron bitmap';  
 						
 			case 3: echotime('cron sitemap'); swSitemap();  return 'cron sitemap';  

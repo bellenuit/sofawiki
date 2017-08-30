@@ -55,7 +55,7 @@ function swExport($revisions)
 }
 
  
-function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $trigrambackup, $treebackup)
+function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup)
 {
 	global $swRoot;
 	swSemaphoreSignal();
@@ -80,15 +80,10 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $trigra
 		$emptydirectories[] = "sofawiki/site/logs";
 		$emptydirectories[] = "sofawiki/site/queries";
 		$emptydirectories[] = "sofawiki/site/revisions";
-		$emptydirectories[] = "sofawiki/site/tree";
-		$emptydirectories[] = "sofawiki/site/trigram";
 		$emptydirectories[] = "sofawiki/site/upload";
 		
 		$includeddirectories[] = "sofawiki/site";
 		$includeddirectories[] = "sofawiki/site/functions";
-		// $includeddirectories[] = "sofawiki/site/logs";
-		// $includeddirectories[] = "sofawiki/site/current";
-		// $includeddirectories[] = "sofawiki/site/revisions";
 		$includeddirectories[] = "sofawiki/site/skins";
 		
 		$files = array();
@@ -316,37 +311,6 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $trigra
 	
 	
 	
-	if ($trigrambackup)
-	{
-	
-		$result .=  '<br/><br/>trigram';
-		
-		$dir = $swRoot.'/site/trigram';
-		$files = glob($dir.'/*.txt');
-		
-		$zip = 'trigram-'.date('Y-m-d',time()).'.zip'; 
-		$zipfile = new ZipArchive; 
-		$zipfile->open($swRoot.'/bak/'.$zip, ZipArchive::CREATE);
-		
-		$result .= '<br/>.'.$zip.'<br/>';
-		
-		$file =  $swRoot.'/site/indexes/trigrambitmap.txt';
-		$fn = '-trigrambitmap.txt'; // avoid conflict on fields
-		$result .=  '<br/>'.$fn.'<br/>';
-		$zipfile -> addFile($file,$fn); 
-			
-		foreach($files as $file)
-		{
-			$fn = str_replace($swRoot.'/site/trigram/','',$file);
-			$result .=  $fn.' '; 
-			$zipfile -> addFile($file, $fn); 
-		}
-		$zipfile->close();
-	}
-	else
-	{
-		$result .=  '<br/><br/>Add <a href="index.php?name=special:backup&trigram=1">trigram option</a>  option to URL to backup trigram (slow)'; 
-	}
 	
 	
 	$result .=  '<br/><br/>';
@@ -386,7 +350,6 @@ function swSnapShot($username)
 	$emptydirectories[] = "sofawiki/site/queries";
 	$emptydirectories[] = "sofawiki/site/revisions";
 	$emptydirectories[] = "sofawiki/site/skins";
-	$emptydirectories[] = "sofawiki/site/trigram";
 	$emptydirectories[] = "sofawiki/site/upload";
 	
 	$includeddirectories[] = "sofawiki/inc";

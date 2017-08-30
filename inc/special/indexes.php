@@ -10,7 +10,6 @@ if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
 $l0 = '';
 
 
-if ($_REQUEST['index'] == 'indextrigram') {$t0 = $db->trigrambitmap->countbits(); swIndexTrigram(2500); }
 if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(1000); $_REQUEST['index'] = 'bloom';}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
@@ -25,16 +24,14 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <a href="index.php?name=special:indexes&index=urls">urls</a>
 <a href="index.php?name=special:indexes&index=short">short</a>
-<a href="index.php?name=special:indexes&index=trigram">trigram</a>
 <a href="index.php?name=special:indexes&index=bloom">bloom</a>
 <a href="index.php?name=special:indexes&index=queries">queries</a>
 <br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
 <br>current = '. $db->currentbitmap->countbits().'
-<br>trigram = '.$db->trigrambitmap->countbits().'
+<br>bloom = '. $db->bloombitmap->countbits().'
 <br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>
 <a href="index.php?name=special:indexes&index=indexnames">Index Names</a>
-<a href="index.php?name=special:indexes&index=indextrigram">Index Trigram</a>
 <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a>
 <a href="index.php?name=special:indexes&index=docron">Do Cron</a>
 
@@ -44,7 +41,6 @@ $swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
 $swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
 $swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresettrigram' value='Reset Trigram' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
@@ -52,7 +48,7 @@ $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset 
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Trigram, Reset Bitmaps</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Bloom, Reset Bitmaps</i>";
 
 
 $done = '';
@@ -103,16 +99,6 @@ $done = '';
 				
 	}
 	
-	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresettrigram']))
-	{
-
-		clearTrigrams();
-		
-		$file = $swRoot.'/site/indexes/trigrambitmap.txt';
-		swUnlink($file); 	
-	
-		$done .= '<p>Deleted trigram';
-	}
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
 	{
 
@@ -164,7 +150,7 @@ $done = '';
 	}
 
 
-if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) || isset($_REQUEST['submitresetqueries']) || isset($_REQUEST['submitresettrigram'])
+if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) || isset($_REQUEST['submitresetqueries']) 
 || isset($_REQUEST['submitresetbitmaps']) || isset($_REQUEST['submitreseturls']) || isset($_REQUEST['submitresetbloom']) )
 	{	
 		$swIndexError = true;
@@ -258,35 +244,6 @@ switch($_REQUEST['index'])
 						  break;
 
 	
-	case 'trigram':			$swParsedContent .= '<h3>trigram</h3><p>';
-							$swParsedContent .= '<i>Trigram is depreciated and replaced by Bloom filter</i><p>';
-
-							
-							if (isset($_REQUEST['t']))
-							{
-								$bm = getTrigram($_REQUEST['t']);
-								$swParsedContent .= $_REQUEST['t'];
-								
-						 	    $swParsedContent .= '<p>length: '.$bm->length;
-						        $swParsedContent .= '<br>countbits: '.$bm->countbits();
-								$swParsedContent .= '<p>'.bitmap2canvas($bm);
-								
-							}
-							else
-							{
-								$swParsedContent .= '<h3>trigrambitmap</h3>';
-						  		$bm = $db->trigrambitmap;
-						  		$swParsedContent .= '<p>length: '.$bm->length;
-						 		$swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
-						 		$swParsedContent .= '<p>';
-								$list = trigramlist();
-								foreach($list as $k=>$v)
-								{
-							 		$swParsedContent .= '<a href="index.php?name=special:indexes&index=trigram&t='.$v.'">'.$v.'</a> ';
-								}
-							}
-							break;
 
 
 	case 'bloom':			 
@@ -456,8 +413,6 @@ switch($_REQUEST['index'])
 							break;
 						
 
-	case "indextrigram": $swParsedContent .= '<h3>Index Trigram</h3><p>'.sprintf('%0d',$db->trigrambitmap->countbits() - $t0 ). ' revisions';
-							$swParsedContent .= '<p><i>Trigram is depreciated and replaced by Bloom filter</i><p>';break;
 	case "indexnames": $result = swFilter('SELECT _revision, _name WHERE _name *','*'); 
 						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
 	

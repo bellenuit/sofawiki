@@ -11,6 +11,7 @@ class swUser extends swRecord
 	var $ipuser;
 	var $rights;
 	var $session;
+	
 		
 	function exists()
 	{
@@ -59,7 +60,7 @@ class swUser extends swRecord
 			if ($right == '*') { return true;}// power users
 			
 			$right = swNameURL($right); // * is not in nameurl
-			if ($right == 'main' && !stristr($name,":")) {return true;}// main namespace
+			if (($right == 'main' || $right == '') && !stristr($name,":")) {return true;}// main namespace
 			
 			if (stripos($name,$right) === 0 ) {  return true;}
 			
@@ -132,6 +133,13 @@ class swUser extends swRecord
 	{
 		global $db;
 		return md5(swNameURL($this->nameshort()).$this->pass.$db->salt);
+	}
+	
+	function altusers()
+	{
+		$list = swGetValue($this->content,'_altuser',true);
+		//print_r($list);
+		return $list;
 	}
 	
 	

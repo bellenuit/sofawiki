@@ -8,7 +8,6 @@ echotime('special:indexes');
 
 if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
 
-if ($_REQUEST['index'] == 'indextrigram') {$t0 = GetLastTrigram(); swIndexTrigram(300);}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->lastrevision;   $db->init(true);}
 
 $swParsedContent = '
@@ -16,13 +15,10 @@ $swParsedContent = '
 <br><a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
 <br><a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <br><a href="index.php?name=special:indexes&index=urls">urls</a>
-<br><a href="index.php?name=special:indexes&index=trigram">trigram</a>
 <br><a href="index.php?name=special:indexes&index=queries">queries</a>
 <br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .'
-<br>lasttrigram = '.GetLastTrigram().'
-<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>
-<br><a href="index.php?name=special:indexes&index=indextrigram">Index Trigram</a>';
+<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>';
 
 $swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
 $swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
@@ -43,11 +39,6 @@ if (isset($_REQUEST['submitreset']) && $_REQUEST['submitreset'])
 	
 	$swParsedContent .= '<p>Deleted queries';
 	
-	// delete all trigram
-	$files = glob($swRoot.'/site/trigram/*.txt');
-	foreach($files as $file) { unlink($file); }
-	
-	$swParsedContent .= '<p>Deleted trigram';
 	
 	// delete index folder
 	$files = glob($swRoot.'/site/indexes/*.txt');
@@ -114,25 +105,6 @@ switch($_REQUEST['index'])
 
 
 	
-	case 'trigram':			$swParsedContent .= '<h3>trigram</h3><p>';
-							
-							if (isset($_REQUEST['t']))
-							{
-								$bm = getTrigram($_REQUEST['t']);
-								$swParsedContent .= $_REQUEST['t'];
-						 	    $swParsedContent .= '<p>length: '.$bm->length;
-						        $swParsedContent .= '<br>countbits: '.$bm->countbits();
-								$swParsedContent .= '<p>'.bitmap2canvas($bm);
-							}
-							else
-							{
-								$list = trigramlist();
-								foreach($list as $k=>$v)
-								{
-							 		$swParsedContent .= '<a href="index.php?name=special:indexes&index=trigram&t='.$v.'">'.$v.'</a> ';
-								}
-							}
-							break;
 							
 	case 'queries':			$swParsedContent .= '<h3>queries</h3><p>';
 							
@@ -176,7 +148,6 @@ switch($_REQUEST['index'])
 							break;
 						
 
-	case "indextrigram": $swParsedContent .= '<h3>Index Trigram</h3><p>'.sprintf('%0d',GetLastTrigram() - $t0 ). ' revisions'; break;
 	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d', $db->lastrevision-$l0).' revisions'; break;
 }
 

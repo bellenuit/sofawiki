@@ -125,7 +125,6 @@ class swDB extends swPersistance //extend may be obsolete
 	var $currentbitmap;
 	var $deletedbitmap; 
 	var $protectedbitmap;
-	var $trigrambitmap;
 	var $bloombitmap;
 	var $shortbitmap;
 	
@@ -133,7 +132,6 @@ class swDB extends swPersistance //extend may be obsolete
 	var $hasindex = false;
 	var $lastrevision = 0;
 	var $persistance2 = '';
-	var $trigrams = array();
 	var $inited = false;
 	var $currentupdaterev;
 	var $pathbase;
@@ -166,7 +164,6 @@ class swDB extends swPersistance //extend may be obsolete
 		if (!is_dir( $this->pathbase.'current/')) mkdir ( $this->pathbase.'current/', 0777); 
 		if (!is_dir( $this->pathbase.'indexes/')) mkdir ( $this->pathbase.'indexes/', 0777);
 		if (!is_dir( $this->pathbase.'queries/')) mkdir ( $this->pathbase.'queries/', 0777);
-		if (!is_dir( $this->pathbase.'trigram/')) mkdir ( $this->pathbase.'trigram/', 0777);
 		if (!is_dir( $this->pathbase.'files/')) mkdir ( $this->pathbase.'files/', 0777);
 		if (!is_dir( "$swRoot/site/revisions/")) mkdir ( "$swRoot/site/revisions/", 0777);
 
@@ -209,11 +206,6 @@ class swDB extends swPersistance //extend may be obsolete
 		if ($bitmaperror)
 			$this->rebuildBitmaps();
 			
-		$this->trigrambitmap = new swBitmap;
-		$this->trigrambitmap->persistance = $this->pathbase.'indexes/trigrambitmap.txt';
-		if (file_exists($this->trigrambitmap->persistance))
-			$this->trigrambitmap->open();
-
 		$this->bloombitmap = new swBitmap;
 		$this->bloombitmap->persistance = $this->pathbase.'indexes/bloombitmap.txt';
 		if (file_exists($this->bloombitmap->persistance))

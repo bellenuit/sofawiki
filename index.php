@@ -101,6 +101,11 @@ if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Y
 if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()-24*60*60).$swEncryptionSalt))
 {	$knownuser = true; } 
 
+$altuser = handleCookie('altuser','',$swUserCookieExpiration);
+
+
+if (isset($_REQUEST['submitlogin'])) $knownuser = false;
+
 if($knownuser)
 {
         $found=false;
@@ -125,11 +130,21 @@ if($knownuser)
 			$user->name = 'User:'.$username;
 			$user->lookup();
 			$user->username = $username;
+			
+			if (substr($username,0,3) == 'ip.')
+				$user->ipuser = true;
+			
+			if (!$user->visible())
+			{
+				$username = '';
+				$user->username = '';
+			}
+			
 			error_reporting(0);
 			ini_set("display_errors", 0); 
 
 		}
-		if ($action=='login') $action='view'; // do not stay in login 
+		if ($action=='login' & !$user->ipuser) $action='view'; // do not stay in login 
 		
 }
 else
@@ -166,7 +181,32 @@ else
 		if ($username != '')
 			$user->lookup();
 		$user->pass = $pass;
+		
+		if ($user->revision) $found = true;
 	}
+	
+	if (!$found)
+	{
+		// check for ip-users
+		$username = 'ip.'.$ip;
+			
+		$user = new swUser;
+		$user->username = $username;
+		$user->name = 'User:'.$username;
+		if ($username != '')
+			$user->lookup();
+		$user->pass = $pass;
+		
+		if ($user->visible())
+			$user->ipuser = true;
+		else
+			$username = ''; // failed
+	
+	}
+	
+	
+	
+	
 	$user->name = 'User:'.$username;
 	
 	
@@ -195,15 +235,31 @@ else
 		$user->content = $swAllUserRights;
     }
 }
+
+
+if ($user->name != '' && isset($altuser) && $altuser != '')
+{
+	$user2 = new swUser;
+	$user2->name = 'User:'.$altuser;
+	$user2->lookup();
+	if ($user2->exists()) {
+		$realuser = $user;
+		$user = $user2;
+		$user->username = $username = $user->nameshort();
+	}
+	
+}
+
 if ($action == 'logout')
 {
 	$user = new swUser;
 	$user->name = '';
 	$user->pass = '';
 	$user->content = $swAllUserRights;
+	unset($realuser);
 }
 
-if ($swUseSemaphore)
+
 session_write_close();
 
 // add searchnamespaces by user rights
@@ -322,10 +378,33 @@ $swSearchMenu = ' <form method="get" action="index.php"><p>
  </p></form> ';
 
 $swLoginMenus= array();
-if ($user->username != "")
+
+if ($user->username != "" || isset($realuser))
 {
 		$swLoginMenus['user'] = $user->nameshort();
-		$swLoginMenus['logout'] = "<a href='index.php?action=logout' rel='nofollow'>".swSystemMessage('Logout',$lang).'</a>';
+		if ($user->ipuser)
+		$swLoginMenus['login'] = '<a href="index.php?action=login" rel="nofollow">'.swSystemMessage('Login',$lang).'</a>';
+		else
+		{
+			if (!isset($realuser))
+			$swLoginMenus['logout'] = '<a href="index.php?action=logout" rel="nofollow">'.swSystemMessage('Logout',$lang).'</a>';
+		}
+		
+		$altuserlist = $user->altusers();
+		if (is_array($altuserlist) && count($altuserlist)>0)
+		{
+			foreach($altuserlist as $elem)
+			$swLoginMenus['altuser-'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'" rel="nofollow">'.$elem.'</a>';
+		}
+		if (isset($realuser))
+		{
+			$altuserlist = $realuser->altusers();
+			$swLoginMenus['altuser-'.$realuser->nameshort()] = '! <a href="index.php?action=view&altuser" rel="nofollow">'.$realuser->nameshort().'</a>';
+			foreach($altuserlist as $elem)
+			$swLoginMenus['altuser-'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'" rel="nofollow">'.$elem.'</a>';
+			
+		}
+		
 }
 elseif ($action != 'login')
 {

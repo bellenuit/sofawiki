@@ -15,7 +15,7 @@ $swParsedContent = "<div id='editzone'>
 		<input type='hidden' name='name' value='$name' />
 		<input type='hidden' name='action' value='login' />
 		</td></tr><tr><td></td><td>
-		<input type='submit' name='submitprotect' value='".swSystemMessage("Login",$lang)."' /></td></tr></table>
+		<input type='submit' name='submitlogin' value='".swSystemMessage("Login",$lang)."' /></td></tr></table>
 	</form>";
 	
 	if ($swNewUserEnable)

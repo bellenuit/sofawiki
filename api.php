@@ -3,11 +3,8 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.7.5';   
+$swVersion = '1.8.0';   
 $swMainName = 'Main';
-$swOldFilter = false;
-$swUseSemaphore = true;
-$swUseTrigram = false;
 $swStartTime = microtime(true);
 
 
@@ -31,7 +28,6 @@ include_once $swRoot.'/inc/cron.php';
 include_once $swRoot.'/inc/db.php';
 include_once $swRoot.'/inc/filter.php';
 
-include_once $swRoot.'/inc/trigram.php';
 include_once $swRoot.'/inc/function.php';
 include_once $swRoot.'/inc/legacy.php';
 include_once $swRoot.'/inc/notify.php';

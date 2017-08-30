@@ -26,10 +26,8 @@ function swSemaphoreSignal()
 	global $swSempahore;
 	global $swRoot;
 	global $swSemaphoreTimeOut;
-	global $swUseSemaphore;
 	
-	if (!$swUseSemaphore) return;
-	//echotime("semaphore signal");
+	
 	
 	$file = $swRoot."/site/indexes/semaphore.txt";
 	
@@ -69,10 +67,9 @@ function swSemaphoreRelease()
 {
 	global $swSempahore;
 	global $swRoot;
-	global $swUseSemaphore;
 	
-	if (!$swUseSemaphore) return;
-	//echotime("semaphore release");
+	
+	
 	$file = $swRoot."/site/indexes/semaphore.txt";
 	@unlink($file);
 	$swSempahore = false;

@@ -221,7 +221,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
 	global $swStartTime;
-	global $swUseTrigram;
 	
 	$verbose = 0;
 	if (isset($_REQUEST['verbose'])) $verbose = 1;
@@ -601,8 +600,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
 	{
 		
-		global $swOldFilter;
-		// cachechanged must provoke removal of obsolete revisions and save of new cachefile
 				
 		// if there is an existing search on a substring, we can exclude all urls with no result
 		// a cron tab will create searches on all possible strings with 3 characters
@@ -676,37 +673,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				if ($tocheckcount > 16 && $mode == 'relaxed' && strlen($filter)>=3)
 				{
 					
-					
-					if (@$swUseTrigram) 
-					{
-					
-					for($i=0;$i<=strlen($filter)-3;$i++)
-					{
-						if ($tocheckcount < 16) continue;
-						$f = substr($filter,$i,3);
-						$gr = getTrigram($f);
-						if ($gr)
-						{
-							$gr->redim($tocheck->length, true);
-							$tocheck = $tocheck->andop($gr);
-							$notgr = $gr->notop();
-							$checkedbitmap = $checkedbitmap->orop($notgr);
-						}
-						$tocheckcount = $tocheck->countbits();
-						echotime('- '.$f.' '.$tocheckcount);
-					}
-					
-					}
-					else
-					{
-						$gr = swGetBloomBitmapFromTerm($filter);
-						$gr->redim($tocheck->length, true);
-						$tocheck = $tocheck->andop($gr);
-						$notgr = $gr->notop();
-						$checkedbitmap = $checkedbitmap->orop($notgr);
-						$tocheckcount = $tocheck->countbits();
-					}
-					
+					$gr = swGetBloomBitmapFromTerm($filter);
+					$gr->redim($tocheck->length, true);
+					$tocheck = $tocheck->andop($gr);
+					$notgr = $gr->notop();
+					$checkedbitmap = $checkedbitmap->orop($notgr);
+					$tocheckcount = $tocheck->countbits();
 				
 				}
 				
@@ -717,35 +689,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 						
 					$field2 = swNameURL($field);
 					
-					if (@$swUseTrigram) 
-					{
-					
-					for($i=0;$i<=strlen($field2)-3;$i++)
-					{
-						if ($tocheckcount < 16) continue;
-						$f = substr($field2,$i,3);
-						$gr = getTrigram($f);
-						if ($gr)
-						{
-							$gr->redim($tocheck->length, true);
-							$tocheck = $tocheck->andop($gr);
-							$notgr = $gr->notop();
-							$checkedbitmap = $checkedbitmap->orop($notgr);
-						}
-						$tocheckcount = $tocheck->countbits();
-						echotime('- '.$f.' '.$tocheckcount);
-					}
-					
-					}
-					else
-					{
-						$gr = swGetBloomBitmapFromTerm($field2);
-						$gr->redim($tocheck->length, true);
-						$tocheck = $tocheck->andop($gr);
-						$notgr = $gr->notop();
-						$checkedbitmap = $checkedbitmap->orop($notgr);
-						$tocheckcount = $tocheck->countbits();
-					}
+					$gr = swGetBloomBitmapFromTerm($field2);
+					$gr->redim($tocheck->length, true);
+					$tocheck = $tocheck->andop($gr);
+					$notgr = $gr->notop();
+					$checkedbitmap = $checkedbitmap->orop($notgr);
+					$tocheckcount = $tocheck->countbits();
 						
 						
 				}
@@ -759,37 +708,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 					if (strlen($term)>=3)
 					{
 						$term2 = swNameURL($term);
-						
-						if (@$swUseTrigram) 
-						{
-						
-						
-						for($i=0;$i<=strlen($term2)-3;$i++)
-						{
-							if ($tocheckcount < 16) continue;
-							$f = substr($term2,$i,3);
-							$gr = getTrigram($f);
-							if ($gr)
-							{
-								$gr->redim($tocheck->length, true);
-								$tocheck = $tocheck->andop($gr);
-								$notgr = $gr->notop();
-								$checkedbitmap = $checkedbitmap->orop($notgr);
-							}
-							$tocheckcount = $tocheck->countbits();
-							echotime('-term '.$f.' '.$tocheckcount);
-						}
-						
-						}
-						else
-						{
-							$gr = swGetBloomBitmapFromTerm($term2);
-							$gr->redim($tocheck->length, true);
-							$tocheck = $tocheck->andop($gr);
-							$notgr = $gr->notop();
-							$checkedbitmap = $checkedbitmap->orop($notgr);
-							$tocheckcount = $tocheck->countbits();
-						}
+						$gr = swGetBloomBitmapFromTerm($term2);
+						$gr->redim($tocheck->length, true);
+						$tocheck = $tocheck->andop($gr);
+						$notgr = $gr->notop();
+						$checkedbitmap = $checkedbitmap->orop($notgr);
+						$tocheckcount = $tocheck->countbits();
 						
 					}
 				
@@ -800,36 +724,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				{
 						$term2 = swNameURL($hint);
 						
-						if (@$swUseTrigram) 
-						{
-						
-						
-						for($i=0;$i<=strlen($term2)-3;$i++)
-						{
-							if ($tocheckcount < 16) continue;
-							$f = substr($term2,$i,3);
-							$gr = getTrigram($f);
-							if ($gr)
-							{
-								$gr->redim($tocheck->length, true);
-								$tocheck = $tocheck->andop($gr);
-								$notgr = $gr->notop();
-								$checkedbitmap = $checkedbitmap->orop($notgr);
-							}
-							$tocheckcount = $tocheck->countbits();
-							echotime('-hint '.$f.' '.$tocheckcount);
-						}
-						
-						}
-						else
-						{
-							$gr = swGetBloomBitmapFromTerm($term2);
-							$gr->redim($tocheck->length, true);
-							$tocheck = $tocheck->andop($gr);
-							$notgr = $gr->notop();
-							$checkedbitmap = $checkedbitmap->orop($notgr);
-							$tocheckcount = $tocheck->countbits();
-						}
+						$gr = swGetBloomBitmapFromTerm($term2);
+						$gr->redim($tocheck->length, true);
+						$tocheck = $tocheck->andop($gr);
+						$notgr = $gr->notop();
+						$checkedbitmap = $checkedbitmap->orop($notgr);
+						$tocheckcount = $tocheck->countbits();
 					
 				}
 				
