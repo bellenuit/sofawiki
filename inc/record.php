@@ -23,7 +23,7 @@ class swRecord extends swPersistance
 	{
 		
 		$this->status = "ok";
-		$this->writefile($silent);
+		$this->writefile($silent); // Function writefile doesn't have a parameter in its declaration, is that correct?
 	}
 		
 	function delete()
