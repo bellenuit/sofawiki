@@ -37,10 +37,13 @@ if ($action == "newusersubmit")
 	{
 		$swError = swSystemMessage("UserExistsAlreadyError",$lang);
 		$email = '';
+		$submitted = false; 
 	}
 	if ($email == $poweruser->nameshort())
+	{
 		$swError = swSystemMessage("UserExistsAlreadyError",$lang);
-	
+		$submitted = false; 
+	}
 	
 	
 	if (!$swError)
@@ -48,7 +51,10 @@ if ($action == "newusersubmit")
 		
 		$w = new swUser;
 		$w->name = "User:$email";
-		$w->pass = rand(111111,99999);
+		if (function_exists('swGeneratePasswordHook'))
+			$w->pass = swGeneratePasswordHook();
+		else
+			$w->pass = rand(111111,99999);
 		$w->content = "[[_pass::".$w->encryptpassword()."]]
 $swNewUserRights";
 		$w->insert();
