@@ -54,7 +54,7 @@ if ($action == "newusersubmit")
 		if (function_exists('swGeneratePasswordHook'))
 			$w->pass = swGeneratePasswordHook();
 		else
-			$w->pass = rand(111111,99999);
+			$w->pass = rand(111111,999999);
 		$w->content = "[[_pass::".$w->encryptpassword()."]]
 $swNewUserRights";
 		$w->insert();

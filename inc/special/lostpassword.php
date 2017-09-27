@@ -41,7 +41,7 @@ if ($action == 'lostpasswordsubmit')
 		if (function_exists('swGeneratePasswordHook'))
 			$lostuser->pass = swGeneratePasswordHook();
 		else
-			$lostuser->pass = rand(111111,99999);
+			$lostuser->pass = rand(111111,999999);
 		
 		$p = '[[_newpass::'.$lostuser->encryptpassword().']]';
 		$s = $lostuser->content;

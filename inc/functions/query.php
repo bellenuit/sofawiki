@@ -19,10 +19,12 @@ function array_sort_func($a,$b=NULL) {
       $desc = false;
       $familyname = false;
       $url = false;
+      $nocase = false;
       if (stristr($k,'#')) { $numeric = true; $k = str_replace('#','',$k);}
       if (stristr($k,'!')) { $desc = true;  $k = str_replace('!','',$k) ;}
       if (stristr($k,'?')) { $familyname = true;  $k = str_replace('?','',$k) ;}
       if (stristr($k,'@')) { $url = true;  $k = str_replace('@','',$k) ;}
+      if (stristr($k,'&')) { $nocase = true;  $k = str_replace('&','',$k) ;}
       
       if ($numeric)
       {
@@ -44,6 +46,11 @@ function array_sort_func($a,$b=NULL) {
       	{
       		$ca = swNameURL(@$a[$k]);
       		$cb = swNameURL(@$b[$k]);
+      	}
+      	elseif ($nocase)
+      	{
+      		$ca = strtolower(@$a[$k]);
+      		$cb = strtolower(@$b[$k]);
       	}
       	else
       	{
@@ -545,6 +552,8 @@ class swQueryFunction extends swFunction
 										$key = '?'.$key;
 									if (stristr($o,'URL'))
 										$key = '@'.$key;
+									if (stristr($o,'NOCASE'))
+										$key = '&'.$key;
 									
 									$keys[] = $key;
 								}
@@ -762,6 +771,12 @@ class swQueryFunction extends swFunction
 										$key = '!'.$key;
 									if (stristr($o,' NUMERIC'))
 										$key = '#'.$key;
+									if (stristr($o,'FAMILYNAME'))
+										$key = '?'.$key;
+									if (stristr($o,'URL'))
+										$key = '@'.$key;
+									if (stristr($o,'NOCASE'))
+										$key = '&'.$key;
 									
 									$keys[] = $key;
 								}
