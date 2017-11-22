@@ -128,6 +128,8 @@ $swSpecials['Long Pages'] = 'longpages.php';
 $swSpecials['Short Pages'] = 'shortpages.php';
 $swSpecials['Uncategorized Pages'] = 'uncategorizedpages.php';
 $swSpecials['Import'] = 'import.php';
+$swSpecials['Tickets'] = 'tickets.php';
+
 
 /*
 	initialize variables
