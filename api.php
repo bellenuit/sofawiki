@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.8.2';   
+$swVersion = '1.8.3';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 
@@ -16,6 +16,8 @@ $swStartTime = microtime(true);
 // core
 $swRoot = dirname(__FILE__); // must be first
 
+// inis
+ini_set(‘pcre.jit’,0); // prevent preg_match to be limited to 2700 characters
 
 	
 	

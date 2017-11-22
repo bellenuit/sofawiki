@@ -46,8 +46,9 @@ function swGetHashesFromTerm($s)
 			$hashes[] = swFNVhash($elem,1024,1103,661);
 			$hashes[] = swFNVhash($elem,1024,1103,859);
 		}
-		
+		sort($hashes);
 		$hashes = array_unique($hashes);
+		//echotime(print_r($hashes,true));
 		return $hashes;
 	
 }
@@ -107,6 +108,7 @@ function swGetBloomBitmapFromTerm($term)
 
 function swIndexBloom($numberofrevisions = 1000)
 {
+	
 	swSemaphoreSignal();
 	echotime('indexbloom');
 	
@@ -114,28 +116,54 @@ function swIndexBloom($numberofrevisions = 1000)
 	global $db;
 	global $swBloomIndex;
 	global $swMaxSearchTime;
+	global $swRamdiskPath;
 	
 	$path = $swRoot.'/site/indexes/bloom.raw';
-	$fpt = fopen($path,'c+');
+	chmod($path,0777);
 	$starttime = microtime(true);
 	
+	if (!$db->bloombitmap) return;
 	$db->bloombitmap->redim($db->lastrevision);
+	
+	echotime('indexbloom2');
+	
+	if ($swRamdiskPath != '' && false) //ne marche pas,Permission denied
+	{
+		echotime('to ram');
+		$path2 = $swRamdiskPath.'bloom.txt';
+		$raw = file_get_contents($path);
+		file_put_contents($path2,$raw);
+		
+		chmod($path2,0777);
+		echotime('done');
+		$fpt = fopen($path2,'c+');
+	}
+	else
+		$fpt = fopen($path,'c+');
 	
 	$block = floor($db->lastrevision/65536);
 	$fs = (($block + 1) * 1024) * 8192 ;
 	fseek($fpt,$fs);
 	fwrite($fpt," "); // write to force file size;
 	
-	
+	// new try read all to bitmap
+	echotime('to bitmap');
+	$bitmap = new swBitmap;
+	$raw = file_get_contents($path);
+	$bitmap->init(strlen($raw)*8);
+	$bitmap->map = $raw;
+	echotime('done');
 	
 	$i = 0; $rev = 0;
-	while ($i < $numberofrevisions)
+	while ($i < $numberofrevisions) 
 	{
 		$rev++;
 		if ($rev > $db->lastrevision) 
 			break;
 		if (!$db->indexedbitmap->getbit($rev)) continue;
 		if ($db->bloombitmap->getbit($rev)) continue;
+		
+		
 		
 		$nowtime = microtime(true);	
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
@@ -152,9 +180,8 @@ function swIndexBloom($numberofrevisions = 1000)
 		}
 		
 		$text = $w->name.' '.$w->content;
-		
 		$hashes = swGetHashesFromTerm($text);
-		
+		echotime('rev '.$rev.' gothashes '.count($hashes));
 		$offsetmax = 0;
 		
 		if ($hashes)
@@ -172,6 +199,8 @@ function swIndexBloom($numberofrevisions = 1000)
 			$byte = $rev >> 3;
 			$bit = $rev - ($byte << 3);
 			$bitmask = 128 >> $bit;
+			
+			/*
 
 			fseek($fpt,$offset);	
 			$ch = fread($fpt,1);
@@ -180,6 +209,12 @@ function swIndexBloom($numberofrevisions = 1000)
 			$ch = chr($ch);
 			fseek($fpt,$offset);	
 			fwrite($fpt,$ch);
+			
+			*/
+			
+			// new try read all to bitmap
+			$p = $offset*8 + $bit;
+			$bitmap->setbit($p);
 			
 			if ($offset>$offsetmax) $offsetmax = $offset;
 			
@@ -194,6 +229,22 @@ function swIndexBloom($numberofrevisions = 1000)
 	// echo "offsetmax $offsetmax; ";
 	@fclose($fpt);
 	echotime('indexbloom end ');
+	
+	if ($swRamdiskPath != '' && false)
+	{
+		echotime('from ram');
+		$raw = file_get_contents($path2);
+		file_put_contents($path,$raw);
+		echotime('done');
+	}
+	
+	// new try read all to bitmap
+	echotime('from bitmap');
+	file_put_contents($path,$bitmap->map);
+	echotime('done');
+	
+	
+	
 	return $i;
 	 swSemaphoreRelease();
 	
