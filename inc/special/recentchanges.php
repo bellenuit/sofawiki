@@ -3,7 +3,7 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Recent Changes";
-$db->init(true);
+$db->init();
 $last = $db->lastrevision;
 
 
