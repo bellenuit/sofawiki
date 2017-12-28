@@ -441,7 +441,7 @@ class swQueryFunction extends swFunction
 								if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($iname)) 
 								{
 									
-									echo "<p>l ".$hooklink.".";
+									//echo "<p>l ".$hooklink.".";
 									if (!$s = swFileGetContents($hooklink))
 										return(array('_error'=>'invalid url '.$hooklink));
 									//echo "<p>s ".print_r($s).".";

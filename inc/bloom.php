@@ -119,7 +119,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	global $swRamdiskPath;
 	
 	$path = $swRoot.'/site/indexes/bloom.raw';
-	chmod($path,0777);
+	if (file_exists($path)) chmod($path,0777);
 	$starttime = microtime(true);
 	
 	if (!$db->bloombitmap) return;
