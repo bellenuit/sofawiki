@@ -13,7 +13,6 @@ if (isset($_REQUEST['searchliteral'])) { $searchliteral = "1"; $searchliteralche
 else 
 { $searchliteral = 0;  $searchliteralchecked = '';}
 
-$swMaxRelaxedSearchTime *=5;   
 $swMaxOverallSearchTime *=5;  
 
 

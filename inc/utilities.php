@@ -343,16 +343,26 @@ function swNameURL($name)
 
 function swFileGetContents($url)
 {
-       $c = curl_init();
+       	$c = curl_init();
         curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($c, CURLOPT_URL, $url);
         $contents = curl_exec($c);
-        curl_close($c);
+        
+        //print_r($c);
+        
 
-        if ($contents) 
+        if ($contents)
+        {
+        	curl_close($c);
         	return $contents;
+        }
         else 
+        {
+            echotime('swFileGetContents error: '.curl_error($c));
+            curl_close($c);
             return false;
+         }
 }
 
 // field writer uses rows separated by [[]] and having only one value by field

@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.8.3';   
+$swVersion = '1.8.4';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 

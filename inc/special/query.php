@@ -4,7 +4,6 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swParsedName = 'Special:Query';
 
-$swMaxRelaxedSearchTime *=3;   
 $swMaxOverallSearchTime *=3;  
 
 $q = swGetArrayValue($_REQUEST,'q');
@@ -50,7 +49,6 @@ $swParsedContent = '<div id="editzone"><form method="post" action="index.php">
 
 $query = str_replace("\n","<br>",$query);
 
-$swMaxRelaxedSearchTime /=3;   
 $swMaxOverallSearchTime /=3;  
 
 

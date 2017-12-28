@@ -61,11 +61,6 @@ class swLinksParser extends swParser
 			{
 				if ($v[3] != "")
 					$label = $v[3];
-				elseif (stristr($val,"::"))
-				{	// pipe trick on variables to remove Field name on label and value
-					$label = preg_replace("@(.*)::+(.*)@", "$2", $val); 
-					$val = "";
-				}
 				else
 				{	// pipe trick
 					$label = preg_replace("@(.*):+(.*)@", "$2", $val);  // remove namespace
@@ -188,10 +183,10 @@ class swLinksParser extends swParser
 				// add a hook here for custom handler
 				
 				if (function_exists('swInternalLinkHook')) {
-  					$hooklink = swInternalLinkHook($val,$label);
+  					$hooklink = swInternalLinkHook($val);  					
   					if ($hooklink)
   					{
-  						$s = str_replace($v[0], $hooklink,$s);
+  						$s = str_replace($v[0], '<a href="'.$hooklink.'" target="_blank">'.$label.'</a>',$s);
   						continue;
   					}
 				}
