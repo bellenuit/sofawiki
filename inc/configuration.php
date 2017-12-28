@@ -68,8 +68,6 @@ $swDefaultLang = "en";
 
 // $swSearchNamespaces[] = "Namespace";
 
-// on relaxed searches, filtering will be aborted after n msec. Index will be created over multiple searches
- $swMaxRelaxedSearchTime = 2000;  
  // on all searches, filtering will be aborted after n msec. Index will be created over multiple searches
  $swMaxOverallSearchTime = 2000;  
  // searches priority in title. if title search gives results, returns only these
@@ -119,6 +117,7 @@ function swInternalLinkHook($val,$label) {}
 // put all functions in the site/functions folder. use the Special:Backup page to backup these files
 
 // include_once "$swRoot/site/functions/myfunction.php";
+
 
 // 15. Define Simple URL scheme and enable simple URL scheme
 

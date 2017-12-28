@@ -61,7 +61,7 @@ function swGetBloomBitmapFromTerm($term)
 	global $swBloomIndex;
 	
 	$bm = new swBitmap;
-	$bm->init($db->lastrevision, true);
+	$bm->init($db->lastrevision+1, true);
 	
 	echotime('bloom '.$term);
 	
@@ -76,10 +76,10 @@ function swGetBloomBitmapFromTerm($term)
 	foreach($hashes as $h)
 	{
 		$hbm = new swBitmap;
-		$hbm->init($db->lastrevision, true);
+		$hbm->init($db->lastrevision+1, true);
 		$hbm->map = '';
 				
-		$blocks = floor($db->lastrevision/65536);
+		$blocks = floor(($db->lastrevision+1)/65536);
 				
 		for ($i = 0; $i<=$blocks; $i++)
 		{
@@ -123,7 +123,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	$starttime = microtime(true);
 	
 	if (!$db->bloombitmap) return;
-	$db->bloombitmap->redim($db->lastrevision);
+	$db->bloombitmap->redim($db->lastrevision+1);
 	
 	echotime('indexbloom2');
 	
@@ -141,7 +141,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	else
 		$fpt = fopen($path,'c+');
 	
-	$block = floor($db->lastrevision/65536);
+	$block = floor(($db->lastrevision+1)/65536);
 	$fs = (($block + 1) * 1024) * 8192 ;
 	fseek($fpt,$fs);
 	fwrite($fpt," "); // write to force file size;

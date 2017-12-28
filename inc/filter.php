@@ -435,13 +435,25 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				return(array('_error'=>'invalid name '.$urlname.' ('.$namespace.')'));
 			}
 	    }
-		
-		$w = new swWiki;
+	    
+	    $w = new swWiki;
 		$w->name = $urlname;
-		$w->lookup();
-		
-		if ($w->revision == 0) return(array('_error'=>'unknown name '.$urlname));
-		
+	    
+	    if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($urlname)) 
+	    {
+  			
+  			//echo "<p>l ".$hooklink.".";
+  			if (!$s = swFileGetContents($hooklink))
+  				return(array('_error'=>'invalid url '.$hooklink));
+  			//echo "<p>s ".print_r($s).".";
+  			
+  			$w->content = $s;
+		}
+		else
+		{
+			$w->lookup();
+			if ($w->revision == 0) return(array('_error'=>'unknown name '.$urlname));
+		}
 		
 		$w->parsedContent = $w->content;
 		$fp = new swTidyParser;
@@ -551,8 +563,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	$maxlastrevision = $db->lastrevision;
 	$indexedbitmap = $db->indexedbitmap->duplicate();
 	if ($indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($indexedbitmap->length); // fallback
-	$bitmap->redim($maxlastrevision,false);
-	$checkedbitmap->redim($maxlastrevision,false);
+	$bitmap->redim($maxlastrevision+1,false);
+	$checkedbitmap->redim($maxlastrevision+1,false);
 	$currentbitmap = $db->currentbitmap->duplicate();
 	$deletedbitmap = $db->deletedbitmap->duplicate();
 	$notchecked = $checkedbitmap->notop();
@@ -669,25 +681,13 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 						
 					
 				}	
-				//seems to be depreciated
-				if ($tocheckcount > 16 && $mode == 'relaxed' && strlen($filter)>=3)
-				{
-					
-					$gr = swGetBloomBitmapFromTerm($filter);
-					$gr->redim($tocheck->length, true);
-					$tocheck = $tocheck->andop($gr);
-					$notgr = $gr->notop();
-					$checkedbitmap = $checkedbitmap->orop($notgr);
-					$tocheckcount = $tocheck->countbits();
-				
-				}
 				
 				// search only in records which have the field
 				// and use also the 3letter-trick on the field
 				if ($tocheckcount > 16 && isset($field) && strlen($field)>=3 && $mode == 'query' && substr($field,0,1) != '_'  )
 				{
 						
-					$field2 = swNameURL($field);
+					$field2 = swNameURL('[['.$field.'::');
 					
 					$gr = swGetBloomBitmapFromTerm($field2);
 					$gr->redim($tocheck->length, true);

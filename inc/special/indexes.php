@@ -276,7 +276,7 @@ switch($_REQUEST['index'])
 						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
 						 			
 						 			$bm2 = swGetBloomBitmapFromTerm($_REQUEST['term']);
-						 			//$bm2 = $bm2->andop($db->currentbitmap);
+						 			$bm2 = $bm2->andop($db->currentbitmap);
 						 			
 						 			$n = $db->currentbitmap->countbits();
 						 			$c = $bm2->countbits();

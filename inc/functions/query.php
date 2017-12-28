@@ -437,7 +437,24 @@ class swQueryFunction extends swFunction
 				
 								$w = new swWiki;
 								$w->name = $iname;
-								$w->lookup();
+								
+								if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($iname)) 
+								{
+									
+									echo "<p>l ".$hooklink.".";
+									if (!$s = swFileGetContents($hooklink))
+										return(array('_error'=>'invalid url '.$hooklink));
+									//echo "<p>s ".print_r($s).".";
+									
+									$w->content = $s;
+								}
+								else
+								{
+									$w->lookup();
+									if ($w->revision == 0) return(array('_error'=>'unknown name '.$urlname));
+								}
+								
+								
 								
 								switch ($mode)
 								{ 								

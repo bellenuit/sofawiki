@@ -139,11 +139,9 @@ class swDB extends swPersistance //extend may be obsolete
 	function init($force = false) 
 	{
 		global $swRoot; 
-		global $swMaxRelaxedSearchTime;
  
 		if ($force)
 		{
-			$swMaxRelaxedSearchTime = 10000;
 			$this->inited = false;
 			$this->hasindex = false;
 			$this->close(); // update lastrevision.txt
@@ -409,7 +407,6 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		
 		global $swMaxOverallSearchTime;
-		if ($swMaxOverallSearchTime<2500) $swMaxRelaxedSearchTime=2500;
 		global $rebuildstarttime;
 		if (!$rebuildstarttime)
 		$rebuildstarttime = microtime(true);	

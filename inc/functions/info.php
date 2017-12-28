@@ -179,6 +179,7 @@ class swInstalledFunctionsFunction extends swFunction
 	{
 		global $swFunctions;
 	
+		$lines = array();
 		foreach($swFunctions as $k=>$v)
 		{
 			$lines[$k] = "'''$k''' ".$v->info(); 
@@ -205,6 +206,7 @@ class swInstalledParsersFunction extends swFunction
 	{
 		global $swParsers;
 	
+		$lines = array();
 		foreach($swParsers as $k=>$v)
 		{
 			$lines[$k] = "'''$k''' ".$v->info(); 
@@ -218,6 +220,7 @@ class swInstalledParsersFunction extends swFunction
 $swFunctions["parsers"] = new swInstalledParsersFunction;
 
 
+
 class swInstalledSkinsFunction extends swFunction
 {
 	function info()
@@ -229,6 +232,7 @@ class swInstalledSkinsFunction extends swFunction
 	{
 		global $swSkins;
 	
+		$lines = array();
 		foreach($swSkins as $k=>$v)
 		{
 			$lines[$k] = "'''$k''' "; 
