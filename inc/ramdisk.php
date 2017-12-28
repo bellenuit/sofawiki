@@ -52,7 +52,7 @@ function swFileGet($path)
 		
 		$hash = $swRamdiskPath.md5($path).'.txt';
 		
-		if (file_exists($hash))
+		if (@file_exists($hash))
 			return file_get_contents($hash);
 		else
 		{
@@ -60,7 +60,7 @@ function swFileGet($path)
 			if ($s != '')
 			{
 				echotime('tocache '.basename($path));
-				file_put_contents($hash,$s);
+				@file_put_contents($hash,$s);
 			}
 			return $s;
 			
