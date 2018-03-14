@@ -2,7 +2,11 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
 <?php
+echo '<meta http-equiv="content-language" content="'.$lang.'">';
+echo '<base href="'.$swBaseHrefFolder.'">';
+	
 $t = $swMainName;
 if (trim($swParsedName) != '') 
 	if (stristr($swParsedName, $swMainName))
@@ -24,13 +28,30 @@ echo '<meta name="title" content="'. $t. '">
 	{
 		foreach($swLanguages as $l)
 		{
+			
 			if ($l!=$lang)
 			{
-				if (isset($wiki->interlanguageLinks[$l]))
-					echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->interlanguageLinks[$l]).'">'.PHP_EOL;
+				if ($swLangURL)
+				{
+					if (isset($wiki->interlanguageLinks[$l]))
+						echo '<link rel="alternate" hreflang="'.$l.'" href="'.$l.'/'.swNameURL($wiki->interlanguageLinks[$l]).'">'.PHP_EOL;
+					else
+						echo '<link rel="alternate" hreflang="'.$l.'" href="'.$wiki->link('view',$l).'">'.PHP_EOL;
+				}
 				else
-					echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->name).'&lang='.$l.'">'.PHP_EOL;
+				{
+					if (isset($wiki->interlanguageLinks[$l]))
+						echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->interlanguageLinks[$l]).'">'.PHP_EOL;
+					else
+						echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->name).'&lang='.$l.'">'.PHP_EOL;
+				}
 			}
+			else
+			{
+				if ($swLangURL)
+					echo '<link rel="canonical" hreflang="'.$l.'" href="'.$swBaseHrefFolder.$wiki->link('view',$l).'">'.PHP_EOL;
+			}
+			
 		}
 	}
 

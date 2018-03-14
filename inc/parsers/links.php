@@ -14,8 +14,10 @@ class swLinksParser extends swParser
 
 	function dowork(&$wiki)
 	{
+		
 		$s = $wiki->parsedContent;
 		global $user;
+		global $lang;
 		
 		 // must start with whitespace
 		  $s = " ".$s;
@@ -81,7 +83,7 @@ class swLinksParser extends swParser
 			{
 				
 				$linkwiki->name = $val;
-				$s = str_replace($v[0], "<a href='".$linkwiki->link("")."'>$label</a>",$s);
+				$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
 				continue;
 			}
 			elseif (substr($val,0,9) == "Category:")
@@ -99,7 +101,7 @@ class swLinksParser extends swParser
 				if ($linkwiki->visible())
 				{
 						if ($user->hasright('view', $linkwiki->name))
-							$v = "<a href='".$linkwiki->link("")."'>$v2</a>";
+							$v = "<a href='".$linkwiki->link("",$lang)."'>$v2</a>";
 						else
 							$v = $v2;
 				}
@@ -108,7 +110,7 @@ class swLinksParser extends swParser
 						// show only invalid if right to modify
 						
 						if ($user->hasright('modify', $linkwiki->name))
-							$v = "<a href='".$linkwiki->link("")."' class='invalid'>$v2</a>";
+							$v = "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$v2</a>";
 						else
 							$v = $v2;
 				}
@@ -164,7 +166,14 @@ class swLinksParser extends swParser
 							$w2->name = $val;
 							
 							if (!$this->ignorelanguagelinks)
-								$swLangMenus[$l] = "<a href='".$w2->link("view")."&amp;lang=$l'>".swSystemMessage("$l",$lang)."</a>";
+							{
+								global $swLangURL;
+								if ($swLangURL)
+									$swLangMenus[$l] = '<a href="'.$w2->link('view',$l).'">'.swSystemMessage($l,$lang).'</a>';
+
+								else	
+									$swLangMenus[$l] = "<a href='".$w2->link("view")."&amp;lang=$l'>".swSystemMessage($l,$lang)."</a>";
+							}
 	
 							
 						}
@@ -203,7 +212,7 @@ class swLinksParser extends swParser
 					if ($linkwiki->visible())
 					{
 						if ($user->hasright('view', $linkwiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("")."'>$label</a>",$s);
+							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
 						else
 							$s = str_replace($v[0], $label, $s);
 					}
@@ -215,7 +224,7 @@ class swLinksParser extends swParser
 						{
 							$linkwiki->name = $val;
 							if ($user->hasright('view', $linkwiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("")."'>$label</a>",$s);
+								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
 							else
 								$s = str_replace($v[0], $label, $s);
 						}
@@ -224,7 +233,7 @@ class swLinksParser extends swParser
 						
 						
 							if ($user->hasright('modify', $wiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("")."' class='invalid'>$label </a>",$s);
+								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label </a>",$s);
 							else
 								$s = str_replace($v[0], $label,$s);
 						}
@@ -242,7 +251,7 @@ class swLinksParser extends swParser
 					$linkwiki->name = $val;
 					
 					if ($user->hasright('modify', $wiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("")."' class='invalid'>$label</a>",$s);
+							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
 						else
 							$s = str_replace($v[0], $label ,$s);
 				}

@@ -3,9 +3,11 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.8.4';   
+$swVersion = '1.9.0';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
+$swSimpleURL = false;
+$swLangURL = false;
 
 
 /*
@@ -183,7 +185,26 @@ include_once $swRoot.'/inc/ramdisk.php';
 if (defined('SOFAWIKIINDEX'))
 {
 	//require_once $swRoot.'/inc/cookies.php'; // 0.3.2 moved here, swMainName must have been set
-	$lang = handleCookie("lang",$swDefaultLang); 
+	if ($swLangURL)
+	{
+		
+		//derive lang from name
+		$name = swGetArrayValue($_REQUEST,'name',$swMainName);
+		$name = swSimpleSanitize($name); 
+		if (substr($name,2,1)=='/')
+		{
+			$lang = substr($name,0,2);
+			$name = substr($name,3);
+			$_REQUEST['name'] = $name; // let index.php discover it itself
+		}
+		else
+			$lang = $swDefaultLang;
+		
+	}
+	else
+	{
+		$lang = handleCookie("lang",$swDefaultLang); 
+	}
 	$skin = handleCookie("skin",$swDefaultSkin);
 }
 

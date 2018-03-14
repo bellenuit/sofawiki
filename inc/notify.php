@@ -30,6 +30,8 @@ function swNotify($action,$error,$label,$message,$receiver="")
 	// send email
 
 	global $swNotifyMail;
+	global $swNotifyMailBCC;
+	global $swNotifyMailCC;
 	global $swNotifyActions;
 	$actions = array_flip($swNotifyActions);
 	
@@ -37,16 +39,20 @@ function swNotify($action,$error,$label,$message,$receiver="")
 	{
 		$headers = "From: $swNotifyMail" . "\r\n" .
    		"Reply-To: $swNotifyMail" . "\r\n" .
-   		'Content-type: text/plain; charset=UTF-8' . "\r\n";
-   		'X-Mailer: PHP/' . phpversion();
+   		'Content-type: text/plain; charset=UTF-8' . "\r\n" ;
+   		
+   		
    		
 		if (array_key_exists($action,$actions))
 		{
 			if ($receiver !="")
 			$receiver .= ", ";
 			
-			$receiver .= "$swNotifyMail";
+			$headers .= "Cc: $swNotifyMail, $swNotifyMailCC". "\r\n".
+   		"Bcc: $swNotifyMailBCC". "\r\n";
+			
 		}
+		$headers .= 'X-Mailer: PHP/' . phpversion();
 	}
 	else
 	{	
@@ -55,7 +61,11 @@ function swNotify($action,$error,$label,$message,$receiver="")
 	
 	
 	if ($receiver !="")
-		if (!mail($receiver, $label, $message, $headers))
+		$preferences = array('input-charset' => 'UTF-8', 'output-charset' => 'UTF-8');
+		$encoded_subject = @iconv_mime_encode('Subject', $label, $preferences);
+		$encoded_subject = substr($encoded_subject, strlen('Subject: '));
+		
+		if (!mail($receiver, $encoded_subject, $message, $headers))
 		{		$error .= ' mail not sent';
 		}
 				
