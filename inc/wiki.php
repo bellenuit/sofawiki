@@ -180,7 +180,8 @@ class swWiki extends swRecord
 	function link($action, $subpagelang="")
 	{
 
-
+		
+		
 		$url = swNameURL($this->name);
 
 		
@@ -208,11 +209,18 @@ class swWiki extends swRecord
 		
 		// 
 		global $swSimpleURL;
-		if ($swSimpleURL && ($action =="" || $action =="view") && !stristr($this->name,"/") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt")
+		global $swLangURL;
+		global $swMainName; 
+		if ($swSimpleURL && ($action =="" || $action =="view") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt")
 		{
 			$result = swNameURL($this->name);
+			if (!$result) 
+				$result = $swMainName;			
+			if ($swLangURL)
+				$result = $subpagelang.'/'.$result;
 			if (stristr($this->name,":"))
-				$result = "./$result"; // force relative link
+				$result = './'.$result; // force relative link
+				
 		}
 		
 		

@@ -93,6 +93,11 @@ if ($action == 'logout')
 	swSetCookie('username','',0);
 	swSetCookie('passwordtoken','',0);
 	$username = ''; $pass = '';
+	
+	session_write_close();
+	session_name('PHPSESSION_'.@$swCookiePrefix);
+	session_start();
+
 }
 if(isset($_SESSION[$swMainName.'-username'])&& $_SESSION[$swMainName.'-username'] != '')
 {	$knownuser = true;  $username = $_SESSION[$swMainName.'-username']; }
@@ -222,9 +227,11 @@ else
 	}
     else
     {
+		
+		
 		if ($username != '' && $action != 'lostpassword' && $action != 'lostpasswordsubmit'
 		&& (array_key_exists('username', $_GET) || array_key_exists('username', $_POST) ) )
-		{
+		{			
 			$swError = swSystemMessage('WrongPasswordError',$lang);
 			$action = "login";
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
@@ -233,6 +240,8 @@ else
 		$user->name = '';
 		$user->pass = '';
 		$user->content = $swAllUserRights;
+		
+		$username = '';
     }
 }
 
@@ -260,7 +269,7 @@ if ($action == 'logout')
 }
 
 
-session_write_close();
+//session_write_close(); 1.9.0 moved down to end
 
 // add searchnamespaces by user rights
 $viewdomains = swGetValue($user->content,'_view',true);
@@ -363,12 +372,19 @@ $swFooter = '';
 
 // create menus
 echotime("menus"); 
-$swHomeMenu = '<a href="index.php">'.swSystemMessage('Home',$lang).'</a>';
+{
+	$linkwiki = new swWiki;
+	$linkwiki->name = $swMainName; 
+	$swHomeMenu = '<a href="'.$linkwiki->link('view',$lang).'" rel="nofollow">'.swSystemMessage('Home',$lang).'</a>';
+}
 
 $swLangMenus = array();
 foreach ($swLanguages as $v)
 {
-		$swLangMenus[$v] = '<a href="'.$wiki->link('view','--').'&amp;lang='.$v.'">'.swSystemMessage($v,$lang).'</a>';
+		if ($swLangURL)
+			$swLangMenus[$v] = '<a href="'.$wiki->link('view',$v).'">'.swSystemMessage($v,$lang).'</a>';
+		else
+			$swLangMenus[$v] = '<a href="'.$wiki->link('view','--').'&amp;lang='.$v.'">'.swSystemMessage($v,$lang).'</a>';
 }
 unset($v);
 $swSearchMenu = ' <form method="get" action="index.php"><p>
@@ -513,10 +529,18 @@ if ($user->hasright('create', '*'))
 
 
 if ($user->hasright('special','special') && $action != 'logout')
-	$swEditMenus['special'] = '<a href="index.php?name=special:special-pages" rel="nofollow">'.swSystemMessage('Special',$lang).'</a>';
+{
+	$linkwiki = new swWiki;
+	$linkwiki->name = 'special:special-pages'; 
+	$swEditMenus['special'] = '<a href="'.$linkwiki->link('view',$lang).'" rel="nofollow">'.swSystemMessage('Special',$lang).'</a>';
+}
 
 if ($user->hasright('upload','') && $action != 'logout')
-	$swEditMenus['upload'] = '<a href="index.php?name=special:upload" rel="nofollow">'.swSystemMessage('Upload',$lang).'</a>';		
+{
+	$linkwiki = new swWiki;
+	$linkwiki->name = 'special:upload'; 
+	$swEditMenus['upload'] = '<a href="'.$linkwiki->link('view',$lang).'" rel="nofollow">'.swSystemMessage('Upload',$lang).'</a>';
+}
 
 
 if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99)
@@ -873,7 +897,7 @@ if ($action != 'indexerror' && rand(0,100)<2)
 	swCron();
 
 $db->close(); 
-
+session_write_close();
 
 
 // apply page skin
