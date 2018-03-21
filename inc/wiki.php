@@ -180,7 +180,9 @@ class swWiki extends swRecord
 	function link($action, $subpagelang="")
 	{
 
-		
+		global $swLanguages;
+		if (count($swLanguages)<2)
+			$subpagelang="";
 		
 		$url = swNameURL($this->name);
 

@@ -29,7 +29,7 @@ class swTidyParser extends swParser
 		$s = preg_replace('/^[\pZ\pC]+|[\pZ\pC]+$/u',' ',$s);
 		
 		// preformatted text
-		 $s = preg_replace('/^[ ](.*)(\n)/Um', "<pre>$1</pre>", $s); 
+// 		 $s = preg_replace('/^[ ](.*)(\n)/Um', "<pre>$1</pre>", $s); 
 	
 	
 	

@@ -115,8 +115,8 @@ class swRecord extends swPersistance
 			// some namespaces however are priority
 			
 			global $name, $swMainName;
-			
-			if ( stristr($this->name,$swMainName) || stristr($name,$this->name) 
+			// suppressed empty needle
+			if (@stristr($this->name,$swMainName) || @stristr($name,$this->name) 
 			|| !stristr($this->name,':') || (!stristr($this->name,'/') &&   (stristr($this->name,'template') || stristr($this->name,'image')) ) )
 			{
 					$revs = swGetAllRevisionsFromName($this->name);

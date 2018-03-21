@@ -83,7 +83,7 @@ class swLinksParser extends swParser
 			{
 				
 				$linkwiki->name = $val;
-				$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
+				$s = str_replace($v[0], "<a href='".$linkwiki->link('','')."'>$label</a>",$s);
 				continue;
 			}
 			elseif (substr($val,0,9) == "Category:")
@@ -263,7 +263,7 @@ class swLinksParser extends swParser
 
 		if (count($categories) > 0)
 		{
-			$s .= "\n\n<div class='categories' id='categories'>\n<ul>".join(" ",$categories)."\n</ul>\n</div>";
+			$s .= "<div class='categories' id='categories'><ul>".join("",$categories)."</ul></div>";
 		}
 		
 
