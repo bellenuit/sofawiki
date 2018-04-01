@@ -40,13 +40,20 @@ class swResumeFunction extends swFunction
 		$lp = new swLinksParser;
 		$lp->ignorecategories = true;  
 		$lp->ignorelanguagelinks = true;
+		
+		//remove categories
+		$wiki->content = preg_replace('/\[Category:(.*)\]/','',$wiki->content);
+		
 		$wiki->parsers['tidy'] = $ip;
 		$wiki->parsers['image'] = $ip;
 		$wiki->parsers['link'] = $lp;
 		$wiki->parsers['nowiki'] = new swNoWikiParser;
 		$s = $wiki->parse();
 		
+		
+		
 		//remove links
+		
 		$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
 
 
@@ -84,7 +91,7 @@ class swResumeFunction extends swFunction
 					$t = $elem;
 			}
 		}
-		return $t;
+		return trim($t);
 	}
 
 }

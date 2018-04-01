@@ -26,6 +26,9 @@ function swGetHashesFromTerm($s)
 {
 
 		$s = swNameURL($s);
+		
+		//echotime('s '.$s);
+		
 		$l = strlen($s)-3; if ($l<0) return false;
 		$list = array();
 		
@@ -73,6 +76,8 @@ function swGetBloomBitmapFromTerm($term)
 						 			
 	$hashes = swGetHashesFromTerm($term);
 	
+		
+	
 	foreach($hashes as $h)
 	{
 		$hbm = new swBitmap;
@@ -80,13 +85,22 @@ function swGetBloomBitmapFromTerm($term)
 		$hbm->map = '';
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
-				
+		
+		echotime($blocks);
+					
 		for ($i = 0; $i<=$blocks; $i++)
 		{
+			
+			
+			echotime($h.' '.$i);
+			
 			$col = 0;
 			$offset = ($i * 1024 + $h) * 8192 + $col;
 			fseek($swBloomIndex,$offset); 
 			$test = fread($swBloomIndex,8192); 
+			
+			echotime($offset);
+			
 			$hbm->map .= $test;
 		}
 		$bm = $bm->andop($hbm);
@@ -124,9 +138,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	
 	if (!$db->bloombitmap) return;
 	$db->bloombitmap->redim($db->lastrevision+1);
-	
-	echotime('indexbloom2');
-	
+		
 	if ($swRamdiskPath != '' && false) //ne marche pas,Permission denied
 	{
 		echotime('to ram');
@@ -155,11 +167,15 @@ function swIndexBloom($numberofrevisions = 1000)
 	echotime('done');
 	
 	$i = 0; $rev = 0;
+	$rev = $db->lastrevision;
 	while ($i < $numberofrevisions) 
 	{
-		$rev++;
+		$rev--;
+		if ($rev < 1) break;
+		//$rev++;
 		if ($rev > $db->lastrevision) 
 			break;
+		
 		if (!$db->indexedbitmap->getbit($rev)) continue;
 		if ($db->bloombitmap->getbit($rev)) continue;
 		
@@ -181,7 +197,7 @@ function swIndexBloom($numberofrevisions = 1000)
 		
 		$text = $w->name.' '.$w->content;
 		$hashes = swGetHashesFromTerm($text);
-		echotime('rev '.$rev.' gothashes '.count($hashes));
+		//echotime('rev '.$rev.' gothashes '.count($hashes));
 		$offsetmax = 0;
 		
 		if ($hashes)
@@ -194,23 +210,9 @@ function swIndexBloom($numberofrevisions = 1000)
 			$col = floor(($rev % 65536)/8);
 			$offset = ($block * 1024 + $h) * 8192 + $col;
 			
-			// code from bitmap class
 			// sets nth bit to true
 			$byte = $rev >> 3;
 			$bit = $rev - ($byte << 3);
-			$bitmask = 128 >> $bit;
-			
-			/*
-
-			fseek($fpt,$offset);	
-			$ch = fread($fpt,1);
-			$ch = ord($ch);
-			$ch = $ch | $bitmask;
-			$ch = chr($ch);
-			fseek($fpt,$offset);	
-			fwrite($fpt,$ch);
-			
-			*/
 			
 			// new try read all to bitmap
 			$p = $offset*8 + $bit;
@@ -223,12 +225,18 @@ function swIndexBloom($numberofrevisions = 1000)
 		
 		
 		$db->bloombitmap->setbit($rev);
+		
+		
+		
 		$i++;
 		
 	}
+	
+		
+		
 	// echo "offsetmax $offsetmax; ";
-	@fclose($fpt);
-	echotime('indexbloom end ');
+	
+	echotime('indexbloom end '.$rev);
 	
 	if ($swRamdiskPath != '' && false)
 	{
@@ -239,8 +247,16 @@ function swIndexBloom($numberofrevisions = 1000)
 	}
 	
 	// new try read all to bitmap
-	echotime('from bitmap');
-	file_put_contents($path,$bitmap->map);
+	echotime('from bitmap '.$bitmap->length);
+	
+	$minblock = floor($rev/65536);
+	$fileoffset = $minblock * 1024 * 8192;
+	$stream = substr($bitmap->map,$fileoffset);
+	echotime('offset '.$fileoffset);
+	
+	fseek($fpt,$fileoffset);
+	fwrite($fpt,$stream);
+	@fclose($fpt);
 	echotime('done');
 	
 	
