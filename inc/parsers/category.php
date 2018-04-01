@@ -102,7 +102,7 @@ class swCategoryParser extends swParser
 				if ($start<$count-$limit)
 					$navigation .= ' <a href="index.php?name='.swNameURL($wiki->originalName).'&start='.sprintf("%0d",$start+$limit).
 					'">'.swSystemMessage('forward',$lang).'</a>';
-				$navigation .= '</div><br/>';
+				$navigation .= '</div>';
 			}			
 			
 			
