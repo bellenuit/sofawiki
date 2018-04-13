@@ -19,7 +19,9 @@ if ($user->hasright("view", $wiki->name))
 	if ($wiki->status == "deleted" || $wiki->status == "delete")
 	{
 		header('HTTP/1.0 404 Not Found');
-		$swError = swSystemMessage("ThisPageHasBeenDeletedError",$lang);
+		$swParsedContent = 'HTTP/1.0 404 Not Found';
+		$swParsedContent .= '<br><a href="index.php?action=search&query='.$name.'">'.swSystemMessage('Search',$lang).' '.$name.'</a>';
+
 	}
 	else
 	{

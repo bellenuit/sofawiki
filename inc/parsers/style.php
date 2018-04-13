@@ -183,7 +183,8 @@ class swStyleParser extends swParser
 				continue;
 			}
 			
-			if (substr($line,0,1) == ' ')
+			/*
+			if (substr($line,0,1) == ' ') // we move that forward to tidy, to many false positive here
 			{
 				
 				if ($state == 'p')
@@ -194,7 +195,7 @@ class swStyleParser extends swParser
 				$s .= "\n".'<pre>'.substr($line,1).'</pre>';
 				continue;
 			}
-			
+			*/
 			
 			switch (substr($line,0,3))
 			{
@@ -255,7 +256,7 @@ class swStyleParser extends swParser
         $s = str_replace("</h2>","</h2>\n",$s);
         $s = str_replace("</h3>","</h3>\n",$s);
         $s = str_replace("</h4>","</h4>\n",$s);
-		$s = str_replace("<br>\n</pre>","</pre>\n",$s);
+		$s = str_replace("<br>\n</pre>","</pre>\n",$s); 
 		$s = str_replace("</pre>\n<pre>","\n",$s);
 		$s = str_replace("</pre><pre>","\n",$s);
 		

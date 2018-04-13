@@ -23,23 +23,23 @@ class swLinksParser extends swParser
 		  $s = " ".$s;
 
 		 // external links without markup must not start with [ ' " first special case first line
-		 $s = preg_replace('@\n(https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', ' <br><a href="$1" target="_blank">$1</a> ', $s);
-		 $s = preg_replace('@[^[\[\'\"](https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', ' <a href="$1" target="_blank">$1</a> ', $s);
+		 $s = preg_replace('@\n(https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', '<br><a href="$1" target="_blank">$1</a>', $s);
+		 $s = preg_replace('@([^[\[\'\"])(https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', '$1<a href="$2" target="_blank">$2</a>', $s);
 		 
 		 // external links with markup
-		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+)]@', ' <a href="$1" target="_blank">$1</a> ', $s);
+		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+)]@', '<a href="$1" target="_blank">$1</a>', $s);
 
 		 // external links with markup and alternate text
-		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+) (.*?)\]@', ' <a href="$1" target="_blank">$2</a> ', $s); 
+		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+) (.*?)\]@', '<a href="$1" target="_blank">$2</a>', $s); 
 
 		 // mail links without markup must have space before
-		  $s = preg_replace('/\s([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', ' <a href="mailto:$1" target="_blank">$1</a> ', $s);
+		  $s = preg_replace('/\s([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', ' <a href="mailto:$1" target="_blank">$1</a>', $s);
 		 
 		 // mail links with markup
-		 $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)\]/', ' <a href="mailto:$1" target="_blank">$1</a> ', $s);
+		 $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)\]/', '<a href="mailto:$1" target="_blank">$1</a>', $s);
 
 		 // mail links with markup and alternate text
-		  $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+) (.*?)\]/', ' <a href="mailto:$1" target="_blank">$2</a> ', $s);
+		  $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+) (.*?)\]/', '<a href="mailto:$1" target="_blank">$2</a>', $s);
 
 
  		 $s = substr($s,1);	
