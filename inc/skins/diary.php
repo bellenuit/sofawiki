@@ -10,7 +10,7 @@
 
 <div id='header'>
 <?php
-	echo swSystemMessage("SkinHeader",$lang, true);
+	echo swSystemMessage("skin-header",$lang, true);
 ?>
 </div>
 
@@ -29,7 +29,7 @@
 <div id='menu'>
 <?php 
 	// echo $swHomeMenu. "<br/>"; 
-	echo swSystemMessage("SkinMenu",$lang, true). "<br/>\r\n";
+	echo swSystemMessage("skin-menu",$lang, true). "<br/>\r\n";
 	echo $swSearchMenu; 
 	
 	
@@ -58,7 +58,7 @@ $swParsedContent
 " ?>
 
 <div id="info">
-<?php echo "$swFooter"; echo swSystemMessage("SkinFooter",$lang, true);?>
+<?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);?>
 </div>
 
 </div><!-- content -->

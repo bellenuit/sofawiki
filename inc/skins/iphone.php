@@ -12,7 +12,7 @@
 
 <div id='header'>
 <?php
-echo swSystemMessage("SkinHeader",$lang, true);
+echo swSystemMessage("skin-header",$lang, true);
 ?>
 </div>
 
@@ -61,7 +61,7 @@ $swParsedContent
 foreach($swLangMenus as $item) {echo "<div class='menuitem'>".$item."</div> \n"; }
 
 echo "<div class='menuitem'>".$swHomeMenu."</div>\n"; 
-echo "<div class='menuitem'>".swSystemMessage("SkinMenu",$lang, true)."</div>";
+echo "<div class='menuitem'>".swSystemMessage("skin-menu",$lang, true)."</div>";
 
 
 ?>

@@ -2,7 +2,7 @@
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
-$swParsedName = swSystemMessage('Search',$lang).':"'.$query.'"';
+$swParsedName = swSystemMessage('search',$lang).':"'.$query.'"';
 
 $ns = join('|',$swSearchNamespaces);
 
@@ -25,14 +25,14 @@ if (isset($swQuickSearchRedirect) && $swQuickSearchRedirect && !isset($_REQUEST[
 		{
 			$name = $query;
 			$swParsedContent = $wiki->content;
-			$swParsedContent .= '<nowiki><br><br><i><a href="index.php?action=search&allresults=1&query='.$query.'">'.swSystemMessage('All Results',$lang).' "'.$query.'"</a></i></nowiki>';
+			$swParsedContent .= '<nowiki><br><br><i><a href="index.php?action=search&allresults=1&query='.$query.'">'.swSystemMessage('all-results',$lang).' "'.$query.'"</a></i></nowiki>';
 
 			$swParsedName = $wiki->namewithoutlanguage();
 			$swParseSpecial = true;
 			$found = true;
 			if ($user->hasright('modify', $wiki->namewithoutlanguage()))
-				array_unshift($swEditMenus,'<a href="'.$wiki->link('edit','--').'" rel="nofollow">'.swSystemMessage('Edit',$lang).'</a>');
-			array_unshift($swEditMenus, '<a href="'.$wiki->link('view','--').'" rel="nofollow">'.swSystemMessage('View',$lang).'</a>');
+				array_unshift($swEditMenus,'<a href="'.$wiki->link('edit','--').'" rel="nofollow">'.swSystemMessage('edit',$lang).'</a>');
+			array_unshift($swEditMenus, '<a href="'.$wiki->link('view','--').'" rel="nofollow">'.swSystemMessage('view',$lang).'</a>');
 
 		}
 	}
@@ -175,7 +175,7 @@ if (!$found)
 	if ($count)
 		$navigation .= " ".sprintf("%0d",min($start+1,$count))." - ".sprintf("%0d",min($start+$limit,$count))." / ".$count;
 	else
-		$navigation .= swSystemMessage('noresult',$lang);
+		$navigation .= swSystemMessage('no-result',$lang);
 	if ($start<$count-$limit && $count)
 		$navigation .= ' <a href="index.php?action=search&allresults=1&query='.$query.'&start='.sprintf("%0d",$start+$limit).'">'.swSystemMessage('forward',$lang).'</a>';
 	$navigation .= '</div></nowiki>';
@@ -291,7 +291,7 @@ if (!$found)
 
 }
 
-if ($query == '') $swParsedContent = swSystemMessage('Error: query is empty',$lang);
+if ($query == '') $swParsedContent = swSystemMessage('query-is-empty-error',$lang);
 
 if (isset($swParseSpecial))
 {
@@ -301,10 +301,10 @@ if (isset($swParseSpecial))
 	$swParsedContent = $wiki->parse();
 }
 
-if (isset($swOvertime) && $swOvertime)  $swParsedContent.="\n".'<a href="index.php?action=search&query='.$query.'&allresults=1&moreresults=1">'.swSystemMessage('more results',$lang).'</a>';
+if (isset($swOvertime) && $swOvertime)  $swParsedContent.="\n".'<a href="index.php?action=search&query='.$query.'&allresults=1&moreresults=1">'.swSystemMessage('there-may-be-more-results',$lang).'</a>';
 
 if (isset($swOvertime))
-	$swParsedContent .= '<br>'.swSystemMessage('Search limited by time out.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('Search again',$lang).'</a>';
+	$swParsedContent .= '<br>'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a>';
 
 
 ?>

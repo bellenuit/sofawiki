@@ -20,7 +20,7 @@ if ($user->hasright("view", $wiki->name))
 	{
 		header('HTTP/1.0 404 Not Found');
 		$swParsedContent = 'HTTP/1.0 404 Not Found';
-		$swParsedContent .= '<br><a href="index.php?action=search&query='.$name.'">'.swSystemMessage('Search',$lang).' '.$name.'</a>';
+		$swParsedContent .= '<br><a href="index.php?action=search&query='.$name.'">'.swSystemMessage('search',$lang).' '.$name.'</a>';
 
 	}
 	else
@@ -47,7 +47,7 @@ if ($user->hasright("view", $wiki->name))
 			{
 				header('HTTP/1.0 404 Not Found');
 				$swParsedContent = 'HTTP/1.0 404 Not Found';
-				$swParsedContent .= '<br><a href="index.php?action=search&query='.$name.'">'.swSystemMessage('Search',$lang).' '.$name.'</a>';
+				$swParsedContent .= '<br><a href="index.php?action=search&query='.$name.'">'.swSystemMessage('search',$lang).' '.$name.'</a>';
 			}
 	}
 	
@@ -77,19 +77,12 @@ else
 	
 	if (!$hookresult)
 	{
-		$swError = swSystemMessage("NoAccessError",$lang);
+		$swError = swSystemMessage("no-access-error",$lang);
 		$swFooter = "";
 	}
 }
 if (isset($wiki->displayname))
 	$swParsedName = $wiki->displayname;  // must be here, because the wiki can be redirected
-
-/*
-if ($name != $wiki->name and $user->hasright("modify", $wiki->name))
-{
-	$swEditMenus[] = "<a href='".$wiki->link("edit")."'>".swSystemMessage("Edit",$lang)." $wiki->name</a>";
-}
-*/
 						
 
 ?>

@@ -16,23 +16,23 @@ if ($action == 'lostpasswordsubmit')
 {
 	// verify that all arguments are there
 	if ( !$email )
-		$swError = swSystemMessage('NewUserMissingFieldsError',$lang);
+		$swError = swSystemMessage('new-user-missing-fields-error',$lang);
 	
 	// verify that no field has a tag
 	$s = $email;
 		if (stristr($s,'<') || stristr($s,'>')) 
-		$swError = swSystemMessage('NewUserInvalidCharactersError',$lang);
+		$swError = swSystemMessage('new-user-invalid-characters-error',$lang);
 	
 	// verify the email looks possible
 	if (!(stristr($email,'@')) || stristr($email,' '))
-		$swError = swSystemMessage('EmailLooksNotValidError',$lang);
+		$swError = swSystemMessage('email-looks-not-valid-error',$lang);
 	
 	
 	// verify that the signature exists and the email is valid	
 	$lostuser= new swUser;
 	$lostuser->name = ('User:'.swNameURL($email));
 	$lostuser->lookup();
-	if (!$lostuser->visible()) $swError = swSystemMessage('LostPasswordWrongUserError',$lang);
+	if (!$lostuser->visible()) $swError = swSystemMessage('lost-password-wrong-user-error',$lang);
 		
 	if (!$swError)
 	{
@@ -52,8 +52,8 @@ if ($action == 'lostpasswordsubmit')
 		$lostuser->content = $s;
 		$lostuser->insert();
 		
-		$label = $swMainName.':'.swSystemMessage('YourPasswordTitle',$lang);
-		$msg = swSystemMessage('YourPasswordMessage',$lang)."\n
+		$label = $swMainName.':'.swSystemMessage('your-password-title',$lang);
+		$msg = swSystemMessage('your-password-message',$lang)."\n
 User = $email\n
 Password = $lostuser->pass\n";
 		
@@ -76,25 +76,25 @@ else
 	$err = '';
 }
 
-$swParsedName = swSystemMessage('Lost Password',$lang);
+$swParsedName = swSystemMessage('lost-password',$lang);
 
 if ($submitted)
 {
-	$swParsedContent .= swSystemMessage('Email',$lang) . ': '.$email.'<br/><br/>
-	<div id="help">'.swSystemMessage('LostPasswordSubmitHelp',$lang).'</div>';
+	$swParsedContent .= swSystemMessage('email',$lang) . ': '.$email.'<br/><br/>
+	<div id="help">'.swSystemMessage('lost-password-submit-help',$lang).'</div>';
 	
 }
 else
 {
 $swParsedContent = $err.'<div id="editzone">
 		<form method="post" action="index.php">
-		<table><tr><td>'.swSystemMessage('Email',$lang).'</td><td>
+		<table><tr><td>'.swSystemMessage('email',$lang).'</td><td>
 		<input type="text" name="email" value=""/>
 		<input type="hidden" name="action" value="lostpasswordsubmit" /></td></tr><tr><td></td><td>
-		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("Lost Password Submit",$lang).'" /></td></tr></table>
+		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" /></td></tr></table>
 	</form>
 	
-	<div id="help">'.swSystemMessage("LostPasswordHelp",$lang).'</div>
+	<div id="help">'.swSystemMessage("lost-password-help",$lang).'</div>
 	</div>
 	';
 }

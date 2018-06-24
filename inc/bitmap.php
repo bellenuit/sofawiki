@@ -95,6 +95,7 @@ class swBitmap extends swPersistance
 	function setbit($n)
 	{
 		if ($n<0) return; 
+		if ($n=='') return; 
 		$this->touched = true;
 		
 		if ($n>=$this->length)
@@ -116,6 +117,7 @@ class swBitmap extends swPersistance
 	function unsetbit($n)
 	{
 		if ($n<0) return; 
+		if ($n=='') return; 
 		$this->touched = true;
 		
 		if ($n>=$this->length)
@@ -139,6 +141,7 @@ class swBitmap extends swPersistance
 	{
 		if ($n>=$this->length) return false;
 		if ($n<0) return false;
+		if ($n=='') return false;
 		
 		// gets the value of the nth bit
 		$byte = $n >> 3;

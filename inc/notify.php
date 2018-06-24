@@ -82,9 +82,26 @@ function swLog($user,$name,$action,$query,$lang,$referer,$time,$error,$label,$me
 	$daystamp = date("Y-m-d",time());
 	$memory = memory_get_usage();
 	global $ip;
-	if ($user=="")
-		$user = $ip;
 	
+	if ($user=='')
+	{
+		//echo "IP $ip";
+		$user = $ip;
+		
+		global $swEncryptionSalt ;
+		global $swLogAnonymizedIPNumber;
+		
+		if ($swLogAnonymizedIPNumber)
+		{
+			$fields = explode('.',$ip);
+			$last = array_pop($fields);
+			$last = hexdec(substr(md5($last.$ip.$swEncryptionSalt),0,2));
+			array_push($fields,$last);
+			$user = join('.',$fields);
+			//echo " $ip";
+		}
+		
+	}
 	
 	
 	$t = "[[timestamp::$timestamp]] [[user::$user]] [[name::$name]] [[action::$action]] ";

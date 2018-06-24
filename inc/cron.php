@@ -19,7 +19,7 @@ function swCron()
 	}
 	else
 	{
-		switch(rand(0,6))
+		switch(rand(0,10))
 		{
 			case 0: echotime('cron index'); $db->init(true); return 'cron index'; // rebuild indexes 
 						
@@ -62,6 +62,17 @@ function swCron()
 					}
 					return 'cron overtime filter '.$filterlist;
 				}
+				
+			  case 6: echotime('cron logs'); 
+			  		  
+			  		  if (!defined("CRON")) define('CRON',true);
+			  		  global $swParsedContent;
+			  		  $swParsedContent .= '';
+			  		  include_once $swRoot.'/inc/special/logs.php';
+			  		  
+			  		  
+			  
+			  		  return "cron logs";  
 
 			
 			default: return "cron pause";

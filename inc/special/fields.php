@@ -5,7 +5,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 
 $wiki->lookup(); 
-$swParsedName = swSystemMessage("Fields",$lang)." ".$wiki->name; 
+$swParsedName = swSystemMessage("fields",$lang)." ".$wiki->name; 
 
 $transpose = 1; if (isset($_POST['transpose'])) $transpose = $_POST['transpose'];
 
@@ -72,7 +72,7 @@ if (isset($_POST['fieldsubmitmodify']) && $_POST['fieldsubmitmodify'])
 	
 	$addrows = $addcolumns = 0;
 	
-	$swParsedName = swSystemMessage("Fields saved:",$lang)." ".$wiki->name; 
+	$swParsedName = swSystemMessage("fields-saved",$lang)." ".$wiki->name; 
 
 	
 }
@@ -90,7 +90,7 @@ $swError = '';
 if ($wiki->status == "deleted" || $wiki->status == "delete")
 {
 	header('HTTP/1.0 404 Not Found');
-	$swError = swSystemMessage("ThisPageHasBeenDeletedError",$lang);
+	$swError = swSystemMessage("this-page-has-been-deleted-error",$lang);
 }
 else
 {
@@ -102,10 +102,10 @@ else
 	$swParsedContent .= PHP_EOL.'<input type="hidden" name="transpose" value="'.$transpose.'">';
 	$swParsedContent .= PHP_EOL.'<input type="hidden" name="addrows" value="'.$addrows.'">';
 	$swParsedContent .= PHP_EOL.'<input type="hidden" name="addcolumns" value="'.$addcolumns.'">';
-	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldsubmitmodify" value="'.swSystemMessage("Modify",$lang).'">';
-	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldtranspose" value="'.swSystemMessage("Transpose",$lang).'">';
-	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddrow" value="'.swSystemMessage("Add Value",$lang).'">';
-	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddcolumn" value="'.swSystemMessage("Add Field",$lang).'">';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldsubmitmodify" value="'.swSystemMessage("modify",$lang).'">';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldtranspose" value="'.swSystemMessage("transpose",$lang).'">';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddrow" value="'.swSystemMessage("add-value",$lang).'">';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddcolumn" value="'.swSystemMessage("add-field",$lang).'">';
 	$swParsedContent .= PHP_EOL.'<p><table class="fieldseditor">';
 		
 	//count columns

@@ -1,0 +1,997 @@
+[[timestamp::2018-05-26 01:01:11]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[time::2868]] [[memory::2058528]] 
+
+[[timestamp::2018-05-26 01:01:22]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1663]] [[memory::2067064]] 
+
+[[timestamp::2018-05-26 01:01:26]] [[user::matti]] [[name::sofawiki/fr]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0226]] [[memory::2059536]] 
+
+[[timestamp::2018-05-26 01:01:26]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0054]] [[memory::2054856]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:01:48]] [[user::matti]] [[name::SofaWiki/fr]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0652]] [[memory::2080824]] 
+
+[[timestamp::2018-05-26 01:01:50]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0208]] [[memory::2060576]] 
+
+[[timestamp::2018-05-26 01:01:51]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0056]] [[memory::2054896]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:02:11]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0174]] [[memory::2059152]] 
+
+[[timestamp::2018-05-26 01:02:11]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0051]] [[memory::2054632]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:02:14]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2057856]] 
+
+[[timestamp::2018-05-26 01:02:43]] [[user::matti]] [[name::sandbox:sandbox]] [[action::editmulti]] [[referer::www.sofawiki.com]] [[time::0535]] [[memory::2069248]] 
+
+[[timestamp::2018-05-26 01:02:43]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0053]] [[memory::2055256]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:02:46]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2061712]] 
+
+[[timestamp::2018-05-26 01:02:48]] [[user::matti]] [[name::sofawiki]] [[action::editmulti]] [[referer::www.sofawiki.com]] [[time::0142]] [[memory::2085040]] 
+
+[[timestamp::2018-05-26 01:04:13]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0108]] [[memory::2060280]] 
+
+[[timestamp::2018-05-26 01:06:37]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0150]] [[memory::2060320]] 
+
+[[timestamp::2018-05-26 01:06:56]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0043]] [[memory::2060320]] 
+
+[[timestamp::2018-05-26 01:07:03]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0036]] [[memory::2059152]] 
+
+[[timestamp::2018-05-26 01:07:33]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0218]] [[memory::2062280]] 
+
+[[timestamp::2018-05-26 01:07:57]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2058176]] 
+
+[[timestamp::2018-05-26 01:09:56]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::1914]] [[memory::2062288]] 
+
+[[timestamp::2018-05-26 01:09:57]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0387]] [[memory::2062288]] 
+
+[[timestamp::2018-05-26 01:12:33]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::2583]] [[memory::2078736]] 
+
+[[timestamp::2018-05-26 01:12:51]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::2833]] [[memory::2063392]] 
+
+[[timestamp::2018-05-26 01:12:52]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::7731]] [[memory::2063864]] 
+
+[[timestamp::2018-05-26 01:13:00]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0504]] [[memory::2078816]] 
+
+[[timestamp::2018-05-26 01:13:05]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0178]] [[memory::2063528]] 
+
+[[timestamp::2018-05-26 01:16:11]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1502]] [[memory::2058368]] 
+
+[[timestamp::2018-05-26 01:21:24]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3092]] [[memory::2060520]] 
+
+[[timestamp::2018-05-26 01:21:42]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0064]] [[memory::2059544]] 
+
+[[timestamp::2018-05-26 01:21:55]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0043]] [[memory::2058000]] 
+
+[[timestamp::2018-05-26 01:22:12]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2059400]] 
+
+[[timestamp::2018-05-26 01:23:32]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::23770]] [[memory::2075528]] [[error::Index incomplete. Please reload]] 
+
+[[timestamp::2018-05-26 01:23:32]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::20076]] [[memory::2064632]] 
+
+[[timestamp::2018-05-26 01:23:39]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3589]] [[memory::2060480]] 
+
+[[timestamp::2018-05-26 01:24:27]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::5003]] [[memory::2059296]] 
+
+[[timestamp::2018-05-26 01:24:28]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0141]] [[memory::2064624]] 
+
+[[timestamp::2018-05-26 01:24:31]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0163]] [[memory::2060360]] 
+
+[[timestamp::2018-05-26 01:24:33]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0132]] [[memory::2064552]] 
+
+[[timestamp::2018-05-26 01:24:42]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0020]] [[memory::2060360]] 
+
+[[timestamp::2018-05-26 01:24:44]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0457]] [[memory::2060288]] 
+
+[[timestamp::2018-05-26 01:24:56]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2064552]] 
+
+[[timestamp::2018-05-26 01:25:26]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2059576]] 
+
+[[timestamp::2018-05-26 01:27:01]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::1449]] [[memory::2064624]] 
+
+[[timestamp::2018-05-26 01:27:16]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0259]] [[memory::2080120]] 
+
+[[timestamp::2018-05-26 01:27:18]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0061]] [[memory::2059536]] 
+
+[[timestamp::2018-05-26 01:27:36]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::1573]] [[memory::2065360]] 
+
+[[timestamp::2018-05-26 01:27:42]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0190]] [[memory::2080168]] 
+
+[[timestamp::2018-05-26 01:27:43]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0626]] [[memory::2059528]] 
+
+[[timestamp::2018-05-26 01:28:01]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2065528]] 
+
+[[timestamp::2018-05-26 01:28:05]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0298]] [[memory::2080528]] 
+
+[[timestamp::2018-05-26 01:28:07]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0054]] [[memory::2059504]] 
+
+[[timestamp::2018-05-26 01:28:10]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2059440]] 
+
+[[timestamp::2018-05-26 01:28:18]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0066]] [[memory::2065504]] 
+
+[[timestamp::2018-05-26 01:28:25]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0203]] [[memory::2080320]] 
+
+[[timestamp::2018-05-26 01:28:26]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2059528]] 
+
+[[timestamp::2018-05-26 01:29:41]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::26248]] [[memory::2066064]] 
+
+[[timestamp::2018-05-26 01:29:41]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::29252]] [[memory::2078808]] [[error::Index incomplete. Please reload]] 
+
+[[timestamp::2018-05-26 01:29:44]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::4028]] [[memory::2065816]] 
+
+[[timestamp::2018-05-26 01:29:45]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[time::0192]] [[memory::2057896]] 
+
+[[timestamp::2018-05-26 01:30:35]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::4314]] [[memory::2080664]] 
+
+[[timestamp::2018-05-26 01:31:02]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::23535]] [[memory::2059920]] 
+
+[[timestamp::2018-05-26 01:35:01]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::4232]] [[memory::2060264]] 
+
+[[timestamp::2018-05-26 01:35:58]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1970]] [[memory::2060416]] 
+
+[[timestamp::2018-05-26 01:38:03]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::7507]] [[memory::2060416]] 
+
+[[timestamp::2018-05-26 01:38:32]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1558]] [[memory::2059728]] 
+
+[[timestamp::2018-05-26 01:39:23]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::10166]] [[memory::2066888]] 
+
+[[timestamp::2018-05-26 01:39:48]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0426]] [[memory::2059904]] 
+
+[[timestamp::2018-05-26 01:40:25]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1333]] [[memory::2060416]] 
+
+[[timestamp::2018-05-26 01:40:27]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2870]] [[memory::2060416]] 
+
+[[timestamp::2018-05-26 01:43:19]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::36608]] [[memory::2059568]] 
+
+[[timestamp::2018-05-26 01:43:19]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::47125]] [[memory::2059568]] 
+
+[[timestamp::2018-05-26 01:43:37]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::11237]] [[memory::2072272]] 
+
+[[timestamp::2018-05-26 01:43:55]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::8975]] [[memory::2067008]] 
+
+[[timestamp::2018-05-26 01:44:13]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::1178]] [[memory::2080768]] 
+
+[[timestamp::2018-05-26 01:44:18]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0449]] [[memory::2059680]] 
+
+[[timestamp::2018-05-26 01:46:59]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3068]] [[memory::2056240]] 
+
+[[timestamp::2018-05-26 01:48:17]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1297]] [[memory::2056408]] 
+
+[[timestamp::2018-05-26 01:48:35]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0084]] [[memory::2056400]] 
+
+[[timestamp::2018-05-26 01:50:00]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::1992]] [[memory::2064240]] 
+
+[[timestamp::2018-05-26 01:50:14]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::5029]] [[memory::2056608]] 
+
+[[timestamp::2018-05-26 01:50:59]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::20337]] [[memory::2056784]] 
+
+[[timestamp::2018-05-26 01:51:26]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[time::6688]] [[memory::2054592]] 
+
+[[timestamp::2018-05-26 01:51:28]] [[user::matti]] [[name::tableverylong]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1536]] [[memory::2065264]] 
+
+[[timestamp::2018-05-26 01:51:28]] [[user::matti]] [[name::tableverylong]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4114]] [[memory::2077504]] 
+
+[[timestamp::2018-05-26 01:51:32]] [[user::matti]] [[name::Template:template]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1483]] [[memory::2048896]] 
+
+[[timestamp::2018-05-26 01:51:36]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::5950]] [[memory::2052528]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:51:36]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0157]] [[memory::2052632]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:51:49]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0233]] [[memory::2064240]] 
+
+[[timestamp::2018-05-26 01:52:09]] [[user::matti]] [[name::Template:template]] [[action::view]] [[referer::www.sofawiki.com]] [[time::5460]] [[memory::2049136]] 
+
+[[timestamp::2018-05-26 01:52:15]] [[user::matti]] [[name::template:template]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::9786]] [[memory::2056888]] 
+
+[[timestamp::2018-05-26 01:52:28]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::5359]] [[memory::2052672]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 01:52:45]] [[user::matti]] [[name::Template:template]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::9126]] [[memory::2068680]] 
+
+[[timestamp::2018-05-26 01:53:06]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::25714]] [[memory::2067312]] 
+
+[[timestamp::2018-05-26 01:53:59]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::1811]] [[memory::2064368]] 
+
+[[timestamp::2018-05-26 01:54:22]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2428]] [[memory::2056840]] 
+
+[[timestamp::2018-05-26 01:57:30]] [[user::matti]] [[name::template:template]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::4365]] [[memory::2057192]] 
+
+[[timestamp::2018-05-26 01:57:30]] [[user::matti]] [[name::template:template]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::5702]] [[memory::2057192]] 
+
+[[timestamp::2018-05-26 01:58:36]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2370]] [[memory::2056840]] 
+
+[[timestamp::2018-05-26 02:00:56]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2525]] [[memory::2057176]] 
+
+[[timestamp::2018-05-26 02:01:53]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1845]] [[memory::2057176]] 
+
+[[timestamp::2018-05-26 02:02:10]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2057000]] 
+
+[[timestamp::2018-05-26 02:02:13]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0168]] [[memory::2057000]] 
+
+[[timestamp::2018-05-26 02:05:30]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0082]] [[memory::2057624]] 
+
+[[timestamp::2018-05-26 02:05:57]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2057872]] 
+
+[[timestamp::2018-05-26 02:06:07]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2057872]] 
+
+[[timestamp::2018-05-26 02:06:48]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::8207]] [[memory::2070472]] 
+
+[[timestamp::2018-05-26 02:08:02]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1892]] [[memory::2057584]] 
+
+[[timestamp::2018-05-26 02:08:17]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0215]] [[memory::2065240]] 
+
+[[timestamp::2018-05-26 02:08:30]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::2889]] [[memory::2078912]] 
+
+[[timestamp::2018-05-26 02:08:32]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0368]] [[memory::2057624]] 
+
+[[timestamp::2018-05-26 02:09:38]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1914]] [[memory::2057504]] 
+
+[[timestamp::2018-05-26 02:10:22]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[time::3468]] [[memory::2059976]] 
+
+[[timestamp::2018-05-26 02:10:25]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0042]] [[memory::2060264]] 
+
+[[timestamp::2018-05-26 02:10:28]] [[user::matti]] [[name::User Manual]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0402]] [[memory::2062656]] 
+
+[[timestamp::2018-05-26 02:10:29]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1520]] [[memory::2053408]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:10:33]] [[user::matti]] [[name::User Manual]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0263]] [[memory::2064248]] 
+
+[[timestamp::2018-05-26 02:10:35]] [[user::matti]] [[name::Syntax]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0101]] [[memory::2065744]] 
+
+[[timestamp::2018-05-26 02:10:35]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0053]] [[memory::2053408]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:14:15]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1847]] [[memory::2057576]] 
+
+[[timestamp::2018-05-26 02:14:30]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2058320]] 
+
+[[timestamp::2018-05-26 02:15:33]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1806]] [[memory::2059000]] 
+
+[[timestamp::2018-05-26 02:16:17]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1724]] [[memory::2059424]] 
+
+[[timestamp::2018-05-26 02:20:45]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2252]] [[memory::2060048]] 
+
+[[timestamp::2018-05-26 02:21:07]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060392]] 
+
+[[timestamp::2018-05-26 02:22:17]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1728]] [[memory::2058776]] 
+
+[[timestamp::2018-05-26 02:22:20]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0648]] [[memory::3095440]] 
+
+[[timestamp::2018-05-26 02:22:20]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0052]] [[memory::2056096]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:22:23]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0096]] [[memory::2636888]] 
+
+[[timestamp::2018-05-26 02:22:23]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0054]] [[memory::2056256]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:22:36]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0098]] [[memory::2637104]] 
+
+[[timestamp::2018-05-26 02:22:38]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0169]] [[memory::2061936]] 
+
+[[timestamp::2018-05-26 02:22:39]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0057]] [[memory::2056384]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:22:41]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2061968]] 
+
+[[timestamp::2018-05-26 02:25:24]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0060]] [[memory::2061944]] 
+
+[[timestamp::2018-05-26 02:25:33]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0042]] [[memory::2061944]] 
+
+[[timestamp::2018-05-26 02:27:38]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0375]] [[memory::2061952]] 
+
+[[timestamp::2018-05-26 02:29:06]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0048]] [[memory::2062952]] 
+
+[[timestamp::2018-05-26 02:29:14]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0047]] [[memory::2059728]] 
+
+[[timestamp::2018-05-26 02:29:17]] [[user::matti]] [[name::tableverylong]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0357]] [[memory::2073624]] 
+
+[[timestamp::2018-05-26 02:29:20]] [[user::matti]] [[name::Template:link]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0218]] [[memory::2053312]] 
+
+[[timestamp::2018-05-26 02:29:20]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2057144]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:30:22]] [[user::matti]] [[name::Template:link]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1949]] [[memory::2053904]] 
+
+[[timestamp::2018-05-26 02:30:26]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1457]] [[memory::2059728]] 
+
+[[timestamp::2018-05-26 02:30:28]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0313]] [[memory::3096048]] 
+
+[[timestamp::2018-05-26 02:30:29]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0095]] [[memory::2639368]] 
+
+[[timestamp::2018-05-26 02:30:30]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0058]] [[memory::2057208]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:30:32]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0564]] [[memory::2077072]] 
+
+[[timestamp::2018-05-26 02:30:32]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0057]] [[memory::2057144]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:30:49]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2064472]] 
+
+[[timestamp::2018-05-26 02:31:24]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0044]] [[memory::2064728]] 
+
+[[timestamp::2018-05-26 02:32:06]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2064880]] 
+
+[[timestamp::2018-05-26 02:32:53]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0042]] [[memory::2065368]] 
+
+[[timestamp::2018-05-26 02:33:30]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1770]] [[memory::2065640]] 
+
+[[timestamp::2018-05-26 02:33:33]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0048]] [[memory::2065640]] 
+
+[[timestamp::2018-05-26 02:34:17]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3219]] [[memory::2065888]] 
+
+[[timestamp::2018-05-26 02:35:32]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3223]] [[memory::2064912]] 
+
+[[timestamp::2018-05-26 02:35:43]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0080]] [[memory::2064296]] 
+
+[[timestamp::2018-05-26 02:36:44]] [[user::matti]] [[name::Category:Help]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2590]] [[memory::2064296]] 
+
+[[timestamp::2018-05-26 02:36:47]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2164]] [[memory::2059392]] 
+
+[[timestamp::2018-05-26 02:37:05]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::7138]] [[memory::2332928]] 
+
+[[timestamp::2018-05-26 02:37:05]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0140]] [[memory::2056912]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:37:18]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[time::0092]] [[memory::2058960]] 
+
+[[timestamp::2018-05-26 02:37:35]] [[user::matti]] [[name::Template:template]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0433]] [[memory::2073000]] 
+
+[[timestamp::2018-05-26 02:37:39]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0116]] [[memory::2059408]] 
+
+[[timestamp::2018-05-26 02:37:42]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0412]] [[memory::2313968]] 
+
+[[timestamp::2018-05-26 02:37:44]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0065]] [[memory::2059408]] 
+
+[[timestamp::2018-05-26 02:37:48]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[time::0061]] [[memory::2058984]] 
+
+[[timestamp::2018-05-26 02:37:51]] [[user::matti]] [[name::special:query]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0117]] [[memory::2053312]] 
+
+[[timestamp::2018-05-26 02:37:51]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0054]] [[memory::2057040]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 02:38:09]] [[user::matti]] [[name::special:query]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0310]] [[memory::2071848]] 
+
+[[timestamp::2018-05-26 02:38:14]] [[user::matti]] [[name::special:query]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0192]] [[memory::2071840]] 
+
+[[timestamp::2018-05-26 02:47:12]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::8694]] [[memory::2380728]] 
+
+[[timestamp::2018-05-26 02:47:39]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::6267]] [[memory::2380800]] 
+
+[[timestamp::2018-05-26 02:48:00]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4373]] [[memory::2171328]] 
+
+[[timestamp::2018-05-26 02:48:23]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5048]] [[memory::2171336]] 
+
+[[timestamp::2018-05-26 02:48:32]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1212]] [[memory::2171336]] 
+
+[[timestamp::2018-05-26 02:49:15]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5308]] [[memory::2171336]] 
+
+[[timestamp::2018-05-26 02:49:36]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4468]] [[memory::2171328]] 
+
+[[timestamp::2018-05-26 02:49:56]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0270]] [[memory::2171360]] 
+
+[[timestamp::2018-05-26 02:49:56]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4601]] [[memory::2171360]] 
+
+[[timestamp::2018-05-26 02:50:20]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5321]] [[memory::2171448]] 
+
+[[timestamp::2018-05-26 02:50:32]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2662]] [[memory::2171416]] 
+
+[[timestamp::2018-05-26 02:50:42]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0885]] [[memory::2171440]] 
+
+[[timestamp::2018-05-26 02:51:53]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4503]] [[memory::2177488]] 
+
+[[timestamp::2018-05-26 02:52:33]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4388]] [[memory::2177504]] 
+
+[[timestamp::2018-05-26 02:52:45]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0178]] [[memory::2176544]] 
+
+[[timestamp::2018-05-26 02:53:43]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5088]] [[memory::2228592]] 
+
+[[timestamp::2018-05-26 02:55:01]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3965]] [[memory::2231720]] 
+
+[[timestamp::2018-05-26 02:55:25]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::7041]] [[memory::2268488]] 
+
+[[timestamp::2018-05-26 02:55:42]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4682]] [[memory::2251760]] 
+
+[[timestamp::2018-05-26 02:56:35]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::6112]] [[memory::2390208]] 
+
+[[timestamp::2018-05-26 02:57:31]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4857]] [[memory::2404464]] 
+
+[[timestamp::2018-05-26 03:00:42]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5134]] [[memory::2418920]] 
+
+[[timestamp::2018-05-26 03:01:40]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::8488]] [[memory::2405184]] 
+
+[[timestamp::2018-05-26 03:02:10]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0367]] [[memory::2416456]] 
+
+[[timestamp::2018-05-26 03:02:38]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0464]] [[memory::2430696]] 
+
+[[timestamp::2018-05-26 03:03:06]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0466]] [[memory::2416456]] 
+
+[[timestamp::2018-05-26 03:04:03]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0468]] [[memory::2415576]] 
+
+[[timestamp::2018-05-26 03:04:39]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5101]] [[memory::2378384]] 
+
+[[timestamp::2018-05-26 03:06:08]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0327]] [[memory::2378360]] 
+
+[[timestamp::2018-05-26 03:06:19]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0272]] [[memory::2378352]] 
+
+[[timestamp::2018-05-26 03:06:34]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0304]] [[memory::2378352]] 
+
+[[timestamp::2018-05-26 03:06:47]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0443]] [[memory::2378568]] 
+
+[[timestamp::2018-05-26 03:07:24]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0639]] [[memory::2378680]] 
+
+[[timestamp::2018-05-26 03:07:38]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0212]] [[memory::2063816]] 
+
+[[timestamp::2018-05-26 03:08:22]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0331]] [[memory::2069392]] 
+
+[[timestamp::2018-05-26 03:11:15]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0163]] [[memory::2070344]] 
+
+[[timestamp::2018-05-26 03:11:17]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0408]] [[memory::2062992]] 
+
+[[timestamp::2018-05-26 03:11:19]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0439]] [[memory::2070216]] 
+
+[[timestamp::2018-05-26 03:11:30]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0818]] [[memory::2083448]] 
+
+[[timestamp::2018-05-26 03:12:26]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1071]] [[memory::2062176]] 
+
+[[timestamp::2018-05-26 03:12:26]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::4660]] [[memory::2062288]] 
+
+[[timestamp::2018-05-26 03:12:57]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0104]] [[memory::2062160]] 
+
+[[timestamp::2018-05-26 03:13:24]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2061880]] 
+
+[[timestamp::2018-05-26 03:14:54]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::4524]] [[memory::2061880]] 
+
+[[timestamp::2018-05-26 03:14:54]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3093]] [[memory::2061880]] 
+
+[[timestamp::2018-05-26 03:17:15]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2273]] [[memory::2061984]] 
+
+[[timestamp::2018-05-26 03:17:15]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5552]] [[memory::2061984]] 
+
+[[timestamp::2018-05-26 03:17:18]] [[user::matti]] [[name::tableverylong]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0419]] [[memory::2075944]] 
+
+[[timestamp::2018-05-26 03:17:23]] [[user::matti]] [[name::Template:template]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0333]] [[memory::2055680]] 
+
+[[timestamp::2018-05-26 03:17:24]] [[user::matti]] [[name::template:template]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0462]] [[memory::2063840]] 
+
+[[timestamp::2018-05-26 03:17:33]] [[user::matti]] [[name::Template:template]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0728]] [[memory::2075576]] 
+
+[[timestamp::2018-05-26 03:17:36]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0339]] [[memory::2063544]] 
+
+[[timestamp::2018-05-26 03:20:28]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::22871]] [[memory::2076016]] 
+
+[[timestamp::2018-05-26 03:20:28]] [[user::matti]] [[name::template:template]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::16181]] [[memory::2063928]] 
+
+[[timestamp::2018-05-26 03:20:36]] [[user::matti]] [[name::Template:template]] [[action::modify]] [[referer::www.sofawiki.com]] [[time::0347]] [[memory::2075664]] 
+
+[[timestamp::2018-05-26 03:20:39]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0048]] [[memory::2063592]] 
+
+[[timestamp::2018-05-26 03:21:20]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0062]] [[memory::2063432]] 
+
+[[timestamp::2018-05-26 03:22:38]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2651]] [[memory::2063240]] 
+
+[[timestamp::2018-05-26 03:22:59]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2939]] [[memory::2063240]] 
+
+[[timestamp::2018-05-26 03:23:45]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3462]] [[memory::2063240]] 
+
+[[timestamp::2018-05-26 03:24:08]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2360]] [[memory::2063240]] 
+
+[[timestamp::2018-05-26 03:24:53]] [[user::matti]] [[name::sandbox:sandbox]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::4354]] [[memory::2071736]] 
+
+[[timestamp::2018-05-26 03:26:25]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3251]] [[memory::2063088]] 
+
+[[timestamp::2018-05-26 03:26:38]] [[user::matti]] [[name::Sandbox:Sandbox]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0078]] [[memory::2063408]] 
+
+[[timestamp::2018-05-26 13:04:19]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0211]] [[memory::2068256]] 
+
+[[timestamp::2018-05-26 13:04:26]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0131]] [[memory::2061776]] 
+
+[[timestamp::2018-05-26 13:04:34]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2849]] [[memory::2384552]] 
+
+[[timestamp::2018-05-26 13:07:21]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::6230]] [[memory::2372664]] 
+
+[[timestamp::2018-05-26 13:08:34]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0311]] [[memory::2373464]] 
+
+[[timestamp::2018-05-26 13:10:37]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::6194]] [[memory::2373464]] 
+
+[[timestamp::2018-05-26 13:11:37]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0522]] [[memory::2380520]] 
+
+[[timestamp::2018-05-26 13:11:47]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0228]] [[memory::2380520]] 
+
+[[timestamp::2018-05-26 13:12:20]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0214]] [[memory::2373880]] 
+
+[[timestamp::2018-05-26 13:13:03]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0258]] [[memory::2367704]] 
+
+[[timestamp::2018-05-26 13:13:26]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0220]] [[memory::2365328]] 
+
+[[timestamp::2018-05-26 13:13:58]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::6773]] [[memory::2363072]] 
+
+[[timestamp::2018-05-26 13:14:36]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0335]] [[memory::2363280]] 
+
+[[timestamp::2018-05-26 13:14:50]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0259]] [[memory::2363456]] 
+
+[[timestamp::2018-05-26 13:17:14]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0344]] [[memory::2363624]] 
+
+[[timestamp::2018-05-26 13:18:07]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0244]] [[memory::2364416]] 
+
+[[timestamp::2018-05-26 13:19:35]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0274]] [[memory::2364256]] 
+
+[[timestamp::2018-05-26 13:19:46]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0270]] [[memory::2364256]] 
+
+[[timestamp::2018-05-26 13:20:03]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0262]] [[memory::2364432]] 
+
+[[timestamp::2018-05-26 13:20:13]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0231]] [[memory::2361864]] 
+
+[[timestamp::2018-05-26 13:21:28]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0201]] [[memory::2359448]] 
+
+[[timestamp::2018-05-26 13:22:03]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0223]] [[memory::2356960]] 
+
+[[timestamp::2018-05-26 13:22:38]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0268]] [[memory::2356920]] 
+
+[[timestamp::2018-05-26 13:22:39]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0036]] [[memory::2060424]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:22:41]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0096]] [[memory::2062688]] 
+
+[[timestamp::2018-05-26 13:22:46]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0166]] [[memory::2356920]] 
+
+[[timestamp::2018-05-26 13:22:49]] [[user::matti]] [[name::System:SkinMenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0207]] [[memory::2067016]] 
+
+[[timestamp::2018-05-26 13:22:50]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060328]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:22:52]] [[user::matti]] [[name::system:skinmenu]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0189]] [[memory::2071536]] 
+
+[[timestamp::2018-05-26 13:22:52]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0035]] [[memory::2060408]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:22:56]] [[user::matti]] [[name::system:skinmenu/en]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0052]] [[memory::2071200]] 
+
+[[timestamp::2018-05-26 13:22:56]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060432]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:04]] [[user::matti]] [[name::system:skinmenu/en]] [[action::rename]] [[referer::www.sofawiki.com]] [[time::0629]] [[memory::2085112]] 
+
+[[timestamp::2018-05-26 13:23:05]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0373]] [[memory::2060552]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:07]] [[user::matti]] [[name::system:skinmenu/fr]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0190]] [[memory::2071472]] 
+
+[[timestamp::2018-05-26 13:23:07]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060432]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:14]] [[user::matti]] [[name::system:skinmenu/fr]] [[action::rename]] [[referer::www.sofawiki.com]] [[time::0398]] [[memory::2085416]] 
+
+[[timestamp::2018-05-26 13:23:14]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2060824]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:18]] [[user::matti]] [[name::system:skinmenu/de]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0026]] [[memory::2071648]] 
+
+[[timestamp::2018-05-26 13:23:18]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:23]] [[user::matti]] [[name::system:skinmenu/de]] [[action::rename]] [[referer::www.sofawiki.com]] [[time::0402]] [[memory::2085392]] 
+
+[[timestamp::2018-05-26 13:23:23]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0044]] [[memory::2060824]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:24]] [[user::matti]] [[name::system:skinmenu]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0028]] [[memory::2070832]] 
+
+[[timestamp::2018-05-26 13:23:24]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:26]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0071]] [[memory::2067208]] 
+
+[[timestamp::2018-05-26 13:23:29]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0114]] [[memory::2062856]] 
+
+[[timestamp::2018-05-26 13:23:33]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0424]] [[memory::3101528]] 
+
+[[timestamp::2018-05-26 13:23:43]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0238]] [[memory::2642816]] 
+
+[[timestamp::2018-05-26 13:23:52]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::8786]] [[memory::2073216]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:52]] [[user::matti]] [[name::Amin:Remote restart]] [[action::view]] [[referer::www.sofawiki.com]] [[time::6667]] [[memory::2062904]] 
+
+[[timestamp::2018-05-26 13:23:53]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0055]] [[memory::2061144]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:58]] [[user::matti]] [[name::amin:remote-restart]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0393]] [[memory::2073424]] 
+
+[[timestamp::2018-05-26 13:23:59]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060664]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:23:59]] [[user::matti]] [[name::amin:remote-restart]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0024]] [[memory::2073496]] 
+
+[[timestamp::2018-05-26 13:24:04]] [[user::matti]] [[name::amin:remote-restart]] [[action::rename]] [[referer::www.sofawiki.com]] [[time::0426]] [[memory::2085064]] 
+
+[[timestamp::2018-05-26 13:24:04]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0202]] [[memory::2060824]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:24:06]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0063]] [[memory::2063720]] 
+
+[[timestamp::2018-05-26 13:24:08]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0374]] [[memory::3103264]] 
+
+[[timestamp::2018-05-26 13:24:15]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0085]] [[memory::2644264]] 
+
+[[timestamp::2018-05-26 13:24:15]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060656]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:24:19]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2063328]] 
+
+[[timestamp::2018-05-26 13:26:01]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1998]] [[memory::3101576]] 
+
+[[timestamp::2018-05-26 13:27:10]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1533]] [[memory::2063328]] 
+
+[[timestamp::2018-05-26 13:27:13]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1420]] [[memory::2053728]] 
+
+[[timestamp::2018-05-26 13:27:13]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0063]] [[memory::2060592]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:27:22]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0034]] [[memory::2063328]] 
+
+[[timestamp::2018-05-26 13:27:23]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0162]] [[memory::2053728]] 
+
+[[timestamp::2018-05-26 13:27:28]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4116]] [[memory::2052888]] 
+
+[[timestamp::2018-05-26 13:27:28]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:27:36]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4303]] [[memory::2052904]] 
+
+[[timestamp::2018-05-26 13:27:42]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3882]] [[memory::2052904]] 
+
+[[timestamp::2018-05-26 13:27:47]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3710]] [[memory::2052872]] 
+
+[[timestamp::2018-05-26 13:27:54]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4604]] [[memory::2052904]] 
+
+[[timestamp::2018-05-26 13:28:24]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::28058]] [[memory::2070336]] 
+
+[[timestamp::2018-05-26 13:28:24]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0043]] [[memory::2060656]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:28:32]] [[user::matti]] [[name::special:backup]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3326]] [[memory::2067304]] 
+
+[[timestamp::2018-05-26 13:28:32]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:28:37]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2063288]] 
+
+[[timestamp::2018-05-26 13:28:41]] [[user::matti]] [[name::Sandbox]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0547]] [[memory::2065976]] 
+
+[[timestamp::2018-05-26 13:28:41]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:28:45]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063288]] 
+
+[[timestamp::2018-05-26 13:28:54]] [[user::matti]] [[name:::Image:animage.jpg]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3769]] [[memory::2093960]] 
+
+[[timestamp::2018-05-26 13:28:54]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060696]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:11]] [[user::matti]] [[name::File upload]] [[action::view]] [[time::0227]] [[memory::2068880]] 
+
+[[timestamp::2018-05-26 13:29:12]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060696]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:24]] [[user::matti]] [[name::History]] [[action::view]] [[time::0363]] [[memory::2151776]] 
+
+[[timestamp::2018-05-26 13:29:24]] [[user::matti]] [[name::History]] [[action::view]] [[time::0056]] [[memory::2151776]] 
+
+[[timestamp::2018-05-26 13:29:24]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0050]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:26]] [[user::matti]] [[name::History]] [[action::view]] [[time::0059]] [[memory::2151776]] 
+
+[[timestamp::2018-05-26 13:29:33]] [[user::matti]] [[name::Multilanguage_content]] [[action::view]] [[time::0040]] [[memory::2061800]] 
+
+[[timestamp::2018-05-26 13:29:33]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:40]] [[user::matti]] [[name::Syntax]] [[action::view]] [[time::0087]] [[memory::2070728]] 
+
+[[timestamp::2018-05-26 13:29:41]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0072]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:45]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0050]] [[memory::2063088]] 
+
+[[timestamp::2018-05-26 13:29:48]] [[user::matti]] [[name::special:deleted-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0694]] [[memory::2093936]] 
+
+[[timestamp::2018-05-26 13:29:48]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:29:51]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063112]] 
+
+[[timestamp::2018-05-26 13:29:55]] [[user::matti]] [[name::special:deny]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2044]] [[memory::2775496]] 
+
+[[timestamp::2018-05-26 13:29:59]] [[user::matti]] [[name::special:deny]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0472]] [[memory::2792768]] 
+
+[[timestamp::2018-05-26 13:30:09]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0035]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:30:11]] [[user::matti]] [[name::queryfunctionscreenshot.jpg]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0746]] [[memory::2394016]] 
+
+[[timestamp::2018-05-26 13:30:12]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060592]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:18]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0036]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:30:20]] [[user::matti]] [[name::special:import]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0128]] [[memory::2051816]] 
+
+[[timestamp::2018-05-26 13:30:26]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:30:31]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0079]] [[memory::2062784]] 
+
+[[timestamp::2018-05-26 13:30:31]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060592]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:33]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0051]] [[memory::2358144]] 
+
+[[timestamp::2018-05-26 13:30:34]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060688]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:35]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0045]] [[memory::2115792]] 
+
+[[timestamp::2018-05-26 13:30:35]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2060688]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:37]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0042]] [[memory::2064408]] 
+
+[[timestamp::2018-05-26 13:30:37]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060688]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:38]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0045]] [[memory::2063920]] 
+
+[[timestamp::2018-05-26 13:30:38]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060688]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:39]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0082]] [[memory::4164712]] 
+
+[[timestamp::2018-05-26 13:30:40]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0108]] [[memory::2113792]] 
+
+[[timestamp::2018-05-26 13:30:40]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0057]] [[memory::2060656]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:42]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0296]] [[memory::2357896]] 
+
+[[timestamp::2018-05-26 13:30:43]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0134]] [[memory::2060656]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:43]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::4130]] [[memory::2061032]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:45]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1462]] [[memory::2126688]] 
+
+[[timestamp::2018-05-26 13:30:45]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2060664]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:49]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2109]] [[memory::2364576]] 
+
+[[timestamp::2018-05-26 13:30:49]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060712]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:30:53]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1011]] [[memory::2360416]] 
+
+[[timestamp::2018-05-26 13:30:59]] [[user::matti]] [[name::special:indexes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4243]] [[memory::2077520]] 
+
+[[timestamp::2018-05-26 13:30:59]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0048]] [[memory::2061192]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:31:01]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0059]] [[memory::2063344]] 
+
+[[timestamp::2018-05-26 13:31:07]] [[user::matti]] [[name::special:info]] [[action::filter]] [[memory::2081368]] [[error::filtermodedepreciated mail not sent]] [[label::filter data]] 
+
+[[timestamp::2018-05-26 13:31:08]] [[user::matti]] [[name::special:info]] [[action::special]] [[referer::www.sofawiki.com]] [[time::1578]] [[memory::2080904]] 
+
+[[timestamp::2018-05-26 13:31:08]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060400]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:31:12]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0034]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:31:16]] [[user::matti]] [[name::special:logs]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2171]] [[memory::2778344]] 
+
+[[timestamp::2018-05-26 13:31:18]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:31:24]] [[user::matti]] [[name::Image:snapshot20150204.zip]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3487]] [[memory::2675904]] 
+
+[[timestamp::2018-05-26 13:31:24]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:31:51]] [[user::matti]] [[name::Test:Kinodaten]] [[action::view]] [[referer::www.sofawiki.com]] [[time::2575]] [[memory::6001024]] 
+
+[[timestamp::2018-05-26 13:31:52]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0042]] [[memory::2060712]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:04]] [[user::matti]] [[name::Image:snapshot20140828.zip]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4985]] [[memory::3269992]] 
+
+[[timestamp::2018-05-26 13:32:08]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0070]] [[memory::2063112]] 
+
+[[timestamp::2018-05-26 13:32:16]] [[user::matti]] [[name::nameofcategory]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2174]] [[memory::2078352]] 
+
+[[timestamp::2018-05-26 13:32:16]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0045]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:19]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063288]] 
+
+[[timestamp::2018-05-26 13:32:21]] [[user::matti]] [[name::indexes-file-formats]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0466]] [[memory::2351552]] 
+
+[[timestamp::2018-05-26 13:32:21]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:27]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:32:29]] [[user::matti]] [[name::test-stat]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0835]] [[memory::2697064]] 
+
+[[timestamp::2018-05-26 13:32:37]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::7402]] [[memory::2073304]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:44]] [[user::matti]] [[name::Caching]] [[action::view]] [[referer::www.sofawiki.com]] [[time::1759]] [[memory::2076640]] 
+
+[[timestamp::2018-05-26 13:32:44]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2060720]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:48]] [[user::matti]] [[name::caching]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0288]] [[memory::2068184]] 
+
+[[timestamp::2018-05-26 13:32:49]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:32:51]] [[user::matti]] [[name::Caching]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2062768]] 
+
+[[timestamp::2018-05-26 13:32:52]] [[user::matti]] [[name::caching]] [[action::edit]] [[referer::www.sofawiki.com]] [[time::0023]] [[memory::2068184]] 
+
+[[timestamp::2018-05-26 13:32:57]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0087]] [[memory::2063288]] 
+
+[[timestamp::2018-05-26 13:33:06]] [[user::matti]] [[name::test-stat]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0694]] [[memory::2692032]] 
+
+[[timestamp::2018-05-26 13:33:09]] [[user::matti]] [[name::DISPLAYNAME]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0101]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:33:09]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:33:15]] [[user::matti]] [[name::test-stat]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0243]] [[memory::2692032]] 
+
+[[timestamp::2018-05-26 13:33:24]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:29]] [[user::matti]] [[name::special:passwords]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0092]] [[memory::2052928]] 
+
+[[timestamp::2018-05-26 13:33:29]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0068]] [[memory::2060600]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:33:31]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:33:34]] [[user::matti]] [[name::special:protected-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0267]] [[memory::2072368]] 
+
+[[timestamp::2018-05-26 13:33:34]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:33:36]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0035]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:38]] [[user::matti]] [[name::special:recent-changes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0399]] [[memory::2092696]] 
+
+[[timestamp::2018-05-26 13:33:39]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:33:43]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:49]] [[user::matti]] [[name::special:recent-changes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3345]] [[memory::2093064]] 
+
+[[timestamp::2018-05-26 13:33:49]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:52]] [[user::matti]] [[name::special:regex]] [[action::special]] [[query:://]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0216]] [[memory::2055504]] 
+
+[[timestamp::2018-05-26 13:33:52]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2060400]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:33:54]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:56]] [[user::matti]] [[name::special:recent-changes]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0060]] [[memory::2092696]] 
+
+[[timestamp::2018-05-26 13:33:58]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0035]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:33:59]] [[user::matti]] [[name::special:regex]] [[action::special]] [[query:://]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0034]] [[memory::2055504]] 
+
+[[timestamp::2018-05-26 13:34:39]] [[user::matti]] [[name::special:regex]] [[action::special]] [[query:://]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0030]] [[memory::2055360]] 
+
+[[timestamp::2018-05-26 13:34:41]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0034]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:34:42]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0207]] [[memory::3101688]] 
+
+[[timestamp::2018-05-26 13:34:44]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:34:48]] [[user::matti]] [[name::special:regex]] [[action::special]] [[query:://]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0029]] [[memory::2055360]] 
+
+[[timestamp::2018-05-26 13:34:50]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:34:53]] [[user::matti]] [[name::test stat]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0536]] [[memory::2319184]] 
+
+[[timestamp::2018-05-26 13:34:53]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0041]] [[memory::2060608]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:00]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:35:06]] [[user::matti]] [[name::special:snapshot]] [[action::special]] [[referer::www.sofawiki.com]] [[time::4089]] [[memory::2077536]] 
+
+[[timestamp::2018-05-26 13:35:07]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0681]] [[memory::2060712]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:09]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0049]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:35:11]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0046]] [[memory::2063112]] 
+
+[[timestamp::2018-05-26 13:35:13]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063112]] 
+
+[[timestamp::2018-05-26 13:35:18]] [[user::matti]] [[name::special:system-messages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2457]] [[memory::2363736]] 
+
+[[timestamp::2018-05-26 13:35:19]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:35:24]] [[user::matti]] [[name::special:tickets]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0381]] [[memory::2080232]] 
+
+[[timestamp::2018-05-26 13:35:28]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:35:30]] [[user::matti]] [[name::test60]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0386]] [[memory::3132744]] 
+
+[[timestamp::2018-05-26 13:35:30]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0039]] [[memory::2060712]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:33]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2063104]] 
+
+[[timestamp::2018-05-26 13:35:35]] [[user::matti]] [[name::category:sandbox]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0515]] [[memory::2072072]] 
+
+[[timestamp::2018-05-26 13:35:36]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:38]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0032]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:35:42]] [[user::matti]] [[name::tableverylong]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0576]] [[memory::2090568]] 
+
+[[timestamp::2018-05-26 13:35:42]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0040]] [[memory::2060704]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:45]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2063096]] 
+
+[[timestamp::2018-05-26 13:35:51]] [[user::matti]] [[name::test]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0292]] [[memory::2085888]] 
+
+[[timestamp::2018-05-26 13:35:51]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0037]] [[memory::2060400]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:35:52]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0033]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:36:04]] [[user::matti]] [[name::special:query]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0134]] [[memory::2056800]] 
+
+[[timestamp::2018-05-26 13:36:08]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0031]] [[memory::2062848]] 
+
+[[timestamp::2018-05-26 13:36:14]] [[user::matti]] [[name::special:logs]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2196]] [[memory::2778344]] 
+
+[[timestamp::2018-05-26 13:37:25]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::3662]] [[memory::2063392]] 
+
+[[timestamp::2018-05-26 13:37:31]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2073]] [[memory::2778352]] 
+
+[[timestamp::2018-05-26 13:37:31]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0067]] [[memory::2060592]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:38:34]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2397]] [[memory::2778408]] 
+
+[[timestamp::2018-05-26 13:39:59]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::5963]] [[memory::2778040]] 
+
+[[timestamp::2018-05-26 13:40:07]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0051]] [[memory::2777992]] 
+
+[[timestamp::2018-05-26 13:41:04]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::9841]] [[memory::2787640]] 
+
+[[timestamp::2018-05-26 13:41:07]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::3426]] [[memory::2061160]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:41:09]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0100]] [[memory::2792144]] 
+
+[[timestamp::2018-05-26 13:41:09]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::0038]] [[memory::2060920]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:41:11]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0124]] [[memory::2792808]] 
+
+[[timestamp::2018-05-26 13:41:13]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0106]] [[memory::2793760]] 
+
+[[timestamp::2018-05-26 13:42:55]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::1816]] [[memory::2793888]] 
+
+[[timestamp::2018-05-26 13:42:59]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0101]] [[memory::2794440]] 
+
+[[timestamp::2018-05-26 13:44:15]] [[user::matti]] [[name::special:logs]] [[action::special]] [[query::Matthias]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::4086]] [[memory::2795136]] 
+
+[[timestamp::2018-05-26 13:44:23]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0088]] [[memory::2063752]] 
+
+[[timestamp::2018-05-26 13:44:25]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::0049]] [[memory::2777952]] 
+
+[[timestamp::2018-05-26 13:50:35]] [[user::matti]] [[name::favicon.ico]] [[action::view]] [[referer::www.sofawiki.com]] [[time::306876]] [[memory::2073688]] [[error::no-record-with-this-name]] 
+
+[[timestamp::2018-05-26 13:50:38]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::260397]] [[memory::2778008]] 
+
+[[timestamp::2018-05-26 13:51:24]] [[user::matti]] [[name::special:special-pages]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2372]] [[memory::2063880]] 
+
+[[timestamp::2018-05-26 13:51:29]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[referer::www.sofawiki.com]] [[time::2127]] [[memory::2777960]] 
+
+[[timestamp::2018-05-26 13:51:33]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::0091]] [[memory::2779064]] 
+
+[[timestamp::2018-05-26 13:52:00]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3206]] [[memory::3222080]] 
+
+[[timestamp::2018-05-26 13:52:18]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3287]] [[memory::3418776]] 
+
+[[timestamp::2018-05-26 13:52:50]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3085]] [[memory::3419504]] 
+
+[[timestamp::2018-05-26 13:53:19]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3238]] [[memory::3419896]] 
+
+[[timestamp::2018-05-26 13:57:46]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::9480]] [[memory::3210984]] 
+
+[[timestamp::2018-05-26 14:04:08]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::8559]] [[memory::2999560]] 
+
+[[timestamp::2018-05-26 14:05:21]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::6833]] [[memory::3001728]] 
+
+[[timestamp::2018-05-26 14:13:01]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::6618]] [[memory::3004160]] 
+
+[[timestamp::2018-05-26 14:13:47]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3266]] [[memory::3099024]] 
+
+[[timestamp::2018-05-26 14:14:24]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3398]] [[memory::6827336]] 
+
+[[timestamp::2018-05-26 14:15:41]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::6749]] [[memory::7939456]] 
+
+[[timestamp::2018-05-26 14:16:21]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::5324]] [[memory::3273264]] 
+
+[[timestamp::2018-05-26 14:17:48]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::10122]] [[memory::3273928]] 
+
+[[timestamp::2018-05-26 14:19:25]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::8263]] [[memory::3120832]] 
+
+[[timestamp::2018-05-26 14:20:04]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::[[user::matti]]]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::5128]] [[memory::3274840]] 
+
+[[timestamp::2018-05-26 14:22:23]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::5020]] [[memory::3275464]] 
+
+[[timestamp::2018-05-26 14:25:06]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::5587]] [[memory::3118240]] 
+
+[[timestamp::2018-05-26 14:25:26]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::3287]] [[memory::2787664]] 
+
+[[timestamp::2018-05-26 14:26:05]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::10812]] [[memory::2800384]] 
+
+[[timestamp::2018-05-26 14:27:56]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::6785]] [[memory::2787816]] 
+
+[[timestamp::2018-05-26 14:30:32]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::8393]] [[memory::2788344]] 
+
+[[timestamp::2018-05-26 14:32:29]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::9497]] [[memory::2788384]] 
+
+[[timestamp::2018-05-26 14:33:03]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::4052]] [[memory::2788368]] 
+
+[[timestamp::2018-05-26 14:35:01]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::8116]] [[memory::2788400]] 
+
+[[timestamp::2018-05-26 14:38:49]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::5690]] [[memory::2788432]] 
+
+[[timestamp::2018-05-26 14:44:43]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::7275]] [[memory::2788808]] 
+
+[[timestamp::2018-05-26 14:45:28]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::7370]] [[memory::2788768]] 
+
+[[timestamp::2018-05-26 14:46:35]] [[user::matti]] [[name::SofaWiki]] [[action::view]] [[time::2034]] [[memory::2064584]] 
+
+[[timestamp::2018-05-26 14:52:48]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::7934]] [[memory::2788048]] 
+
+[[timestamp::2018-05-26 14:53:10]] [[user::matti]] [[name::special:privacy]] [[action::special]] [[query::matti]] [[lang::fr]] [[referer::www.sofawiki.com]] [[time::4513]] [[memory::2788112]] 

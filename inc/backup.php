@@ -130,7 +130,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup)
 		
 		
 		$zipfile->close();
-		unset($zip);
+		unset($zipfile);
 		
 		$result .=  "<br/>$filename";
 		
@@ -362,6 +362,12 @@ function swSnapShot($username)
 	$files[] = "index.php";
 	$files[] = "api.php";
 	$files[] = "cron.php";
+	$files[] = "inc/.htaccess";
+	$files[] = "inc/skins/.htaccess";
+	$files[] = "site/.htaccess";
+	$files[] = "site/cache/.htaccess";
+	$files[] = "site/files/.htaccess";
+	$files[] = "site/skins/.htaccess";
 	
 	
 	foreach($emptydirectories as $dir)

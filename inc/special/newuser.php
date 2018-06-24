@@ -16,17 +16,17 @@ if ($action == "newusersubmit")
 {
 	// verify if new user can add themselves
 	if (!$swNewUserEnable)
-		$swError = swSystemMessage("NoAccessError",$lang);
+		$swError = swSystemMessage("no-access-error",$lang);
 
 	
 	// verify that no field has a tag
 	$s = $email;
 		if (!swValidate($s,"<'[]{}*\""))
-		$swError = swSystemMessage("NewUserInvalidCharactersError",$lang);
+		$swError = swSystemMessage("new-user-invalid-characters-error",$lang);
 	
 	// verify the email looks possible
 	if (!(stristr($email,"@")) || stristr($email," ") || !(stristr($email,".")))
-		$swError = swSystemMessage("EmailLooksNotValidError",$lang);
+		$swError = swSystemMessage("email-looks-not-valid-error",$lang);
 	
 	// verify that the email is not already taken
 	$newuser = new swRecord;
@@ -35,13 +35,13 @@ if ($action == "newusersubmit")
 	$newuser->lookup();
 	if ($newuser->visible())
 	{
-		$swError = swSystemMessage("UserExistsAlreadyError",$lang);
+		$swError = swSystemMessage("user-exists-already-error",$lang);
 		$email = '';
 		$submitted = false; 
 	}
 	if ($email == $poweruser->nameshort())
 	{
-		$swError = swSystemMessage("UserExistsAlreadyError",$lang);
+		$swError = swSystemMessage("user-exists-already-error",$lang);
 		$submitted = false; 
 	}
 	
@@ -59,8 +59,8 @@ if ($action == "newusersubmit")
 $swNewUserRights";
 		$w->insert();
 		
-		$label = $swMainName.":".swSystemMessage("YourPasswordTitle",$lang);
-		$message = swSystemMessage("YourPasswordMessage",$lang)."\n
+		$label = $swMainName.":".swSystemMessage("your-password-title",$lang);
+		$message = swSystemMessage("your-password-message",$lang)."\n
 		User=$email\n
 		Password=$w->pass\n";
 		

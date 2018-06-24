@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title><?php echo swSystemMessage("Sitename",$lang);  echo " ".$swParsedName ?></title>
+<title><?php echo swSystemMessage("sitename",$lang);  echo " ".$swParsedName ?></title>
 <link rel='stylesheet' href="inc/skins/zeitung.css"/>
 <style><?php echo $swParsedCSS ?></style>
 </head>
@@ -11,7 +11,7 @@
 
 <div id='header'>
 <?php
-echo swSystemMessage("SkinHeader",$lang, true);
+echo swSystemMessage("skin-header",$lang, true);
 ?>
 </div>
 
@@ -25,7 +25,7 @@ echo swSystemMessage("SkinHeader",$lang, true);
 <div id='menu'><small>
 <?php
 	echo $swHomeMenu. "<br/>"; 
-	echo swSystemMessage("SkinMenu",$lang, true). "<br/><br/>";
+	echo swSystemMessage("skin-menu",$lang, true). "<br/><br/>";
 	if (count($swEditMenus)>1)
 		foreach($swEditMenus as $item) {echo $item."<br/>"; }
 	echo " <span class='error'>$swError</span>"; 
@@ -44,10 +44,10 @@ $swParsedContent
 
 <div id='footer'>
 <?php
-	echo swSystemMessage("Impressum",$lang,true);
+	echo swSystemMessage("impressum",$lang,true);
 	echo "<br/><small>"; 
 	foreach($swLoginMenus as $item) {echo $item." " ; } ; 
-	echo swSystemMessage("SkinFooter",$lang, true);
+	echo swSystemMessage("skin-footer",$lang, true);
 	echo "</small>";  
 ?>
 </div>

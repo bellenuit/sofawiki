@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title><?php echo $swParsedName ?></title>
+<base href="<?php echo $swBaseHref ?>">
 <link rel='stylesheet' href="inc/skins/wiki.css"/>
 <style><?php echo $swParsedCSS ?></style>
 </head>
@@ -10,7 +11,7 @@
 
 <div id='header'>
 <?php
-	echo swMessage("System:SkinHeader",$lang, true);
+	echo swSystemMessage("skin-header",$lang, true);
 ?>
 </div>
 
@@ -25,7 +26,7 @@
 <div id='menu'>
 <?php 
 	echo $swHomeMenu. "<br/>"; 
-	echo swSystemMessage("SkinMenu",$lang, true). "<br/>\r\n";
+	echo swSystemMessage("skin-menu",$lang, true). "<br/>\r\n";
 	echo $swSearchMenu; 
 	
 	
@@ -54,7 +55,7 @@ $swParsedContent
 " ?>
 </div><!-- content -->
 <div id="info">
-<?php echo "$swFooter"; echo swMessage("System:SkinFooter",$lang, true);?>
+<?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);?>
 </div>
 
 </div><!-- main -->

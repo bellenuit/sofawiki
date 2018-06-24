@@ -17,9 +17,9 @@ $swParsedContent = '<div id="editzone"><form method="post" action="index.php">
 		<p>
 		<input type="hidden" name="name" value="special:query" />
 		<textarea name="q" rows=8 cols=180 style="width:100%">'.$q.'</textarea>
-		<input type="submit" name="submit" value="'.swSystemMessage('Search',$lang).'" />
-		<input type="submit" name="submitrefresh" value="'.swSystemMessage('SearchRefresh',$lang).'" />
-		<input type="submit" name="submitverbose" value="'.swSystemMessage('Search Verbose',$lang).'" /></form>';
+		<input type="submit" name="submit" value="Search" />
+		<input type="submit" name="submitrefresh" value="Search Refresh" />
+		<input type="submit" name="submitverbose" value="Verbose" /></form>';
 
 
 

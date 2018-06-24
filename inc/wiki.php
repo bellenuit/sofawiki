@@ -132,9 +132,11 @@ class swWiki extends swRecord
 
 	function localname($lang)
 	{
-		$ns = swSystemMessage("Namespace".$this->wikinamespace(),$lang);
-		if ($ns == "Namespace".$this->wikinamespace())  // not found
+		$key="namespace".swNameURL($this->wikinamespace());
+		$ns = swSystemMessage($key,$lang);
+		if ($ns == $key)  // not found
 			$ns = $this->wikinamespace();
+		$ns = strtoupper(substr($ns,0,1)).substr($ns,1);
 		if ($ns)
 		{
 			$s = $ns.":".$this->nameshort();

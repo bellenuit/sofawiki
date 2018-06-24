@@ -34,11 +34,11 @@ if (!$wiki->status)
 
 if ($name && $wiki->status != "" || $modifymode == "modifymulti")
 {
-	$swParsedName = swSystemMessage("Edit",$lang)." ".$wiki->name; 
+	$swParsedName = swSystemMessage("edit",$lang)." ".$wiki->name; 
 	$namefieldtype = "hidden";
 	$namespacelist  = "";
 	$defaultnamespace = "";
-	$helptext = swSystemMessage("ModifyHelp",$lang);
+	$helptext = swSystemMessage('modify-help',$lang);
 }
 else
 {
@@ -50,9 +50,9 @@ else
 	$wiki->name=$s;
 	
 	
-	$swParsedName = swSystemMessage("New",$lang)." ".$wiki->name ;
+	$swParsedName = swSystemMessage("new",$lang)." ".$wiki->name ;
 	$namefieldtype = "text";
-	$helptext = swSystemMessage("NewHelp",$lang);
+	$helptext = swSystemMessage("new-help",$lang);
 	
 	
 }
@@ -67,7 +67,7 @@ switch ($wiki->status)
 							$swParsedContent .= "
  <form method='post' action='".$wiki->link("unprotect")."'><p>
  <input type='Hidden' name='name' value='$name' />
- <input type='Submit' name='submitprotect' value='".swSystemMessage("Unprotect",$lang)."' />
+ <input type='Submit' name='submitprotect' value='".swSystemMessage("unprotect",$lang)."' />
  </p></form>";
 							$swParsedContent .= "\n<div class='preview'>".$wiki->parse()."\n</div>";
 						}
@@ -83,7 +83,7 @@ switch ($wiki->status)
 	case "deleted":
 						if ($user->hasright("delete", $wiki->name))
 						{
-							$swEditMenus[] = "Deleted <a href='".$wiki->link("history")."'>".swSystemMessage("History",$lang)."</a>";
+							$swEditMenus[] = "Deleted <a href='".$wiki->link("history")."'>".swSystemMessage("history",$lang)."</a>";
 							$helptext = "";
 						}
 						else
@@ -132,7 +132,7 @@ switch ($wiki->status)
 							$submitbutton = "";
 							if ($user->hasright("modify", $wiki->name))
 							{
-								$submitbutton .= "<input type='submit' name='submit$modifymode' value='".swSystemMessage("Modify",$lang)."' />";
+								$submitbutton .= "<input type='submit' name='submit$modifymode' value='".swSystemMessage("modify",$lang)."' />";
 							}
 							
 							
@@ -141,15 +141,15 @@ switch ($wiki->status)
 							$swParsedContent .= "
  <form method='post' action='index.php?action=modify'><p>
  <input type='$namefieldtype' name='name' value=\"$wiki->name\" style='width:60%' />
- <input type='submit' name='submitcancel' value='".swSystemMessage("Cancel",$lang)."' />
- <input type='submit' name='submitpreview' value='".swSystemMessage("Preview",$lang)."' />
+ <input type='submit' name='submitcancel' value='".swSystemMessage("cancel",$lang)."' />
+ <input type='submit' name='submitpreview' value='".swSystemMessage("preview",$lang)."' />
  $submitbutton
  </p>
  <p>
  <textarea name='content' rows='$rows' cols='$cols' style='width:95%'>".$wiki->contentclean()."</textarea>
  </p>
  <input type='hidden' name='revision' value='$wiki->revision'>
- <p>".swSystemMessage("Comment",$lang).":
+ <p>".swSystemMessage("comment",$lang).":
  <input type='text' name='comment' value=\"$wiki->comment\" style='width:95%' />
  </p></form>
 ";
@@ -162,7 +162,7 @@ switch ($wiki->status)
 									$swParsedContent .= "
  <p>
  <form method='post' action='".$wiki->link("protect")."'><p>
- <input type='submit' name='submitprotect' value='".swSystemMessage("Protect",$lang)."' />
+ <input type='submit' name='submitprotect' value='".swSystemMessage("protect",$lang)."' />
  </p></form>
 ";
 								}
@@ -171,18 +171,18 @@ switch ($wiki->status)
 								{
 									$swParsedContent .= "
  <form method='post' action='".$wiki->link("rename")."'><p>
- <input type='submit' name='submitdelete' value='".swSystemMessage("Rename",$lang)."' />
+ <input type='submit' name='submitdelete' value='".swSystemMessage("rename",$lang)."' />
  <input type='text' name='name2' value=\"$wiki->name\" style='width:60%;' />";
  
  if (!stristr($name,'/'))
- $swParsedContent .="<input type='checkbox' name='renamesubpages' value='1'/>".swSystemMessage("Rename Subpages",$lang);
+ $swParsedContent .="<input type='checkbox' name='renamesubpages' value='1'/>".swSystemMessage("rename-subpages",$lang);
  $swParsedContent .=" </p></form>";
 								}
 								if ($user->hasright("delete", $wiki->name) && $name && $wiki->status != "")
 								{
 									$swParsedContent .= "
  <form method='post' action='".$wiki->link("delete")."'><p>
- <input type='submit' name='submitdelete' value='".swSystemMessage("Delete",$lang)."' />
+ <input type='submit' name='submitdelete' value='".swSystemMessage("delete",$lang)."' />
  </p></form>
 ";
 								}
@@ -212,11 +212,11 @@ if ($helptext != "")
 $swParsedContent .= "
 <br/>
 <div id='help'>
-".swSystemMessage("ModifyHelp",$lang). "
+".swSystemMessage("modify-help",$lang). "
 </div><!-- help -->";
 
 
-$swFooter = "$wiki->name, ".swSystemMessage("Revision",$lang).": $wiki->revision, $wiki->user, ".swSystemMessage("Date",$lang).":$wiki->timestamp, ".swSystemMessage("Status",$lang).":$wiki->status";
+$swFooter = "$wiki->name, ".swSystemMessage("revision",$lang).": $wiki->revision, $wiki->user, ".swSystemMessage("date",$lang).":$wiki->timestamp, ".swSystemMessage("status",$lang).":$wiki->status";
 if(!$name) $swFooter = "";
 if (!$wiki->revision) $swFooter="";
 if (count($wikis)>1) $swFooter="";

@@ -3,12 +3,13 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.9.3';   
+$swVersion = '1.9.4';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
 $swLangURL = false;
 $swOldStyle = false;
+$swLogAnonymizedIPNumber = true;
 
 
 /*
@@ -20,9 +21,7 @@ $swOldStyle = false;
 $swRoot = dirname(__FILE__); // must be first
 
 // inis
-ini_set(‘pcre.jit’,0); // prevent preg_match to be limited to 2700 characters
-
-	
+ini_set('pcre.jit',0); // prevent preg_match to be limited to 2700 characters error 503
 	
 include_once $swRoot.'/inc/persistance.php';
 include_once $swRoot.'/inc/bitmap.php';
@@ -90,7 +89,7 @@ include $swRoot.'/inc/system-defaults-en.php';
 include $swRoot.'/inc/system-defaults-fr.php';
 include $swRoot.'/inc/system-defaults-de.php';
 include $swRoot.'/inc/system-defaults-es.php';
-include $swRoot.'/inc/system-defaults-da.php';
+include $swRoot.'/inc/system-defaults-dk.php';
 include $swRoot.'/inc/system-defaults-it.php';
 $swSystemSiteValues = array();
 
@@ -115,6 +114,7 @@ $swSpecials['Snapshot'] = 'snapshot.php';
 $swSpecials['Backup'] = 'backup.php';
 $swSpecials['Regex'] = 'regex.php';
 $swSpecials['Logs'] = 'logs.php';
+$swSpecials['Metrics'] = 'metrics.php';
 $swSpecials['Deny'] = 'deny.php';
 $swSpecials['Update'] = 'update.php';
 //$swSpecials['Fields'] = 'fields.php';
@@ -199,7 +199,9 @@ if (defined('SOFAWIKIINDEX'))
 			$_REQUEST['name'] = $name; // let index.php discover it itself
 		}
 		else
-			$lang = $swDefaultLang;
+		{
+			$lang = handleCookie("lang",$swDefaultLang); 
+		}
 		
 	}
 	else
@@ -271,6 +273,8 @@ function swSystemMessage($msg,$lang,$styled=false)
 	global $swSystemSiteValues;
 	global $swSystemDefaults;
 	global $swDefaultLang;
+	
+	$msg = swNameURL($msg);
 	
 	if ($lang)
 		$langmsg =  $msg.'/'.$lang;

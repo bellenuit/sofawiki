@@ -4,6 +4,8 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:System Messages";
 
+/*
+
 $revisions = swFilter('SELECT _name FROM system: WHERE _name *','*','query');
 $names = array();
 foreach($revisions as $r=>$row)
@@ -82,15 +84,69 @@ foreach($foundshorts as $s=>$v)
 		}
 	}
 }
+*/
+
+//$swParsedContent = "====Missing translations====\n$missing";
 
 
-$swParsedContent = "====Missing translations====\n$missing";
+//$swParsedContent .= "\n====Pages====\n$pages";
+
+//$swParsedContent .= "\n====Defaults====\n$defaults";
+
+$swParsedContent = "===Translations===";
+$swParsedContent .= "\n''Black text and red editing link: System Defaults''";
+$swParsedContent .= "\n''Black text and blue editing link: System pages''";
+$swParsedContent .= "\n''Red text: Missing''";
+
+$table = array();
+foreach ($swSystemDefaults as $k=>$v)
+{
+	if (substr($k,-3,1)=='/')
+	{
+		$key  = substr($k,0,-3);
+		$la = substr($k,-2);
+		
+		$table[$key][$la] = $v;
+	}	
+}
+$revisions = swFilter('SELECT _name, _content FROM system:','*','query');
+$names = array();
+foreach($revisions as $row)
+{
+	$k = $row['_name'];
+	$k = swNameURL(substr($k,7));
+	$v = $row['_content'];
+	if (substr($k,-3,1)=='/')
+	{
+		$key  = substr($k,0,-3);
+		$la = substr($k,-2);
+		
+		$table[$key][$la] = $v;
+	}	
+}
 
 
-$swParsedContent .= "\n====Pages====\n$pages";
 
-$swParsedContent .= "\n====Defaults====\n$defaults";
+ksort($table);
+$swParsedContent .= "\n{| border=1\n! key";
+foreach ($swLanguages as $l)
+{
+		$swParsedContent .= "\n! $l";
+}
 
+foreach ($table as $k=>$v)
+{
+		$swParsedContent .= "\n|-";
+		$swParsedContent .= "\n| $k";
+		foreach ($swLanguages as $l)
+		{
+			if (isset($v[$l]))
+			$swParsedContent .= "\n| $v[$l] [[System:$k/$l|...]]";
+			else
+			$swParsedContent .= "\n| [[System:$k/$l]]";
+		}
+}	
+$swParsedContent .= "\n|}";
 
 $swParseSpecial = true;
 

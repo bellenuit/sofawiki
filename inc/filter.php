@@ -80,6 +80,13 @@ function swFilterCompare($operator,$values,$term)
 		case 'r=': foreach($valuelist as $v)
 					{ if (preg_match($term, $v, $matches)) return true; }
 					break;
+		case 'IN':  $termlist = explode('::',$term);
+					//print_r($termlist);
+					foreach($valuelist as $v)
+				   {	
+					    foreach($termlist as $t)
+					   		if (trim($v)==trim($t)) return true; } 
+					break;
 		default:   return false;
 	}
 	return false;
@@ -399,7 +406,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	if ($operator == '~~'|| $operator == '*~'|| $operator == '~*'|| $operator == '*~*') 
 		$term = swNameURL($term);
 		
-	if ($operator == 'r=')
+	if ($operator == 'r=' || $operator == 'IN')
 	{
 		$delimiter = substr($term,0,1);
 		$pos = strpos($term,$delimiter,1);

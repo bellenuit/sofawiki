@@ -23,7 +23,7 @@ if ($query)
 	$replace = str_replace("\\\\","\\",$replace);
 }
 
-$swParsedName = swSystemMessage('Regex',$lang);
+$swParsedName = 'Special:Regex';
 if ($query) $swParsedName .= ': '.$query;
 
 $regexerror = false;
@@ -189,22 +189,22 @@ $swParsedContent .= '<div id="editzone"><form method="post" action="index.php">
 		<input type="hidden" name="name" value="special:regex" />
 		<input type="text" size=40 name="query" value="'.$query.'" />
 		Hint <input type="text" size=40 name="hint" value="'.$hint.'" />
-		<input type="submit" name="submit" value="'.swSystemMessage('Search',$lang).'" />
-		<input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'>'.swSystemMessage('Search Names',$lang).
-		'<input type="checkbox" name="searchliteral" value="'.$searchliteral.'" / '. $searchliteralchecked.'>'.swSystemMessage('Search Literal',$lang);
+		<input type="submit" name="submit" value="'.swSystemMessage('search',$lang).'" />
+		<input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'> Search names
+		<input type="checkbox" name="searchliteral" value="'.$searchliteral.'" / '. $searchliteralchecked.'> Search literal';
 		
 if (!isset($_REQUEST['searchnames']) && ($query != '//' || $searchliteral))
 $swParsedContent .= '
 		<input type="text" size=40 name="replace" value="'.$replace.'" />
-		<input type="submit" name="submitreplacepreview" value="'.swSystemMessage('Replace Preview',$lang).'" />';
+		<input type="submit" name="submitreplacepreview" value="'.swSystemMessage('replace-preview',$lang).'" />';
 		
 if (!isset($_REQUEST['searchnames']) && $submitreplacepreview &&!isset($swOvertime) && !$regexerror && count($revisions)>0)
 
-$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("Replace",$lang).'" />';
+$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("peplace",$lang).'" />';
 
 
 if (count($revisions)>0)
-	$swParsedContent .= ' <input type="submit" name="submitexport" value="'.swSystemMessage("Export",$lang).'" />';
+	$swParsedContent .= ' <input type="submit" name="submitexport" value="'.swSystemMessage("export",$lang).'" />';
 	
 $swParsedContent .= '</p><p><i>Note: You need to use Perl style delimiters at the start and at the end like /searchterm/.
 	<br/>This is a very powerful tool that can change many wiki pages at once. Use it carefully.
