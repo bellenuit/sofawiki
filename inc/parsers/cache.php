@@ -21,7 +21,7 @@ class swCacheParser extends swParser
 		global $lang;
 		
 		if ($swError || $swOvertime) return;
-		if ($action != 'view') return;
+		
 		
 		$s = $wiki->parsedContent;
 		$key = "#CACHE";  
@@ -46,7 +46,7 @@ class swCacheParser extends swParser
 			//echotime('keyword cache '.$path);
 			//echotime(filemtime($path) .' '. $expire .' '.$now);
 			
-			if (file_exists($path) && filemtime($path) + $expire > $now)
+			if (file_exists($path) && filemtime($path) + $expire > $now && $action == 'view')
 			{
 				$s = file_get_contents($path);
 				$wiki->parsedContent = $s;
