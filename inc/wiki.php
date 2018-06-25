@@ -34,8 +34,17 @@ class swWiki extends swRecord
 							 $this->parsedContent = "<pre>$s</pre>";
 							 break;
 			
-			default: foreach ($this->parsers as $parser)
+			default:  $docache = false;
+					  foreach ($this->parsers as $parser)
 								{	
+										
+										if (is_a($parser,'swCacheParser'))
+										{
+											if ($parser->dowork($this)) break; 
+											$docache = true;
+
+											continue;
+										}
 										
 										//echo  $this->parsedContent;
 										//print_r($parser); 
@@ -81,6 +90,13 @@ class swWiki extends swRecord
 								$s = str_replace("<nowiki>","",$s);
 								$s = str_replace("</nowiki>","",$s);	
 								$this->parsedContent = $s;
+								
+								if ($docache)
+								{
+									$parser=new swPutCacheParser;
+									$parser->dowork($this); 
+									
+								}
 								
 		}
 		

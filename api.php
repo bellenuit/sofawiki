@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.9.4';   
+$swVersion = '1.9.5';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -66,10 +66,12 @@ include_once $swRoot.'/inc/functions/prettydate.php';
 include_once $swRoot.'/inc/functions/calc.php';
 include_once $swRoot.'/inc/functions/css.php';
 include_once $swRoot.'/inc/functions/familyname.php';
+include_once $swRoot.'/inc/functions/htmltabletofields.php';
 
 
 // parsers
 $swParsers = array();
+include_once $swRoot.'/inc/parsers/cache.php';
 include_once $swRoot.'/inc/parsers/redirection.php';
 include_once $swRoot.'/inc/parsers/displayname.php';
 include_once $swRoot.'/inc/parsers/tidy.php';
