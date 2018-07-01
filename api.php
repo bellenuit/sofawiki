@@ -157,7 +157,7 @@ $swDenyCount = 5;
 $swNewUserFormFields = array();
 $swAllUserRights = '[[_view::Main]] ';
 $swNewUserRights = '[[_view::Main]] ';
-$swNewUserEnable = true;
+$swNewUserEnable = false;
 $swNotifyMail = '';
 $swNotifyActions = array();
 

@@ -109,6 +109,7 @@ class swUser extends swRecord
 		
 		$kkey = $this->encryptpassword(); 
 		if (stristr($this->content, "[[_pass::$kkey]]")) return true;
+		if ($kkey == $this->ppass) return true;
 		
 		
 		// lost password
