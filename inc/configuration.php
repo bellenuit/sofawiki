@@ -4,13 +4,14 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 // 1. Name your wiki
 
-$swMainName = "SofaWiki";
-$swBaseHref = "http://www.sofawiki.com/index.php";
-$swBaseHrefFolder = "http://www.sofawiki.com/"; 
+$swMainName = "{{{swmainname}}}"; // SofaWiki
+$swBaseHrefFolder = "{{{swbasehrefolder}}}"; // https://www.sofawiki.com/
+$swBaseHref = $swBaseHrefFolder.'index.php'; // https://www.sofawiki.com/index.php
+
 
 // 2. Create a cookie prefix if you have multiple wikis on the same domain and add personal cookies here
 
-$swCookiePrefix = 'sofawiki'; 
+//$swCookiePrefix = 'sofawiki'; 
 
 /*
 if (array_key_exists('affiliate',$_GET))
@@ -24,8 +25,8 @@ include_once
 // 2. Create a master user. This needed because there is no user page yet at installation
 
 $poweruser = new swUser;
-$poweruser->username = "admin";
-$poweruser->ppass = "1234";
+$poweruser->username = "{{{powerusername}}}"; // admin
+$poweruser->ppass = "{{{poweruserpass}}}"; // 1234
 $poweruser->content = "[[_view::*]] 
 [[_create::*]] 
 [[_upload::*]]
@@ -38,25 +39,25 @@ $poweruser->content = "[[_view::*]]
 // 3. Define default rights for users that create themselves
 
 $swAllUserRights .= " [[_view::Main]] [[_view::Category]] ";
-$swNewUserRights .= " ";
-$swNewUserEnable = true;
+//$swNewUserRights .= " ";
+//$swNewUserEnable = true;
 
 // 5. Define your encryption salt so that md5 footprints cannot be reused on another server.
 // Note that a change here makes all your current User passwords invalid.
 
-$swEncryptionSalt = "0000";
+$swEncryptionSalt = "{{{encryptionsalt}}}"; // 0000
 
 // 6. Configure skins and add your own. If you create your own skins, start with a copy of default.php and move it to the site/skins folder
 
 // $swSkins["default"] = "inc/skins/default.php";
-// $swDefaultSkin = "zeitung";
+ $swDefaultSkin = "{{{swskin}}}";
 
 // 7. Enable languages and set default language
 
 //$swLanguages[] = "de"; 
-$swLanguages[] = "en";
+$swLanguages[] = "{{{swlang}}}";
 //$swLanguages[] = "fr";
-$swDefaultLang = "en";
+$swDefaultLang = "{{{swlang}}}";
 
 
 // 8. Namespaces that are allowed for transclusion. normally this is only main and templates.
@@ -82,7 +83,7 @@ $swDefaultLang = "en";
 
 // 12. Define Email and actions to notify
 
-   $swNotifyMail = "a@b.c";
+// $swNotifyMail = "a@b.c";
 // $swNotifyActions[] = "newusersubmit";  // password sent to user
 // $swNotifyActions[] = "lostpasswordsubmit"; // new password sent to user
 
@@ -109,7 +110,9 @@ function swInternalCronHook() {}
 
 /*
 // handles pseudo namespaces linke interlanguage links 
-function swInternalLinkHook($val,$label) {} 
+// handles pseudo namespaces linke interlanguage links 
+function swInternalLinkHook($val) {} 
+
 */
 
 
