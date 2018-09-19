@@ -107,7 +107,7 @@ $swParsedContent .= '
 * Create the basic configuration
 Here are the basic settings to get you running. You can change these and other settings later manually the site/configuration.php file.
 <nowiki><form method="post" action="index.php"></nowiki>
-{|
+{| class="blanktable"
 | swMainName || <nowiki><input type="text" name="swmainname" size=40 value="SofaWiki"></nowiki> 
 |-
 | swBaseHrefFolder || <nowiki><input type="text" name="swbasehrefolder" size=40 value="'.urlbase().'"></nowiki>

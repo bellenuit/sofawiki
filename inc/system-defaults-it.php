@@ -26,6 +26,7 @@ $swSystemDefaults["status/it"] = "Statuto";
 $swSystemDefaults["create/it"] = "Creare";
 
 $swSystemDefaults["modify/it"] = "Modificare";
+$swSystemDefaults["save/it"] = "Registrare";
 $swSystemDefaults["protect/it"] = "Proteggere";
 $swSystemDefaults["unprotect/it"] = "Sproteggere";
 $swSystemDefaults["rename/it"] = "Rinominare";
@@ -102,6 +103,7 @@ $swSystemDefaults["editing-conflict-differences/it"] = "Differenze";
 
 $swSystemDefaults["modify-help/it"] = "Editare questa pagina con la sintassi Wiki. In seguito, cliccare su Preview o Modificare.";
 $swSystemDefaults["there-may-be-more-results/it"] =  "Potrebbero esserci più risultati. Si prega di ricaricare la pagina per visualizzarli tutti.";
+$swSystemDefaults["swovertime/it"] =  "Search timeout";
 $swSystemDefaults["no-result/it"] =  "Nessun risultato trovato;.";
 
 
@@ -118,6 +120,9 @@ $swSystemDefaults["upload/it"] = "Upload";
 $swSystemDefaults["preview/it"] = "Preview";
 $swSystemDefaults["comment/it"] = "Comment";
 $swSystemDefaults["rename-subpages/it"] = "Rename subpages";
+
+
+$swSystemDefaults["what-links-here/it"] = "What links here";
 
 
 ?>

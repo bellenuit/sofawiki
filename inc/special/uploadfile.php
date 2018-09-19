@@ -63,7 +63,8 @@ if (is_uploaded_file($_FILES['uploadedfile']['tmp_name']))
 
 $wiki->name ='Image:'.$filename;
 $wiki->user = $user->name;
-$wiki->content = str_replace("\\",'',$content);
+$wiki->content = str_replace("\\",'',$content)
+.PHP_EOL.'[[imagechecksum::'.md5_file($newfile).']]';
 if ($filename != "")
 	$wiki->insert();
 

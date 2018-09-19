@@ -25,6 +25,7 @@ $swSystemDefaults["status/es"] = "Estado";
 $swSystemDefaults["create/es"] = "Crear";
 
 $swSystemDefaults["modify/es"] = "Modificar";
+$swSystemDefaults["save/es"] = "Registrar";
 $swSystemDefaults["protect/es"] = "Proteger";
 $swSystemDefaults["unprotect/es"] = "Desproteger";
 $swSystemDefaults["rename/es"] = "Renombrar";
@@ -96,6 +97,7 @@ En esta página se ve primero la última revisión de la página actual, luego s
 $swSystemDefaults["editing-conflict-current-page/es"] = "La &uacute;ltima revisi&oacute;n de la p&aacute;gina actual";
 $swSystemDefaults["editing-conflict-your-change/es"] = "Tus propuestas";
 $swSystemDefaults["editing-conflict-differences/es"] = "Diferencias";
+$swSystemDefaults["swovertime/es"] =  "Search timeout";
 $swSystemDefaults["no-result/es"] =  "Nada.";
 $swSystemDefaults["modify-help/es"] = "Edita la p&aacute;gina actual usando sint&aacute;xis de Wiki. Despu&eacute;s previsualiza o modificala directamente.";
 
@@ -117,4 +119,5 @@ $swSystemDefaults["comment/es"] = "Comment";
 $swSystemDefaults["rename-subpages/es"] = "Rename subpages";
 
 
+$swSystemDefaults["what-links-here/es"] = "What links here";
 ?>

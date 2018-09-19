@@ -26,8 +26,9 @@ class swWiki extends swRecord
 		// do not parse special namespaces
 		switch ($this->wikinamespace())
 		{
-			case "User":
-			case "Template": $s = $this->content;
+			case 'Logs':
+			case 'User':
+			case 'Template': $s = $this->content;
 							 $s = str_replace("&", "&amp;",$s);
 							 $s = str_replace("<", "&lt;",$s);
 							 $s = str_replace(">", "&gt;",$s);
@@ -40,9 +41,9 @@ class swWiki extends swRecord
 										
 										if (is_a($parser,'swCacheParser'))
 										{
-											if ($parser->dowork($this)) break; 
-											$docache = true;
-
+											$r = $parser->dowork($this); 
+											if ($r==2) break;
+											if ($r==1) $docache = true; 
 											continue;
 										}
 										

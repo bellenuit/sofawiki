@@ -25,6 +25,7 @@ $swSystemDefaults["status/en"] = "Status";
 $swSystemDefaults["create/en"] = "Create";
 
 $swSystemDefaults["modify/en"] = "Modify";
+$swSystemDefaults["save/en"] = "Save";
 $swSystemDefaults["protect/en"] = "Protect";
 $swSystemDefaults["unprotect/en"] = "Uprotect";
 $swSystemDefaults["rename/en"] = "Rename";
@@ -98,6 +99,7 @@ $swSystemDefaults["editing-conflict-differences/en"] = "Differences";
 
 $swSystemDefaults["modify-help/en"] = "Edit the current page using Wiki Syntax. Then preview it or modify it directly.";
 $swSystemDefaults["there-may-be-more-results/en"] =  "There may be more results. Refresh the page to get them.";
+$swSystemDefaults["swovertime/en"] =  "Search timeout";
 $swSystemDefaults["no-result/en"] =  "Not found.";
 
 // skins
@@ -117,6 +119,7 @@ $swSystemDefaults["rename-subpages/en"] = "Rename subpages";
 
 
 
+$swSystemDefaults["what-links-here/en"] = "What links here";
 
 
 

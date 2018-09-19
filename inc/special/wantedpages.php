@@ -2,28 +2,29 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-$swParsedName = "Special:Dead End Pages";
-$swParsedContent = "Pages in Main namespace with no internal links (links via Tenplates ignored here).<br><br>";
+$swParsedName = "Special:Wanted Pages";
+$swParsedContent = "Links to non existing pages (except media and special namespace).<br><br>";
 
 $start = @$_REQUEST['start'];
 $limit = 500;
 		
 
-$revisions = swQuery(array('SELECT _name FROM main:','SELECT _name FROM main: WHERE _link','EXCEPT _name'));
+$revisions = swQuery(array('SELECT _name, _link','WHERE _link !*=* {','CALC _link _link URLIFY' ,'WHERE _link !=* media:','WHERE _link !=* special:','SELECT _name','CALC _link _name URLIFY','EXCEPT _link'));
 
 $lines = array();
 foreach ($revisions as $row)
 {
-	
-	
 	$origin = $row['_name'];
-	$url = swNameURL($origin);
+	$name = $row['_link'];
+
+	if (trim($name)=='') continue;
 	
-	if (trim($origin)=='') continue;
 	
 	
+	$url = swNameURL($name);
+	$originurl= swNameURL($origin); 
 	
-	$lines[$url] = '<li><a href="index.php?name='.$url.'">'.$origin.'</a></li>';
+	$lines[$url] = '<li><a href="index.php?name='.$url.'" style="color:red;">'.$name.'</a> in <a href="index.php?name='.$originurl.'">'.$origin.'</a></li> ';
 
 }
 sort($lines);

@@ -3,13 +3,14 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.9.6';   
+$swVersion = '1.9.7';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
 $swLangURL = false;
 $swOldStyle = false;
 $swLogAnonymizedIPNumber = true;
+$swEditZoneColor = true;
 
 
 /*
@@ -134,7 +135,7 @@ $swSpecials['Short Pages'] = 'shortpages.php';
 $swSpecials['Uncategorized Pages'] = 'uncategorizedpages.php';
 $swSpecials['Import'] = 'import.php';
 $swSpecials['Tickets'] = 'tickets.php';
-
+$swSpecials['Wanted Pages'] = 'wantedpages.php';
 
 /*
 	initialize variables

@@ -15,6 +15,7 @@ class swRecord extends swPersistance
 	var $comment;
 	var $error;
 	var $encoding;
+	var $checksum;
 	var $originalName;
 	
 	var $internalfields=array();
@@ -83,6 +84,8 @@ class swRecord extends swPersistance
 		$c = $this->currentPath();
 		if (file_exists($c) && (!isset($_GET['refresh']) || !$_GET['refresh']))
 		{
+			if (!filesize($c)) return;
+			
 			$this->persistance = $c;
 			$this->open();
 			
@@ -123,6 +126,12 @@ class swRecord extends swPersistance
 					sort($revs, SORT_NUMERIC); 
 					$this->revision = array_pop($revs);
 					echotime('revision '.$this->revision);
+					
+					if (!$this->revision)
+					{
+						$fpt = fopen($c,'c');
+						fclose($fpt);
+					}
 			}
 			
 		}
@@ -146,6 +155,7 @@ class swRecord extends swPersistance
 		$this->status = swGetValue($s,"_status");
 		$this->comment = swGetValue($s,"_comment");
 		$this->encoding = swGetValue($s,"_encoding");
+		$this->checksum = swGetValue($s,"_checksum");
 		
 		if (strlen($s) <= 512)
 		{
@@ -246,6 +256,7 @@ class swRecord extends swPersistance
 			$this->status = swGetValue($s,"_status");
 			$this->comment = swGetValue($s,"_comment");
 			$this->encoding = swGetValue($s,"_encoding");
+			$this->checksum = swGetValue($s,"_checksum");
 			
 			$pos = strpos($s,"[[_ ]]");
 			$this->content = substr($s,$pos+strlen("[[_ ]]"));
@@ -399,6 +410,7 @@ class swRecord extends swPersistance
 		. "\n[[_status::$this->status]]"
 		. "\n[[_comment::$this->comment]]"
 		. "\n[[_encoding::$this->encoding]]"
+		. "\n[[_checksum::$this->checksum]]"
 		. "\n[[_ ]]$this->content";
 	}
 	
@@ -426,6 +438,9 @@ class swRecord extends swPersistance
 		
 		$this->timestamp = date("Y-m-d H:i:s",time());
 		$this->encoding = "UTF8";
+		$lastfile = swGetPath($this->revision-1);
+		if (file_exists($lastfile))
+			$this->checksum = md5_file($lastfile);
 		
 		$t = $this->source();
 		
@@ -529,6 +544,33 @@ class swRecord extends swPersistance
 		return false;
 	}
 
+	function integrity()
+	{
+		if ($this->revision == 0) return -1; // NA
+		$checkfile = swGetPath($this->revision+1);
+		if (!file_exists($checkfile)) return -1;
+		$thisfile = swGetPath($this->revision);
+		if (!file_exists($thisfile)) return -1;
+		$s = file_get_contents($checkfile);
+		$s = substr($s,0,strpos($s, '[[_ ]]'));
+		$check = swGetValue($s,'_checksum');
+		echotime('integrity1'.$s);
+		if ($check=='') return -1;
+		echotime('integrity2');
+		$checksum = md5_file($thisfile);
+		if ($checksum == $check)
+		{
+			return 1; // ok
+		}
+		else
+		{
+			echotime('checksum error');
+			echotime('expected ',$check);
+			echotime('got '. $checksum);
+			return 0; // not ok
+		}
+		
+	}
 
 } 
 

@@ -25,6 +25,7 @@ $swSystemDefaults["status/de"] = "Status";
 $swSystemDefaults["create/de"] = "Anlegen";
 
 $swSystemDefaults["modify/de"] = "Bearbeiten";
+$swSystemDefaults["save/de"] = "Speichern";
 $swSystemDefaults["protect/de"] = "Sch&uuml;tzen";
 $swSystemDefaults["unprotect/de"] = "Schutz aufheben";
 $swSystemDefaults["rename/de"] = "Umbenennen";
@@ -94,6 +95,7 @@ $swSystemDefaults["editing-conflict-current-page/de"] = "Aktuelle Version der Se
 $swSystemDefaults["editing-conflict-your-change/de"] = "Ihr Vorschlag";
 $swSystemDefaults["editing-conflict-differences/de"] = "Differenzen";
 $swSystemDefaults["there-may-be-more-results/de"] =  "Es hat vielleicht mehr Suchresultate. W&auml;hlen Sie die Seite noch einmal, um mehr Resultate zu erhalten.";
+$swSystemDefaults["swovertime/en"] =  "Suchzeit &uuml;berschritten";
 $swSystemDefaults["no-result/de"] =  "Nichts gefunden.";
 $swSystemDefaults["modify-help/de"] = "Bearbeiten Sie die Seite mit der Wiki Syntax. Dann gehen Sie zur Preview oder direkt zu Bearbeiten.";
 
@@ -111,6 +113,7 @@ $swSystemDefaults["preview/de"] = "Preview";
 $swSystemDefaults["comment/de"] = "Comment";
 $swSystemDefaults["rename-subpages/de"] = "Rename subpages";
 
+$swSystemDefaults["what-links-here/de"] = "Links zum Artikel";
 
 
 

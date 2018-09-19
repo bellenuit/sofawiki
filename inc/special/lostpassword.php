@@ -88,7 +88,7 @@ else
 {
 $swParsedContent = $err.'<div id="editzone">
 		<form method="post" action="index.php">
-		<table><tr><td>'.swSystemMessage('email',$lang).'</td><td>
+		<table class="blanktable" ><tr><td>'.swSystemMessage('email',$lang).'</td><td>
 		<input type="text" name="email" value=""/>
 		<input type="hidden" name="action" value="lostpasswordsubmit" /></td></tr><tr><td></td><td>
 		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" /></td></tr></table>

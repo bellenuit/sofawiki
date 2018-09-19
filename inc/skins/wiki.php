@@ -5,7 +5,10 @@
 <title><?php echo $swParsedName ?></title>
 <base href="<?php echo $swBaseHref ?>">
 <link rel='stylesheet' href="inc/skins/wiki.css"/>
-<style><?php echo $swParsedCSS ?></style>
+<style><?php 
+echo $swParsedCSS ?></style>
+<script>
+</script>
 </head>
 <body>
 

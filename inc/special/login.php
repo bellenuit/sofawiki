@@ -7,7 +7,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 $swParsedName = swSystemMessage("login",$lang);
 $swParsedContent = "<div id='editzone'>
 		<form method='post' action='index.php'>
-		<table><tr><td>
+		<table class='blanktable' ><tr><td>
 		".swSystemMessage("email",$lang)."</td><td>
 		<input type='text' name='username' value='".$username."' /></td></tr><tr><td>
 		".swSystemMessage("password",$lang)."</td><td>

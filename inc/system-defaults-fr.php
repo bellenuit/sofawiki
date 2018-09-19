@@ -15,8 +15,8 @@ $swSystemDefaults["edit/fr"] = "Editer";
 $swSystemDefaults["history/fr"] = "Historique";
 $swSystemDefaults["new/fr"] = "Nouvel article";
 $swSystemDefaults["special/fr"] = "Sp&eacute;cial";
-$swSystemDefaults["login/fr"] = "S&rsquo;inscrire";
-$swSystemDefaults["logout/fr"] = "Se d&eacute;sinscrire";
+$swSystemDefaults["login/fr"] = "Se connecter";
+$swSystemDefaults["logout/fr"] = "Se d&eacute;connecter";
 $swSystemDefaults["search/fr"] = "Recherche";
 $swSystemDefaults["revision/fr"] = "R&eacute;vision";
 $swSystemDefaults["user/fr"] = "Utilisateur";
@@ -25,6 +25,7 @@ $swSystemDefaults["status/fr"] = "Status";
 $swSystemDefaults["create/fr"] = "Cr&eacute;er";
 
 $swSystemDefaults["modify/fr"] = "Modifier";
+$swSystemDefaults["save/fr"] = "Enregistrer";
 $swSystemDefaults["protect/fr"] = "Prot&eacute;ger";
 $swSystemDefaults["unprotect/fr"] = "D&eacute;prot&eacute;ger";
 $swSystemDefaults["rename/fr"] = "Renommer";
@@ -104,6 +105,7 @@ $swSystemDefaults["editing-conflict-differences/fr"] = "Diff&eacute;rences";
 
 $swSystemDefaults["modify-help/fr"] = "Editez cette page avec la syntax Wiki. Puis cliquer sur Preview ou Modifier.";
 $swSystemDefaults["there-may-be-more-results/fr"] =  "La recherche n'a pas pu trouver tout les r&eacute;sultats. Rafra&icirc;chissez la page pour en avoir plus.";
+$swSystemDefaults["swovertime/fr"] =  "Temps de recherche d&eacute;pass&eacute;";
 $swSystemDefaults["no-result/fr"] =  "Rien trouv&eacute;.";
 
 
@@ -120,6 +122,9 @@ $swSystemDefaults["upload/fr"] = "Upload";
 $swSystemDefaults["preview/fr"] = "Preview";
 $swSystemDefaults["comment/fr"] = "Comment";
 $swSystemDefaults["rename-subpages/fr"] = "Rename subpages";
+
+
+$swSystemDefaults["what-links-here/fr"] = "Liens vers l‘article";
 
 
 ?>

@@ -2,16 +2,17 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-$swParsedName = "Special:Orphaned Pages";
-$swParsedContent = "Pages that are not linked (except category, image logs, template and user namespace).<br><br>";
+$url =  swNameURL($name);
+
+$swParsedName = 'Special:What links here';
+$swParsedContent = 'Pages that link to <b>'.$url.'</b>.<br><br>';
 
 
 $start = @$_REQUEST['start'];
 $limit = 500;
 		
 
-$revisions = swQuery(array('SELECT _name','CALC n _name URLIFY %(.*)/.*% $1 REGEX','WHERE n !=* template:','WHERE n !=* image:',
-'WHERE n !=* category:','WHERE n !=* user:','WHERE n !=* logs:', 'PROJECT n','SELECT _link','CALC n _link URLIFY %(.*)/.*% $1 REGEX','PROJECT n','EXCEPT n'));
+$revisions = swQuery(array('SELECT _name WHERE _link ~~ '.$url,'RENAME _name n'));
 
 $lines = array();
 foreach ($revisions as $row)

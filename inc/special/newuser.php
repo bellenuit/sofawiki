@@ -93,7 +93,7 @@ else
 {
 $swParsedContent = "$err<div id='editzone' >
 		<form method='post' action='index.php'>
-		<table><tr><td>
+		<table class='blanktabke'><tr><td>
 		".swSystemMessage("Email",$lang)."</td><td>
 		<input type='text' name='email' value='$email' />
 		</td></tr>";

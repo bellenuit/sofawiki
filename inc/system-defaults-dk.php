@@ -25,6 +25,7 @@ $swSystemDefaults["status/dk"] = "Status";
 $swSystemDefaults["create/dk"] = "Ny";
 
 $swSystemDefaults["modify/dk"] = "Rediger";
+$swSystemDefaults["save/dk"] = "Rekord";
 $swSystemDefaults["protect/dk"] = "Beskyt";
 $swSystemDefaults["unprotect/dk"] = "Ubeskyt";
 $swSystemDefaults["rename/dk"] = "Omd&oslash;b";
@@ -94,6 +95,7 @@ På denne side ser du først den sidste revision af den aktuelle side, så din p
 $swSystemDefaults["editing-conflict-current-page/dk"] = "Sidste revision af nuv&aelig;rende side.";
 $swSystemDefaults["editing-conflict-your-change/dk"] = "Dine forslag";
 $swSystemDefaults["editing-conflict-differences/dk"] = "Forskelle";
+$swSystemDefaults["swovertime/dk"] =  "Search timeout";
 $swSystemDefaults["no-result/dk"] =  "Intet.";
 
 $swSystemDefaults["modify-help/dk"] = "Rediger den nuv&aelig;rende side ved brug af Wiki syntaks. Forh&aring;ndsvis den s&aring; eller send rettelserne direkte.";
@@ -114,6 +116,8 @@ $swSystemDefaults["preview/dk"] = "Preview";
 $swSystemDefaults["comment/dk"] = "Comment";
 $swSystemDefaults["rename-subpages/dk"] = "Rename subpages";
 
+
+$swSystemDefaults["what=-links-here/dk"] = "What links here";
 
 
 ?>

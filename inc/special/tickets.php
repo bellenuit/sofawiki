@@ -259,7 +259,7 @@ if ($ticketaction == 'new')
 {
 
 	$swParsedContent .= "\n".'===New Ticket===';
-	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table><tr><td >Title</td><td ><input type="text" name="title" value="" autocomplete="off" style="width:95%" /></td></tr><tr><td>Text</td><td><textarea name="text" rows="20" cols="80" style="width:95%"></textarea></td></tr><tr><td>Assign to </td><td>'.swhtmlselect('assigned',$ticketusers,$username,$username).'</td></tr><tr><td>Priority</td><td>'.swhtmlselect('priority',$priorities,'2 normal','2 normal').'</td></tr><tr><td></td><td><input type="submit" name="submitopen" value="Open Ticket" /></td></tr></table></form></nowiki>';
+	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table class="blanktable"><tr><td >Title</td><td ><input type="text" name="title" value="" autocomplete="off" style="width:95%" /></td></tr><tr><td>Text</td><td><textarea name="text" rows="20" cols="80" style="width:95%"></textarea></td></tr><tr><td>Assign to </td><td>'.swhtmlselect('assigned',$ticketusers,$username,$username).'</td></tr><tr><td>Priority</td><td>'.swhtmlselect('priority',$priorities,'2 normal','2 normal').'</td></tr><tr><td></td><td><input type="submit" name="submitopen" value="Open Ticket" /></td></tr></table></form></nowiki>';
 	$mytickets = false;
 	$assigned = '';
 }

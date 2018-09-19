@@ -99,10 +99,10 @@ switch ($wiki->status)
 						
 						
 						
-						$swParsedContent .= "\n<table>\n<tr>";
+						$swParsedContent .= "\n<table class='blanktable' style='width:100%'>\n<tr>";
 						$cw = max(count($wikis),1);
 						$cw = 100/$cw;
-						$wikiwidth = ' style="width:'.$cw.'%"';
+						$wikiwidth = ' style=" width:'.$cw.'%"';
 						
 						foreach ($wikis as $wiki)
 						{
@@ -127,30 +127,54 @@ switch ($wiki->status)
 							$rows = max(count($lines) + 2, strlen($wiki->content)*count($wikis)/70, 3);
 							$rows = min($rows,50);
 							if (strlen($wiki->content)<2) $rows = 16;
-							$cols = 80 / count($wikis);
+							$cols = 100 / count($wikis);
+							$codecols = $cols;
+							if ($codecols==80) $codecols=100;
 														
 							$submitbutton = "";
 							if ($user->hasright("modify", $wiki->name))
 							{
-								$submitbutton .= "<input type='submit' name='submit$modifymode' value='".swSystemMessage("modify",$lang)."' />";
+								$submitbutton .= "<input type='submit' name='submit$modifymode' value='".swSystemMessage("save",$lang)."' />";
+							}
+							
+							if ($modifymode == "modify")
+							{
+								$cid = "id='editzonecolor'"; 
+								if (!$swEditZoneColor) $cid .= "style='visibility:hidden'";
+								$sid = "id='editzonesource'";
+								$swParsedContent .= '
+<script>' . file_get_contents('inc/skins/editzone.js').'</script>';  
+ 								$swParsedCSS .= file_get_contents('inc/skins/editzone.css'); 
+							}
+							else 
+							{
+								$cid = $sid = 0;
+								$rows = 20;
 							}
 							
 							
 							
 							
 							$swParsedContent .= "
- <form method='post' action='index.php?action=modify'><p>
+ <form method='post' action='index.php?action=modify'>
+ <p id='editzonesubmit' style='width:100%; position:relative'>
  <input type='$namefieldtype' name='name' value=\"$wiki->name\" style='width:60%' />
  <input type='submit' name='submitcancel' value='".swSystemMessage("cancel",$lang)."' />
  <input type='submit' name='submitpreview' value='".swSystemMessage("preview",$lang)."' />
  $submitbutton
  </p>
- <p>
- <textarea name='content' rows='$rows' cols='$cols' style='width:95%'>".$wiki->contentclean()."</textarea>
- </p>
+ <script>window.onload = colorCode </script>
+ <div id='editzonewrapper' style='width: 100%; height: "  . floor($rows*20)  . "px; position: relative; background-color: transparent;' >
+ <div $cid class='editzonecommon'></div>
+ <textarea $sid class='editzonecommon' name='content'
+  oninput='colorCode();' 
+ >".$wiki->contentclean()."</textarea>
+ </div>
+ <script>colorCode()</script>
+
  <input type='hidden' name='revision' value='$wiki->revision'>
  <p>".swSystemMessage("comment",$lang).":
- <input type='text' name='comment' value=\"$wiki->comment\" style='width:95%' />
+ <input type='text' name='comment' value=\"$wiki->comment\" style='width:90%' />
  </p></form>
 ";
 						
@@ -217,9 +241,13 @@ $swParsedContent .= "
 
 
 $swFooter = "$wiki->name, ".swSystemMessage("revision",$lang).": $wiki->revision, $wiki->user, ".swSystemMessage("date",$lang).":$wiki->timestamp, ".swSystemMessage("status",$lang).":$wiki->status";
+switch($wiki->integrity())
+{
+	case 0: $swFooter .= ' error checksum not ok'; break;
+	case 1: $swFooter .= ' checksum ok'; break;
+}
 if(!$name) $swFooter = "";
 if (!$wiki->revision) $swFooter="";
 if (count($wikis)>1) $swFooter="";
-
 
 ?>

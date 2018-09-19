@@ -514,6 +514,8 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 		{
 			$swEditMenus['history'] = '<a href="'.$wiki->link('history').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
 		}
+		$swEditMenus['whatlinkshere'] = '<a href="'.$wiki->link('whatlinkshere').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('what-links-here',$lang).'</a>';
+		
 		
 	}
 	
@@ -631,6 +633,8 @@ switch ($action)
 						
 	case 'history':	 include 'inc/special/history.php';
 				     break;
+	case 'whatlinkshere' : include 'inc/special/whatlinkshere.php';
+							break;
 	case 'diff':	include 'inc/special/diff.php';
 				     break;
 

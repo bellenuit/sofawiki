@@ -106,7 +106,7 @@ else
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldtranspose" value="'.swSystemMessage("transpose",$lang).'">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddrow" value="'.swSystemMessage("add-value",$lang).'">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddcolumn" value="'.swSystemMessage("add-field",$lang).'">';
-	$swParsedContent .= PHP_EOL.'<p><table class="fieldseditor">';
+	$swParsedContent .= PHP_EOL.'<p><table class="fieldseditor blanktable">';
 		
 	//count columns
 	$maxcols = 0;

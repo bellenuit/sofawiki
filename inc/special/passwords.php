@@ -26,7 +26,7 @@ $swParsedContent = '<p>Password Encryptor
 
 
 	$swParsedContent .= '<form method="post" action="index.php?name=special:passwords">
-		<table><tr><td>Email</td><td>Password</td><td>User template</td></tr>
+		<table class="blanktable"><tr><td>Email</td><td>Password</td><td>User template</td></tr>
 		<tr><td><input type="text" name="myname" value="'.$myname.'" autocomplete="off" /></td>
 		<td><input type="text" name="mypass" value="'.$mypass.'" autocomplete="off" /></td>
 		<td><input type="text" name="myusertemplate" value="'.$myusertemplate.'" /></td></tr>

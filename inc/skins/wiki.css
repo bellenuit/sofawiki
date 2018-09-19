@@ -72,7 +72,7 @@ span.found
 
 #editmenu0
 {
-	background-color: none;
+	background: none;
 } 
 
 #editmenu0 a
@@ -87,7 +87,7 @@ span.found
 	
 	left: 10px;
 	top: 0px;
-	background-color: none;
+	background: none;
 } 
 
 #langmenu a
@@ -160,6 +160,55 @@ img.yfrog
 	width: 640px;
 }
 
+table { width:100%;  border-collapse: collapse; table-layout: fixed;}
 
+td { vertical-align: top; border: 1px solid black; padding: 2px;}
 
-td { vertical-align: top;  width: 50% }
+table.blanktable td {border: 0px solid white; } 
+ 	
+.editzonecommon {
+ 	position: absolute;
+ 	top: 0px;
+ 	left: 0px;
+ 	right: 0px; 	
+ 	width: 100%;
+ 	height: 100%;
+ 	font-family: monospace;
+ 	font-size   : 12px;
+ 	line-height: 18px;
+  word-break  : normal;
+  word-wrap   : break-word;
+  white-space : pre-wrap;
+  bordeer     : 1px solid black;
+  margin      : 0;
+  padding     : 0;
+  border-radius: 0;
+ }
+ #editzonesource {
+ 	color: rgba(0,0,0,1);
+
+  background-color: transparent;
+  overflow        : hidden;
+ }
+ 
+ #editzonecolor {
+
+  color           : transparent;
+  background-color: white;
+  overflow        : hidden;
+  left: 4px;
+  right:4px;
+  background-color: transparent;
+  
+  
+ }
+
+ 
+ mark.parsed { 
+ 	background-color: LightGreen; color: transparent;
+ }
+ 
+ mark.error {
+ 	background-color: LightPink; color:transparent
+ }
+ 

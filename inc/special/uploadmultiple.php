@@ -25,7 +25,7 @@ foreach($files as $file)
 
 		$wiki->name ='Image:'.$shortname;
 		$wiki->user = $user->name;
-		$wiki->content = '';
+		$wiki->content = '[[imagechecksum::'.md5file($file2).']]';
 		if ($file != '')
 			$wiki->insert();
 
