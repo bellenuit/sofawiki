@@ -46,7 +46,7 @@ class swCacheParser extends swParser
 			//echotime('keyword cache '.$path);
 			//echotime(filemtime($path) .' '. $expire .' '.$now);
 			
-			if (file_exists($path) && filemtime($path) + $expire > $now && $action == 'view')
+			if (file_exists($path) && filemtime($path) + $expire > $now && $action == 'view' && !(isset($_REQUEST['cacherefresh'])))
 			{
 				$s = file_get_contents($path);
 				$wiki->parsedContent = $s;
@@ -54,19 +54,24 @@ class swCacheParser extends swParser
 				
 				// mute other parsers
 				
-				return true;
+				return 2;
 			}
 			else
 			{
 				$wiki->parsedContent = trim(substr($s,$pos2));
 				
 				
+				if ($action=='view')
+					return 1;
+				else
+					return 0;
 				// add put cache to parsers
 				
 								
 				
 			}
 		}
+		return 0;
 		
 	}
 

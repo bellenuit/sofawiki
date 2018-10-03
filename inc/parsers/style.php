@@ -5,6 +5,8 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 class swStyleParser extends swParser
 {
 
+	var $domakepretty = true;
+	
 	function info()
 	{
 	 	return "Applies wikitext styles";
@@ -22,6 +24,8 @@ class swStyleParser extends swParser
 		}
 		
 		$s = $wiki->parsedContent;
+		
+		//echo "<p>STYLE</p>$s";
 
 		// keep only \n
 		$s = str_replace("\r\n","\n",$s);
@@ -120,18 +124,24 @@ class swStyleParser extends swParser
 	
 		// headers     	
 		// id must use single token
-		while (preg_match('/\n====(.*)====/U', $s, $matches))
+		/*
+		while (preg_match('/^====(.*)====/U', $s, $matches))
 		{
 			$s = str_replace($matches[0],"<h4><a id='".$matches[1]."'>".$matches[1]."</a></h4>",$s);
 		}
-		while (preg_match('/\n===(.*)===/U', $s, $matches))
+		while (preg_match('/^===(.*)===/U', $s, $matches))
 		{
 			$s = str_replace($matches[0],"<h3><a id='".str_replace(" ","_",$matches[1])."'>".$matches[1]."</a></h3>",$s);
 		}
-		while (preg_match('/\n==(.*)==/U', $s, $matches))
+		while (preg_match('/^==(.*)==/U', $s, $matches))
 		{
 			$s = str_replace($matches[0],"<h2><a id='".str_replace(" ","_",$matches[1])."'>".$matches[1]."</a></h2>",$s);
 		}
+		*/
+		
+		$s = preg_replace('/^====(.*)====/Um',"<h4><a id='$1'>$1</a></h4>",$s);
+		$s = preg_replace('/^===(.*)===/Um',"<h3><a id='$1'>$1</a></h3>",$s);
+		$s = preg_replace('/^==(.*)==/Um',"<h2><a id='$1'>$1</a></h2>",$s);
 		
 		// lists
 		$s = preg_replace('/^\*\*\*(.*)(\n)/Um', "<ul><ul><ul><li>$1</li></ul></ul></ul>$2", $s);
@@ -154,12 +164,18 @@ class swStyleParser extends swParser
 		$s = preg_replace('/^\:\:\:(.*)(\n)/Um', "<blockquote><blockquote><blockquote>$1</blockquote></blockquote></blockquote>$2", $s);
         $s = preg_replace('/^\:\:(.*)(\n)/Um', "<blockquote><blockquote>$1</blockquote></blockquote>$2", $s);
         $s = preg_replace('/^\:(.*)(\n)/Um', "<blockquote>$1</blockquote>$2", $s);
-
-		while (stristr($s,"</blockquote>\n<blockquote>")) $s = str_replace("</blockquote>\n<blockquote>",'',$s);
-		while (stristr($s,"</blockquote><blockquote>")) $s = str_replace("</blockquote><blockquote>",'',$s);
+		
+		$s = str_replace('<blockquote> ','<blockquote>',$s);
+		
+		while (stristr($s,"</blockquote>\n<blockquote><blockquote>")) $s = str_replace("</blockquote>\n<blockquote><blockquote>",'<blockquote>',$s);
+		while (stristr($s,"</blockquote><blockquote><blockquote>")) $s = str_replace("</blockquote><blockquote><blockquote>",'<blockquote>',$s);
+		while (stristr($s,"</blockquote></blockquote>\n<blockquote>")) $s = str_replace("</blockquote></blockquote>\n<blockquote>",'</blockquote>',$s);
+		while (stristr($s,"</blockquote></blockquote><blockquote>")) $s = str_replace("</blockquote></blockquote><blockquote>",'</blockquote>',$s);
+		while (stristr($s,"</blockquote>\n<blockquote>")) $s = str_replace("</blockquote>\n<blockquote>",'<br>',$s);
+		while (stristr($s,"</blockquote><blockquote>")) $s = str_replace("</blockquote><blockquote>",'<br>',$s);
 		
 		// hr
-		$s = str_replace("\n----\n","\n<hr>",$s);	
+		$s = str_replace("\n----\n","\n<hr>\n",$s);	
 		
 		// preserve div
 		$s = str_replace('<div',"\n<div",$s);
@@ -182,21 +198,7 @@ class swStyleParser extends swParser
 				}
 				continue;
 			}
-			
-			/*
-			if (substr($line,0,1) == ' ') // we move that forward to tidy, to many false positive here
-			{
-				
-				if ($state == 'p')
-				{
-					$s .= '</p>';
-					$state = '';
-				}
-				$s .= "\n".'<pre>'.substr($line,1).'</pre>';
-				continue;
-			}
-			*/
-			
+						
 			switch (substr($line,0,3))
 			{
 				case '<h2':
@@ -210,25 +212,47 @@ class swStyleParser extends swParser
 				case '<ol':
 				case '<pr':
 				case '<bl': 
-				case '<hr': 	if ($state == 'p')
+				case '<hr':
+				
+							 	if ($state == 'p')
 								{
 									$s .= '</p>';
 									$state = '';
 								}
-								$s .= "\n".$line; break;
+								$s .= $line; break;
 								
-				default: 	if ($state == 'p')
+				default: 	if (substr($line,0,1)==' ')
 							{
-								$s .= "\n".'<br>'.$line;
+								if ($state == 'p')
+								{
+									$s .= '</p>';
+									$state = '';
+								} 
+								
+								$s .= '<pre>'.substr($line,1).'</pre>';
+							}
+							elseif ($state == 'p')
+							{
+								$s .= '<br>'.$line;
 							}
 							else
 							{
-								$s .= "\n".'<p>'.$line;
-								$state = 'p';							
+								if (trim($line) != '') 
+								{
+									$s .= '<p>'.$line;
+									$state = 'p';	
+								}						
 							}
 			}
+			//$s.="(STATE $state)";
 			
-		}		
+		}	
+		
+		// bugs
+		$s = str_replace("<p><div","<div",$s);
+		$s = str_replace("</div></p>","</div>",$s);
+
+	
 		
 		// bold and italics
 		$s = str_replace("''''''","",$s);
@@ -237,16 +261,24 @@ class swStyleParser extends swParser
         $s = preg_replace("/'''(.*)'''/Um", '<b>$1</b>', $s);
         $s = preg_replace("/''(.*)''/Um", '<i>$1</i>', $s);
         
+        // detect pre
+        //$s = preg_replace("/<p> (.*)<\/p>/Um", '<pre>$1</pre>', $s);
+		// br inside pre
+		
         
 		$s = swUnescape($s);  		
 		
+		if ($this->domakepretty)
+		{
 		
         // make pretty
-        $s = str_replace("<ol>","\n<ol>",$s);
-//         $s = str_replace("</ul>","</ul>\n",$s);
-        $s = str_replace("</ol>","</ol>\n",$s);
+       
         
-//         $s = str_replace("<br>","<br>\n",$s);
+        
+        $s = str_replace("<ol>","\n<ol>",$s);
+        $s = str_replace("</ul>","</ul>\n",$s);
+        $s = str_replace("</ol>","</ol>\n",$s);
+        $s = str_replace("<br>","<br>\n",$s);
         $s = str_replace("<hr>","\n<hr>\n",$s);
         $s = str_replace("<h1>","\n<h1>",$s);
         $s = str_replace("<h2>","\n<h2>",$s);
@@ -256,10 +288,16 @@ class swStyleParser extends swParser
         $s = str_replace("</h2>","</h2>\n",$s);
         $s = str_replace("</h3>","</h3>\n",$s);
         $s = str_replace("</h4>","</h4>\n",$s);
+        
+        
 		$s = str_replace("<br>\n</pre>","</pre>\n",$s); 
 		$s = str_replace("</pre>\n<pre>","\n",$s);
 		$s = str_replace("</pre><pre>","\n",$s);
 		
+		$s = str_replace("</pre>","</pre>\n",$s);
+        $s = str_replace("</p>","</p>\n",$s);
+        
+
 		$s = str_replace("<table","\n\n<table",$s);
 		$s = str_replace("</table>","</table>\n",$s);
 	
@@ -269,6 +307,9 @@ class swStyleParser extends swParser
 		$s = str_replace("</li><ol>","</li>\n<ol>",$s);
         $s = str_replace("<li>","\n <li>",$s);
 		$s = str_replace("<caption>","\n <caption>",$s);
+		
+		$s = str_replace('<blockquote>',"\n<blockquote>",$s);
+	
 	
 		$s = str_replace("<tr","\n  <tr",$s);
 		$s = str_replace("</tr>","\n  </tr>",$s);
@@ -277,6 +318,17 @@ class swStyleParser extends swParser
 		$s = str_replace("<tbody","\n <tbody",$s); // can be styled
     	$s = str_replace("</tbody>","\n </tbody>",$s); 
     	$s = str_replace("</table>","\n</table>",$s);
+    	
+    	// auto close divs
+		$divopen = substr_count($s,'<div');
+		$divclose = substr_count($s,'</div>');
+		while ($divopen > $divclose)
+		{
+			$s .= '</div>'; $divclose++;
+		}
+
+    	
+    	}
 		
 		$wiki->parsedContent = trim($s);
 		
@@ -508,7 +560,7 @@ class swStyleParser extends swParser
 		$s = str_replace("<td>","\n  <td>",$s);
 		$s = str_replace("<th>","\n  <th>",$s);
     	
-	
+				
 		
 		$wiki->parsedContent = $s;
 		

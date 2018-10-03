@@ -277,7 +277,7 @@ function swSystemMessage($msg,$lang,$styled=false)
 	global $swSystemDefaults;
 	global $swDefaultLang;
 	
-	$msg = swNameURL($msg);
+	
 	
 	if ($lang)
 		$langmsg =  $msg.'/'.$lang;
@@ -306,6 +306,8 @@ function swSystemMessage($msg,$lang,$styled=false)
 			}
 			else
 			{
+				if ($msg != swNameURL($msg))	return swSystemMessage(swNameURL($msg),$lang,$styled);
+				
 				$w->parsedContent = $swSystemSiteValues[$langmsg] = $msg;
 			}
 		}
