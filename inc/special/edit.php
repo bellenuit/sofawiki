@@ -142,9 +142,12 @@ switch ($wiki->status)
 								$cid = "id='editzonecolor'"; 
 								if (!$swEditZoneColor) $cid .= "style='visibility:hidden'";
 								$sid = "id='editzonesource'";
+								// use this only in skin (opt-in)
+								/*
 								$swParsedContent .= '
 <script>' . file_get_contents('inc/skins/editzone.js').'</script>';  
  								$swParsedCSS .= file_get_contents('inc/skins/editzone.css'); 
+ 								*/
 							}
 							else 
 							{
@@ -163,14 +166,11 @@ switch ($wiki->status)
  <input type='submit' name='submitpreview' value='".swSystemMessage("preview",$lang)."' />
  $submitbutton
  </p>
- <script>window.onload = colorCode </script>
  <div id='editzonewrapper' style='width: 100%; height: "  . floor($rows*20)  . "px; position: relative; background-color: transparent;' >
  <div $cid class='editzonecommon'></div>
- <textarea $sid class='editzonecommon' name='content'
-  oninput='colorCode();' 
+ <textarea $sid class='editzonecommon' name='content' style = 'width:100%; height:100%'
  >".$wiki->contentclean()."</textarea>
  </div>
- <script>colorCode()</script>
 
  <input type='hidden' name='revision' value='$wiki->revision'>
  <p>".swSystemMessage("comment",$lang).":

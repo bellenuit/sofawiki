@@ -1,3 +1,8 @@
+function colorCodeInit() {
+	document.getElementById("editzonesource").addEventListener("input", colorCode);
+	colorCode();
+}
+
 
 function colorCode() {
   var ta  = document.getElementById("editzonesource")

@@ -23,6 +23,7 @@ echo '<meta name="title" content="'. $t. '">
 ?>
 <title><?php echo $t ?></title>
 <link rel='stylesheet' href="inc/skins/default.css"/>
+
 <?php
 	if ($action=='view')
 	{
@@ -56,7 +57,10 @@ echo '<meta name="title" content="'. $t. '">
 	}
 
 ?>
+<link rel='stylesheet' href="inc/skins/editzone.css"/>
 <style><?php echo $swParsedCSS ?></style>
+<script src="inc/skins/editzone.js"></script>
+<script>window.onload = colorCodeInit </script>
 </head>
 <body>
 

@@ -2,13 +2,14 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<base href="<?php echo $swBaseHrefFolder ?>">
 <title><?php echo $swParsedName ?></title>
 <base href="<?php echo $swBaseHref ?>">
 <link rel='stylesheet' href="inc/skins/wiki.css"/>
-<style><?php 
-echo $swParsedCSS ?></style>
-<script>
-</script>
+<style><?php echo $swParsedCSS ?></style>
+<link rel='stylesheet' href="inc/skins/editzone.css"/>
+<script src="inc/skins/editzone.js"></script>
+<script>window.onload = colorCodeInit </script>
 </head>
 <body>
 

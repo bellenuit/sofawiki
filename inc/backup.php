@@ -109,7 +109,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup)
 			$dir = substr($dir,strlen("sofawiki/"));
 			$absolutedir = $swRoot.'/'.$dir;
 			
-			$formats = array("php","css","txt");
+			$formats = array("php","css","txt","js");
 			
 			foreach ($formats as $f)
 			{
@@ -397,6 +397,16 @@ function swSnapShot($username)
 			$result .= "&nbsp;$zf<br/>";
 		}
 		$files = glob($absolutedir."/*.css");
+		if (is_array($files))
+		{
+			foreach($files as $file)
+			{
+				$zf = str_replace($swRoot,"sofawiki",$file);
+				$zipfile -> addFile($file,$zf); 
+				$result .= "&nbsp;$zf<br/>";
+			}
+		}
+		$files = glob($absolutedir."/*.js");
 		if (is_array($files))
 		{
 			foreach($files as $file)

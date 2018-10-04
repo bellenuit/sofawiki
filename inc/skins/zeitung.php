@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<base href="<?php echo $swBaseHrefFolder ?>">
 <title><?php echo swSystemMessage("sitename",$lang);  echo " ".$swParsedName ?></title>
 <link rel='stylesheet' href="inc/skins/zeitung.css"/>
 <style><?php echo $swParsedCSS ?></style>
