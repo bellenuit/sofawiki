@@ -10,6 +10,10 @@ class swStrreplaceFunction extends swFunction
 	 	return "(old, new, string) Emulates the PHP str_replace function";
 	}
 
+	function arity()
+	{
+		return 3;
+	}
 	
 	function dowork($args)
 	{

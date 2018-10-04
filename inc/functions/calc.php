@@ -9,7 +9,7 @@ class swCalcfunction extends swFunction
 	{
 	 	return "(term) makes RPN calculation";
 	}
-
+	
 	
 	function dowork($args)
 	{

@@ -53,6 +53,14 @@ class swTemplateParser extends swParser
 		
 		$s0 = '';
 		
+		// simple check unbalanced curly brackets against error 503 when PRCE looks too far
+		$matches1 = explode('{{',$s);
+		$matches2 = explode('}}',$s);
+		echotime('matches1 '.count($matches1));
+		echotime('matches2 '.count($matches1));
+		if (count($matches1) != count($matches2)) { global $swError; $swError = 'Unbalanced curly brackets'; return; };
+		
+		
 		// search for most inner {{ }} pair, but without {{{ }}} therefore we search a letter before
 		while (preg_match("@[^\{]\{\{([^\{])*?\}\}@"," ".$s,$matches) && $s0 != $s)
 		{
@@ -60,6 +68,9 @@ class swTemplateParser extends swParser
 			$val0 = substr($matches[0],3,-2);
 			
 			// we must protect pipe characters inside [[ ]] because they are parsed later in links.php
+			
+			
+			
 			
 			$val0protected = preg_replace("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@",'[[$1&pipeprotected;$3]]',$val0);
 			
@@ -72,10 +83,28 @@ class swTemplateParser extends swParser
 				$v = str_replace('&pipeprotected;','|',$v);
 				
 				if (substr($v,0,2)== "::")
-					$vals[] = substr($v,2);
+				{
+					$v = substr($v,2); 
+					//evaluate style inside template
+					
+					$p = new swStyleParser;
+					$p->domakepretty = false;
+					$w2 = new swWiki;
+					$w2->parsedContent = $v;
+					$p->doWork($w2);
+					$v = $w2->parsedContent;
+					
+					
+				}
 				else
-					$vals[] = trim(str_replace("\n","",$v));
+					$v = trim(str_replace("\n","",$v));
+					
+					
+				
+				
+				$vals[] = $v;
 			}
+			
 			
 			$vheader = trim($vals[0]);
 			
@@ -136,7 +165,14 @@ class swTemplateParser extends swParser
 				for ($i = 1; $i< count($vals); $i++)
 				{
 					$c = str_replace("{{{".$i."}}}",$vals[$i],$c);
+					$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/",$vals[$i],$c);
 				}
+				// remove optional parameters
+				for ($i = 1; $i<10; $i++)
+				{
+					$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/","$1",$c);
+				}
+				
 			}
 				
 			$s = str_replace("{{".$val0."}}",$c,$s);   

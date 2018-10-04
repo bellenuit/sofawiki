@@ -10,6 +10,10 @@ class swSprintfunction extends swFunction
 	 	return "(format, text) formats text like PHP sprintf";
 	}
 
+	function arity()
+	{
+	 	return 2;
+	}
 	
 	function dowork($args)
 	{

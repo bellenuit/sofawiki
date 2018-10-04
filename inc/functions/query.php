@@ -219,6 +219,35 @@ function swQueryTupleExpression($row, $term)
 					  $a = array_pop($calcstack); $b = array_pop($calcstack); 
 					  array_push($calcstack,$a); array_push($calcstack,$b); break;
 				default: 
+				
+				
+						if (substr($arg,0,9) == "FUNCTION-")
+						{
+							$fn = substr($arg,9);
+							global $swFunctions;
+							if (!isset($swFunctions[$fn])) { return array('_error'=>'Fnction '.$fn.' does not exist'); } 
+							$f2 = $swFunctions[$fn];
+							$fargs =array();
+							if ($f2->arity()<0) { return array('_error'=>'Invalid function '.$fn); } 
+							$a = $f2->arity(); 
+							while ($a>0)
+							{
+								
+								if (count($calcstack)>0)
+									$fargs[] = array_pop($calcstack); 
+								else
+									return array('_error'=>'Empty calc stack'); 
+								$a--;
+							}
+							$fargs[] =  $fn;
+							$fargs = array_reverse($fargs);
+							//print_r($fargs);
+
+							$fresult = $f2->dowork($fargs);
+							
+							array_push($calcstack,$fresult);
+						}
+						else
 						switch(substr($arg,0,1))
 						{
 							case '-': case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': 
@@ -359,6 +388,7 @@ class swQueryFunction extends swFunction
 		$extra = '';
 		$numbercolumns = array();
 		$outputformat = 'HTML';
+		$navigationlimit = 0;
 		$verbose = false;
 		global $lang;
 		
@@ -413,7 +443,29 @@ class swQueryFunction extends swFunction
 								$datatablestyle = join(' ',$fs);
 								break;
 
-				case 'SELECT':  $set = swFilter($line,$ns,'query','current');
+				case 'SELECT':  // allow peak values from top stack when value starts with $
+								// but this must be done rewriting line.
+								if ($p = strpos($line,' WHERE'))
+								{
+									
+									$q1 = substr($line,$p+strlen(' WHERE')+1);
+									$ws = explode(' ',$q1);
+									
+									
+									if (count($ws)==3 && substr($ws[2],0,1) =='$')
+									{
+										
+										$r = array_pop($rowstack);
+										array_push($rowstack,$r);	
+										$l = array_pop($r);
+										$k = substr($ws[2],1);
+										if (!isset($l[$k])) { $error = 'Unknown field'; $errorline = $line; break; }
+										$line = substr($line,0,- strlen($ws[2])).$l[$k];
+										//echo $line;
+									}
+								}
+				
+								$set = swFilter($line,$ns,'query','current');
 								if (isset($set['_error'])) { $error = $set['_error']; $errorline = $line; break; }
 								array_push($rowstack,swUniqueTuples($set)); 
 								break;
@@ -502,7 +554,29 @@ class swQueryFunction extends swFunction
 									array_push($rowstack,swUniqueTuples($rs)); 
 								break;
 				
-				
+				case "DATA":    $d = join(' ',$fs);
+								$datafields = swGetAllFields($d, true);
+								//print_r($datafields);
+								$maxrows = 0;
+										foreach($datafields as $k=>$v)
+										{
+											$maxrows = max($maxrows, count($v)+1);
+											foreach($v as $vi=>$vv)
+												$rs[$vi][$k] = $vv;
+										}
+										// pad
+										foreach($datafields as $k=>$v)
+										{
+											for($vi=count($v);$vi<$maxrows;$vi++)
+											{
+												$rs[$vi][$k] = $rs[count($v)-1][$k];
+											}
+										}
+								
+								if (isset($rs))
+									array_push($rowstack,swUniqueTuples($rs)); 
+								break;
+								
 				case 'WHERE':   if (!array_key_exists(0,$fs)) { $error = 'Missing field'; $errorline = $line; break; }
 								if (!array_key_exists(1,$fs)) { $error = 'Missing operator'; $errorline = $line; break; }
 								if (count($rowstack)<1) { $error = 'Empty stack'; $errorline = $line; break; }
@@ -1011,7 +1085,12 @@ class swQueryFunction extends swFunction
 								$outputformat = array_shift($fs);
 								switch($outputformat)
 								{
-									case "HTML":  // HTML htable
+									case "LISTPAGED":
+									case "HTMLPAGED":  // HTML htable with pages and navigation included
+														$navigationlimit = 50;
+														if (count($fs)>0) $navigationlimit = array_shift($fs);
+														
+									case "HTML":  // HTML htable									
 									case "FIXED": // SQL style as pre
 									case "FIELDS": // sofawiki fields as pre
 									case "FIELDSCOMPACT": // sofawiki fields as pre
@@ -1228,17 +1307,43 @@ class swQueryFunction extends swFunction
 		$overtimetext = '';
 		if ($swOvertime)
 			$overtimetext .= "\n".'<div class="queryovertime">'.
-		swSystemMessage('Result incomplete, you may want to refresh the page to get more results',$lang)
+		swSystemMessage('there-may-be-more-results',$lang)
 		.'</div>';
+		
+		
+		$navigationstart = 0; 
+		if (isset($_REQUEST['start'])) $navigationstart = $_REQUEST['start'];
+		$navigationstart = max(0,$navigationstart);
+		$navigationcount = count($rows);
+		$navigationstart = min($navigationcount-1,$navigationstart);
+		// remove unused rows
+		if ($navigationlimit>0) 
+		{
+			for ($i=0;$i<$navigationstart;$i++) 
+				if (count($rows)>0) array_shift($rows);
+				while (count($rows)>$navigationlimit) array_pop($rows);
+		}
+		// prepare navigation
+		
+		$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+		$url = preg_replace('/&start=\d*/','', $url);
+		$navigation = '<div class="htmlpagednavigation"><nowiki>';
+		if ($navigationstart>0)
+		$navigation .= '<a href="'.$url.'&start='.sprintf("%0d",$navigationstart-$navigationlimit).'"> '.swSystemMessage('back',$lang).'</a> ';
+		$navigation .= " ".sprintf("%0d",min($navigationstart+1,$navigationcount))." - ".sprintf("%0d",min($navigationstart+$navigationlimit,$navigationcount))." / ".$navigationcount;
+		if ($navigationstart+$navigationlimit<$navigationcount)
+		$navigation .= ' <a href="'.$url.'&start='.sprintf("%0d",$navigationstart+$navigationlimit).'">'.swSystemMessage('forward',$lang).'</a>';
+		$navigation .= '</nowiki></div>';
 		
 		if (count($rows) > 0)
 		{
-
 			if ($this->outputraw) return $rows;
 			$rows = swCleanTupleFieldOrder($rows);
 			switch ($outputformat)
 			{
-				case 'HTML': 	$result  .= '<table class="'.$datatablestyle.'">';
+				case 'HTMLPAGED': 
+				case 'HTML': 	if ($navigationlimit>0) $result  .= $navigation;
+								$result .= '<table class="'.$datatablestyle.'">';
 								$result .= '<thead><tr>';
 								reset($rows);
 								$row = current($rows);
@@ -1265,8 +1370,21 @@ class swQueryFunction extends swFunction
 									$result .= '</tr>';
 								}
 								$result .= '</tbody></table>';
+								if ($navigationlimit>0) $result  .= $navigation;
 								break;
 								
+				case 'LISTPAGED': 
+				case 'LIST': 	if ($navigationlimit>0) $result  .= $navigation;
+								$result  .= '<ul class="'.$datatablestyle.'">';
+								reset($rows);
+								$row = current($rows);
+								foreach ($rows as $rev=>$row)
+								{
+									$result .= '<li>'.join(' ',$row).'</li>';
+								}
+								$result .= '</ul>';
+								if ($navigationlimit>0) $result  .= $navigation;
+								break;
 				case 'FIXED'  : $lens = array();
 								foreach ($rows as $rev=>$row)
 								{

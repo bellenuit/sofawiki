@@ -10,6 +10,11 @@ class swSubstrFunction extends swFunction
 	 	return "(s, start, length) Emulates the PHP substr function";
 	}
 
+	function arity()
+	{
+	 	return 3;
+	}
+
 	
 	function dowork($args)
 	{

@@ -9,6 +9,11 @@ class swNameURLfunction extends swFunction
 	{
 	 	return "(s) translates string to URL";
 	}
+	
+	function arity()
+	{
+		return 1;
+	}
 
 	
 	function dowork($args)

@@ -191,6 +191,9 @@ class swLinksParser extends swParser
 				
 				// add a hook here for custom handler
 				
+				// TO DO: ONLY IF NAMESPACE DOES NOT EXIST.
+				// TO DO: OPTION NOT BLANK (depending on protocol?)
+				
 				if (function_exists('swInternalLinkHook')) {
   					$hooklink = swInternalLinkHook($val);  					
   					if ($hooklink)
