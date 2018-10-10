@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.9.8';   
+$swVersion = '1.9.9';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -306,9 +306,20 @@ function swSystemMessage($msg,$lang,$styled=false)
 			}
 			else
 			{
-				if ($msg != swNameURL($msg))	return swSystemMessage(swNameURL($msg),$lang,$styled);
+				if ($msg != swNameURL($msg))	
+				{
+					$urlmsg = swNameURL($msg);
+					$urlsystemmessage = swSystemMessage($urlmsg,$lang,$styled);
+					
+					if ($urlsystemmessage != $urlmsg)
+						$swSystemSiteValues[$langmsg] = $urlsystemmessage;
+					else
+						$swSystemSiteValues[$langmsg] = $msg;
+				}
+				else
+					$swSystemSiteValues[$langmsg] = $msg;
 				
-				$w->parsedContent = $swSystemSiteValues[$langmsg] = $msg;
+				$w->parsedContent = $swSystemSiteValues[$langmsg];
 			}
 		}
 	}
