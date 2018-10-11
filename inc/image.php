@@ -19,7 +19,7 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 	{
 		$returnpath = 'site/cache/'.$destw.'-'.$desth.'-'.$name;
 		if ($crop != '')
-			$returnpath = 'site/cache/'.$destw.'-'.$desth.'-'.$name.'-'.$crop;
+			$returnpath = 'site/cache/'.$destw.'-'.$desth.'-'.$crop.'-'.$name;
 	}
 	$path1 = $swRoot.'/'.$returnpath;
 	
@@ -97,16 +97,16 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 			switch(substr($crop,0,1))
 			{
 				case '1': case 't': $t = 0; break;
-				case '2': $t = ($sourceh - $desth / $destw * $sourceh)/8; break;
-				case '3': $t = ($sourceh - $desth / $destw * $sourceh)/4; break;
-				case '4': $t = ($sourceh - $desth / $destw * $sourceh)*3/8; break;
-				case '5': case 'c': $t = ($sourceh - $desth / $destw * $sourceh)/2; break;
-				case '6': $t = ($sourceh - $desth / $destw * $sourceh)*5/8; break;
-				case '7': $t = ($sourceh - $desth / $destw * $sourceh)*3/4; break;
-				case '8': $t = ($sourceh - $desth / $destw * $sourceh)*7/8; break;
-				case '9': case 'b': $t = $sourceh - $desth / $destw * $sourceh; break;
+				case '2': $t = ($sourceh - $desth / $destw * $sourcew)/8; break;
+				case '3': $t = ($sourceh - $desth / $destw * $sourcew)/4; break;
+				case '4': $t = ($sourceh - $desth / $destw * $sourcew)*3/8; break;
+				case '5': case 'c': $t = ($sourceh - $desth / $destw * $sourcew)/2; break;
+				case '6': $t = ($sourceh - $desth / $destw * $sourcew)*5/8; break;
+				case '7': $t = ($sourceh - $desth / $destw * $sourcew)*3/4; break;
+				case '8': $t = ($sourceh - $desth / $destw * $sourcew)*7/8; break;
+				case '9': case 'b': $t = $sourceh - $desth / $destw * $sourcew; break;
 			}
-			$sourceh = $desth / $destw * $sourceh;
+			$sourceh = $desth / $destw * $sourcew;
 		}
 		
 
