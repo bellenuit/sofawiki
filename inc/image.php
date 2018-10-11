@@ -3,8 +3,10 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 
-function swImageDownscale($name, $destw=0, $desth=0)
+function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 {
+    
+    
     
     //  ImageCreateTrueColor not supported on local php distribution mac
 	global $swRoot;
@@ -14,7 +16,11 @@ function swImageDownscale($name, $destw=0, $desth=0)
 	@mkdir($swRoot.'/site/cache/');
 	$returnpath = 'site/cache/'.$destw.'-'.$name;
 	if ($desth)
+	{
 		$returnpath = 'site/cache/'.$destw.'-'.$desth.'-'.$name;
+		if ($crop != '')
+			$returnpath = 'site/cache/'.$destw.'-'.$desth.'-'.$name.'-'.$crop;
+	}
 	$path1 = $swRoot.'/'.$returnpath;
 	
 	if (file_exists($path1) && !array_key_exists('refresh',$_GET))
@@ -59,8 +65,54 @@ function swImageDownscale($name, $destw=0, $desth=0)
 			$destw = $sourcew;
 		}
 		
+		$t = 0;
+		$l = 0;
+		
+		if ( $destw / $desth < $sourcew / $sourceh && $crop != '')
+		{
+			/* crop maintains aspect ratio, but cuts in the source image
+			
+			|-------|------|
+			|       |      |
+			|-------|------|
+					D      S
+			*/
+			
+			switch(substr($crop,1))
+			{
+				case '1'; case 'l': $l = 0; break;
+				case '2': $l = ($sourcew - $destw / $desth * $sourceh)/8; break;
+				case '3': $l = ($sourcew - $destw / $desth * $sourceh)/4; break;
+				case '4': $l = ($sourcew - $destw / $desth * $sourceh)*3/8; break;
+				case '5': case 'c': $l = ($sourcew - $destw / $desth * $sourceh)/2; break;
+				case '6': $l = ($sourcew - $destw / $desth * $sourceh)*5/8; break;
+				case '7': $l = ($sourcew - $destw / $desth * $sourceh)*3/4; break;
+				case '8': $l = ($sourcew - $destw / $desth * $sourceh)*7/8; break;
+				case '9': case 'r': $l = $sourcew - $destw / $desth * $sourceh; break;
+			}
+			$sourcew = $destw / $desth * $sourceh;
+		}
+		elseif ( $destw / $desth > $sourcew / $sourceh && $crop != '')
+		{			
+			switch(substr($crop,0,1))
+			{
+				case '1': case 't': $t = 0; break;
+				case '2': $t = ($sourceh - $desth / $destw * $sourceh)/8; break;
+				case '3': $t = ($sourceh - $desth / $destw * $sourceh)/4; break;
+				case '4': $t = ($sourceh - $desth / $destw * $sourceh)*3/8; break;
+				case '5': case 'c': $t = ($sourceh - $desth / $destw * $sourceh)/2; break;
+				case '6': $t = ($sourceh - $desth / $destw * $sourceh)*5/8; break;
+				case '7': $t = ($sourceh - $desth / $destw * $sourceh)*3/4; break;
+				case '8': $t = ($sourceh - $desth / $destw * $sourceh)*7/8; break;
+				case '9': case 'b': $t = $sourceh - $desth / $destw * $sourceh; break;
+			}
+			$sourceh = $desth / $destw * $sourceh;
+		}
+		
+
+		
 		$back = ImageCreateTrueColor($destw,$desth);
-		ImageCopyResampled($back, $img, 0,0,0, 0, $destw, $desth, $sourcew, $sourceh);
+		ImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);
 
 		imagejpeg($back,$path1,90);
 		
@@ -72,6 +124,8 @@ function swImageDownscale($name, $destw=0, $desth=0)
 	}
 
 }
+
+
 
 
 

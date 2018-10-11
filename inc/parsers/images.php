@@ -23,6 +23,9 @@ class swImagesParser extends swParser
 		if ($wiki->wikinamespace()=='Image')
 		{
 			
+			
+			
+			
 			$wiki->name = $wiki->namewithoutlanguage();
 			$file = substr($wiki->name,6);
 			// show all subsampled images
@@ -60,6 +63,29 @@ class swImagesParser extends swParser
 			if (substr($file,-4) == '.jpg' || substr($file,-5) == '.jpeg' || substr($file,-4) == '.png' || substr($file,-4) == '.gif')
 			{
 				$s ='<img class="embeddimage" alt="" src="site/files/'.$file.'"><p>'.$s;
+				
+				/*
+				if (isset($_POST['submitconvert']))
+				{
+					
+					$width = $_POST['width'];
+					$height = $_POST['height'];
+					$crop = $_POST['crop'];
+					
+					if ($width>0 || $height>0)
+					{
+						$newfile = swImageDownscale($file,$width,$height,$crop);
+						
+					}
+					
+					
+				}
+				
+				
+				$s .='<h4>Image Converter</h4>';
+				$s .='<nowiki><form><method="post" action="index.php"><input type="hidden" name="action" value="search"><input type="hidden" name="name" value="'.$wiki->name.'"><table><tr><td>Width</td><td><input type="text" name="width" value="640" style="width:100px"></td></tr><tr><td>Height</td><td><input type="text" name="height" value="360" style="width:100px"></td></tr><tr><td>Crop</td><td><select name="crop"><option value="topleft">Top Left</option><option value="topcenter" SELECTED>Top Center</option><option value="topright">Top Right</option><option value="centerleft">Center Left</option><option value="centercenter">Center Center</option><option value="centerright">Center Right</option><option value="bottomleft">Bottom Left</option><option value="bottomcenter">Bottom Center</option><option value="topleft">Bottom Right</option></select></td></tr><tr><td><input type="submit" name="submitconvert" value="Convert"></td></tr></table></form></nowiki>';
+				
+				*/
 			}
 			else
 			{
@@ -73,17 +99,50 @@ class swImagesParser extends swParser
 		
 		
 		
-		// Image Links with dual size width and height and alt tag
-		preg_match_all("/\[\[Image:([^\|\]]*)(\|+)([^\]]*)(\|+)([^\]]*)(\|+)([^\]]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
+		// Image Links with dual size width and height, crop and alt tag
+		
+		//preg_match_all("/\[\[Image:([^\|\]]*)(\|+)([^\]]*)(\|+)([^\]]*)(\|+)([^\]]*)(\|+)([^\]]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
+		
+		preg_match_all("/\[\[Image:([^\]]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
 		
 		foreach ($matches as $v)
 		{
 			
+			
+			$options = explode('|',$v[1]);
+			
+			$val = $options[0];
+			$width = intval(@$options[1]);
+			$height = intval(@$options[2]);
+			$crop = @$options[3];
+			$alttag = @$options[4];
+			
+			//print_r($options);
+			
+			/*
 			$val = $v[1];
-			$width = $v[3];
-			$height = $v[5];
-			$alttag = $v[7];
-			if ($height!= '' && $height > 0 && $width != '' && $width>0)
+			$width = intval($v[3]);
+			$height = intval($v[5]);
+			$crop = intval($v[7]);
+			$alttag = $v[9];
+			*/
+			
+			
+			if ($height!= '' && $height > 0 && $width != '' && $width>0 && $crop !='')
+			{
+				
+				$path = swImageDownscale($val,$width,$height,$crop);
+				
+				if ($path)
+				{
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'">';
+				}
+				else
+				{
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+				}
+			}
+			elseif ($height!= '' && $height > 0 && $width != '' && $width>0)
 			{
 				$path = swImageDownscale($val, $width,$height);
 				
