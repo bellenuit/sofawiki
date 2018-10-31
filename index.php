@@ -601,7 +601,7 @@ switch ($action)
 				 	 break;
 
 	case 'logout':   $swParsedName = 'Logout';
-					 $swParsedContent = swSystemMessage('you-have–logged-out',$lang);
+					 $swParsedContent = swSystemMessage('you-have-logged-out',$lang);
 					 break;
 	
 	case 'upload':   if ($user->hasright('upload', ''))

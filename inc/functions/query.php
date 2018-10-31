@@ -1288,19 +1288,62 @@ class swQueryFunction extends swFunction
 		if ($verbose)
 		{
 			$a2 = $args;
-			array_shift($a2);
-			$source = join('<br>| ',$a2);
-			$source = str_replace('<br>| VERBOSE','',$source);
-			$verbosetext = "\n".'<div class="queryverbose">| '.$source;
+			//array_shift($a2);
+			
+			$a3 = array();
+			$prefix = array();
+			$hasswap = false;
+			$haspop = false;
+			foreach($a2 as $a)
+			{
+				$a = trim($a);
+				$fs = explode(' ',$a);
+				$f = array_shift($fs);
+				
+				if ($f == 'VERBOSE') continue;
+				if (strtolower($f) == 'query') continue;
+
+				if ($hasswap) { array_pop($prefix); array_pop($prefix); $prefix[] = '|'; $prefix[] = '|'; $hasswap = false; }
+				if ($haspop) { array_pop($prefix); $haspop = false;}
+				
+				
+				
+				switch($f)
+				{
+					case 'SELECT':
+					case 'DATA':
+					case 'FIELDS':
+					case 'IMPORT': if (count($prefix)) 
+									{ array_pop($prefix); $prefix[] = '|'; } 
+									$prefix[] = '+'; break;
+					case 'COPY': array_pop($prefix); $prefix[] = '|';  $prefix[] = '\\'; break;
+					case 'SWAP': array_pop($prefix); array_pop($prefix); $prefix[] = 'x';  $prefix[] = 'x'; $hasswap = true; break;
+					case 'POP': array_pop($prefix);  $prefix[] = '-';  $haspop = true; break;
+					case 'JOIN':
+					case 'LEFTJOIN':
+					case 'OUTERJOIN':
+					case 'UNION':
+					case 'EXCEPT':
+					case 'CROSS': array_pop($prefix);   $prefix[] = '/'; $haspop = true; break;
+					
+					
+					default: array_pop($prefix); $prefix[] = '|';
+				}
+				$a3[] = join('',$prefix).'  '.$a;
+			}
+			
+			$source = join('<br>',$a3);
+			//$source = str_replace('<br> VERBOSE','',$source);
+			$verbosetext = "\n".'<nowiki><div class="queryverbose"><pre>'.$source;
 			if (count($rows)==1)
-				$verbosetext .= '<br>'.sprintf('%0d row',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</div>';
+				$verbosetext .= '<br>= '.sprintf('%0d row',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</pre></div></nowiki>';
 			else
-				$verbosetext .= '<br>'.sprintf('%0d rows',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</div>';
+				$verbosetext .= '<br>= '.sprintf('%0d rows',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</pre></div></nowiki>';
 		}
 		
 		$errortext = '';
 		if ($error) 
-			$errortext .= "\n".'<div class="queryerror">'. swSystemMessage('Query Error - '.$error,$lang).'<br>| '.$errorline.'</div><br>';
+			$errortext .= "\n".'<div class="queryerror">'. swSystemMessage('Query Error - '.$error,$lang).'<br>'.$errorline.'</div><br>';
 		
 		global $swOvertime;
 		

@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '1.9.9';   
+$swVersion = '2.0.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -68,6 +68,7 @@ include_once $swRoot.'/inc/functions/calc.php';
 include_once $swRoot.'/inc/functions/css.php';
 include_once $swRoot.'/inc/functions/familyname.php';
 include_once $swRoot.'/inc/functions/htmltabletofields.php';
+include_once $swRoot.'/inc/functions/system.php';
 
 
 // parsers
@@ -280,49 +281,48 @@ function swSystemMessage($msg,$lang,$styled=false)
 	
 	
 	if ($lang)
-		$langmsg =  $msg.'/'.$lang;
-	else
-		$langmsg =  $msg.'/'.$swDefaultLang;
-		
-	$w->name = 'System:'.$langmsg;
-		
-	if (array_key_exists($langmsg,$swSystemSiteValues))
 	{
-		$w->parsedContent = $swSystemSiteValues[$langmsg];
+		$langmsg =  $msg.'/'.$lang;
+		$langmsgurl =  swNameURL($msg).'/'.$lang;
 	}
 	else
 	{
-		$w->lookup();   
+		$langmsg =  $msg.'/'.$swDefaultLang;
+		$langmsgurl =  swNameURL($msg).'/'.$swDefaultLang;
+	}
+		
+	$w->name = 'System:'.$langmsgurl;
+	
+	// we try to look up only once these values per call - expensive file lookup	
+	if (!array_key_exists($langmsg,$swSystemSiteValues))
+	{
+		$w->lookup(); 
+		
+		// site has defined a custom value as page  
 		if ($w->visible())
 		{
-				$swSystemSiteValues[$msg] = $w->content;
-				$w->parsedContent = $w->content;
+			$swSystemSiteValues[$langmsg] = $w->content;
 		}
+		
+		// verbatim systemDefaults - obsolete  
+		elseif (array_key_exists($langmsg,$swSystemDefaults))
+		{
+			$swSystemSiteValues[$langmsg] = $swSystemDefaults[$langmsg];
+		}
+		
+		// urlname systemDefaults   
+		elseif (array_key_exists($langmsgurl,$swSystemDefaults))
+		{
+			$swSystemSiteValues[$langmsg] = $swSystemDefaults[$langmsgurl];
+		}
+		
+		// nor found, return texto
 		else
 		{
-			if (array_key_exists($langmsg,$swSystemDefaults))
-			{
-				$w->parsedContent = $swSystemSiteValues[$langmsg] = $swSystemDefaults[$langmsg];
-			}
-			else
-			{
-				if ($msg != swNameURL($msg))	
-				{
-					$urlmsg = swNameURL($msg);
-					$urlsystemmessage = swSystemMessage($urlmsg,$lang,$styled);
-					
-					if ($urlsystemmessage != $urlmsg)
-						$swSystemSiteValues[$langmsg] = $urlsystemmessage;
-					else
-						$swSystemSiteValues[$langmsg] = $msg;
-				}
-				else
-					$swSystemSiteValues[$langmsg] = $msg;
-				
-				$w->parsedContent = $swSystemSiteValues[$langmsg];
-			}
+			$swSystemSiteValues[$langmsg] = $msg;
 		}
 	}
+	$w->parsedContent = $swSystemSiteValues[$langmsg];
 	
 	if ($styled) {$ti->dowork($w); $tl->dowork($w); $ts->dowork($w); }
 	
