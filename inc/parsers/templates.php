@@ -56,8 +56,6 @@ class swTemplateParser extends swParser
 		// simple check unbalanced curly brackets against error 503 when PRCE looks too far
 		$matches1 = explode('{{',$s);
 		$matches2 = explode('}}',$s);
-		echotime('matches1 '.count($matches1));
-		echotime('matches2 '.count($matches1));
 		if (count($matches1) != count($matches2)) { global $swError; $swError = 'Unbalanced curly brackets'; return; };
 		
 		
