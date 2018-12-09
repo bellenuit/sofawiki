@@ -4,7 +4,8 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swParsedName = swSystemMessage('search',$lang).':"'.$query.'"';
 
-$ns = join('|',$swSearchNamespaces);
+$ns = join('|',$swSearchNamespaces); 
+if (stristr($ns,'*')) $ns = '*';
 
 $urlquery = swNameURL($query);
 
@@ -65,6 +66,32 @@ if (!$found)
 		
 		$revisions = swFilter('SELECT _name, _rating, _revision WHERE _* *~* '.$word,$ns,'query','',$hint);
 		
+		// remove revisions of excluded name spaces
+		
+		
+		if (count($swSearchExcludeNamespaces)>0)
+		{
+
+			
+			foreach($swSearchExcludeNamespaces as $excl)
+			{
+				
+				$excl .= ':';
+				$excl = swNameURL($excl);
+				
+				echotime($excl);
+				
+				$l = strlen($excl);
+				foreach($revisions as $k=>$v)
+				{
+					$n = $v['_name'];
+					if (swNameURL(substr($n,0,$l)) == $excl) unset($revisions[$k]);
+				}
+			}
+		}
+		
+		
+		
 		if (!isset($revisions) || !is_array($revisions)) continue;
 		
 		$hint = new swBitmap();
@@ -79,7 +106,7 @@ if (!$found)
 		{
 			foreach($revisions as $k=>$v)
 			{
-				$n = $v['_name'];
+				$n = swNameURL($v['_name']);
 				$r = $v['_rating'];
 				if (isset($names[$n]))
 					$names[$n] += $r;
@@ -93,7 +120,7 @@ if (!$found)
 			$thisrevision = array();
 			foreach($revisions as $k=>$v)
 			{
-				$n = $v['_name'];
+				$n = swNameURL($v['_name']);
 				$r = $v['_rating'];
 				$thisrevision[$n] = $r;
 			}
@@ -124,10 +151,31 @@ if (!$found)
 		}
 		
 	}
+	
+	$goodresults = swFilter('SELECT querygoodresults, querygoodhits FROM logs: WHERE querygoodresults == '.$urlquery,'*','query','','');
+	
+	//print_r($names);
+	
+	foreach($goodresults as $row)
+	{
+		$goodhits = explode('+',$row['querygoodhits']);
+		
+		$c = count($goodhits);
+		
+		foreach ($goodhits as $g)
+		{
+			echotime('good '.$g); 
+			if (isset($names[$g])) $names[$g] += (5/$c);
+			
+		}
+	}
 
+	//print_r($names);
 
 	if (count($names))
 		arsort($names);
+
+
 
 
 	$swParseSpecial = false; 
@@ -205,6 +253,8 @@ if (!$found)
 			
 			$link = $record->link("");
 			
+			$link .= '&query='.urlencode(swNameURL($query));
+			
 			$dplen = strlen('#DISPLAYNAME');
 			if (substr($record->content,0,$dplen)=='#DISPLAYNAME')
 				{
@@ -255,6 +305,7 @@ if (!$found)
 							
 
 							$record->content = substr($record->content,$pos,$pos2-$pos);  
+							$record->content = str_replace(PHP_EOL,' ',$record->content);
 
 							$record->parsers = array();
 							$record->parsers['nowiki'] = new swNoWikiParser;
@@ -301,10 +352,9 @@ if (isset($swParseSpecial))
 	$swParsedContent = $wiki->parse();
 }
 
-if (isset($swOvertime) && $swOvertime)  $swParsedContent.="\n".'<a href="index.php?action=search&query='.$query.'&allresults=1&moreresults=1">'.swSystemMessage('there-may-be-more-results',$lang).'</a>';
 
-if (isset($swOvertime))
-	$swParsedContent .= '<br>'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a>';
+if (isset($swOvertime) && $swOvertime)
+	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
 
 
 ?>

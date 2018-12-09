@@ -86,20 +86,20 @@ function swGetBloomBitmapFromTerm($term)
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
 		
-		echotime($blocks);
+		//echotime($blocks);
 					
 		for ($i = 0; $i<=$blocks; $i++)
 		{
 			
 			
-			echotime($h.' '.$i);
+			//echotime($h.' '.$i);
 			
 			$col = 0;
 			$offset = ($i * 1024 + $h) * 8192 + $col;
 			fseek($swBloomIndex,$offset); 
 			$test = fread($swBloomIndex,8192); 
 			
-			echotime($offset);
+			//echotime($offset);
 			
 			$hbm->map .= $test;
 		}
@@ -112,7 +112,7 @@ function swGetBloomBitmapFromTerm($term)
 	$notindexed = $db->bloombitmap->notop();
 	$bm = $bm->orop($notindexed);
 	
-	echotime('bloom end');
+	//echotime('bloom end');
 		
 	return $bm;
 	

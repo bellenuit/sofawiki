@@ -15,7 +15,13 @@ class swNoWikiParser extends swParser
 	function dowork(&$wiki)
 	{
 
+		
+		
 		$s = $wiki->parsedContent;
+		
+		//echo "<nowiki><pre>NOWIKI: ".$s."</pre></nowiki>";
+		
+		$s = str_replace('{{}}','',$s);
 		
 		if (substr($s,0,strlen("#DISPLAYNAME"))=="#DISPLAYNAME")
 		{
@@ -23,17 +29,23 @@ class swNoWikiParser extends swParser
 			$s = substr($s,$pos+1);
 		}
 		
-		// remove templates and images
-		$s = preg_replace("/\{{([-\.\w\/\: \|,\'\p{Latin}\p{N}]+)\}}/u", "", $s);
-		$s = preg_replace("/\[\[Image:([-\.\w\/\: \|,\'\p{Latin}\p{N}]+)\]\]/u", "", $s);
-		$s = preg_replace("/\[\[Media:([-\.\w\/\: \|,\'\p{Latin}\p{N}]+)\]\]/u", "", $s);
-		$s = preg_replace("/\[\[Category:([-\.\w\/\: \|,\'\p{Latin}\p{N}]+)\]\]/u", "", $s);
-		
-		global $swLanguages;
-		foreach ($swLanguages as $v)
+		if (substr($s,0,strlen("#CACHE"))=="#CACHE")
 		{
-			$s = preg_replace("/\[\[".$v.":([-\.\w\/\: \|,\'\p{Latin}\p{N}]+)\]\]/u", "", $s);
+			$pos = strpos($s,"\n");
+			$s = substr($s,$pos+1);
 		}
+		
+		// remove templates and images
+		$s = preg_replace("/\{\{(.+?)\}\}/u", "", $s);
+		$s = preg_replace("/\[\[Image:(.+?)\]\]/u", "", $s);
+		$s = preg_replace("/\[\[Media:(.+?)\]\]/u", "", $s);
+		$s = preg_replace("/\[\[Category:(.+?)\]\]/u", "", $s);
+		
+		// remove language links
+		global $swLanguages;
+		foreach($swLanguages as $l)
+			$s = preg_replace("/\[\[".$l.":(.+?)\]\]/u", "", $s);
+		
 		
 		// remove table code
 		$s = preg_replace("/^\{\|(.*)$/", "", $s);

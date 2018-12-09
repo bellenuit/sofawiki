@@ -159,22 +159,27 @@ function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,
 						//counts the number of occurences and the position
 						$rating = 0;
 						$len0 = strlen($titleurl);
+						$k = 1;
 						
 						//if in title, means before \n, it counts 10 times
-						while ($titleurl = stristr($titleurl,$termurl))
+						if ($titleurl = stristr($titleurl,$termurl))
 						{
-							$rating += strlen($titleurl) * strlen($termurl) / $len0 / $len0 * 10 ;
+							$rating += strlen($titleurl) / $len0 / $k * 10 ;
 							$titleurl = substr($titleurl,1);
+							$k++;
 						}
 						
 						$len0 = strlen($contenturl);
+						$k = 1;
 						
-						while ($contenturl = stristr($contenturl,$termurl))
+						if ($contenturl = stristr($contenturl,$termurl))
 						{
-							$rating += strlen($contenturl) * strlen($termurl) / $len0 / $len0 ;
+							$rating += strlen($contenturl) / $len0 / $k ;
 							$contenturl = substr($contenturl,1);
+							$k++;
 						}
-						$row[$revision.'-'.$fi][$f] = sprintf('%09.3f',$rating);
+						$rating = min(99.999,$rating);
+						$row[$revision.'-'.$fi][$f] = sprintf('%06.3f',$rating);
 				}
 				else
 					$row[$revision.'-'.$fi][$f] = @$fieldlist2[$fi][$f];

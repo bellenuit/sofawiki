@@ -102,6 +102,9 @@ $swSystemDefaults["no-result/es"] =  "Nada.";
 $swSystemDefaults["modify-help/es"] = "Edita la p&aacute;gina actual usando sint&aacute;xis de Wiki. Despu&eacute;s previsualiza o modificala directamente.";
 
 $swSystemDefaults["there-may-be-more-results/es"] = "Puede haber más resultados. Actualizar la página para obtenerlos.";
+$swSystemDefaults["search-limited-by-timeout/es"] =  "Búsqueda limitada por tiempo de espera";
+$swSystemDefaults["search-again/es"] =  "Búsqueda-de nuevo";
+
 
 // skins
 
@@ -120,4 +123,8 @@ $swSystemDefaults["rename-subpages/es"] = "Rename subpages";
 
 
 $swSystemDefaults["what-links-here/es"] = "What links here";
+
+$swSystemDefaults["replace/es"] = "Replace";
+$swSystemDefaults["replace-preview/es"] = "Replace Preview";
+$swSystemDefaults["export/es"] = "Export";
 ?>

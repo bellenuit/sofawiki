@@ -97,10 +97,14 @@ $swSystemDefaults["editing-conflict-your-change/dk"] = "Dine forslag";
 $swSystemDefaults["editing-conflict-differences/dk"] = "Forskelle";
 $swSystemDefaults["swovertime/dk"] =  "Search timeout";
 $swSystemDefaults["no-result/dk"] =  "Intet.";
+$swSystemDefaults["search-limited-by-timeout/de"] =  "Search timeout";
+$swSystemDefaults["search-again/de"] =  "Search again";
+
 
 $swSystemDefaults["modify-help/dk"] = "Rediger den nuv&aelig;rende side ved brug af Wiki syntaks. Forh&aring;ndsvis den s&aring; eller send rettelserne direkte.";
 
 $swSystemDefaults["there-may-be-more-results/dk"] = "Der kan være flere resultater. Opdater siden for at få dem";
+
 
 // skins
 
@@ -118,6 +122,10 @@ $swSystemDefaults["rename-subpages/dk"] = "Rename subpages";
 
 
 $swSystemDefaults["what=-links-here/dk"] = "What links here";
+
+$swSystemDefaults["replace/dk"] = "Replace";
+$swSystemDefaults["replace-preview/dk"] = "Replace Preview";
+$swSystemDefaults["export/dk"] = "Export";
 
 
 ?>

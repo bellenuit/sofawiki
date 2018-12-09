@@ -1,4 +1,15 @@
-<!DOCTYPE HTML>
+<?php if (isset($_REQUEST['ajax']))
+{
+	if (isset($swOvertime) && $swOvertime)
+		echo '1';
+		else
+		echo '0';
+	echo $swParsedContent;
+		
+	return;
+
+}
+?><!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -108,18 +119,61 @@ echo '<meta name="title" content="'. $t. '">
 <h1><?php echo "$swParsedName" ?></h1>
 </div><!-- title -->
 
-<div id='content'><?php echo "
+<div id='content'><div id='parsedcontent'><?php echo "
 
 $swParsedContent
 " ?>
 
-<div id="info">
+</div><div id="info">
 <?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);?>
 </div>
 
 </div><!-- content -->
 
+<?php 
 
+if (isset($swOvertime) && $swOvertime && count($_POST) == 0)
+{
 
+echo '
+<script>
+var xmlhttp=new XMLHttpRequest();
+xmlhttp.onreadystatechange=function()
+  {
+  if (xmlhttp.readyState==4 && xmlhttp.status==200)
+    {
+    	s = xmlhttp.responseText;
+		overtime = s.substr(0,1);
+		t = s.substr(1);
+		document.getElementById("parsedcontent").innerHTML=t;
+		if (overtime=="1")
+		{
+			setTimeout(function()
+			{	
+				var u = document.URL;
+				if (u.indexOf("?") == -1) u = u+"?ajax=1"; else u = u+"&ajax=1";
+				xmlhttp.open("GET",u,true);
+				xmlhttp.send();
+				document.title = document.title+"-";
+				document.getElementById("searchovertime").innerHTML +="...";
+			}, 3000);
+		}
+		else
+			document.title = document.title+".";
+    }
+  }
+setTimeout(function()
+{
+	var u = document.URL;
+	if (u.indexOf("?") == -1) u = u+"?ajax=1"; else u = u+"&ajax=1";
+	xmlhttp.open("GET",u,true);
+	xmlhttp.send();
+	document.title = document.title+"-"
+	document.getElementById("searchovertime").innerHTML +="...";
+}, 3000);
+</script>';
+}
+
+?>
 </body>
 </html>

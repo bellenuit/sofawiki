@@ -95,8 +95,11 @@ $swSystemDefaults["editing-conflict-current-page/de"] = "Aktuelle Version der Se
 $swSystemDefaults["editing-conflict-your-change/de"] = "Ihr Vorschlag";
 $swSystemDefaults["editing-conflict-differences/de"] = "Differenzen";
 $swSystemDefaults["there-may-be-more-results/de"] =  "Es hat vielleicht mehr Suchresultate. W&auml;hlen Sie die Seite noch einmal, um mehr Resultate zu erhalten.";
-$swSystemDefaults["swovertime/en"] =  "Suchzeit &uuml;berschritten";
+$swSystemDefaults["swovertime/de"] =  "Suchzeit &uuml;berschritten";
 $swSystemDefaults["no-result/de"] =  "Nichts gefunden.";
+$swSystemDefaults["search-limited-by-timeout/de"] =  "Suchzeit &uuml;berschritten";
+$swSystemDefaults["search-again/de"] =  "Nochmals suchen";
+
 $swSystemDefaults["modify-help/de"] = "Bearbeiten Sie die Seite mit der Wiki Syntax. Dann gehen Sie zur Preview oder direkt zu Bearbeiten.";
 
 // skins
@@ -115,6 +118,9 @@ $swSystemDefaults["rename-subpages/de"] = "Rename subpages";
 
 $swSystemDefaults["what-links-here/de"] = "Links zum Artikel";
 
+$swSystemDefaults["replace/de"] = "Ersetzen";
+$swSystemDefaults["replace-preview/de"] = "Voransicht Ersetzen";
+$swSystemDefaults["export/de"] = "Exportieren";
 
 
 

@@ -14,6 +14,7 @@ $swParsedContent .= "\n<form method='get' action='index.php'><p>";
 
 $query = swGetArrayValue($_REQUEST,'query');
 $query = str_replace("\\\\","\\",$query);
+$query = trim($query);
 $regex = swGetArrayValue($_REQUEST,'regex');
 $regex =  str_replace("\\\\","\\",$regex);
 if ($regex)
@@ -60,7 +61,7 @@ foreach ($files as $f)
 }
 $datestart = swGetArrayValue($_REQUEST,'datestart');
 $dateend = swGetArrayValue($_REQUEST,'dateend');
-if (!$datestart) $datestart = max($minfile, date("Y-m-d",time()-29*86400));
+if (!$datestart) $datestart = max($minfile, date("Y-m-d",time()));
 if (!$dateend) $dateend = $maxfile;
 
 
@@ -70,7 +71,7 @@ if (swGetArrayValue($_REQUEST,'submitconsolidate',false) || defined("CRON") )
 
 	
 	$datestart = date("Y-m-d",time());
-	$dateend = date("Y-m-d",time()-86400); //no at default
+	$dateend = date("Y-m-d",time()); //no at default
 	$stats = 1;
 	foreach($files as $f)
 	{
@@ -99,7 +100,7 @@ if (!defined("CRON"))
 // $swParsedContent .= "\n</select>";
 $swParsedContent .= "\n<input type='hidden' name='name' value='special:logs'><p>";
 $swParsedContent .= "\nStart <input type='text' name='datestart' value='$datestart' /> ";
-$swParsedContent .= "\nEnd<input type='text' name='dateend' value='$dateend' />";
+$swParsedContent .= "\nEnd <input type='text' name='dateend' value='$dateend' />";
 $swParsedContent .= "\nFilter <input type='text' name='query' value='$query' />";
 $swParsedContent .= "\n<p><input type='checkbox' name='regex' value='1' $checked /> Regex";
 $swParsedContent .= "\n<input type='checkbox' name='unique' value='1' $uniquechecked /> Unique";
@@ -119,6 +120,7 @@ $totaltime = 0;
 $uniquevisitors = array();
 $uniquepageviews = array();
 $queries = array();
+$queriesgoodresults = array();
 $actions = array();
 $errors = array();
 if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'submitsave',false))
@@ -186,7 +188,12 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 					}
 					if ($q != '')
 					{
-						if (isset($queries[$q])) $queries[$q]++; else $queries[$q]=1;
+						if ($a == 'search')
+							if (isset($queries[$q])) $queries[$q]++; else $queries[$q]=1;
+						if ($a == 'view' && $hitname != swNameURL($swMainName))
+						{
+							$queriesgoodresults[$q][] = $hitname;
+						}
 					}
 					if ($a != '')
 					{
@@ -272,7 +279,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			$i++;
 			$viewpercentage = sprintf("%0.1f",100*$views/count($uniquepageviews)).'%';
 			$statlines[]= "$i. [[name::$hitpage]][[uniqueviews::$views]][[viewpercentage::$viewpercentage]]";
-			if($i>=50) break; 
+			if ($swLogCount && $i>=$swLogCount) break;  
 		}
 		
 		$statlines[]= "[[title::Search keywords]]";
@@ -284,13 +291,21 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			if($i>=50) break; 
 		}
 		
+		$statlines[]= "[[title::Search good results]]";
+		asort($queriesgoodresults); $i=0;
+		foreach($queriesgoodresults as $k=>$v)
+		{
+			$i++;
+			$statlines[]= "$i. [[querygoodresults::$k]][[querygoodhits::".join('+',$v)."]]";
+			if($i>=25) break; 
+		}
 		$statlines[]= "[[title::Actions]]";
 		arsort($actions); $i=0;
 		foreach($actions as $k=>$v)
 		{
 			$i++;
 			$statlines[]= "$i. [[action::$k]][[actionhits::$v]]";
-			if($i>=50) break; 
+			if($i>=25) break; 
 		}
 
 		$statlines[]= "[[title::Errors]]";
@@ -299,9 +314,9 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		{
 			$i++;
 			$statlines[]= "$i. [[error::$k]][[errorhits::$v]]";
-			if($i>=50) break; 
+			if($i>=25) break; 
 		}
-		/*
+		
 		$statlines[]= "[[title::Entry pages]]";
 		
 		$entrypages = array();
@@ -344,7 +359,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			if($i>=25) break; 
 		}
 
-		*/
+		
 		
 		$statlines[]= "[[title::Most active users]]"; 
 		
@@ -394,7 +409,22 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 	else
 	{
 		if (!defined("CRON")) $swParsedContent .= "\n\n<pre>\n\n</pre>\n";
-		if (!defined("CRON")) $swParsedContent .= "\n\n<pre>".join("\n",$rawlines)."\n</pre>\n";	
+		if (!defined("CRON")) $swParsedContent .= "\n\n<pre>".join("\n",$rawlines)."\n</pre>\n";
+		
+		if (swGetArrayValue($_REQUEST,'submitsave',false))
+		{
+			if ($savename)
+			{
+				$w = new swRecord;
+				$w->name = $savename;
+				$w->content = join("\n",$rawlines);
+				$w->insert();
+			}
+			else
+			{
+				$swError = 'no name for saved log';
+			}
+		}
 	}
 
 } 

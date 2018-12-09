@@ -200,7 +200,7 @@ $swParsedContent .= '
 		
 if (!isset($_REQUEST['searchnames']) && $submitreplacepreview &&!isset($swOvertime) && !$regexerror && count($revisions)>0)
 
-$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("peplace",$lang).'" />';
+$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("replace",$lang).'" />';
 
 
 if (count($revisions)>0)

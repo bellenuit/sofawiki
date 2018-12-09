@@ -101,6 +101,8 @@ $swSystemDefaults["modify-help/en"] = "Edit the current page using Wiki Syntax. 
 $swSystemDefaults["there-may-be-more-results/en"] =  "There may be more results. Refresh the page to get them.";
 $swSystemDefaults["swovertime/en"] =  "Search timeout";
 $swSystemDefaults["no-result/en"] =  "Not found.";
+$swSystemDefaults["search-limited-by-timeout/en"] =  "Search limited by timeout";
+$swSystemDefaults["search-again/en"] =  "Search again";
 
 // skins
 
@@ -120,6 +122,10 @@ $swSystemDefaults["rename-subpages/en"] = "Rename subpages";
 
 
 $swSystemDefaults["what-links-here/en"] = "What links here";
+
+$swSystemDefaults["replace/en"] = "Replace";
+$swSystemDefaults["replace-preview/en"] = "Replace Preview";
+$swSystemDefaults["export/en"] = "Export";
 
 
 

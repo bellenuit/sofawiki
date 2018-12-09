@@ -107,6 +107,8 @@ $swSystemDefaults["modify-help/fr"] = "Editez cette page avec la syntax Wiki. Pu
 $swSystemDefaults["there-may-be-more-results/fr"] =  "La recherche n'a pas pu trouver tout les r&eacute;sultats. Rafra&icirc;chissez la page pour en avoir plus.";
 $swSystemDefaults["swovertime/fr"] =  "Temps de recherche d&eacute;pass&eacute;";
 $swSystemDefaults["no-result/fr"] =  "Rien trouv&eacute;.";
+$swSystemDefaults["search-limited-by-timeout/fr"] =  "Recherche limit&eacute; par le temps";
+$swSystemDefaults["search-again/fr"] =  "Rechercher";
 
 
 // skins
@@ -125,6 +127,10 @@ $swSystemDefaults["rename-subpages/fr"] = "Rename subpages";
 
 
 $swSystemDefaults["what-links-here/fr"] = "Liens vers l‘article";
+
+$swSystemDefaults["replace/fr"] = "Remplacer";
+$swSystemDefaults["replace-preview/fr"] = "Prévisualier Remplacer";
+$swSystemDefaults["export/fr"] = "Exporter";
 
 
 
