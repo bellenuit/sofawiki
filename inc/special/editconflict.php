@@ -32,8 +32,7 @@ $rows = max(count($lines) + 2, 3);
 if (strlen($wiki->content)<2) $rows = 16;
 $cols = 80 / count($wikis);
 
-if ($action=="preview") $wikicomment = $wiki->comment;
-	else	$wikicomment="";
+$wikicomment="";
 
 $submitbutton = "";
 if ($user->hasright("modify", $wiki->name))
@@ -49,7 +48,6 @@ $swParsedContent .= "
 		<form method='post' action='".$wiki->link($modifymode)."'>
 		<p>
 			<input type='$namefieldtype' name='name' value=\"$wiki->name\" style='width:60%' />
-			<input type='submit' name='submitpreview' value='".swSystemMessage("preview",$lang)."' />
 			$submitbutton
 		</p>
 		<p>".swSystemMessage("editing-conflict-current-page",$lang)." ($wiki->revision, $wiki->user, $wiki->timestamp):</p>

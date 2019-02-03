@@ -65,8 +65,6 @@ if (swGetArrayValue($_REQUEST,'submitmodify',false))
 	$action = 'modify';
 if (swGetArrayValue($_REQUEST,'submitmodifymulti',false))	
 	$action = 'modifymulti';
-if (swGetArrayValue($_REQUEST,'submitpreview',false))	
-	$action = 'preview';
 if (swGetArrayValue($_REQUEST,'submitcancel',false))	
 	$action = 'view';
 	
@@ -272,7 +270,7 @@ if ($action == 'logout')
 //session_write_close(); 1.9.0 moved down to end
 
 // add searchnamespaces by user rights
-$viewdomains = swGetValue($user->content,'_view',true);
+$viewdomains = swGetValue($user->content,'_view'.$swAllUserRights,true);
 {
 	foreach($viewdomains as $v)
 	{
@@ -288,7 +286,7 @@ $viewdomains = swGetValue($user->content,'_view',true);
 	}
 }
 
-$transcludedomains = swGetValue($user->content,'_transclude',true);
+$transcludedomains = swGetValue($user->content.$swAllUserRights,'_transclude',true);
 {
 	foreach($transcludedomains as $v)
 	{
@@ -350,7 +348,7 @@ elseif ($action != 'new')
 				{
 					
 					
-					if ($action !='preview')  
+					 
 						$swError =$action.' '.swSystemMessage('this-page-does-not-exist-error',$lang).' '.$wiki->name; 
 					
 				}
@@ -638,12 +636,6 @@ switch ($action)
 	case 'diff':	include 'inc/special/diff.php';
 				     break;
 
-	case 'preview':  if (!swValidate($name2,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name2)';
-					 if (!swValidate($name,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name)';
-					 $wiki->content = str_replace("\\",'',$content);
-					 $wiki->comment = str_replace("\\",'',$comment);
-					 include_once 'inc/special/edit.php';
-					 break;
 	case 'modify':	
 	case 'modifymulti':	
 					$wiki->name = $name;

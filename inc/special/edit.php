@@ -111,14 +111,7 @@ switch ($wiki->status)
 							$wiki->persistance = false;
 							if ($action != 'new')
 								$wiki->lookup(); // by revision again.
-							if ($action == 'preview')
-							{
-								$wiki->content = $_POST['content'];
-								$wiki->comment = $_POST['comment'];
-								
-							}
-							else
-								$wiki->comment = '';
+							$wiki->comment = '';
 							
 							
 							$swParsedContent .= "\n<td valign=top $wikiwidth>";
@@ -163,7 +156,6 @@ switch ($wiki->status)
  <p id='editzonesubmit' style='width:100%; position:relative'>
  <input type='$namefieldtype' name='name' value=\"$wiki->name\" style='width:60%' />
  <input type='submit' name='submitcancel' value='".swSystemMessage("cancel",$lang)."' />
- <input type='submit' name='submitpreview' value='".swSystemMessage("preview",$lang)."' />
  $submitbutton
  </p>
  <div id='editzonewrapper' style='width: 100%; height: "  . floor($rows*20)  . "px; position: relative; background-color: transparent;' >
@@ -217,12 +209,6 @@ switch ($wiki->status)
 								
 							}
 							
-							if ($action=="preview")
-							{
-									$wiki->parsers = $swParsers;
-									$wiki->internalfields = swGetAllFields($wiki->content);
-									$swParsedContent .= "\n<p><div class='preview'>".$wiki->parse()."\n</div>";
-							}
 							$swParsedContent .= "</td>";
 						}
 						$swParsedContent .= "</tr></table>";

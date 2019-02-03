@@ -490,7 +490,7 @@ class swQueryFunction extends swFunction
 								$w = new swWiki;
 								$w->name = $iname;
 								
-								if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($iname)) 
+								if (function_exists('swVirtualLinkHook') && $hooklink = swVirtualLinkHook($iname)) 
 								{
 									
 									//echo "<p>l ".$hooklink.".";
