@@ -450,8 +450,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	    
 	    $w = new swWiki;
 		$w->name = $urlname;
-	    
-	    if (function_exists('swVirtualLinkHook') && $hooklink = swVirtualLinkHook($urlname, $fields)) 
+	
+	    if (function_exists('swVirtualLinkHook') && $hooklink = swVirtualLinkHook($urlname, $fields, $query)) 
 	    {
   			
   			//echo "<p>l ".$hooklink.".";

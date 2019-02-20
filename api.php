@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '2.0.3';  
+$swVersion = '2.0.4';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -69,6 +69,7 @@ include_once $swRoot.'/inc/functions/css.php';
 include_once $swRoot.'/inc/functions/familyname.php';
 include_once $swRoot.'/inc/functions/htmltabletofields.php';
 include_once $swRoot.'/inc/functions/system.php';
+include_once $swRoot.'/inc/functions/fields.php';
 
 
 // parsers

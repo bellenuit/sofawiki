@@ -127,5 +127,10 @@ $swSystemDefaults["replace/dk"] = "Replace";
 $swSystemDefaults["replace-preview/dk"] = "Replace Preview";
 $swSystemDefaults["export/dk"] = "Export";
 
+$swSystemDefaults["add-column/dk"] = "Add column";
+$swSystemDefaults["add-row/dk"] = "Add row";
+$swSystemDefaults["edit-header/dk"] = "Edit field names";
+$swSystemDefaults["make-permanent/dk"] = "Make permanent";
+
 
 ?>

@@ -132,6 +132,10 @@ $swSystemDefaults["replace/fr"] = "Remplacer";
 $swSystemDefaults["replace-preview/fr"] = "Prévisualier Remplacer";
 $swSystemDefaults["export/fr"] = "Exporter";
 
+$swSystemDefaults["add-column/fr"] = "Add column";
+$swSystemDefaults["add-row/fr"] = "Add row";
+$swSystemDefaults["edit-header/fr"] = "Edit field names";
+$swSystemDefaults["make-permanent/fr"] = "Make permanent";
 
 
 

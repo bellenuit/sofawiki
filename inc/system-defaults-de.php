@@ -122,6 +122,11 @@ $swSystemDefaults["replace/de"] = "Ersetzen";
 $swSystemDefaults["replace-preview/de"] = "Voransicht Ersetzen";
 $swSystemDefaults["export/de"] = "Exportieren";
 
+$swSystemDefaults["add-column/de"] = "Spalte hinzufügen";
+$swSystemDefaults["add-row/de"] = "Zeile hinzufügen";
+$swSystemDefaults["edit-header/de"] = "Feldnamen editieren";
+$swSystemDefaults["make-permanent/de"] = "Felder permanent anzeigen";
+
 
 
 ?>

@@ -50,6 +50,7 @@ if ($action == 'lostpasswordsubmit')
 		$s .= $p;
 		$lostuser->comment = 'lost password';
 		$lostuser->content = $s;
+		$lostuser->user = '';
 		$lostuser->insert();
 		
 		$label = $swMainName.':'.swSystemMessage('your-password-title',$lang);

@@ -13,6 +13,10 @@ ins
 {
 	color: green; text-decoration: none;
 }
+.comment
+{
+	color: blue; background-color: AliceBlue; border: 1px blue solid;
+}
 
 a.invalid
 {

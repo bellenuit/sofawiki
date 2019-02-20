@@ -116,11 +116,12 @@ class swUser extends swRecord
 		if (stristr($this->content, "[[_newpass::$kkey]]")) 
 		{
 			$s = $this->content;
-			$s = preg_replace("/\[\[\_pass\:\:(.*)\]\]/","",$s);
-			$s = preg_replace("/\[\[\_newpass\:\:(.*)\]\]/","",$s);
+			$s = preg_replace("/\[\[\_pass\:\:([^\]]*)\]\]/","",$s);
+			$s = preg_replace("/\[\[\_newpass\:\:([^\]]*)\]\]/","",$s);
 			$s .= "[[_pass::$kkey]]";
 			$this->content = $s;
 			$this->comment = 'new password';
+			$this->user = '';
 			$this->insert();
 			return true;
 		

@@ -127,4 +127,10 @@ $swSystemDefaults["what-links-here/es"] = "What links here";
 $swSystemDefaults["replace/es"] = "Replace";
 $swSystemDefaults["replace-preview/es"] = "Replace Preview";
 $swSystemDefaults["export/es"] = "Export";
+
+$swSystemDefaults["add-column/es"] = "Add column";
+$swSystemDefaults["add-row/es"] = "Add row";
+$swSystemDefaults["edit-header/es"] = "Edit field names";
+$swSystemDefaults["make-permanent/es"] = "Make permanent";
+
 ?>

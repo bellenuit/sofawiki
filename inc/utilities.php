@@ -185,6 +185,21 @@ function swReplaceFields($s,$fields,$options)
 	
 	// options not implemented. default is replace existing fields, or create it if it exists
 	
+	
+	
+	if (stristr($options,'REMOVE_OLD'))
+	{
+		foreach($fields0 as $key=>$value)
+		{
+			if (substr($key,0,1) != '_')
+				$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
+		}
+		
+	}
+	
+	
+
+	
 	foreach($fields as $key=>$value)
 	{
 		// replace existing fields, with one or more instance
@@ -195,6 +210,7 @@ function swReplaceFields($s,$fields,$options)
 		else
 			$s .= PHP_EOL.'[['.$key.'::'.$value.']]';
 	}
+	
 	
 	// remove field lines that are empty;
 	$s = str_replace("[[::]]\n\r",'',$s);
