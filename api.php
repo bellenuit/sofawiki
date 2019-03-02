@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '2.0.4';  
+$swVersion = '2.0.5';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -158,6 +158,7 @@ $swMaxSearchTime = 3000;
 $swMaxOverallSearchTime = 15000;
 $swDenyCount = 5;
 $swLogCount = 0;
+$swMaxFileSize = 8000000;
 
 $swNewUserFormFields = array();
 $swAllUserRights = '[[_view::Main]] ';

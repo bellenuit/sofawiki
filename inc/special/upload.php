@@ -2,10 +2,11 @@
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
+
 $swParsedName = 'Upload';
 $swParsedContent = '<div id="editzone">
 <form action="index.php" method="post" enctype="multipart/form-data">
-<p><input type="hidden" name="MAX_FILE_SIZE" value="8000000" />
+<p><input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxFileSize.'" />
 <input type="hidden" name="action" value="uploadfile" />
 <input type="file" name="uploadedfile" />
 <br/>Filename: <input type="text" name="filename" value="" size="30" />

@@ -74,20 +74,21 @@ $swParsedContent = "'''Version''' {{version}}
 ====Templates====
 {{templates}}
 ====Environment====
-Remote Address " .$_ENV["REMOTE_ADDR"]."
-User Agent " .$_ENV["HTTP_USER_AGENT"]."
-Request URI " .$_ENV["REQUEST_URI"]."
-Referer " .$_ENV["HTTP_REFERER"]."
-Server Address " .$_ENV["SERVER_ADDR"]."
-Host " .$_ENV["HTTP_HOST"]."
+Remote Address " .getenv('REMOTE_ADDR')."
+User Agent " .getenv('HTTP_USER_AGENT')."
+Request URI " .getenv('REQUEST_URI')."
+Referer " .getenv('HTTP_REFERER')."
+Server Address " .getenv('SERVER_ADDR')."
+Host " .getenv('HTTP_HOST')."
 PHP Version ".phpversion()." <nowiki><a href='index.php?name=special:info&phpinfo=1'>PHP Info</a></nowiki>
 Memory Limit ".ini_get("memory_limit")."
 Memory Usage ".sprintf("%0.1f",memory_get_usage()/1024/1024)."M
-Server Signature " .$_ENV["SERVER_SIGNATURE"]."
+Upload max filesize ".ini_get('upload_max_filesize')."
+Post max size ".ini_get('post_max_size')."
+Server Signature " .getenv('SERVER_SIGNATURE')."
 
 
 ";
-
 
 
 

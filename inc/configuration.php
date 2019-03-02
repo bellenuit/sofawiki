@@ -80,7 +80,13 @@ $swDefaultLang = "{{{swlang}}}";
  // index only on cron job or Special:Recent Changes. swFilter may temporarily not show latest results.
  // set this true if you have more than 15'000 revisions.
  $swLazyIndexing = false;
+ // max file size for upload
+ // note that the PHP environment may limit the upload size (upload_max_filesize default 2M and post_max_size) 
+ $swMaxFileSize = 8000000;
+ini_set('upload_max_filesize',$swMaxFileSize);
+ini_set('post_max_size',$swMaxFileSize);
 
+ 
 // 12. Define Email and actions to notify
 
 // $swNotifyMail = "a@b.c";
