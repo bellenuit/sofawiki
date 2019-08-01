@@ -3,8 +3,10 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $wikis = array();
-if ($action == "editmulti" || $action == "modifymulti"  ) 
+if ($action == "editmulti" || $action == "modifymulti") 
 {
+		$deeplsources = array();
+		$targetlang='';
 				
 		foreach($swLanguages as $l)
 		{
@@ -18,9 +20,46 @@ if ($action == "editmulti" || $action == "modifymulti"  )
 			
 			$w->lookup();
 			
+			if (trim($w->content)!='')
+			{
+				$deeplsources[$l]= $w->content;
+			}
+			
 			//echotime($w->name);
-			array_push($wikis,$w);
+			//array_push($wikis,$w);
+			$wikis[$l]=$w;
 		}
+		
+		if (swGetArrayValue($_REQUEST,'submitdeepl',false))	
+		{
+			//echo "translating ";
+			//echo $_REQUEST['submitdeepl'];
+			//echo $_REQUEST['name'];
+			
+			$sourcelang = substr($_REQUEST['submitdeepl'],-2);
+			$targetlang = substr($_REQUEST['name'],-2);
+			
+			//echo " $sourcelang $targetlang ";
+			
+			$w = $wikis[$sourcelang];
+			$sourcetext = $w->content;
+			
+			//echo '<p>'.$sourcetext;
+			
+			$translated = swTranslate($sourcetext,$sourcelang,$targetlang);
+			
+			//echo '<p>'.$translated;
+			
+			//$w = $wikis[$targetlang];
+			//$w->content = $translated;
+			//$wikis[$targetlang] = $w;
+			
+			//print_r($wikis[$targetlang]);
+			
+			
+			$action == "editmulti";
+		}	
+		
 		$modifymode = "modifymulti";
 }
 else
@@ -104,7 +143,7 @@ switch ($wiki->status)
 						$cw = 100/$cw;
 						$wikiwidth = ' style=" width:'.$cw.'%"';
 						
-						foreach ($wikis as $wiki)
+						foreach ($wikis as $wikilang=>$wiki)
 						{
 							
 							//print_r($wiki);
@@ -148,7 +187,23 @@ switch ($wiki->status)
 								$rows = 20;
 							}
 							
-							
+							$deeplcontent = '';
+							if ($action == 'editmulti' && (isset($swDeeplKey) && count($deeplsources)>0 && trim($wiki->content) == '' 
+							&& in_array($wikilang,$swTranslateLanguages)))
+							{
+								
+								$deeplcontent = '<form method="post" action="index.php?action=editmulti">';
+								$deeplcontent .= '<input type="'.$namefieldtype.'" name="name" value="'.$wiki->name.'" style="width:60%" />';
+								foreach($deeplsources as $k=>$v)
+									if (in_array($k,$swTranslateLanguages))
+									$deeplcontent .= '<input type="submit" name="submitdeepl" value="DeepL '.$k.'" />';
+								$deeplcontent .= '</form>';
+								
+								// override wiki content
+								if ($wikilang==$targetlang)
+									$wiki->content = $translated;
+								$swError = ''; // This page does not exist. 
+							}
 							
 							
 							$swParsedContent .= "
@@ -166,8 +221,9 @@ switch ($wiki->status)
 
  <input type='hidden' name='revision' value='$wiki->revision'>
  <p>".swSystemMessage("comment",$lang).":
- <input type='text' name='comment' value=\"$wiki->comment\" style='width:90%' />
+ <input type='text' name='comment' value=\"$wiki->comment\" style='width:90%' /> 
  </p></form>
+ $deeplcontent
 ";
 						
 						

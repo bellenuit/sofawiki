@@ -66,8 +66,19 @@ if ($mypass != "")
 	{
 		case "ok":
 		case "protected":
+		
+			$s = $userwiki->content;
+			$s = preg_replace('/\[\[_pass::[a-f0-9]*]]/', '[[_pass::'.$passencrypted.']]', $s);
 			
-			$swParsedContent .= '<p><a href="index.php?name=User:'.$myname.'">User:'.$myname.'</a></p><p>'.$mypass.'</p><p>[[_pass::'.$passencrypted.']]</p>';
+			$swParsedContent .= '<p>User exists already.</p>';
+			$swParsedContent .= '<a href="index.php?name=User:'.$myname.'">User:'.$myname.'</a></p>';
+			$swParsedContent .= '<pre>'.$userwiki->content.'</pre>';
+			$swParsedContent .=  '<form method="post" action="index.php">
+		<input type ="hidden" name="action" value="preview">
+		<input type="hidden" name="name" value="'.$userwiki->name.'" />
+		<input type="hidden" name="revision" value="'.$userwiki->revision.'">
+		<br><textarea name="content" rows="20" cols="80" style="width:95%">'.$s.'</textarea>
+		<input type="Submit" name="submitmodify" value="Save new password for this user" /></p>';
 			break;
 			
 		default : $swParsedContent .=  'Create user '.$myname.' with pass '.$mypass.'<form method="post" action="index.php">

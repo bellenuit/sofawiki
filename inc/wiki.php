@@ -27,7 +27,7 @@ class swWiki extends swRecord
 		switch ($this->wikinamespace())
 		{
 			case 'Logs':
-			case 'User':
+			case 'User':     
 			case 'Template': $s = $this->content;
 							 $s = str_replace("&", "&amp;",$s);
 							 $s = str_replace("<", "&lt;",$s);

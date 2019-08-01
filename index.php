@@ -440,7 +440,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 		
 	// edit
 	if ($user->hasright('modify', $wiki->name) || 
-	$user->hasright('protect', $wiki->name) || $user->hasright('delete', $wiki->name) || $action == 'modifymulti' )
+	$user->hasright('protect', $wiki->name) || $user->hasright('delete', $wiki->name) || $action == 'modifymulti')
 	{
 	
 		if (($wiki->status != '' && $wiki->status != 'deleted' && $wiki->status != 'delete') || $action == 'modifymulti' || $action == 'modify' ) // page does exist // delete is obsolete

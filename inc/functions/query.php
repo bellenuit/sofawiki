@@ -1090,7 +1090,7 @@ class swQueryFunction extends swFunction
 														$navigationlimit = 50;
 														if (count($fs)>0) $navigationlimit = array_shift($fs);
 														
-									case "HTML":  // HTML htable									
+									case "HTML":  // HTML htable
 									case "FIXED": // SQL style as pre
 									case "FIELDS": // sofawiki fields as pre
 									case "FIELDSCOMPACT": // sofawiki fields as pre
@@ -1102,6 +1102,7 @@ class swQueryFunction extends swFunction
 													break;
 									case "ROWTEMPLATE": if (!array_key_exists(0,$fs)) { $error = 'Missing rowtemplate'; $errorline = $line; break; }
 														$rowtemplate = $fs[0]; break;
+									case "CHART": $chartoptions = join(' ',$fs);  break;// SVG charts						
 									default:  { $error = 'Missing or wrong outputformat'; $errorline = $line; break; }
 								}
 								
@@ -1527,6 +1528,9 @@ class swQueryFunction extends swFunction
 										  $result .= '|'.$v;
 										  $result .= '}}';
 									}
+									
+				case 'CHART' :		$result .= swChart($rows,$chartoptions);
+									break;
 		   }
 		}
 		
