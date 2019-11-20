@@ -77,7 +77,7 @@ class swExtValueFunction extends swFunction
 			if ($elem != "" )
 			{
 				if ($template != "")
-					$results[] = '{{'.$template.'|'.$elem.'}}';
+					$results[] = '{{'.$template.'|'.swHTMLSanitize($elem).'}}';
 				else
 					$results[] = $elem;
 			}

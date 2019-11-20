@@ -5,6 +5,8 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 // utf8
 
 
+
+
 // from http://www.php.net/manual/fr/function.array-multisort.php 
 // modified
 
@@ -1407,9 +1409,9 @@ class swQueryFunction extends swFunction
 									{
 										if ($v=='') $v = '&nbsp;'; // no collapse
 										if (in_array($key,$numbercolumns))
-										 	$result .=	'<td style="text-align:right">'.$v.'</td>';
+										 	$result .=	'<td style="text-align:right">'.swHTMLSanitize($v).'</td>';
 										 else
-										 	$result .=	'<td>'.$v.'</td>';
+										 	$result .=	'<td>'.swHTMLSanitize($v).'</td>';
 									}
 									$result .= '</tr>';
 								}
@@ -1424,7 +1426,7 @@ class swQueryFunction extends swFunction
 								$row = current($rows);
 								foreach ($rows as $rev=>$row)
 								{
-									$result .= '<li>'.join(' ',$row).'</li>';
+									$result .= '<li>'.swHTMLSanitize(join(' ',$row)).'</li>';
 								}
 								$result .= '</ul>';
 								if ($navigationlimit>0) $result  .= $navigation;
@@ -1451,7 +1453,7 @@ class swQueryFunction extends swFunction
 								$result .= "<br>";
 								foreach ($row as $key=>$v)
 								{
-									$result .= str_pad("-",$lens[$k],"-").' ';
+									$result .= str_pad("-",$lens[$key],"-").' ';
 								}
 								$result .= "<br>";
 
@@ -1461,9 +1463,9 @@ class swQueryFunction extends swFunction
 									foreach ($row as $key=>$v)
 									{
 										if (in_array($key,$numbercolumns))
-											$result .= str_pad($v,$lens[$key]," ",STR_PAD_LEFT).' ';
+											$result .= str_pad(swHTMLSanitize($v),$lens[$key]," ",STR_PAD_LEFT).' ';
 										else
-											$result .= str_pad($v,$lens[$key]+1);
+											$result .= str_pad(swHTMLSanitize($v),$lens[$key]+1);
 									}
 									$result .= "<br>";
 								}
@@ -1476,7 +1478,7 @@ class swQueryFunction extends swFunction
 								 {
 									foreach ($row as $k=>$v)
 									{
-										  $result .= '[<nowiki>[</nowiki>'.$k.'::'.$v.']] ';
+										  $result .= '[<nowiki>[</nowiki>'.$k.'::'.swHTMLSanitize($v).']] ';
 										  if ($outputformat == 'FIELDS') $result .='<br>';
 									}
 									$result .= '<br>';
@@ -1511,7 +1513,7 @@ class swQueryFunction extends swFunction
 								 {
 									foreach ($row as $k=>$v)
 									{
-										  $result .= $v;
+										  $result .= swHTMLSanitize($v);
 										  if ($outputformat == 'TEXTSPACE') $result .= ' ';
 									}
 								}
@@ -1525,9 +1527,10 @@ class swQueryFunction extends swFunction
 								 	{
 										  $result .= '{{'.$rowtemplate;
 										foreach ($row as $k=>$v)
-										  $result .= '|'.$v;
+										  $result .= '|'.swHTMLSanitize($v);
 										  $result .= '}}';
 									}
+									break;									
 									
 				case 'CHART' :		$result .= swChart($rows,$chartoptions);
 									break;

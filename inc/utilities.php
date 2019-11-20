@@ -13,6 +13,16 @@ function swSimpleSanitize($s)
 	return $s;
 }
 
+
+function swHTMLSanitize($s)
+{
+	// cleans database output to HTML stream
+	$s = str_replace("<","&lt;",$s);
+	$s = str_replace(">","&gt;",$s);
+	return $s;
+}
+
+
 function swLengthSort($a,$b)
 {
 	$sa = strlen($a);

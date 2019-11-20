@@ -52,7 +52,7 @@ class swValueFunction extends swFunction
 		foreach ($list as $elem)
 		{
 			if ($template != "")
-				$results[] = '{{'.$template.'|'.$elem.'}}';
+				$results[] = '{{'.$template.'|'.swHTMLSanitize($elem).'}}';
 			else
 				$results[] = $elem;
 		}
