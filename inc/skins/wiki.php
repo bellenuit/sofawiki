@@ -7,9 +7,6 @@
 <base href="<?php echo $swBaseHref ?>">
 <link rel='stylesheet' href="inc/skins/wiki.css"/>
 <style><?php echo $swParsedCSS ?></style>
-<link rel='stylesheet' href="inc/skins/editzone.css"/>
-<script src="inc/skins/editzone.js"></script>
-<script>window.onload = colorCodeInit </script>
 </head>
 <body>
 

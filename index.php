@@ -152,13 +152,12 @@ if($knownuser)
 }
 else
 {
-	if (array_key_exists('username', $_POST)) 
-		$username = $_POST['username'];
-	if (array_key_exists('username', $_GET)) 
-		$username = $_GET['username'];
+	if (array_key_exists('username', $_REQUEST)) 
+		$username = $_REQUEST['username'];
 		
-	if (array_key_exists('pass', $_POST)) 
+	if (array_key_exists('pass', $_REQUEST)) 
 		$pass = $_REQUEST['pass'];
+
 	else 
 		$pass = '';
 		
@@ -230,7 +229,7 @@ else
 		if ($username != '' && $action != 'lostpassword' && $action != 'lostpasswordsubmit'
 		&& (array_key_exists('username', $_GET) || array_key_exists('username', $_POST) ) )
 		{			
-			$swError = swSystemMessage('wrong-password-error',$lang);
+			$swError = swSystemMessage('wrong-password-error',$lang)."($username)($pass)";
 			$action = "login";
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}

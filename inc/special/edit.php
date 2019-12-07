@@ -170,20 +170,10 @@ switch ($wiki->status)
 							}
 							
 							if ($modifymode == "modify")
-							{
-								$cid = "id='editzonecolor'"; 
-								if (!$swEditZoneColor) $cid .= "style='visibility:hidden'";
-								$sid = "id='editzonesource'";
-								// use this only in skin (opt-in)
-								/*
-								$swParsedContent .= '
-<script>' . file_get_contents('inc/skins/editzone.js').'</script>';  
- 								$swParsedCSS .= file_get_contents('inc/skins/editzone.css'); 
- 								*/
+							{								
 							}
 							else 
 							{
-								$cid = $sid = 0;
 								$rows = 20;
 							}
 							
@@ -206,25 +196,19 @@ switch ($wiki->status)
 							}
 							
 							
-							$swParsedContent .= "
- <form method='post' action='index.php?action=modify'>
- <p id='editzonesubmit' style='width:100%; position:relative'>
- <input type='$namefieldtype' name='name' value=\"$wiki->name\" style='width:60%' />
- <input type='submit' name='submitcancel' value='".swSystemMessage("cancel",$lang)."' />
- $submitbutton
- </p>
- <div id='editzonewrapper' style='width: 100%; height: "  . floor($rows*20)  . "px; position: relative; background-color: transparent;' >
- <div $cid class='editzonecommon'></div>
- <textarea $sid class='editzonecommon' name='content' style = 'width:100%; height:100%'
- >".$wiki->contentclean()."</textarea>
- </div>
-
- <input type='hidden' name='revision' value='$wiki->revision'>
- <p>".swSystemMessage("comment",$lang).":
- <input type='text' name='comment' value=\"$wiki->comment\" style='width:90%' /> 
- </p></form>
- $deeplcontent
-";
+							$swParsedContent .= '
+ <form method="post" action="index.php?action=modify">
+ 	<p id="editzonesubmit" style="width:100%; position:relative">
+ 		<input type="'.$namefieldtype.'" name="name" value="'.$wiki->name.'" style="width:60%" />
+ 		<input type="submit" name="submitcancel" value="'.swSystemMessage('cancel',$lang).'" />
+	'.$submitbutton.'
+	</p>
+	<textarea class="editzonetextarea" name="content" rows='.$rows.' cols='.$cols.' style="width:100%" >'.$wiki->contentclean().'</textarea>
+	<input type="hidden" name="revision" value="'.$wiki->revision.'">
+	<p>'.swSystemMessage('comment',$lang).': 
+	<input type="text" name="comment" value="'.$wiki->comment.'" style="width:90%" /> 
+	</p>
+</form>'. $deeplcontent;
 						
 						
 							if ($modifymode == "modify")

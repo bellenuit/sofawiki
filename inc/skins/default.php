@@ -68,10 +68,7 @@ echo '<meta name="title" content="'. $t. '">
 	}
 
 ?>
-<link rel='stylesheet' href="inc/skins/editzone.css"/>
 <style><?php echo $swParsedCSS ?></style>
-<script src="inc/skins/editzone.js"></script>
-<script>window.onload = colorCodeInit </script>
 </head>
 <body>
 

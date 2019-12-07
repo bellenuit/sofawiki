@@ -392,7 +392,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		}
 	}
 	
-	echotime('filter ['.$mode.'|'.$namespace.'] '.$filter);
+	echotime('filter '.$filter);
 	
 	
 	$comparefields = false;
@@ -766,7 +766,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			
 			$toc = $tocheck->countbits();
 			$checkedcount += $tocheckcount - $toc;
-			echotime('loop '.$toc);
+			if ($toc > 0 ) echotime('loop '.$toc);
 			
 			
 			

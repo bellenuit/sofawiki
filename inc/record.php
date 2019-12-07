@@ -554,9 +554,9 @@ class swRecord extends swPersistance
 		$s = file_get_contents($checkfile);
 		$s = substr($s,0,strpos($s, '[[_ ]]'));
 		$check = swGetValue($s,'_checksum');
-		echotime('integrity1'.$s);
+		//echotime('integrity1'.$s);
 		if ($check=='') return -1;
-		echotime('integrity2');
+		//echotime('integrity2');
 		$checksum = md5_file($thisfile);
 		if ($checksum == $check)
 		{
