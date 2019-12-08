@@ -47,8 +47,6 @@ $name = str_replace("\\",'',$name);
 $name2 = str_replace("\\",'',$name2);	
 $comment = 	str_replace("\\",'',$comment);
 
-//setcookie('aaa', '55', time() + 9000000 , "/"); 
-
 $ip = swGetArrayValue($_SERVER,'REMOTE_ADDR');
 $referer = swGetArrayValue($_SERVER,'HTTP_REFERER');
 
@@ -56,7 +54,6 @@ $referer = swGetArrayValue($_SERVER,'HTTP_REFERER');
 $referer = preg_replace("$\w*://([^/]*)/(.*)$","$1",$referer);
 	
 // editing
-$id = swGetArrayValue($_REQUEST,'id');	   //obsolete??
 $revision = swGetArrayValue($_REQUEST,'revision',0);	
 $content = swGetArrayValue($_REQUEST,'content',0);	
 
@@ -153,10 +150,10 @@ if($knownuser)
 else
 {
 	if (array_key_exists('username', $_REQUEST)) 
-		$username = $_REQUEST['username'];
+		$username = trim($_REQUEST['username']);
 		
 	if (array_key_exists('pass', $_REQUEST)) 
-		$pass = $_REQUEST['pass'];
+		$pass = trim($_REQUEST['pass']);
 
 	else 
 		$pass = '';
@@ -229,7 +226,7 @@ else
 		if ($username != '' && $action != 'lostpassword' && $action != 'lostpasswordsubmit'
 		&& (array_key_exists('username', $_GET) || array_key_exists('username', $_POST) ) )
 		{			
-			$swError = swSystemMessage('wrong-password-error',$lang)."($username)($pass)";
+			$swError = swSystemMessage('wrong-password-error',$lang);
 			$action = "login";
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
