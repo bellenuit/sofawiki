@@ -15,6 +15,9 @@ class swFieldsParser extends swParser
 	function dowork(&$wiki)
 	{
 		$s = $wiki->parsedContent;
+		
+		//echo '<pre>'.$s.'</pre>';
+		
 		// internal links
 		if (strpos($s,"::")===FALSE) return; 
 		

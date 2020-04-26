@@ -19,6 +19,9 @@ class swTidyParser extends swParser
 		
 		$s = $wiki->parsedContent;
 		
+		
+		
+		
 		//tabs and special spaces
 		$s = str_replace("\t",' ',$s);
 		$s = str_replace("\r",'',$s);

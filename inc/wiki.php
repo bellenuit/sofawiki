@@ -39,6 +39,9 @@ class swWiki extends swRecord
 					  foreach ($this->parsers as $parser)
 								{	
 										
+										//echo '<pre>'.$s.'</pre>';
+										//echo $parser->info();
+										
 										if (is_a($parser,'swCacheParser'))
 										{
 											$r = $parser->dowork($this); 
