@@ -255,7 +255,7 @@ class swInstalledTemplatesFunction extends swFunction
 	function dowork($args)
 	{
 		
-		$revisions = swFilter('SELECT name WHERE name =* Template:','*','data','');
+		$revisions = swFilter('SELECT name WHERE name =* Template:','*','query','');
 		
 		$lines = array();
 		foreach ($revisions as $row)
