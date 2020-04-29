@@ -37,10 +37,11 @@ class swStyleParser extends swParser
 		
 		// table parser
 		
-		preg_match_all('/\n{\|(.*)\n\|}/Us', $s, $matches, PREG_SET_ORDER);
+		preg_match_all('/\n{\|(.*?)\n\|}/s', $s, $matches, PREG_SET_ORDER);
 		
 		foreach ($matches as $match)
 		{
+			//echo $match[0].'<br>';
 			$lines = explode("\n",$match[0]);
 			// discount first
 			unset($lines[0]);
@@ -118,7 +119,7 @@ class swStyleParser extends swParser
 				$tabletext .= "<tr$currentrowstyle>$currentrow</tr>";
 			$tabletext = "<table$tablestyle>$captiontext$tabletext</table>";			
 			
-			$s = str_replace($match,$tabletext,$s);
+			$s = str_replace($match[0],$tabletext,$s);
 		}
 			
 	

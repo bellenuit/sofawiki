@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '2.1.3';  
+$swVersion = '3.0.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -45,6 +45,9 @@ include_once $swRoot.'/inc/sitemap.php';
 include_once $swRoot.'/inc/user.php';
 include_once $swRoot.'/inc/utilities.php';
 include_once $swRoot.'/inc/wiki.php';
+include_once $swRoot.'/inc/expression.php';
+include_once $swRoot.'/inc/relation.php';
+include_once $swRoot.'/inc/relationfilter.php';
 
 // external code
 include_once $swRoot.'/inc/diff.php';
@@ -71,6 +74,8 @@ include_once $swRoot.'/inc/functions/familyname.php';
 include_once $swRoot.'/inc/functions/htmltabletofields.php';
 include_once $swRoot.'/inc/functions/system.php';
 include_once $swRoot.'/inc/functions/fields.php';
+include_once $swRoot.'/inc/functions/relation.php';
+
 
 
 // parsers
@@ -125,9 +130,11 @@ $swSpecials['Deny'] = 'deny.php';
 $swSpecials['Update'] = 'update.php';
 //$swSpecials['Fields'] = 'fields.php';
 $swSpecials['Query'] = 'query.php';
+$swSpecials['Relation'] = 'relation.php';
 $swSpecials['Orphaned Pages'] = 'orphanedpages.php';
 $swSpecials['Dead End Pages'] = 'deadendpages.php';
 $swSpecials['Redirects'] = 'redirects.php';
+
 $swSpecials['Most Linked Pages'] = 'mostlinkedpages.php';
 $swSpecials['Most Linked Categories'] = 'mostlinkedcategories.php';
 $swSpecials['Unused Files'] = 'unusedfiles.php';

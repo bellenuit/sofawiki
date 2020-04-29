@@ -164,6 +164,23 @@ table.queryfunction td, th
 	padding-bottom: 3px;
 }
 
+table.datatable
+{
+	border-collapse: collapse;
+	width: 100%;
+	margin-bottom: 5px;
+}
+
+table.datatable td, th
+{
+	text-align: left;
+	border: 1px solid black;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
 td { vertical-align: top;  width: 50% }
 
 table.fieldseditor

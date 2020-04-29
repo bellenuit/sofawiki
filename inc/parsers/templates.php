@@ -95,7 +95,8 @@ class swTemplateParser extends swParser
 					
 				}
 				else
-					$v = trim(str_replace("\n","",$v));
+					$v = trim($v);
+					//$v = trim(str_replace("\n","",$v));
 					
 					
 				

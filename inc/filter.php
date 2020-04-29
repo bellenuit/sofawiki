@@ -892,7 +892,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 					if (isset($row['_error'])) return $row;
 					
 				}
-				//print_r($row);
+				//print_r($row); 
 				if (count($row)>0)
 				{
 					foreach($row as $primary=>$line)

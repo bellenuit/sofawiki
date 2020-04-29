@@ -190,7 +190,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 					{
 						if ($a == 'search')
 							if (isset($queries[$q])) $queries[$q]++; else $queries[$q]=1;
-						if ($a == 'view' && $hitname != swNameURL($swMainName))
+						if ($a == 'view' && $hitname != swNameURL(@$swMainName))
 						{
 							$queriesgoodresults[$q][] = $hitname;
 						}
@@ -279,7 +279,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			$i++;
 			$viewpercentage = sprintf("%0.1f",100*$views/count($uniquepageviews)).'%';
 			$statlines[]= "$i. [[name::$hitpage]][[uniqueviews::$views]][[viewpercentage::$viewpercentage]]";
-			if ($swLogCount && $i>=$swLogCount) break;  
+			if (isset($swLogCount) && $swLogCount && $i>=$swLogCount) break;  
 		}
 		
 		$statlines[]= "[[title::Search keywords]]";
