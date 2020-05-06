@@ -474,6 +474,18 @@ class swRelationLineHandler
 										$this->stack[] = $r2;
 									}
 									break;									
+				case 'label':		if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Label Stack empty'.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$r->label($body);
+										$this->stack[] = $r;
+									}
+									break;				
 				case 'limit':		if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Limit Stack empty'.$ptag2;
@@ -957,6 +969,7 @@ class swRelation
 	var $globals = array();
 	var $locals = array();
 	var $formats = array();
+	var $labels = array();
 	var $functions = array();
 	var $aggregators = array();
 	
@@ -1080,6 +1093,7 @@ class swRelation
 		$result = new swRelation($this->header);
 		$result->tuples = array_clone($this->tuples);
 		$result->formats = array_clone($this->formats);
+		$result->labels = array_clone($this->labels);
 		$result->globals = $this->globals;
 		$result->functions = $this->functions;
 		$result->locals = $this->locals;
@@ -1362,6 +1376,8 @@ class swRelation
 				$rightheader[] = $f;
 				if (array_key_exists($f, $r->formats))
 					$this->formats[$f] = $r->formats[$f];
+				if (array_key_exists($f, $r->labels))
+					$this->labels[$f] = $r->labels[$f];
 			}	
 		}
 		
@@ -1469,6 +1485,8 @@ class swRelation
 				$rightheader[] = $f;
 				if (array_key_exists($f, $r->formats))
 					$this->formats[$f] = $r->formats[$f];
+				if (array_key_exists($f, $r->labels))
+					$this->labels[$f] = $r->labels[$f];
 			}	
 		}
 		
@@ -1567,6 +1585,27 @@ class swRelation
 		
 		$this->tuples = $newtuples;
 
+	}
+	
+	function label($t)
+	{
+		$pairs = explode(',',$t);
+		$this->label2($pairs);
+	}
+	
+	function label2($pairs)
+	{
+		foreach($pairs as $p)
+		{
+			$fields = explode(' ',trim($p));
+			if (count($fields) < 2)
+				throw new swRelationError('Invalid label',121);
+			$f0 = trim(array_shift($fields));
+			$f1 = str_replace('"','',join($fields,' '));
+			if (!in_array($f0, $this->header))
+				throw new swRelationError('Unknown label '.$f0,122);
+			$this->labels[$f0] = $f1;
+		}
 	}
 	
 	function limit($t)
@@ -1829,6 +1868,8 @@ class swRelation
 				throw new swRelationError('Project duplicate column '.$nc,141);
 			if (array_key_exists($fields[0],$this->formats))
 				$this->formats[$nc] = $this->formats[$fields[0]];
+			if (array_key_exists($fields[0],$this->labels))
+				$this->labels[$nc] = $this->labels[$fields[0]];
 			$newcolumns[] = $nc;
 		}
 		$c = count($columns);
@@ -2318,7 +2359,16 @@ class swRelation
 		$lines[]= '{| class="datatable" ';
 		
 		$k = count($this->header);
-		$line = '! '.join(' !! ',$this->header);
+		
+		$ls = array();
+		foreach($this->header as $f)
+		{
+			if (isset($this->labels[$f]))
+				$ls[] = $this->labels[$f];
+			else
+				$ls[] = $f;
+		}
+		$line = '! '.join(' !! ',$ls);
 		$lines[]= '|-';
 		$lines[]= $line;
 		
