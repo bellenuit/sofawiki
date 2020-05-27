@@ -31,6 +31,9 @@ $swParsedContent = '<nowiki><div id="editzone"><form method="post" action="index
 
 $swMaxOverallSearchTime /=3;  
 
+if (trim($s)=="" && !stristr($q,'print') && (stristr($q,'relation') || stristr($q,'read') || stristr($q,'filter') || stristr($q,'import') || stristr($q,'virtual')))
+$s = "''Did you forget '''''print'''''?''";
+
 
 if ($submkitwikitext)
 {

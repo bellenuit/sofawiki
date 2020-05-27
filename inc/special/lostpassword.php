@@ -38,25 +38,53 @@ if ($action == 'lostpasswordsubmit')
 	{
 		 
 		
-		if (function_exists('swGeneratePasswordHook'))
-			$lostuser->pass = swGeneratePasswordHook();
+			
+			
+		if (isset($swOldPasswordReset) && $swOldPasswordReset ) // depreciated
+		{
+		
+			if (function_exists('swGeneratePasswordHook'))
+				$lostuser->pass = swGeneratePasswordHook();
+			else
+				$lostuser->pass = rand(111111,999999);
+
+			$p = '[[_newpass::'.$lostuser->encryptpassword().']]';
+			$s = $lostuser->content;
+			// $s = preg_replace("/\[\[_pass::(.*)\]\]/",$p,$s);
+			// must be added.
+			$s .= $p;
+			$lostuser->comment = 'lost password';
+			$lostuser->content = $s;
+			$lostuser->user = '';
+			$lostuser->insert();
+			
+			$label = $swMainName.':'.swSystemMessage('your-password-title',$lang);
+			$msg = swSystemMessage('your-password-message',$lang)."\n
+	User = $email\n
+	Password = $lostuser->pass\n";
+
+		}
 		else
-			$lostuser->pass = rand(111111,999999);
-		
-		$p = '[[_newpass::'.$lostuser->encryptpassword().']]';
-		$s = $lostuser->content;
-		// $s = preg_replace("/\[\[_pass::(.*)\]\]/",$p,$s);
-		// must be added.
-		$s .= $p;
-		$lostuser->comment = 'lost password';
-		$lostuser->content = $s;
-		$lostuser->user = '';
-		$lostuser->insert();
-		
-		$label = $swMainName.':'.swSystemMessage('your-password-title',$lang);
-		$msg = swSystemMessage('your-password-message',$lang)."\n
-User = $email\n
-Password = $lostuser->pass\n";
+		{
+			
+			$token = rand(111111111,999999999);
+
+			$p = '[[_token::'.$token.']]';
+			$s = $lostuser->content;
+			// $s = preg_replace("/\[\[_pass::(.*)\]\]/",$p,$s);
+			// must be added.
+			$s .= $p;
+			$lostuser->comment = 'lost password';
+			$lostuser->content = $s;
+			$lostuser->user = '';
+			$lostuser->insert();
+			
+			$label = $swMainName.': '.swSystemMessage('your-password-reset',$lang);
+			$msg = swSystemMessage('your-password-reset-message',$lang)."\n".'
+	
+'.$swBaseHref .'?action=resetpassword&email='.$email.'&token='.$token."\n";
+	
+		}
 		
 		swNotify('lostpasswordsubmit',$swError,$label,$msg,$email);
 		
@@ -81,8 +109,13 @@ $swParsedName = swSystemMessage('lost-password',$lang);
 
 if ($submitted)
 {
-	$swParsedContent .= swSystemMessage('email',$lang) . ': '.$email.'<br/><br/>
+	if (isset($swOldPasswordReset) && $swOldPasswordReset ) //depreciated
+		$swParsedContent .= swSystemMessage('email',$lang) . ': '.$email.'<br/><br/>
 	<div id="help">'.swSystemMessage('lost-password-submit-help',$lang).'</div>';
+	else
+		$swParsedContent .= swSystemMessage('email',$lang) . ': '.$email.'<br/><br/>
+	<div id="help">'.swSystemMessage('reset-password-submit-help',$lang).' <b>'.$swMainName.': '.swSystemMessage('your-password-reset',$lang).'</b></div>';
+
 	
 }
 else
@@ -93,9 +126,13 @@ $swParsedContent = $err.'<div id="editzone">
 		<input type="text" name="email" value=""/>
 		<input type="hidden" name="action" value="lostpasswordsubmit" /></td></tr><tr><td></td><td>
 		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" /></td></tr></table>
-	</form>
+	</form>.';
 	
-	<div id="help">'.swSystemMessage("lost-password-help",$lang).'</div>
+	if (isset($swOldPasswordReset) && $swOldPasswordReset ) //depreciated
+		$swParsedContent .=	'<div id="help">'.swSystemMessage("lost-password-help",$lang).'</div>';
+	else
+		$swParsedContent .=	'<div id="help">'.swSystemMessage("lost-reset-password-help",$lang).'</div>';
+	$swParsedContent .='
 	</div>
 	';
 }

@@ -128,5 +128,21 @@ $swSystemDefaults["edit-header/de"] = "Feldnamen editieren";
 $swSystemDefaults["make-permanent/de"] = "Felder permanent anzeigen";
 
 
+$swSystemDefaults["reset-password-submit-help/de"] = "Ein Reset-Link wurde per Mail gesandt mit folgendem Betreff ";
+$swSystemDefaults["your-password-reset/de"] = "Ihr Passwort-Reset-Link";
+$swSystemDefaults["your-password-reset-message/de"] = "Sie möchten das Passwort zurücksetzen. Benutzen Sie den folgenden Link. Bitte ignorieren Sie dieses Mail, wenn Sie keinen Reset veranlasst haben.";
+$swSystemDefaults["password-invalid-characters-error/de"] = "Das Passwort enthält ungültige Spezialzeichen.";
+$swSystemDefaults["token-invalid-characters-error/de"] = "Das Token ist falsch formatiert.";
+$swSystemDefaults["user-does-not-exist-error/de"] = "Der Benutzername existiert nicht.";
+$swSystemDefaults["invalid-token-error/de"] = "Das Token ist ungültig.";
+$swSystemDefaults["password-too-short/de"] = "Das Passwort ist zu kurz (mindestens 8 Zeichen).";
+$swSystemDefaults["password-reset/de"] = "Passwort zurücksetzen";
+$swSystemDefaults["reset-password-help/de"] = "Wählen Sie ein neues Passwort mit mindestens 8 Zeichen";
+$swSystemDefaults["set-password/de"] = "Neues Passwort setzen";
+$swSystemDefaults["new-password/de"] = "Neues Passwort";
+$swSystemDefaults["password-has-been-set/de"] = "Das neue Passwort wurde gesetzt.";
+$swSystemDefaults["lost-reset-password-help/de"] = "Geben Sie Ihr Email an. Ein Reset-Link wird Ihnen per Mail zugesandt.";
+
+
 
 ?>

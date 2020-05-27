@@ -136,5 +136,22 @@ $swSystemDefaults["edit-header/it"] = "Edit field names";
 $swSystemDefaults["make-permanent/it"] = "Make permanent";
 
 
+$swSystemDefaults["reset-password-submit-help-help/it"] = "Un link di reset è stato inviato per e-mail con il seguente oggetto ";
+$swSystemDefaults["your-password-reset/it"] = "Il suo link di reset della password";
+$swSystemDefaults["your-password-reset-message/it"] = "Vuole resettare la password. Utilizza il seguente link. Ignora questa mail se ha avviato un reset";
+$swSystemDefaults["password-invalid-characters-errors-error/ot"] = "La password contiene caratteri speciali non validi";
+$swSystemDefaults["token-invalid-characters-error/it"] = "Il token è formattato in modo errato.";
+$swSystemDefaults["user-does-not-exist-error/it"] = "Il nome utente non esiste.";
+$swSystemDefaults["invalid-token-error/it"] = "Il token non è valido.";
+$swSystemDefaults["password-too-short/it"] = "La password è troppo corta (almeno 8 caratteri)";
+$swSystemDefaults["password-reset/it"] = "Reset password";
+$swSystemDefaults["reset-password-help/it"] = "Scegliere una nuova password con almeno 8 caratteri.";
+$swSystemDefaults["set-password/it"] = "Imposta nuova password";
+$swSystemDefaults["new-password/it"] = "Nuova password";
+$swSystemDefaults["password-has-been-set-set/it"] = "La nuova password è stata impostata";
+$swSystemDefaults["lost-reset-password-help/it"] = "Inserisce la sua email. Un link di reset gli sarà inviato via e-mail";
+
+
+
 
 ?>

@@ -20,38 +20,38 @@ class swExpression
 	
 	function __construct($fn = array())
 	{
-		$this->operators[] =  new swExpressionOperator('-u', '_neg',1,11,'L');
-		$this->operators[] =  new swExpressionOperator('not', '_not',1,100,'L');
+		$this->operators[] =  new swExpressionOperator('-u', ':neg',1,11,'L');
+		$this->operators[] =  new swExpressionOperator('not', ':not',1,100,'L');
 		
-		$this->operators[] =  new swExpressionOperator('/', '_div',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('*', '_mul',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('div', '_idiv',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('mod', '_mod',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('+', '_add',2,8,'L');
-		$this->operators[] =  new swExpressionOperator('-', '_sub',2,8,'L');
+		$this->operators[] =  new swExpressionOperator('/', ':div',2,9,'L');
+		$this->operators[] =  new swExpressionOperator('*', ':mul',2,9,'L');
+		$this->operators[] =  new swExpressionOperator('div', ':idiv',2,9,'L');
+		$this->operators[] =  new swExpressionOperator('mod', ':mod',2,9,'L');
+		$this->operators[] =  new swExpressionOperator('+', ':add',2,8,'L');
+		$this->operators[] =  new swExpressionOperator('-', ':sub',2,8,'L');
 		
-		$this->operators[] =  new swExpressionOperator('.', '_concat',2,7,'L');
+		$this->operators[] =  new swExpressionOperator('.', ':concat',2,7,'L');
 		
-		$this->operators[] =  new swExpressionOperator('=', '_eqn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('!=', '_nen',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('>', '_gtn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('>=', '_gen',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('<', '_ltn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('<=', '_len',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('=', ':eqn',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('!=', ':nen',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('>', ':gtn',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('>=', ':gen',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('<', ':ltn',2,6,'L');
+		$this->operators[] =  new swExpressionOperator('<=', ':len',2,6,'L');
 		
-		$this->operators[] =  new swExpressionOperator('regex', '_regex',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('==', '_eqs',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('!==', '_nes',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('>>', '_gts',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('>==', '_ges',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('<<', '_lts',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('<==', '_les',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('regex', ':regex',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('==', ':eqs',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('!==', ':nes',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('>>', ':gts',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('>==', ':ges',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('<<', ':lts',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('<==', ':les',2,5,'L');
 		
-		$this->operators[] =  new swExpressionOperator('and', '_and',2,4,'L');
-		$this->operators[] =  new swExpressionOperator('or', '_or',2,3,'L');
-		$this->operators[] =  new swExpressionOperator('xor', '_xor',2,2,'L');
+		$this->operators[] =  new swExpressionOperator('and', ':and',2,4,'L');
+		$this->operators[] =  new swExpressionOperator('or', ':or',2,3,'L');
+		$this->operators[] =  new swExpressionOperator('xor', ':xor',2,2,'L');
 		
-		$this->operators[] =  new swExpressionOperator(',','_comma',2,1,'L');
+		$this->operators[] =  new swExpressionOperator(',',':comma',2,1,'L');
 		
 		
 		$this->functions[] = new XPNeg;
@@ -185,7 +185,7 @@ class swExpression
 									case '9': $state = 'number'; $acc = $ch; break;
 									
 									default: 	if (($ch >= 'A' && $ch <= 'Z') ||
-											 	($ch >= 'a' && $ch <= 'z'))
+											 	($ch >= 'a' && $ch <= 'z') || $ch == '_' )
 											 	{
 											 		$state = "name"; $acc = $ch;
 											 	}
@@ -417,11 +417,11 @@ class swExpression
 								$e = array_pop($operatorstack);
 								if (substr($e,0,2)=='@(')
 								{
-									$fn = '_'.substr($e,2);
-									if ($fn != '_comma')
+									$fn = ':'.substr($e,2);
+									if ($fn != ':comma')
 										$this->rpn[] = $fn;
 								}
-								elseif($e != '(' && $e !='1' && $e != '_comma' && floatval($e) == 0)
+								elseif($e != '(' && $e !='1' && $e != ':comma' && floatval($e) == 0)
 								{
 									$this->rpn[] = $e;
 								}
@@ -442,32 +442,32 @@ class swExpression
 										if ($op->associativity == 'L' && $op->precedence <= floatval($e))
 										{
 											$optop = array_pop($operatorstack);
-											if ($optop != '_comma')
+											if ($optop != ':comma')
 												$this->rpn[] = $optop;
 										}
 										elseif ($op->associativity == 'R' && $op->precedence < floatval($e))
 										{
 											$optop = array_pop($operatorstack);
-											if ($optop != '_comma')
+											if ($optop != ':comma')
 												$this->rpn[] = $optop;
 										}
 										else
 											$operatorstack[] = $e;
 									}
-									if ($op->functionlabel == '_and')
+									if ($op->functionlabel == ':and')
 									{
 										$rvi = rand(50000,80000);
 										$this->rpn[] = $rvi;
-										$this->rpn[] = '_andleft';
-										$operatorstack[] = '_andright#'.$rvi;
+										$this->rpn[] = ':andleft';
+										$operatorstack[] = ':andright#'.$rvi;
 										//print_r($op);
 										
 									}
-									elseif ($op->functionlabel == '_or')
+									elseif ($op->functionlabel == ':or')
 									{
 										$rvi = rand(50000,80000);
 										$this->rpn[] = $rvi;
-										$this->rpn[] = '_orleft';
+										$this->rpn[] = ':orleft';
 										$operatorstack[] = "_orright#".$rvi;
 									}
 									else
@@ -494,23 +494,23 @@ class swExpression
 			$e = array_pop($operatorstack);
 			$e = array_pop($operatorstack); //2x!
 			if ($e != '@(comma')
-				$this->rpn[] = str_replace('@(','_',$e);
+				$this->rpn[] = str_replace('@(',':',$e);
 		}
 		for	($i = count($this->rpn)-1;$i >= 0; $i--)
 		{
-			if (substr($this->rpn[$i],0,9) == '_andright')
+			if (substr($this->rpn[$i],0,9) == ':andright')
 			{
 				$l = substr($this->rpn[$i],9);
-				$this->rpn[$i] = '_andright';
+				$this->rpn[$i] = ':andright';
 				array_splice($this->rpn,$i+1,0,$l);	
 				
 											
 			}
 				
-			if (substr($this->rpn[$i],0,8) == '_orright')
+			if (substr($this->rpn[$i],0,8) == ':orright')
 			{
 				$l = substr($this->rpn[$i],8);
-				$this->rpn[$i] = '_orright';
+				$this->rpn[$i] = ':orright';
 				array_splice($this->rpn,$i+1,0,$l);
 			}
 		}
@@ -542,10 +542,10 @@ class swExpression
 			$ch = substr($e,0,1);
 			switch ($ch)
 			{
-				case '_': 	$found = false;
+				case ':': 	$found = false;
 							switch($e)
 							{
-								case '_andleft': 	$jump = '#'.array_pop($this->stack);
+								case ':andleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
 													if (floatval($cond) == 0)
 													{
@@ -558,14 +558,14 @@ class swExpression
 													}
 													$found = true;
 													break;
-								case '_andright': 	$cond = array_pop($this->stack);
+								case ':andright': 	$cond = array_pop($this->stack);
 													if (floatval($cond) == 0)
 														$this->stack[] = '0';
 													else
 														$this->stack[] = '1';
 													$found = true;
 													break;	
-								case '_init':		if (array_key_exists($aggregatorfirstrun,$localdict))
+								case ':init':		if (array_key_exists($aggregatorfirstrun,$localdict))
 													{
 														if ($localdict[$aggregatorfirstrun] != 0)
 															$localdict[$currentlabel] = array_pop($this->stack);
@@ -577,7 +577,7 @@ class swExpression
 															.$currentindex,31);
 													$found = true;
 													break;	
-								case '_goto':		$jump = '#'.array_pop($this->stack);
+								case ':goto':		$jump = '#'.array_pop($this->stack);
 													$j = array_search($jump,$this->rpn);
 													if ($j !== false)
 														$i = $j;
@@ -585,7 +585,7 @@ class swExpression
 														throw new swExpressionError('Goto not defined '.$currentindex,31);
 													$found = true; //echo " *GOTO* "; print_r($this->stack);
 													break;	
-								case '_gotoifn':	$jump = '#'.array_pop($this->stack);
+								case ':gotoifn':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
 													if (floatval($cond) == 0)
 													{
@@ -597,7 +597,7 @@ class swExpression
 													}
 													$found = true;
 													break;	
-								case '_gotoif':	$jump = '#'.array_pop($this->stack);
+								case ':gotoif':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
 													if (floatval($cond) != 0)
 													{
@@ -610,7 +610,7 @@ class swExpression
 													$found = true;
 													break;	
 																
-								case '_orleft': 	$jump = '#'.array_pop($this->stack);
+								case ':orleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
 													if (floatval($cond) != 0)
 													{
@@ -623,20 +623,20 @@ class swExpression
 													}
 													$found = true;
 													break;
-								case '_orright': 	$cond = array_pop($this->stack);
+								case ':orright': 	$cond = array_pop($this->stack);
 													if (floatval($cond) == 0)
 														$this->stack[] = '0';
 													else
 														$this->stack[] = '1';
 													$found = true;
 													break;
-								case '_pop':		$dummy = array_pop($this->stack);
+								case ':pop':		$dummy = array_pop($this->stack);
 													$found = true;
 													break;
-								case '_set':		$localdict[$currentlabel] = array_pop($this->stack);
+								case ':set':		$localdict[$currentlabel] = array_pop($this->stack);
 													$found = true;
 													break;
-								case '_stackcount':	$this->stack[] = count($this->stack);
+								case ':stackcount':	$this->stack[] = count($this->stack);
 													$found = true;
 													break;
 								default:			foreach($this->functions as $f)
@@ -1057,7 +1057,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 		$this->isaggregator = $ia;
 		$this->lines = explode(PHP_EOL,$source);
 		$this->offset = $off;
-		$this->label = '_'.$lb;
+		$this->label = ':'.$lb;
 		$this->xp = new swExpression();
 		$this->compile();
  	}
@@ -1074,13 +1074,13 @@ class swExpressionCompiledFunction extends swExpressionFunction
 	 	{
 		 	$this->compiledlines[] = '1';
 		 	$this->compiledlines[] = '/aggregatorfirstrun';
-		 	$this->compiledlines[] = '_set';
+		 	$this->compiledlines[] = ':set';
 		 	$this->compiledlines[] = '#190000';
-		 	$this->compiledlines[] = '_stackcount';
+		 	$this->compiledlines[] = ':stackcount';
 		 	$this->compiledlines[] = '#190001';
-		 	$this->compiledlines[] = '_gotoifn';
+		 	$this->compiledlines[] = ':gotoifn';
 		 	$this->compiledlines[] = '/elem';
-		 	$this->compiledlines[] = '_set';		 	
+		 	$this->compiledlines[] = ':set';		 	
 	 	}
 	 	
 	 	for($i=0;$i<$c;$i++)
@@ -1116,6 +1116,9 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 						if ($f == '')
 			 							throw new swExpressionError('Set empty field #'.$ti,321);
 			 						$body = join(' ',$fields);
+			 						$body = join(' ',$fields);
+									if ($eq != '=')
+										throw new swExpressionError('Init missing = #'.$ti,321);
 			 						$this->xp = new swExpression;
 			 						$xp->compile($body);
 			 						foreach($xp->rpn as $ti)
@@ -1123,14 +1126,19 @@ class swExpressionCompiledFunction extends swExpressionFunction
 				 						$this->compiledlines[] = $ti;
 			 						}
 			 						$this->compiledlines[] = '/'.$f;
-			 						$this->compiledlines[] = '_init';
+			 						$this->compiledlines[] = ':init';
 			 						break;
 			 	case 'set':			$fields = explode(' ',$body);
 			 						$f = array_shift($fields);
 			 						if ($f == '')
 			 							throw new swExpressionError('Set empty field #'.$ti,321);
 			 						$body = join(' ',$fields);
-			 						if ($body != '')
+			 						$fields = explode(' ',$body);
+									$eq = array_shift($fields);
+									$body = join(' ',$fields);
+									if ($eq != '=')
+										throw new swExpressionError('Init missing = #'.$ti,321);
+									if ($body != '')
 			 						{
 				 						$this->xp = new swExpression;
 				 						$this->xp->compile($body);
@@ -1144,7 +1152,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 				 						$this->compiledlines[] = '0';
 			 						}
 			 						$this->compiledlines[] = '/'.$f;
-			 						$this->compiledlines[] = '_set';
+			 						$this->compiledlines[] = ':set';
 			 						break;
 			 	case 'if':			$conditioncount = 1;
 			 						$elsefound = -1;
@@ -1186,7 +1194,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 												 							$this->compiledlines[] = $ti;
 											 							}
 											 							$this->compiledlines[] = $j+$this->offset+1;
-											 							$this->compiledlines[] = '_gotoifn';
+											 							$this->compiledlines[] = ':gotoifn';
 							 										}
 							 										else
 							 										{
@@ -1197,7 +1205,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 												 							$this->compiledlines[] = $ti;
 											 							}
 											 							$this->compiledlines[] = $elsefound+$this->offset+1;
-											 							$this->compiledlines[] = '_gotoifn';
+											 							$this->compiledlines[] = ':gotoifn';
 											 							$this->lines[$elsefound] = 'goto '.($j+$this->offset+1);
 
 							 										}
@@ -1239,7 +1247,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 											 							$this->compiledlines[] = $ti;
 										 							}
 										 							$this->compiledlines[] = $j+$this->offset+1;
-										 							$this->compiledlines[] = '_gotoifn';
+										 							$this->compiledlines[] = ':gotoifn';
 							 										$this->lines[$j]='goto '.($i+$this->offset);;
 							 										$found = true;
 							 									}
@@ -1258,7 +1266,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 							throw new swExpressionError('Duplicate end #'.$ti,321);
 			 						break;
 			 	case 'goto':		$this->compiledlines[] = $body;			
-			 						$this->compiledlines[] = '_goto';
+			 						$this->compiledlines[] = ':goto';
 			 						break;
 			 	default:			throw new swExpressionError('Invalid instruction #'.$ti.' '.$line,66);
 		 	}
@@ -1269,9 +1277,9 @@ class swExpressionCompiledFunction extends swExpressionFunction
 	 	{
 		 	$this->compiledlines[] = '0';
 		 	$this->compiledlines[] = '/aggregatorfirstrun';
-		 	$this->compiledlines[] = '_set';
+		 	$this->compiledlines[] = ':set';
 		 	$this->compiledlines[] = '190000';
-		 	$this->compiledlines[] = '_goto';
+		 	$this->compiledlines[] = ':goto';
 		 	$this->compiledlines[] = '#190001';		 	
 	 	}
 	 	$this->compiledlines[] = 'result';
@@ -1315,7 +1323,7 @@ class swExpressionError extends Exception
 
 class XPabs extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_abs' ;}
+	function __construct() { $this->arity = 1; $this->label = ':abs' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1326,7 +1334,7 @@ class XPabs extends swExpressionFunction
 
 class XPAdd extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_add' ;}
+	function __construct() { $this->arity = 2; $this->label = ':add' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1338,7 +1346,7 @@ class XPAdd extends swExpressionFunction
 
 class XpAnd extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_and' ;}
+	function __construct() { $this->arity = 2; $this->label = ':and' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1351,7 +1359,7 @@ class XpAnd extends swExpressionFunction
 
 class XpAndRight extends swExpressionFunction //?
 {
-	function __construct() { $this->arity = 2; $this->label = '_and' ;}
+	function __construct() { $this->arity = 2; $this->label = ':and' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1364,7 +1372,7 @@ class XpAndRight extends swExpressionFunction //?
 
 class XPceil extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_ceil' ;}
+	function __construct() { $this->arity = 1; $this->label = ':ceil' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1375,7 +1383,7 @@ class XPceil extends swExpressionFunction
 
 class Xpcomma extends swExpressionFunction 
 {
-	function __construct() { $this->arity = 2; $this->label = '_comma' ;}
+	function __construct() { $this->arity = 2; $this->label = ':comma' ;}
 	function run(&$stack)
 	{
 		//if (count($this->stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1385,7 +1393,7 @@ class Xpcomma extends swExpressionFunction
 
 class XPconcat extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_concat' ;}
+	function __construct() { $this->arity = 2; $this->label = ':concat' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1397,7 +1405,7 @@ class XPconcat extends swExpressionFunction
 
 class XPcos extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_cos' ;}
+	function __construct() { $this->arity = 1; $this->label = ':cos' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1409,7 +1417,7 @@ class XPcos extends swExpressionFunction
 
 class XpDiv extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_div' ;}
+	function __construct() { $this->arity = 2; $this->label = ':div' ;}
 	function run(&$stack)
 	{
 		// print_r($stack);
@@ -1423,7 +1431,7 @@ class XpDiv extends swExpressionFunction
 
 class XPeqN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_eqn' ;}
+	function __construct() { $this->arity = 2; $this->label = ':eqn' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1436,7 +1444,7 @@ class XPeqN extends swExpressionFunction
 
 class XPeqS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_eqs' ;}
+	function __construct() { $this->arity = 2; $this->label = ':eqs' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1449,7 +1457,7 @@ class XPeqS extends swExpressionFunction
 
 class XPexp extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_exp' ;}
+	function __construct() { $this->arity = 2; $this->label = ':exp' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1460,7 +1468,7 @@ class XPexp extends swExpressionFunction
 
 class XPfalse extends swExpressionFunction
 {
-	function __construct() { $this->arity = 0; $this->label = '_false' ;}
+	function __construct() { $this->arity = 0; $this->label = ':false' ;}
 	function run(&$stack)
 	{
 		$stack[] = '0';	
@@ -1469,7 +1477,7 @@ class XPfalse extends swExpressionFunction
 
 class Xpfloor extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_floor' ;}
+	function __construct() { $this->arity = 1; $this->label = ':floor' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1481,7 +1489,7 @@ class Xpfloor extends swExpressionFunction
 
 class XPgeN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_gen' ;}
+	function __construct() { $this->arity = 2; $this->label = ':gen' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1494,7 +1502,7 @@ class XPgeN extends swExpressionFunction
 
 class XPgeS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_ges' ;}
+	function __construct() { $this->arity = 2; $this->label = ':ges' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1507,7 +1515,7 @@ class XPgeS extends swExpressionFunction
 
 class XPgtN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_gtn' ;}
+	function __construct() { $this->arity = 2; $this->label = ':gtn' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1520,7 +1528,7 @@ class XPgtN extends swExpressionFunction
 
 class XPgtS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_gts' ;}
+	function __construct() { $this->arity = 2; $this->label = ':gts' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1533,7 +1541,7 @@ class XPgtS extends swExpressionFunction
 
 class XPidiv extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_idiv' ;}
+	function __construct() { $this->arity = 2; $this->label = ':idiv' ;}
 	function run(&$stack)
 	{	
 		
@@ -1548,7 +1556,7 @@ class XPidiv extends swExpressionFunction
 
 class XPleN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_len' ;}
+	function __construct() { $this->arity = 2; $this->label = ':len' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1561,7 +1569,7 @@ class XPleN extends swExpressionFunction
 
 class XPlength extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_length' ;}
+	function __construct() { $this->arity = 1; $this->label = ':length' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1573,7 +1581,7 @@ class XPlength extends swExpressionFunction
 
 class XPleS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_les' ;}
+	function __construct() { $this->arity = 2; $this->label = ':les' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1586,7 +1594,7 @@ class XPleS extends swExpressionFunction
 
 class XPln extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_ln' ;}
+	function __construct() { $this->arity = 1; $this->label = ':ln' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1597,7 +1605,7 @@ class XPln extends swExpressionFunction
 
 class XPlog extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_log' ;}
+	function __construct() { $this->arity = 1; $this->label = ':log' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1608,7 +1616,7 @@ class XPlog extends swExpressionFunction
 
 class XPlower extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_lower' ;}
+	function __construct() { $this->arity = 1; $this->label = ':lower' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1619,7 +1627,7 @@ class XPlower extends swExpressionFunction
 
 class XPltN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_ltn' ;}
+	function __construct() { $this->arity = 2; $this->label = ':ltn' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1632,7 +1640,7 @@ class XPltN extends swExpressionFunction
 
 class XPltS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_lts' ;}
+	function __construct() { $this->arity = 2; $this->label = ':lts' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1645,7 +1653,7 @@ class XPltS extends swExpressionFunction
 
 class XPmax extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_max' ;}
+	function __construct() { $this->arity = 2; $this->label = ':max' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1657,7 +1665,7 @@ class XPmax extends swExpressionFunction
 
 class XPmin extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_min' ;}
+	function __construct() { $this->arity = 2; $this->label = ':min' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1669,7 +1677,7 @@ class XPmin extends swExpressionFunction
 
 class XPmod extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_mod' ;}
+	function __construct() { $this->arity = 2; $this->label = ':mod' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1683,7 +1691,7 @@ class XPmod extends swExpressionFunction
 
 class XPmul extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_mul' ;}
+	function __construct() { $this->arity = 2; $this->label = ':mul' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1696,7 +1704,7 @@ class XPmul extends swExpressionFunction
 
 class XPneN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_nen' ;}
+	function __construct() { $this->arity = 2; $this->label = ':nen' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1709,7 +1717,7 @@ class XPneN extends swExpressionFunction
 
 class XPneg extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_neg' ;}
+	function __construct() { $this->arity = 1; $this->label = ':neg' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1720,7 +1728,7 @@ class XPneg extends swExpressionFunction
 
 class XPneS extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_nes' ;}
+	function __construct() { $this->arity = 2; $this->label = ':nes' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1733,7 +1741,7 @@ class XPneS extends swExpressionFunction
 
 class XPnot extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_not' ;}
+	function __construct() { $this->arity = 1; $this->label = ':not' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1745,7 +1753,7 @@ class XPnot extends swExpressionFunction
 
 class XpOr extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_or' ;}
+	function __construct() { $this->arity = 2; $this->label = ':or' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1758,7 +1766,7 @@ class XpOr extends swExpressionFunction
 
 class XPpad extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_pad' ;}
+	function __construct() { $this->arity = 2; $this->label = ':pad' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1770,7 +1778,7 @@ class XPpad extends swExpressionFunction
 
 class XPpow extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_pow' ;}
+	function __construct() { $this->arity = 2; $this->label = ':pow' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1782,7 +1790,7 @@ class XPpow extends swExpressionFunction
 
 class XPregex extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_regex' ;}
+	function __construct() { $this->arity = 2; $this->label = ':regex' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1795,7 +1803,7 @@ class XPregex extends swExpressionFunction
 
 class XPregexreplace extends swExpressionFunction
 {
-	function __construct() { $this->arity = 3; $this->label = '_regexreplace' ;}
+	function __construct() { $this->arity = 3; $this->label = ':regexreplace' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
@@ -1808,7 +1816,7 @@ class XPregexreplace extends swExpressionFunction
 
 class XPreplace extends swExpressionFunction
 {
-	function __construct() { $this->arity = 3; $this->label = '_replace' ;}
+	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
@@ -1821,7 +1829,7 @@ class XPreplace extends swExpressionFunction
 
 class XPrnd extends swExpressionFunction
 {
-	function __construct() { $this->arity = 0; $this->label = '_rnd' ;}
+	function __construct() { $this->arity = 0; $this->label = ':rnd' ;}
 	function run(&$stack)
 	{
 		
@@ -1832,7 +1840,7 @@ class XPrnd extends swExpressionFunction
 
 class XPround extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_round' ;}
+	function __construct() { $this->arity = 1; $this->label = ':round' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1843,7 +1851,7 @@ class XPround extends swExpressionFunction
 
 class XPsecondstosql extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_secondstosql' ;}
+	function __construct() { $this->arity = 1; $this->label = ':secondstosql' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1854,7 +1862,7 @@ class XPsecondstosql extends swExpressionFunction
 
 class XPsign extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_sign' ;}
+	function __construct() { $this->arity = 1; $this->label = ':sign' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1867,7 +1875,7 @@ class XPsign extends swExpressionFunction
 
 class XPsin extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_sin' ;}
+	function __construct() { $this->arity = 1; $this->label = ':sin' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1878,7 +1886,7 @@ class XPsin extends swExpressionFunction
 
 class XPsqltoseconds extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_sqltoseconds' ;}
+	function __construct() { $this->arity = 1; $this->label = ':sqltoseconds' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1889,7 +1897,7 @@ class XPsqltoseconds extends swExpressionFunction
 
 class XPsqrt extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_sqrt' ;}
+	function __construct() { $this->arity = 1; $this->label = ':sqrt' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1900,7 +1908,7 @@ class XPsqrt extends swExpressionFunction
 
 class XPSub extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_sub' ;}
+	function __construct() { $this->arity = 2; $this->label = ':sub' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
@@ -1913,7 +1921,7 @@ class XPSub extends swExpressionFunction
 
 class XPsubstr extends swExpressionFunction
 {
-	function __construct() { $this->arity = 3; $this->label = '_replace' ;}
+	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
@@ -1926,7 +1934,7 @@ class XPsubstr extends swExpressionFunction
 
 class XPtan extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_tan' ;}
+	function __construct() { $this->arity = 1; $this->label = ':tan' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1937,7 +1945,7 @@ class XPtan extends swExpressionFunction
 
 class Xptrim extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_trim' ;}
+	function __construct() { $this->arity = 1; $this->label = ':trim' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1948,7 +1956,7 @@ class Xptrim extends swExpressionFunction
 
 class XPtrue extends swExpressionFunction
 {
-	function __construct() { $this->arity = 0; $this->label = '_true' ;}
+	function __construct() { $this->arity = 0; $this->label = ':true' ;}
 	function run(&$stack)
 	{
 		$stack[] = '1';	
@@ -1957,7 +1965,7 @@ class XPtrue extends swExpressionFunction
 
 class XPupper extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_upper' ;}
+	function __construct() { $this->arity = 1; $this->label = ':upper' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1968,7 +1976,7 @@ class XPupper extends swExpressionFunction
 
 class XPurltext extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = '_urltext' ;}
+	function __construct() { $this->arity = 1; $this->label = ':urltext' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
@@ -1979,7 +1987,7 @@ class XPurltext extends swExpressionFunction
 
 class XpxOr extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = '_xor' ;}
+	function __construct() { $this->arity = 2; $this->label = ':xor' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);

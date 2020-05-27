@@ -122,7 +122,7 @@ class swRelationLineHandler
 			// quote
 			if (substr($line,0,1)=="'")
 			{
-				$result .= substr($line,2).$ptag2;
+				$this->result .= substr($line,2).$ptag2;
 				continue;
 			}
 			$fields = explode(' ',$line);
@@ -803,9 +803,21 @@ class swRelationLineHandler
 										$fields = explode(' ',$body);
 										$key = array_shift($fields);
 										$body = join(' ',$fields);
-										$xp = new swExpression($this->functions);
-										$xp->compile($body);
-										$this->globals[$key] = $xp->evaluate($this->globals,$locals);	
+										
+										$fields = explode(' ',$body);
+										$eq = array_shift($fields);
+										$body = join(' ',$fields);
+										if ($eq != '=')
+										{
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Set missing ='.$ptag2;
+											$this->errors[]=$il;
+										}
+										else
+										{
+											$xp = new swExpression($this->functions);
+											$xp->compile($body);
+											$this->globals[$key] = $xp->evaluate($this->globals,$locals);
+										}	
 
 									break; 
 				case 'stop':		$i=$c; break;
@@ -860,6 +872,21 @@ class swRelationLineHandler
 									}
 									break;
 								
+				case 'update':		if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Update Stack empty'.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$r->globals = $this->globals;
+										$r->functions = $this->functions;
+										$r->locals = $locals;
+										$r->update($body);
+										$this->stack[] = $r;
+									}
+									break;	
 				case 'virtual':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
 									$te = $xp->evaluate($this->globals,$locals);
@@ -1218,14 +1245,23 @@ class swRelation
 	
 	function extend($t)
 	{
-		$list = explode(' ',$t);
-		$first = array_shift($list);
-		$rest = join(' ',$list);
-		$this->extend2($first, $rest); 
+		$fields = explode(' ',$t);
+		$first = array_shift($fields);
+		$body = join(' ',$fields);
+		$fields = explode(' ',$body);
+		$eq = array_shift($fields);
+		$body = join(' ',$fields);
+		if ($eq != '=')
+			throw new swRelationError('Extend missing =',121);
+
+		$this->extend2($first, $body); 
 	}
 	
 	function extend2($label, $expression)
 	{
+		if (in_array($label, $this->header))
+			throw new swRelationError('Extend column exists already',121);
+		
 		$newtuples = array();
 		
 		$this->addColumn($label);
@@ -2596,34 +2632,61 @@ class swRelation
 		}
 	}
 	
-	function update($condition, $label, $expression)
+	function update($t)
+	{
+		$fields = explode(' ',$t);
+		$first = array_shift($fields);
+		$body = join(' ',$fields);
+		$fields = explode(' ',$body);
+		$eq = array_shift($fields);
+		$body = join(' ',$fields);
+		if ($eq != '=')
+			throw new swRelationError('Update missing =',121);
+		
+		$p = stripos($body,' where ');
+		if ($p !== FALSE)
+		{
+			$condition = substr($body,$p + strlen(' where '));
+			$body = substr($body,0,$p);
+		}
+		else
+		{
+			$condition = "1";
+		}
+
+		$this->update2($condition, $first, $body); 
+	}
+	
+	function update2($condition, $label, $expression)
 	{
 		$xp = new swExpression($this->functions);
 		$xp->compile($condition);
 		$xp2 = new swExpression($this->functions);
 		$xp2->compile($expression);
 		
-		$c = count($this->tuples);
-		for($i=0;$i<$c;$i++)
+		$newtuples = array();
+		$i=0;
+		foreach($this->tuples as $tp)
+		//for ($i=0;$i<$c;$i++)
 		{
-			$tp = $this->tuples[$i];
 			$d = $tp->fields();
-			if ($xp->evaluate($d,$this->globals,$this->locals))
+			$this->locals['rownumber'] = strval($i+1); $i++;
+			if ($xp->evaluate($d, $this->globals, $this->locals))
 			{
-				$d[$label] = $xp2->evaluate($d,$this->globals,$this->locals);
-				unset($this->tuples[$tp->hash()]);
+				$v = $xp2->evaluate($d, $this->globals, $this->locals);
+				$d[$label] = $v;
 				$tp = new swTuple($d);
-				$this->tuples[$tp->hash()]=$tp;
-				// there may be a better solution in place.
 			}
-			
+			$newtuples[$tp->hash()] = $tp;
 		}
+		$this->tuples = $newtuples;
+
 	}
 
 		
 	function validName($s)
 	{
-		return (strlen($s)< 31 and preg_match('/^[A-Za-z][A-Za-z0-9_]*$/',$s)); 
+		return (strlen($s)< 31 and preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/',$s)); 
 	}
 }
 

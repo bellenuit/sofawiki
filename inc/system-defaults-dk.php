@@ -133,4 +133,21 @@ $swSystemDefaults["edit-header/dk"] = "Edit field names";
 $swSystemDefaults["make-permanent/dk"] = "Make permanent";
 
 
+
+$swSystemDefaults["reset-password-submit-help/en"] = "A reset link has been sent to you with the Subject line ";
+$swSystemDefaults["your-password-reset/en"] = "Your password reset";
+$swSystemDefaults["your-password-reset-message/en"] = "You have asked to reset the password. Use the following link to reset your password. Ignore this message if you didn't ask for a reset.";
+$swSystemDefaults["password-invalid-characters-error/en"] = "The password you chose has illegal special characters.";
+$swSystemDefaults["token-invalid-characters-error/en"] = "The token is not well formated.";
+$swSystemDefaults["user-does-not-exist-error/en"] = "The user does not exist.";
+$swSystemDefaults["invalid-token-error/en"] = "The token is not valid.";
+$swSystemDefaults["password-too-short/en"] = "The chosen password is too short (minimum 8 characters).";
+$swSystemDefaults["password-reset/en"] = "Password Reset";
+$swSystemDefaults["reset-password-help/en"] = "Choose a new password with at least 8 characters";
+$swSystemDefaults["set-password/en"] = "Set new password";
+$swSystemDefaults["new-password/en"] = "New password";
+$swSystemDefaults["password-has-been-set/en"] = "The new password has been set";
+$swSystemDefaults["lost-reset-password-help/en"] = "Enter your Email. A reset link will be sent by mail.";
+
+
 ?>

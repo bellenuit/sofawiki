@@ -133,4 +133,20 @@ $swSystemDefaults["add-row/es"] = "Add row";
 $swSystemDefaults["edit-header/es"] = "Edit field names";
 $swSystemDefaults["make-permanent/es"] = "Make permanent";
 
+
+$swSystemDefaults["reset-password-submit-help/es"] = "Un enlace de restablecimiento fue enviado por correo con el siguiente asunto ";
+$swSystemDefaults["your-password-reset/es"] = "Tu enlace de restablecimiento de contraseña";
+$swSystemDefaults["your-password-reset-message/es"] = "Quieres restablecer la contraseña. Utilice el siguiente enlace. Por favor, ignore este correo si ha iniciado un restablecimiento";
+$swSystemDefaults["contraseña-carácteres inválidos-error/es"] = "La contraseña contiene caracteres especiales inválidos.";
+$swSystemDefaults["token-invalid-characters-error/es"] = "El token está mal formateado.";
+$swSystemDefaults["user-does-not-exist-error/es"] = "El nombre de usuario no existe.";
+$swSystemDefaults["invalid-token-error/es"] = "El token es inválido.";
+$swSystemDefaults["password-too-short/es"] = "La contraseña es demasiado corta (al menos 8 caracteres)";
+$swSystemDefaults["password-reset/es"] = "Restablecer contraseña";
+$swSystemDefaults["reset-password-help/es"] = "Elija una nueva contraseña con al menos 8 caracteres";
+$swSystemDefaults["set-password/es"] = "Establecer nueva contraseña";
+$swSystemDefaults["new-password/es"] = "Nueva contraseña";
+$swSystemDefaults["password-has-been-set/es"] = "La nueva contraseña ha sido establecida";
+$swSystemDefaults["Lost-reset-password-help/es"] = "Introduce tu correo electrónico. Se le enviará por correo electrónico un enlace de restablecimiento";
+
 ?>

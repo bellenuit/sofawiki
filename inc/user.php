@@ -108,7 +108,21 @@ class swUser extends swRecord
 		}
 		
 		$kkey = $this->encryptpassword(); 
-		if (stristr($this->content, "[[_pass::$kkey]]")) return true;
+		if (stristr($this->content, "[[_pass::$kkey]]")) 
+		{
+			// token not used
+			if (stristr($this->content, "[[_token::")) 
+			{	
+				$s = $this->content;
+				$s = preg_replace("/\[\[\_token\:\:([^\]]*)\]\]/","",$s);
+				$this->content = $s;
+				$this->comment = 'token not used';
+				$this->user = '';
+				$this->insert();
+				return true;		
+			}		
+			return true;
+		}
 		if ($kkey == $this->ppass) return true;
 		
 		
@@ -126,6 +140,7 @@ class swUser extends swRecord
 			return true;
 		
 		}
+		
 				
 	}
 	

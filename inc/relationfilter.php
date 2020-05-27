@@ -300,21 +300,21 @@ function swRelationFilter($filter)
 				$fieldlist = $record->internalfields;
 
 				{					
-					$fieldlist['sw_revision'][] = $record->revision;
-					$fieldlist['sw_status'][] = $record->status;
-					$fieldlist['sw_name'][] = $record->name;
-					$fieldlist['sw_url'][] = swNameURL($record->name);
-					$fieldlist['sw_user'][] = $record->user;
-					$fieldlist['sw_timestamp'][] = $record->timestamp;
-					$fieldlist['sw_content'][] = $record->content;
+					$fieldlist['_revision'][] = $record->revision;
+					$fieldlist['_status'][] = $record->status;
+					$fieldlist['_name'][] = $record->name;
+					$fieldlist['_url'][] = swNameURL($record->name);
+					$fieldlist['_user'][] = $record->user;
+					$fieldlist['_timestamp'][] = $record->timestamp;
+					$fieldlist['_content'][] = $record->content;
 					$keys =array_keys($fieldlist);
 					foreach($keys as $key)
 					{
 						if (substr($key,0,1) != '_')
 						{
-							$fieldlist['sw_field'][] = $key;	
+							$fieldlist['_field'][] = $key;	
 							foreach($fieldlist[$key] as $v)
-								$fieldlist['sw_any'][] = $v; // to do avoid duplicates
+								$fieldlist['_any'][] = $v; // to do avoid duplicates
 						}
 					}
 					
@@ -334,8 +334,8 @@ function swRelationFilter($filter)
 					$fieldlist2 = array();
 					foreach($fieldlist as $key=>$v)
 					{
-						if (array_key_exists($key,$fields) or in_array($key,array('sw_revision','sw_url'))
-						or ($getAllFields and substr($key,0,3) != 'sw_') )
+						if (array_key_exists($key,$fields) or in_array($key,array('_revision','_url'))
+						or ($getAllFields and substr($key,0,1) != '_') )
 						{
 						
 							for($fi=0;$fi<count($v);$fi++)
@@ -355,7 +355,7 @@ function swRelationFilter($filter)
 					$rows = array();
 					for ($fi=0;$fi<$maxcount;$fi++)
 					{
-						$revision = $fieldlist2[$fi]['sw_revision'];
+						$revision = $fieldlist2[$fi]['_revision'];
 						$found = true;
 						foreach($fields as $key=>$hint)
 						{
@@ -373,7 +373,7 @@ function swRelationFilter($filter)
 								if (!empty($hint))
 								{
 									if(!isset($fieldlist2[$fi][$key])) $found = false;
-									elseif(strpos($fieldlist2[$fi][$key],$hint) === false)
+									elseif(stripos(swNameURL($fieldlist2[$fi][$key]),$hint) === false)
 									{
 										$found = false;
 									} 
@@ -394,7 +394,7 @@ function swRelationFilter($filter)
 						
 						for ($fi=0;$fi<$maxcount;$fi++)
 						{
-							$revision = $fieldlist2[$fi]['sw_revision'];
+							$revision = $fieldlist2[$fi]['_revision'];
 							if (isset($rows[$revision.'-'.$fi]) && !array_key_exists($key,$rows[$revision.'-'.$fi]))
 							{
 								$rows[$revision.'-'.$fi][$key] = '';
@@ -482,6 +482,7 @@ function swRelationFilter($filter)
 	}
 	
 	//print_r($goodrevisions);
+	
 	// TO DO FILTER NAMESPACE HERE 
 	global $user;
 	global $swSearchNamespaces;
@@ -504,7 +505,7 @@ function swRelationFilter($filter)
 		if ($sp != ':') $ns[$sp]= $sp;
 	}
 	
-	// print_r($goodrevisions);
+	//print_r($goodrevisions);
 	
 	// $searcheverywhere = true;
 	
@@ -512,11 +513,11 @@ function swRelationFilter($filter)
 	
 	foreach ($goodrevisions as $v) 
 	{
+		//print_r($v);
+		
 		$d = unserialize($v);
 		
-		//print_r($d);
-		
-		$dn = $d['sw_url'];
+		$dn = $d['_url'];
 		
 		if (!$searcheverywhere && stristr($dn,':'))
 		{
@@ -525,13 +526,15 @@ function swRelationFilter($filter)
 			if (! in_array($dns, $ns) && !$user->hasright('view',$dn)) continue;
 		}
 		
-		if (!in_array('sw_revision',$result->header)) unset($d['sw_revision']);
-		if (!in_array('sw_url',$result->header)) unset($d['sw_url']);
+		if (!in_array('_revision',$result->header)) unset($d['_revision']);
+		if (!in_array('_url',$result->header)) unset($d['_url']);
 		
-		
+		//print_r($d);
 		
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
+		
+		//print_r($tp);
 	}
 	
 	
@@ -540,6 +543,8 @@ function swRelationFilter($filter)
 		if (!in_array($key, $result->header))
 			$result->addColumn($key);
 	}
+	
+	//print_r($result);
 	
 	return $result;
 	

@@ -137,6 +137,23 @@ $swSystemDefaults["add-row/fr"] = "Add row";
 $swSystemDefaults["edit-header/fr"] = "Edit field names";
 $swSystemDefaults["make-permanent/fr"] = "Make permanent";
 
+$swSystemDefaults["reset-password-submit-help/fr"] = "Un lien de réinitialisation a été envoyé par courrier avec le sujet suivant " ;
+$swSystemDefaults ["your-password-reset/fr"] = "Votre lien de réinitialisation de mot de passe" ;
+$swSystemDefaults["your-password-reset-message/fr"] = "Vous voulez réinitialiser le mot de passe. Utilisez le lien suivant. Veuillez ignorer ce message si vous n'avez pas initié une réinitialisation" ;
+$swSystemDefaults["password-invalid-characters-error/fr"] = "Le mot de passe contient des caractères spéciaux non valides" ;
+$swSystemDefaults["token-invalid-characters-error/fr"] = "Le token est mal formaté." ;
+$swSystemDefaults["user-does-not-exist-error/fr"] = "Le nom d'utilisateur n'existe pas.";
+$swSystemDefaults["invalid-token-error/fr"] = "Le token est invalide" ;
+$swSystemDefaults["password-too-short/fr"] = "Le mot de passe est trop court (au moins 8 caractères)" ;
+$swSystemDefaults["password-reset/fr"] = "Réinitialiser le mot de passe" ;
+$swSystemDefaults["reset-password-help/fr"] = "Choisissez un nouveau mot de passe d'au moins 8 caractères" ;
+$swSystemDefaults["set-password/fr"] = "Définir un nouveau mot de passe" ;
+$swSystemDefaults["new-password/fr"] = "Nouveau mot de passe" ;
+$swSystemDefaults["password-has-been-set/fr"] = "Le nouveau mot de passe a été défini" ;
+$swSystemDefaults["lost-reset-password-help/fr"] = "Entrez votre adresse électronique. Un lien de réinitialisation vous sera envoyé par courrier électronique" ;
+
+
+
 
 
 ?>
