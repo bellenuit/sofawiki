@@ -212,3 +212,13 @@ table.blanktable td {border: 0px solid white; }
  	background-color: LightPink; color:transparent
  }
  
+ #searchfield
+{
+	width:120px;
+}
+
+input.searchfield
+{
+	width:100%;
+}
+ 

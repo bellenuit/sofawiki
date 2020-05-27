@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.0.1';  
+$swVersion = '3.0.3';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -336,7 +336,13 @@ function swSystemMessage($msg,$lang,$styled=false)
 	}
 	$w->parsedContent = $swSystemSiteValues[$langmsg];
 	
-	if ($styled) {$ti->dowork($w); $tl->dowork($w); $ts->dowork($w); }
+	if ($styled) 
+	{
+		 if (stristr($w->parsedContent,'{{')) $t->dowork($w); 
+		 $ti->dowork($w); 
+		 $tl->dowork($w);
+		 $ts->dowork($w);
+	}
 	
 	$t = $w->parsedContent;
 	

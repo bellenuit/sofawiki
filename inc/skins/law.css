@@ -163,3 +163,13 @@ img.yfrog
 
 
 td { vertical-align: top;  width: 50% }
+
+ #searchfield
+{
+	width:120px;
+}
+
+input.searchfield
+{
+	width:100%;
+}

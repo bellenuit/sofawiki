@@ -357,6 +357,7 @@ function swSnapShot($username)
 	$includeddirectories[] = "sofawiki/inc/parsers";
 	$includeddirectories[] = "sofawiki/inc/skins";
 	$includeddirectories[] = "sofawiki/inc/special";
+	$includeddirectories[] = "sofawiki/inc/installer";
 	
 	$files = array();
 	$files[] = "index.php";
@@ -407,6 +408,16 @@ function swSnapShot($username)
 			}
 		}
 		$files = glob($absolutedir."/*.js");
+		if (is_array($files))
+		{
+			foreach($files as $file)
+			{
+				$zf = str_replace($swRoot,"sofawiki",$file);
+				$zipfile -> addFile($file,$zf); 
+				$result .= "&nbsp;$zf<br/>";
+			}
+		}
+		$files = glob($absolutedir."/*.zip");
 		if (is_array($files))
 		{
 			foreach($files as $file)

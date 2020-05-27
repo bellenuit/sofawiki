@@ -382,14 +382,14 @@ foreach ($swLanguages as $v)
 			$swLangMenus[$v] = '<a href="'.$wiki->link('view','--').'&amp;lang='.$v.'">'.swSystemMessage($v,$lang).'</a>';
 }
 unset($v);
-$swSearchMenu = ' <form method="get" action="index.php"><p>
+$swSearchMenu = '<div id="searchmenu"><form method="get" action="index.php"><p>
  <input type="hidden" name="action" value="search" />
- <input type="text" name="query" value="'.$query.'" style="width:100%"/>
- <input type="submit" name="submit" value="'.swSystemMessage('search',$lang).'" /> 
- </p></form> ';
+ <input type="text" class="searchfield" name="query" value="'.$query.'"/>
+ <input type="submit" class="searchbutton" name="submit" value="'.swSystemMessage('search',$lang).'" /> 
+ </p></form></div> ';
 
 $swLoginMenus= array();
-
+ 
 if ($user->username != "" || isset($realuser))
 {
 		$swLoginMenus['user'] = $user->nameshort();
@@ -593,6 +593,8 @@ switch ($action)
 				 	 break;
 	case 'lostpasswordsubmit':    include 'inc/special/lostpassword.php';
 				 	 break;
+	case 'resetpassword':    include 'inc/special/resetpassword.php';
+				 	 break;
 
 	case 'logout':   $swParsedName = 'Logout';
 					 $swParsedContent = swSystemMessage('you-have-logged-out',$lang);
@@ -609,7 +611,7 @@ switch ($action)
 					 	include 'inc/special/snapshot.php';
 				 	 break;
 	
-	case 'install': include_once 'inc/special/install.php';
+	case 'install':  include_once 'inc/special/install.php';
 				 	 break;
 	
 	case 'new':      $wiki=new swWiki; $name = '';// no break!

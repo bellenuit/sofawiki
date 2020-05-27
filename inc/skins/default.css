@@ -203,3 +203,13 @@ table.fieldseditor td.key
 {
 	font-weight: bold;
 }
+
+#searchfield
+{
+	width:120px;
+}
+
+input.searchfield
+{
+	width:100%;
+}

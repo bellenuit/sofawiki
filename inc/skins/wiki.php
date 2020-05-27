@@ -40,7 +40,7 @@
 	echo "<br/>";
 	foreach($swLoginMenus as $item) {echo $item."<br/>\r\n" ; }
 	echo "<span class='error'>$swError</span>\r\n";
-	if ($user->hasright('modify','*')) echo "<br><span class='debug'>$swDebug</span>\r\n";
+	if (isset($swUserDebug) && $swUserDebug && $user->hasright('modify','*')) echo "<br><span class='debug'>$swDebug</span>\r\n";
 ?>
 </div><!-- editmenu -->
 </div><!-- menu -->

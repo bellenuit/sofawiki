@@ -12,7 +12,7 @@ $i=0;
 foreach($files as $file)
 {
 	
-	// limit to 100
+	// limit to 500
 	
 	$i++;
 	if ($i>500) continue;
@@ -25,7 +25,7 @@ foreach($files as $file)
 
 		$wiki->name ='Image:'.$shortname;
 		$wiki->user = $user->name;
-		$wiki->content = '[[imagechecksum::'.md5file($file2).']]';
+		$wiki->content = '[[imagechecksum::'.md5_file($file2).']]';
 		if ($file != '')
 			$wiki->insert();
 
