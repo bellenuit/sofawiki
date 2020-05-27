@@ -21,5 +21,9 @@ SofaWiki is a filebased CMS built on PHP. It uses concepts of MediaWiki, but wit
 http://www.sofawiki.com
 http://www.sofawiki.com/sofawiki-database-primer
 
+# Installation in one minute demo movie
+
+https://github.com/bellenuit/sofawiki/blob/master/inc/installer/install.mp4
+
 matti@belle-nuit.com
 2012-2017
