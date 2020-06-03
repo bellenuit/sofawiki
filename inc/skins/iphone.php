@@ -6,7 +6,7 @@
 <title><?php echo $swParsedName ?></title>
 <link rel='stylesheet' href='inc/skins/iphone.css'/>
 <style><?php echo $swParsedCSS ?></style>
-<meta name='viewport' content='width=320; initial-scale=1.0; maximum-scale=2.0; user-scalable=1;' />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 
