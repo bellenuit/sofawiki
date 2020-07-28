@@ -94,6 +94,7 @@ class swBitmap extends swPersistance
 	
 	function setbit($n)
 	{
+		$n = intval($n);
 		if ($n<0) return; 
 		if ($n=='') return; 
 		$this->touched = true;

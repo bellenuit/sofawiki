@@ -120,6 +120,8 @@ class swExpression
 		
 		$this->functions[] = new XPSecondsToSQL;
 		$this->functions[] = new XPSQLtoSeconds;
+		
+		$this->functions[] = new XPFormat;
 
 		$this->expectedreturn = 1 ;
 
@@ -681,7 +683,7 @@ class swExpression
 
 		if (count($this->stack) > $this->expectedreturn)
 		{
-			print_r($this->stack);
+			//print_r($this->stack);
 			throw new swExpressionError('Evaluate stack not consumed '.join(' ',$this->rpn)." ".$currentindex,31);
 		}
 		
@@ -1101,7 +1103,12 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 	case 'function':	if($this->isaggregator || $i>0)
 			 							throw new swExpressionError('Invalid instruction #'.$ti,66);
 			 						$dummy = array_shift($fields);
-			 						$body = join(' ',$fields);
+			 						$body = trim(join(' ',$fields));
+									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
+									{
+										throw new swExpressionError('Missing paranthesis #'.$ti,66);
+									}
+									$body = substr($body,1,-1);
 			 						$fields = explode(',',$body);
 			 						$this->arity = count($fields);
 			 						for ($j = $this->arity-1;$j>=0;$j--)
@@ -1996,6 +2003,18 @@ class XpxOr extends swExpressionFunction
 		if (!$b && $a) $stack[] = '1';
 		elseif ($b && !$b) $stack[] = '1';
 		else $stack[] = '0';			
+	}
+}
+
+class XpFormat extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':format' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = floatval(array_pop($stack));	
+		$stack[] = swNumberformat($b,$a);		
 	}
 }
 

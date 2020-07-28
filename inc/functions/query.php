@@ -1360,7 +1360,7 @@ class swQueryFunction extends swFunction
 		$navigationstart = 0; 
 		if (isset($_REQUEST['start'])) $navigationstart = $_REQUEST['start'];
 		$navigationstart = max(0,$navigationstart);
-		$navigationcount = count($rows);
+		$navigationcount = @count($rows);
 		$navigationstart = min($navigationcount-1,$navigationstart);
 		// remove unused rows
 		if ($navigationlimit>0) 
@@ -1381,7 +1381,7 @@ class swQueryFunction extends swFunction
 		$navigation .= ' <a href="'.$url.'&start='.sprintf("%0d",$navigationstart+$navigationlimit).'">'.swSystemMessage('forward',$lang).'</a>';
 		$navigation .= '</nowiki></div>';
 		
-		if (count($rows) > 0)
+		if (@count($rows) > 0)
 		{
 			if ($this->outputraw) return $rows;
 			$rows = swCleanTupleFieldOrder($rows);

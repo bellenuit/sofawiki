@@ -34,6 +34,7 @@ echo '<meta name="title" content="'. $t. '">
 ?>
 <title><?php echo $t ?></title>
 <link rel='stylesheet' href="inc/skins/default.css"/>
+<link rel='stylesheet' href="inc/skins/markrelationcode.css"/>
 
 <?php
 	if ($action=='view')
@@ -169,4 +170,10 @@ setTimeout(function()
 
 ?>
 </body>
+<script src="inc/skins/markrelationcode.js"></script>
+<script>
+	let mini = miniEditor(document.getElementById("editor"),markRelationCode);
+	markRelationCode();
+</script>
+
 </html>

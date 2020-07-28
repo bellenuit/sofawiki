@@ -100,7 +100,7 @@ function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,
 	$row = array();
 	
 	// normalize array, to a table, but using only used fields and field
-	$maxcount = count($fieldlist[$field]);
+	$maxcount = @count($fieldlist[$field]);
 	foreach($fields as $v)
 	{
 		if (isset($fieldlist[$v]))
@@ -109,13 +109,13 @@ function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,
 	$fieldlist2 = array();
 	foreach($fieldlist as $key=>$v)
 	{
-		for($fi=0;$fi<count($v);$fi++)
+		for($fi=0;$fi<@count($v);$fi++)
 		{
 			$fieldlist2[$fi][$key] = $v[$fi];
 		}
-		for ($fi=count($v);$fi<$maxcount;$fi++)
+		for ($fi=@count($v);$fi<$maxcount;$fi++)
 		{
-			$fieldlist2[$fi][$key] = $v[count($v)-1];
+			$fieldlist2[$fi][$key] = $v[@count($v)-1];
 		}
 	}
 	

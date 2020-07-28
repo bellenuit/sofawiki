@@ -36,7 +36,7 @@ class swCacheParser extends swParser
 			$pos2 = strpos($s."\n","\n",$pos);
 			
 			
-			$expire = substr($s,$pos,$pos2-$pos);
+			$expire = intval(substr($s,$pos,$pos2-$pos));
 			$now = time();
 			
 			$cachename = 'cache'.$wiki->name.'/'.$lang;

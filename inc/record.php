@@ -203,11 +203,15 @@ class swRecord extends swPersistance
 		{
 			// we have a serialized version that is faster to read
 			$s = '';
-			global $swShortIndex;
-			if ($swShortIndex && $db->shortbitmap->getbit($this->revision))
+			global $swRamdiskPath;
+			if ($swRamdiskPath == '') 
 			{
-				@fseek($swShortIndex, 512*($this->revision-1));
-				$s = @fread($swShortIndex,512);
+				global $swShortIndex;
+				if ($swShortIndex && $db->shortbitmap->getbit($this->revision))
+				{
+					@fseek($swShortIndex, 512*($this->revision-1));
+					$s = @fread($swShortIndex,512);
+				}
 			}
 			
 			$hasshort = false;
@@ -219,17 +223,19 @@ class swRecord extends swPersistance
 			}
 			else
 			{
-				
-				$file = swGetPath($this->revision,true);
-				if (file_exists($file))
+				if ($swRamdiskPath == '') 
 				{
-					$this->persistance = $file;
-					$this->open();
-					$this->error = '';
-					return;
+					$file = swGetPath($this->revision,true);
+					if (file_exists($file))
+					{
+						$this->persistance = $file;
+						$this->open();
+						$this->error = '';
+						return;
+					}
 				}
 				
-				echotime('long '.$this->revision);
+				// echotime('long '.$this->revision);
 				$file = swGetPath($this->revision);
 				
 				if (!file_exists($file)) 

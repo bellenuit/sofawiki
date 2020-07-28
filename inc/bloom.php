@@ -66,6 +66,8 @@ function swGetBloomBitmapFromTerm($term)
 	$bm = new swBitmap;
 	$bm->init($db->lastrevision+1, true);
 	
+	if (strlen(swNameURL($term))<3) return $bm;
+	
 	echotime('bloom '.$term);
 	
 	if (!$swBloomIndex)
@@ -76,7 +78,7 @@ function swGetBloomBitmapFromTerm($term)
 						 			
 	$hashes = swGetHashesFromTerm($term);
 	
-		
+	// echo "TERM=$term;";	
 	
 	foreach($hashes as $h)
 	{

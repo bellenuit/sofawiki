@@ -82,8 +82,10 @@ class swRelationLineHandler
 		
 		if ($internalbody) $internals = explode(',',$internalbody);
 		
+		$t = str_replace("\r\n", PHP_EOL, $t);
 		$t = str_replace("\r", PHP_EOL, $t);
 		$t = str_replace("\n", PHP_EOL, $t);
+		
 		
 		$lines = explode(PHP_EOL,$t);
 		//if ($internal) print_r($lines);
@@ -114,7 +116,9 @@ class swRelationLineHandler
 			}
 			$ti = $il.''; // to text
 			$line = trim($lines[$i]); 
-			
+			$line = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $line);
+			$line = str_replace(html_entity_decode("&#x200B;"),'',$line); // editor ZERO WIDTH SPACE
+		
 			// remove comments
 			if (strpos($line,'// ')>-1)
 				$line = trim(substr($line,0,strpos($line,'// ')));
@@ -327,7 +331,9 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'filter':		$r = swRelationFilter($body);
+				case 'filter':		$gl = array_merge($this->globals,$locals);
+									
+									$r = swRelationFilter($body,$gl);
 									$this->stack[] = $r;
 									break;				
 				case 'format':		if (count($this->stack)<1)
@@ -360,7 +366,11 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'function':	$plines = array();
+				case 'function':	$line = str_replace('(',' (',$line);
+			 						$fields = explode(' ',$line);
+			 						$command = array_shift($fields);
+			 						$body = join(' ',$fields);
+									$plines = array();
 									$plines[] = $line;
 									if (array_key_exists(trim($body), $this->offsets))
 									{
@@ -429,6 +439,50 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Include is not supported'.$ptag2;
 										$this->errors[]=$il;
 									}
+									break;
+				case 'input': 		$fieldgroup = explode(',',$body);
+									$this->result .=  $ptag.'<nowiki><form method="post" action="index.php"></nowiki>';
+									$this->result .= '<nowiki><input type="hidden" name="name" value="</nowiki>{{currentname}}<nowiki>">'.$ptag2.'</nowiki>';
+									if (isset($_REQUEST['q']))
+									$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
+
+									$this->result .=  '<nowiki><table class="input"></nowiki>';
+									$inputfields = array();
+									foreach($fieldgroup as $fg)
+									{
+										$fg = trim($fg);
+										$ts = explode(' ',$fg);
+										$field = array_shift($ts);
+										$inputfields[] = $field;
+										$df = join($ts);
+										$xp = new swExpression($this->functions);
+										$xp->compile($df);
+										$tx = $xp->evaluate($this->globals, $locals);
+										
+										if (isset($_POST['submitinput']))
+											$tx = @$_POST[$field];
+										
+										
+										$this->result .= '<nowiki><tr><td>'.$field.'</td><td><input type="text" name="'.$field.'" value="'.$tx.'"></td></tr></nowiki>';
+										
+									}
+									$this->result .=  '<nowiki><tr><td></td><td><input type="submit" name="submitinput" value="submit"></td></tr></nowiki>';
+									$this->result .=  '<nowiki></table></nowiki>';
+									$this->result .=  '<nowiki></form></nowiki>';
+									
+									if (isset($_POST['submitinput']))
+									{
+										// print_r($inputfields);
+										foreach($inputfields as $key)
+										{
+											$this->globals[$key] = @$_POST[$key];
+										}
+									}
+									else
+									{
+										$i=$c; break; 
+									}
+									
 									break;
 				case 'insert':		if (count($this->stack)<1)
 									{
@@ -553,10 +607,10 @@ class swRelationLineHandler
 										
 										switch(trim($body))
 										{
-											case 'csv':		$this->result .= '<nowiki><textarea style="width:100%;height:200px">'. $r->getCSV($body).'</textarea></nowiki>'; break;
+											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV($body).'</textarea></nowiki>'; break;
 											case 'fields':	$this->result .= $r->toFields($body); break;
-											case 'json':	$this->result .= '<nowiki><textarea style="width:100%;height:200px">'. $r->getJSON($body).'</textarea></nowiki>'; break;
-											case 'tab':		$this->result .= '<nowiki><textarea style="width:100%;height:200px">'. $r->getTab($body).'</textarea></nowiki>'; break;
+											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON($body).'</textarea></nowiki>'; break;
+											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab($body).'</textarea></nowiki>'; break;
 											default: 		$this->result .= $r->toHTML($body); break;
 										}
 										
@@ -564,44 +618,59 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;		
-				case 'program':		$plines = array();
+				case 'program':		$line = str_replace('(',' (',$line);
+			 						$fields = explode(' ',$line);
+			 						$command = array_shift($fields);
+			 						$body = join(' ',$fields);
+									$plines = array();
 									$fields = explode(' ',$body);
 									$key = array_shift($fields);
 									$body = trim(join(' ',$fields));
-									
-									if ($body != '')
+									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
 									{
-										$commafields = explode(',',$body);
-										$k = count($commafields);
-										for($j=0;$j<$k;$j++)
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptag2;
+										$this->errors[]=$il;
+
+									}
+									else
+									{
+										$body = substr($body,1,-1);
+									
+									
+										if ($body != '')
 										{
-											$plines[] = 'parameter '.trim($commafields[$j]);
-										}
-										if (array_key_exists($key, $this->offsets))
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptag2;
-											$this->errors[]=$il;
-										}
-										
-										$this->offsets[$key] = $i+1;
-										$found = false;
-										while($i<$c && !$found)
-										{
-											$i++;
-											$line = trim($lines[$i]); 
-											if ($line != 'end program')
-												$plines[] = $line;
+											$commafields = explode(',',$body);
+											$k = count($commafields);
+											for($j=0;$j<$k;$j++)
+											{
+												$plines[] = 'parameter '.trim($commafields[$j]);
+											}
+											if (array_key_exists($key, $this->offsets))
+											{
+												$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptag2;
+												$this->errors[]=$il;
+											}
+											
+											$this->offsets[$key] = $i+1;
+											$found = false;
+											while($i<$c && !$found)
+											{
+												$i++;
+												$line = trim($lines[$i]); 
+												if ($line != 'end program')
+													$plines[] = $line;
+												else
+													$found = true;											
+											}
+											//print_r($plines);
+											if ($found)
+												$this->programs[$key] = join(PHP_EOL,$plines);
 											else
-												$found = true;											
+											{
+												$this->result .= $ptag.$ptagerror.$ti.' Error : Program missing end'.$ptag2;
+												$this->errors[]=$il;
+											}										
 										}
-										//print_r($plines);
-										if ($found)
-											$this->programs[$key] = join(PHP_EOL,$plines);
-										else
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Program missing end'.$ptag2;
-											$this->errors[]=$il;
-										}										
 									}									
 									break; 				
 				case 'project':		if (count($this->stack)<1)
@@ -748,10 +817,17 @@ class swRelationLineHandler
 									break;										
 				case 'run':			$fields = explode(' ',$body);
 									$key = array_shift($fields);
-									$body = join(' ',$fields);
-									if (array_key_exists($key, $this->programs))
+									$body = trim(join(' ',$fields));
+									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptag2;
+										$this->errors[]=$il;
+
+									}
+									elseif (array_key_exists($key, $this->programs))
 									{
 										$tx = $this->programs[$key];
+										$body = substr($body,1,-1);
 										$this->result = $this->run2($tx,$key,$body); //!!!
 									}
 									else
@@ -971,8 +1047,20 @@ class swRelationLineHandler
 									}
 			}
 			
-		}   
-		return $this->result;
+		}
+		
+		global $swOvertime; 
+		global $lang;		
+		$overtimetext = '';
+		if ($swOvertime)
+			$overtimetext .= '<nowiki><div class="overtime">'.swSystemMessage('there-may-be-more-results',$lang).'</div></nowiki>'; 
+		if (!$internal)
+			return '<div class="relation">'.$this->result.$overtimetext.'</div>' ; 
+		else
+			return $this->result;
+			
+			  
+		
 		
 	}
 	
@@ -2218,7 +2306,7 @@ class swRelation
 										unset($lines[$j+1]);
 										$k -= 1;
 										$j -= 2;
-										continue;
+										continue 2; // for($j=0;$j<$k;$j++) PHP 7.3 needs argument
 									}
 									else
 									{
@@ -2392,7 +2480,7 @@ class swRelation
 	function toHTML($limit = 0)
 	{
 		$lines = array();
-		$lines[]= '{| class="datatable" ';
+		$lines[]= '{| class="print" ';
 		
 		$k = count($this->header);
 		
@@ -2439,7 +2527,7 @@ class swRelation
 					if ($fm != '')
 					{
 						$t = $this->format2($t,$fm);
-						$td = ' style="text-align:right" | '; 						
+						$td = ' class="numberformat" | '; 						
 					}
 				}
 				if (!$t) $t = ' ';  // empty table cell would collapse
@@ -2767,7 +2855,7 @@ class swOrderedDictionary
 		foreach($this->pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
-			if (count($fields < 2)) $fields[] = 'A';
+			if (@count($fields < 2)) $fields[] = 'A';
 			if (! array_key_exists($fields[0],$adict) 
 				|| ! array_key_exists($fields[0],$bdict) ) 
 				throw new swRelationError('Dict Compare missing field '. $fields[0],609);
@@ -2978,15 +3066,75 @@ function array_clone($arr) { return array_slice($arr, 0, null, true); }
 
 function swNumberformat($d,$f)
 {	
-	if (substr($f,0,1)=='n')
+	if (substr($f,-1,1)=='n')
 	{
-		$decimals = substr($f,1,1);
-		$decpoint = substr($f,2,1);
-		$thousandsep = substr($f,3,1);
-		if ($decpoint == '' ) $decpoint = '.';
-		if ($thousandsep == '' ) $thousandsep = "'";
-		if ($thousandsep == 's' ) $thousandsep = ' ';
-		return number_format($d,$decimals,$decpoint,$thousandsep);
+		$f = substr($f,0,-1)."f";
+		$s = sprintf($f,$d);
+		$sign='';
+		if (substr($s,0,1)=='-')
+		{
+			$s = substr($s,1);
+			$sign='-';
+		}
+		if (stristr($s,'.'))
+		{
+			$prefix = substr($s,0,strpos($s,'.'));
+			$postfix = substr($s,strpos($s,'.'));
+		}
+		else
+		{
+			$prefix = $s;
+			$postfix = '';
+		}
+		
+		$prefix = strrev($prefix);
+		$prefix = chunk_split($prefix,3,' ');
+		$prefix = trim(strrev($prefix));
+		$s = $sign.$prefix.$postfix;
+		return $s;
+
+	}
+	if (substr($f,-1,1)=='N')
+	{
+		$f = substr($f,0,-1)."f";
+		$s = sprintf($f,$d);
+		$sign='';
+		if (substr($s,0,1)=='-')
+		{
+			$s = substr($s,1);
+			$sign="-";
+		}
+		if (stristr($s,'.'))
+		{
+			$prefix = substr($s,0,strpos($s,'.'));
+			$postfix = substr($s,strpos($s,'.'));
+		}
+		else
+		{
+			$prefix = $s;
+			$postfix = '';
+		}
+		
+		$prefix = strrev($prefix);
+		$prefix = chunk_split($prefix,3,"'");
+		$prefix = trim(strrev($prefix));
+		$s = $sign.$prefix.$postfix;
+		$s = str_replace("-'","-",$s); // strange bug
+		return $s;
+
+
+	}
+	if (substr($f,-1,1)=='p')
+	{
+		$f = substr($f,0,-1)."f";
+		$s = sprintf($f,$d*100);
+		return $s.'%';
+	}
+	if (substr($f,-1,1)=='P')
+	{
+		$f = substr($f,0,-1)."f";
+		$s = sprintf($f,$d*100);
+		return $s.' %';
 	}
 	return sprintf($f,$d); // waiting for excel style format
 }

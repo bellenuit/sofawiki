@@ -9,12 +9,16 @@ is a pure reading cache, just duplicate files from harddisk
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
+$swRamDiskDBpath = $swRoot.'/site/indexes/records.db';
+$swRamDiskDBfilter = '/site/revisions/';
 
 function swInitRamdisk()
 {
 	
 	global $swRamdiskPath;
+	global $swRamDiskDB;
 	global $swRoot;
+	global $swRamDiskDBpath;
 	if (is_dir($swRamdiskPath)) 
 	{
 		 
@@ -36,6 +40,21 @@ function swInitRamdisk()
 	 return;
 	 
 	}
+	elseif ($swRamdiskPath=='db')
+	{
+		if ($swRamDiskDB) return; 
+		if (!file_exists($swRamDiskDBpath))
+		{
+			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'c', 'db4');
+			echotime('new berkeley db');
+		}
+		else
+		{
+			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'rdt', 'db4');
+			echotime('open berkeley db');  // if it fails, it is false
+		}
+		return;
+	}
 	
 	echotime('no ramdisk');
 	$swRamdiskPath = '';
@@ -46,9 +65,40 @@ function swFileGet($path)
 {
 
 	global $swRamdiskPath;
+	global $swRamDiskDB;
+	global $swRamDiskJobs;
+	global $swRoot;
+	global $swRamDiskDBpath; 
+	global $swRamDiskDBfilter;
 	
 	if (isset($swRamdiskPath) && $swRamdiskPath != '')
 	{
+		
+		if ($swRamdiskPath=='db')
+		{
+			if (!$swRamDiskDB) swInitRamdisk();
+			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
+			{
+				$v = dba_fetch($path,$swRamDiskDB);
+				if ($v) {  return $v; }
+				
+				$s = file_get_contents($path);
+				$swRamDiskJobs[$path] = $s;
+				
+				if (count($swRamDiskJobs) % 50 == 0)
+				{
+					
+					swUpdateRamDiskDB();
+				}
+				
+				
+				return $s;
+			}
+			$s = file_get_contents($path);
+			return $s;
+		}
+		
+		
 		
 		$hash = $swRamdiskPath.md5($path).'.txt';
 		
@@ -76,16 +126,104 @@ function swUnlink($path)
 {
 	
 	global $swRamdiskPath;
+	global $swRoot;
+	global $swRamDiskDBpath;
+	global $swRamDiskDBfilter;
 	
 	if (file_exists($path))
 		unlink($path);
 	
 	if (isset($swRamdiskPath) && $swRamdiskPath != '')
 	{
+		
+		if ($swRamdiskPath=='db')
+		{
+			if (!stristr($path,$swRamDiskDBfilter)) return;
+			
+			if (isset($swRamDiskDB) and $swRamDiskDB) dba_close($swRamDiskDB);
+
+			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'wdt', 'db4');
+			if ($swRamDiskDB)
+			{
+				dba_delete($path,$swRamDiskDB);
+				echotime('delete berkeley db ok');
+				
+			}
+			else			
+			{
+				echotime('delete berkeley db failed '.$path);
+			}
+			@dba_close($swRamDiskDB);
+			swInitRamdisk();
+			return;
+		}
+		
+		
 		$hash = $swRamdiskPath.md5($path).'.txt';
 		if (file_exists($hash))
 			unlink($hash);
 	}
+	
+}
+
+function swIndexRamDiskDB()
+{
+	global $swRamDiskJobs;
+	global $db;
+	
+	$s = microtime(true);
+	$k = rand(1,$db->lastrevision);
+	$d = 1;
+	$c = @count($swRamDiskJobs);
+	$list = array();
+	
+	for($i=0;$i<10000;$i++)
+	{ 
+		//echo $k.' ';
+		$list[$k] = 1;
+		$w = new swWiki;
+		$w->revision = $k;
+		$w->lookup();
+		$c2 = @count($swRamDiskJobs); // check if last was empty
+		if ($c2 > $c) { $d = 1; /*echo $k. ' ';*/} else $d *= 2; // slow step if empty, else open steps
+		$d = $d % $db->lastrevision;
+		$k = ($k + $d) % $db->lastrevision;
+		while(array_key_exists($k,$list))
+		{
+			$k = rand(1,$db->lastrevision);
+		}
+		$c = $c2;
+		$n = microtime(true);
+		if ($n-$s > 10) $i = 10000;
+	}
+	swUpdateRamDiskDB();
+
+}
+
+function swUpdateRamDiskDB()
+{
+	global $swRamDiskDB;
+	global $swRamDiskDBpath;
+	global $swRamDiskJobs;
+	
+	if (!@count($swRamDiskJobs)) return;
+	
+	if ($swRamDiskDB) @dba_close($swRamDiskDB);
+	$swRamDiskDB = @dba_open($swRamDiskDBpath, 'wdt', 'db4');
+	if ($swRamDiskDB)
+	{
+		foreach($swRamDiskJobs as $k=>$v)
+			@dba_replace($k,$v,$swRamDiskDB);
+		echotime('insert berkeley db ok');	
+		$swRamDiskJobs = array();				
+	}
+	else
+	{
+		echotime('insert berkeley db failed');
+	}
+	@dba_close($swRamDiskDB);
+	swInitRamdisk();
+
 }
 
 

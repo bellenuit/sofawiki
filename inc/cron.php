@@ -19,7 +19,7 @@ function swCron()
 	}
 	else
 	{
-		switch(rand(0,10))
+		switch(rand(0,50))
 		{
 			case 0: echotime('cron index'); $db->init(true); return 'cron index'; // rebuild indexes 
 						
@@ -62,6 +62,7 @@ function swCron()
 					}
 					return 'cron overtime filter '.$filterlist;
 				}
+					break;
 				
 			  case 6: echotime('cron logs'); 
 			  		  
@@ -72,8 +73,11 @@ function swCron()
 			  		  
 			  		  
 			  
-			  		  return "cron logs";  
-
+			  		  return "cron logs"; 
+			  		  break; 
+			  case 7: echotime('cron IndexRamDiskDB'); 
+			  		  swIndexRamDiskDB();	
+			  		  break;
 			
 			default: return "cron pause";
 		

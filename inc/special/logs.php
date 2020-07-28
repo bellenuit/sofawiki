@@ -169,7 +169,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 					$i=strpos($hitname,"/");
 					if ($i>-1) $hitname= substr($hitname,0,$i);
 					$hitaction = swGetValue($line,'action');
-					$hittime = swGetValue($line,'time');
+					$hittime = intval(swGetValue($line,'time'));
 					$referer = swGetValue($line,'referer');
 					$q = swGetValue($line,'query');
 					$a = swGetValue($line,'action');

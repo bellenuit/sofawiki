@@ -6,6 +6,7 @@
 <title><?php echo $swParsedName ?></title>
 <base href="<?php echo $swBaseHref ?>">
 <link rel='stylesheet' href="inc/skins/wiki.css"/>
+<link rel='stylesheet' href="inc/skins/markrelationcode.css"/>
 <style><?php echo $swParsedCSS ?></style>
 </head>
 <body>
@@ -64,4 +65,10 @@ $swParsedContent
 
 
 </body>
+<script src="inc/skins/markrelationcode.js"></script>
+<script>
+	let mini = miniEditor(document.getElementById("editor"),markRelationCode);
+	markRelationCode();
+</script>
+
 </html>

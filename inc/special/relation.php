@@ -12,13 +12,15 @@ $submkitwikitext = swGetArrayValue($_REQUEST,'submitwikitext');
 if ($submitrefresh)
 	$swDebugRefresh = true;
 
-
-$swParsedContent = '<nowiki><div id="editzone"><form method="post" action="index.php"><p><input type="hidden" name="name" value="special:relation" /><textarea name="q" rows=16 cols=180 style="width:100%">'.$q.'</textarea><input type="submit" name="submit" value="Run" /><input type="submit" name="submitrefresh" value="Run Refresh" /><input type="submit" name="submitwikitext" value="Run Wikitext" /></form></nowiki>';
+$swParsedContent = '<nowiki><div id="editzone"><form method="post" action="index.php"><p><input type="hidden" name="name" value="special:relation" /><code id="editor" style="width:100%; display:none">'.$q.'</code><textarea id="shadoweditor" name="q" rows=8 cols=180 style="width:100%">'.$q.'</textarea><p><input type="submit" name="submit" value="Run" /><input type="submit" name="submitrefresh" value="Run Refresh" /><input type="submit" name="submitwikitext" value="Run Wikitext" /></form></nowiki>';
 
 	$alines = array('relation',$q);
 	$dtb = new swRelationfunction;
 	
-	//print_r($alines);
+	/* echo "<pre>";
+	print_r($alines);
+	echo "</pre>"; */
+
 		
 	$s = $dtb->dowork($alines);
 	

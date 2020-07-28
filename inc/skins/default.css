@@ -13,10 +13,6 @@ ins
 {
 	color: green; text-decoration: none;
 }
-.comment
-{
-	color: blue; background-color: AliceBlue; border: 1px blue solid;
-}
 
 a.invalid
 {
@@ -57,7 +53,7 @@ span.found
 
 #editmenu0
 {
-	background-color: none;
+	background-color: transparent;
 } 
 
 #editmenu0 a
@@ -76,7 +72,7 @@ span.found
 	
 	left: 10px;
 	top: 0px;
-	background-color: none;
+	background-color: transparent;
 } 
 
 #langmenu a
@@ -154,7 +150,8 @@ table.queryfunction
 	width: 100%;
 }
 
-table.queryfunction td, th
+table.queryfunction td,
+table.queryfunction th
 {
 	text-align: left;
 	border: 1px solid black;
@@ -164,6 +161,7 @@ table.queryfunction td, th
 	padding-bottom: 3px;
 }
 
+.relation table.print,
 table.datatable
 {
 	border-collapse: collapse;
@@ -171,7 +169,13 @@ table.datatable
 	margin-bottom: 5px;
 }
 
-table.datatable td, th
+
+td { vertical-align: top;  width: 50% }
+
+.relation table.print td,
+.relation table.print th,
+table.datatable td,
+table.datatable th
 {
 	text-align: left;
 	border: 1px solid black;
@@ -179,9 +183,12 @@ table.datatable td, th
 	padding-right: 5px;
 	padding-top: 3px;
 	padding-bottom: 3px;
+	width: auto;
 }
 
-td { vertical-align: top;  width: 50% }
+.relation table.print td.numberformat
+{ text-align:right }
+
 
 table.fieldseditor
 {
@@ -189,7 +196,8 @@ table.fieldseditor
 	width: 100%;
 }
 
-table.fieldseditor td, th
+table.fieldseditor td,
+table.fieldseditor th
 {
 	text-align: left;
 	border: 1px solid black;
@@ -197,12 +205,21 @@ table.fieldseditor td, th
 	padding-right: 5px;
 	padding-top: 3px;
 	padding-bottom: 3px;
+	width: auto;
 }
 
 table.fieldseditor td.key
 {
 	font-weight: bold;
 }
+
+
+
+.relation textarea.tab,
+.relation textarea.csv,
+.relation textarea.json
+
+{ width:100%;height:200px; }
 
 #searchfield
 {

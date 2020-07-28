@@ -1,0 +1,37 @@
+code { 
+	display:block;
+	background-color: white;
+	color: black; 
+	padding: 8px; 
+	margin-top: 8px;
+	border: 1px solid #888;
+	counter-reset: line;
+	
+}
+
+code p { 
+	padding: 0px; 
+	margin: 0px;
+}
+
+code p:before {
+	content: counter(line);
+	display: inline-block;
+	font-size: 60%;
+	padding: 0 .5em;
+	margin-right: 1em;
+	color: #888;
+	counter-increment: line;
+	width: 1.5em; 
+}
+
+code p.prefix1:before { margin-right: 3em; }
+code p.prefix2:before { margin-right: 5em; }
+code p.prefix3:before { margin-right: 7em; }
+code p.prefix4:before { margin-right: 9em; }
+
+code span.keyword { color: blue; }
+code span.number { color: green; }
+code span.comment { color: rgb(200,0,0);}
+code span.quote { color: rgb(85, 26, 139); }
+code span.print { color: gray; }

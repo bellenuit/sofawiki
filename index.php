@@ -227,7 +227,8 @@ else
 		&& (array_key_exists('username', $_GET) || array_key_exists('username', $_POST) ) )
 		{			
 			$swError = swSystemMessage('wrong-password-error',$lang);
-			$action = "login";
+			$failaction = swGetArrayValue($_REQUEST,'failaction','login');
+			$action = $failaction;
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
 		$user = new swUser;
@@ -543,8 +544,18 @@ if ($user->hasright('upload','') && $action != 'logout')
 
 if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99)
 	$action = 'indexerror';
+	
+	
+if ($action == 'logout')
+{
+	$failaction = swGetArrayValue($_REQUEST,'failaction','logout');
+	$action = $failaction;
+}
 
 echotime('action '.$action);
+
+
+
 switch ($action)
 {
 	case 'special':  	if ($user->hasright('special',str_replace('special:','',$name)) || $user->hasright('special','special') ||

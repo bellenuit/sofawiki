@@ -7,10 +7,8 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 $swParsedName = "Special:Indexes";
 
 if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
-$l0 = '';
 
-
-if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(1000); $_REQUEST['index'] = 'bloom';}
+if ($_REQUEST['index'] == 'indextrigram') {$t0 = $db->trigrambitmap->countbits(); swIndexTrigram(2500);}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
 
@@ -24,20 +22,18 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <a href="index.php?name=special:indexes&index=urls">urls</a>
 <a href="index.php?name=special:indexes&index=short">short</a>
-<a href="index.php?name=special:indexes&index=bloom">bloom</a>
-<a href="index.php?name=special:indexes&index=queries">queries</a>';
-if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=berkeley">berkeley</a>';
-$swParsedContent .=  '<br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
+<a href="index.php?name=special:indexes&index=trigram">trigram</a>
+<a href="index.php?name=special:indexes&index=queries">queries</a>
+<br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
 <br>current = '. $db->currentbitmap->countbits().'
-<br>bloom = '. $db->bloombitmap->countbits().'
+<br>trigram = '.$db->trigrambitmap->countbits().'
 <br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>
 <a href="index.php?name=special:indexes&index=indexnames">Index Names</a>
-<a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a>';
-if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexberkeley">Index Berkeley</a>';
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=docron">Do Cron</a>
+<a href="index.php?name=special:indexes&index=indextrigram">Index Trigram</a>
+<a href="index.php?name=special:indexes&index=indexfields">Index Fields</a>
+<a href="index.php?name=special:indexes&index=docron">Do Cron</a>
+<a href="index.php?name=special:indexes&index=dokvs">Do kvs</a>
 
 ';
 
@@ -45,14 +41,14 @@ $swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
 $swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
 $swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresettrigram' value='Reset Trigram' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
 
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Bloom, Reset Bitmaps</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Trigram, Reset Bitmaps</i>";
 
 
 $done = '';
@@ -103,13 +99,24 @@ $done = '';
 				
 	}
 	
-	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresettrigram']))
 	{
 
+		// delete all trigram
+		$path =$swRoot.'/site/trigram';
+		$dir = opendir($path);
+		while($file = readdir($dir))
+    	{
+			if($file != '..' && $file != '.')
+			{
+				swUnlink($swRoot.'/site/trigram/'.$file);
+			}
+		}
 		
-		swClearBloom();	
+		$file = $swRoot.'/site/indexes/trigrambitmap.txt';
+		swUnlink($file); 	
 	
-		$done .= '<p>Deleted bloom';
+		$done .= '<p>Deleted trigram';
 	}
 	
 	
@@ -154,8 +161,8 @@ $done = '';
 	}
 
 
-if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) || isset($_REQUEST['submitresetqueries']) 
-|| isset($_REQUEST['submitresetbitmaps']) || isset($_REQUEST['submitreseturls']) || isset($_REQUEST['submitresetbloom']) )
+if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) || isset($_REQUEST['submitresetqueries']) || isset($_REQUEST['submitresettrigram'])
+|| isset($_REQUEST['submitresetbitmaps']) || isset($_REQUEST['submitreseturls']) )
 	{	
 		$swIndexError = true;
 		$swParsedContent = $done;
@@ -231,12 +238,14 @@ switch($_REQUEST['index'])
 						 	$fields = explode("\t",$line);
 							$r = $fields[0];
 						 	$bm->setbit($r);
-						 } 
+						 }
 	
 							
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  
+						  $swParsedContent .= print_r($db->URLstore->dump(),true);
 						  break;
 
 	case 'short': 		$swParsedContent .= '<h3>short</h3>';
@@ -247,85 +256,35 @@ switch($_REQUEST['index'])
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
 						  break;
 
-							break;
-	case 'indexberkeley' :  
-							swIndexRamDiskDB();							
-
-	case 'berkeley': 		$swParsedContent .= '<h3>Berkeley</h3>';
-						  swInitRamdisk();
-						  if (isset($swRamDiskDB) && $swRamDiskDB)
-						  {
-							  $counter = 0;
-							  $k = dba_firstkey($swRamDiskDB);
-							  $bm = new swBitmap($db->lastrevision);
-							  if ($k)
-							  	$counter = 1;
-							  while ($k = dba_nextkey($swRamDiskDB))
-							  { 
-								  if ($pos = strpos($k,$swRamDiskDBfilter))
-								  {
-									  $pos +=strlen($swRamDiskDBfilter);
-									  $k2 = substr($k,$pos);
-									  $k2 = substr($k2,0,-4);
-									  //echo $k2;
-									  $bm->setbit(intval($k2));
-									  $counter++;
-								  }
-								  
-								 
-							  }
-							  $swParsedContent .= '<p>length: '.$counter;
-							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
-							  
-						  }
-						  else
-						  	$swParsedContent .= '<p>not available';
-						  break;
 	
+	case 'trigram':			$swParsedContent .= '<h3>trigram</h3><p>';
 
-
-	case 'bloom':			 
-
+							
+							if (isset($_REQUEST['t']))
+							{
+								$bm = getTrigram($_REQUEST['t']);
+								$swParsedContent .= $_REQUEST['t'];
 								
+						 	    $swParsedContent .= '<p>length: '.$bm->length;
+						        $swParsedContent .= '<br>countbits: '.$bm->countbits();
+								$swParsedContent .= '<p>'.bitmap2canvas($bm);
 								
-								
-								$swParsedContent .= '<h3>bloombitmap</h3>';
-								
-								swOpenBloom();
-
-						  		$bm = $db->bloombitmap;
+							}
+							else
+							{
+								$swParsedContent .= '<h3>trigrambitmap</h3>';
+						  		$bm = $db->trigrambitmap;
 						  		$swParsedContent .= '<p>length: '.$bm->length;
 						 		$swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
 						 		$swParsedContent .= '<p>';
-						 		
-						 		if ($l0)
-						 		$swParsedContent .= '<p>indexed: '.$l0;
-						 		
-						 		$swParsedContent .= "<form method='get' action='index.php'><p>";
-								$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
-								$swParsedContent .= "</pre><input type='hidden' name='index' value='bloom'>";
-								$swParsedContent .= "</pre><input type='text' name='term' value='".@$_REQUEST['term']."'>";
-								$swParsedContent .= "<input type='submit' name='submitterm' value='Test Term' />";
-								$swParsedContent .= "</form>";
-						 		
-						 		if (isset($_REQUEST['term']))
-						 		{
-						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
-						 			
-						 			$bm2 = swGetBloomBitmapFromTerm($_REQUEST['term']);
-						 			$bm2 = $bm2->andop($db->currentbitmap);
-						 			
-						 			$n = $db->currentbitmap->countbits();
-						 			$c = $bm2->countbits();
-						 		
-									$swParsedContent .= $c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,2);
-
-						 		}
-						 		//$swParsedContent .= '<p>'.swGetBloomDensity();
+								$list = trigramlist();
+								foreach($list as $k=>$v)
+								{
+							 		$swParsedContent .= '<a href="index.php?name=special:indexes&index=trigram&t='.$v.'">'.$v.'</a> ';
+								}
+							}
 							break;
-
-
 	case "docron": 		   $swParsedContent .= '<h3>Cron</h3><p>'.swCron() ; break;
 	
 							
@@ -451,10 +410,16 @@ switch($_REQUEST['index'])
 							break;
 						
 
+	case "indextrigram": $swParsedContent .= '<h3>Index Trigram</h3><p>'.sprintf('%0d',$db->trigrambitmap->countbits() - $t0 ). ' revisions'; break;
 	case "indexnames": $result = swFilter('SELECT _revision, _name WHERE _name *','*'); 
 						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
 	
-	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;
+	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; 
+	
+						$swParsedContent .= print_r($db->URLstore->dump(),true);
+						
+	
+	break;
 	
 	case "indexfields" : 	$swParsedContent .= '<h3>Index Fields</h3>';
 							$revisions = swFilter('SELECT _field','*','query');
@@ -473,8 +438,66 @@ switch($_REQUEST['index'])
 								$swParsedContent .= $c. ' '.$field.'<br>';
 							}
 							if (isset($result2)) unset($result2);
-	
-	
+							break;
+							
+							
+	case 'dokvs':			$swParsedContent .= '<h3>Do KVS</h3>';
+							$path = $swRoot.'/site/indexes/urlkvs.txt';
+							$swURLstore = new swKeyValueStore;
+							$swURLstore->open($path);
+							
+							$list = swFilter('SELECT _revision, _name','*');
+							
+							//print_r($list);
+							$i=0;  
+							foreach($list as $v)
+							{
+								$w = new swWiki();
+								$w->name = $v['_name'];
+								$w->lookup();
+								
+								if ($swURLstore->setValue('_rev'.$v['_revision'],$w->content))
+								{
+									$swParsedContent .= "$v[_revision] $v[_name]; content";
+								}
+								
+								if 	($swURLstore->setValue($v['_name'],$v['_revision']))
+								{
+									$swParsedContent .= "$v[_revision] $v[_name]; ";
+								
+
+									
+									$i++;
+								}
+								else
+								{
+									
+								}
+								
+								if ($i>100) break;
+							}
+							
+							$swURLstore->commit();
+							
+							$swParsedContent .= $swURLstore->dump();
+							
+							//$swURLstore->close();
+							
+							// test it on values
+							
+							
+							//$swURLstore->open($path);
+							shuffle($list);
+							$i=0;
+							echotime('test ten');
+							foreach($list as $v)
+							{
+								$aa = $swURLstore->getValue($v['_name']);
+								
+								if ($i>1000) break;
+							}
+							echotime('test ten end');
+
 }
 
 function querylist()

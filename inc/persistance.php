@@ -7,7 +7,25 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 class swPersistance 
 { 
-    var $persistance; 
+    var $persistance;
+    function saveString()
+    {
+	    return serialize(get_object_vars($this));
+    }
+    
+    function openString($s)
+    {
+       	$vars = @unserialize($s);
+        if (!$vars)  return false;
+        if (!is_array($vars))  return false;
+        foreach($vars as $key=>$val) 
+        {            
+			if ($key != 'persistance')
+			$this->{$key} =$vars[$key];
+        } 
+        return true;
+    }
+     
         
     /**********************/ 
     function save() 
@@ -34,7 +52,8 @@ class swPersistance
         if (file_exists($this->persistance))
         {
        	 	$s=swFileGet($this->persistance); 
-       	 	$vars = unserialize($s);
+       	 	$vars = @unserialize($s);
+       	 	if ($vars === FALSE) unlink($this->persistance); // file is corrupt.
        		if (!$vars) 
        		{
        			echotime("Could not open file ".$this->persistance." for reading, at Persistant::open"); 
@@ -44,6 +63,7 @@ class swPersistance
         }
         //echotime(print_r($vars,true));
         if (!$vars)  return false;
+        if (!is_array($vars))  return false;
         foreach($vars as $key=>$val) 
         {            
 			if ($key != 'persistance')

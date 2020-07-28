@@ -66,13 +66,15 @@ function swRelationVirtual($url)
 }
 
 
-function swRelationFilter($filter)
+function swRelationFilter($filter, $globals = array())
 {
 	
 	global $swIndexError;
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
 	global $swStartTime;
+	global $swOvertime;
+	$overtime = false;
 	
 	$verbose = 0;
 	if (isset($_REQUEST['verbose'])) $verbose = 1;
@@ -92,6 +94,7 @@ function swRelationFilter($filter)
 	$pairs = explode(',',$filter);
 	$fields = array(); 
 	$getAllFields = false;
+	$newpairs = array();
 	foreach($pairs as $p)
 	{
 		
@@ -103,17 +106,31 @@ function swRelationFilter($filter)
 		if (count($elems)>0)
 		{
 			$h = join(' ',$elems); 
-			if (substr($h,0,1) != '"')
+			if (substr($h,0,1) != '"' && substr($h,-1,1) != '"')
+			{
+				$h = '"'.$globals[$h].'"';
+			}
+			elseif (substr($h,0,1) != '"')
 				throw new swExpressionError('filter missing start quote '.$f,88);
-			if (substr($h,-1,1) != '"')
+			elseif (substr($h,-1,1) != '"')
 				throw new swExpressionError('filter missing end quote '.$f,88);
 			$h = substr($h,1,-1);
+			if ($h=="") $h = '*';
 		}
 		if ($f == '*')	
 			$getAllFields = true;
 		else	
 			$fields[$f] = $h;
+		
+		if ($h == null)
+			$newpairs[] = $f;
+		else
+			$newpairs[] = $f.' "'.$h.'"';
+		
 	}
+	// print_r($fields);
+	$filter = join(', ',$newpairs); // needed values for cache.
+	echotime('filter '.$filter);
 	
 	// if * there must be at least one hint, we cannot return the entire database
 	if ($getAllFields)
@@ -194,6 +211,8 @@ function swRelationFilter($filter)
 	$cachechanged = false;
 	$db->init();
 	
+	
+	
 	if (!is_a($bitmap, 'swBitmap'))  $bitmap = new swBitmap;
 	if (!is_a($checkedbitmap, 'swBitmap'))  $checkedbitmap = new swBitmap;
 
@@ -214,10 +233,39 @@ function swRelationFilter($filter)
 		echotime('tocheck '.$tocheckcount); 
 	}
 	$checkedcount = 0;
+	
+	foreach($goodrevisions as $k=>$v)
+	{
+		$kr = substr($k,0,strpos($k,'-')); 
+		if($indexedbitmap->getbit($kr) && !$currentbitmap->getbit($kr))
+		{
+			$bitmap->unsetbit($kr);
+			unset($goodrevisions[$k]);
+			$cachechanged = true; 
+			$checkedcount++;
+		}
+		if($deletedbitmap->getbit($kr))
+		{
+			$bitmap->unsetbit($kr);
+			unset($goodrevisions[$k]);
+			$cachechanged = true; 
+			$checkedcount++;
+		}
+		if (!$indexedbitmap->getbit($kr))
+		{
+			$db->UpdateIndexes($kr); // fallback
+		}
+	}
+
+	
+	
 	$nowtime = microtime(true);	
 	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
-	if ($dur>$swMaxOverallSearchTime) 
-		echotime('overtime overall');		
+	if ($dur>$swMaxOverallSearchTime) {
+		
+		echotime('overtime overall');	
+		$swOvertime = true;
+	}	
 		
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
 	{
@@ -225,20 +273,18 @@ function swRelationFilter($filter)
 		// fields with string must be present
 		// hints must be present
 		
-		$list1 = array();
+		$bloomlist = array();
 		foreach($fields as $f=>$h)
 		{
-			if (is_null($h))
-			{
-				$bloomlist[] = '[['.$f.'::]';
-				if (!empty($h))
-					$bloomlist[] = $h;
-			}
+			if (substr($f,0,1)=='_') continue; // header is not indexed bloom
+			$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
+			if (!empty($h))
+				$bloomlist[] = swNameURL($h);
 		}
-		$list2 = array();
-		foreach($list1 as $l)
+		//print_r($bloomlist);
+		foreach($bloomlist as $v)
 		{
-			$v = swNameURL($l);
+			if (strlen(swNameURL($v))<3) continue; // bloom needs at least3 characters
 			$gr = swGetBloomBitmapFromTerm($v);
 			$gr->redim($tocheck->length, true);
 			$tocheck = $tocheck->andop($gr);
@@ -254,8 +300,8 @@ function swRelationFilter($filter)
 		$starttime = microtime(true);
 		if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
 		if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
-		global $swOvertime;
-		$overtime = false;
+
+		// print_r($fields);
 			
 		if ($toc>0) 
 		{
@@ -276,6 +322,7 @@ function swRelationFilter($filter)
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
+					$swOvertime = true;
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
@@ -283,8 +330,7 @@ function swRelationFilter($filter)
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
-					if (!stristr($flags,'internal'))
-							$swOvertime=true;
+					$swOvertime=true;
 					break;
 				}
 				$record = new swRecord;
@@ -349,7 +395,7 @@ function swRelationFilter($filter)
 						}
 					}
 					
-					//print_r($fieldlist2);
+					// print_r($fieldlist2);
 					
 					// select
 					$rows = array();
@@ -359,8 +405,9 @@ function swRelationFilter($filter)
 						$found = true;
 						foreach($fields as $key=>$hint)
 						{
+							// echo $key.$hint;
 							if (!$found) continue;
-							if (is_null($hint))
+							if ($hint=='')
 							{
 								// pass
 							}
@@ -368,14 +415,14 @@ function swRelationFilter($filter)
 							{
 								if (!array_key_exists($key,$fieldlist2[$fi]))
 								{
-									$found = false;
+									$found = false; 
 								}
-								if (!empty($hint))
+								elseif ($hint != "*")
 								{
 									if(!isset($fieldlist2[$fi][$key])) $found = false;
-									elseif(stripos(swNameURL($fieldlist2[$fi][$key]),$hint) === false)
+									elseif(stripos(swNameURL($fieldlist2[$fi][$key]),swNameURL($hint)) === false)
 									{
-										$found = false;
+										$found = false; 
 									} 
 								}
 							}
@@ -387,6 +434,8 @@ function swRelationFilter($filter)
 					
 					
 					$maxcount = count($rows); 
+					
+					
 										
 					// extend missing
 					foreach($fields as $key=>$hint)
@@ -403,6 +452,8 @@ function swRelationFilter($filter)
 					}
 								
 				}
+				
+				
 
 				if (count($rows)>0)
 				{
@@ -415,6 +466,7 @@ function swRelationFilter($filter)
 					$touched = true;
 					
 				}
+				
 			}
 			
 			
@@ -512,12 +564,10 @@ function swRelationFilter($filter)
 	$d = array();	
 	
 	foreach ($goodrevisions as $v) 
-	{
-		//print_r($v);
-		
+	{	
 		$d = unserialize($v);
 		
-		$dn = $d['_url'];
+		$dn = @$d['_url'];
 		
 		if (!$searcheverywhere && stristr($dn,':'))
 		{
