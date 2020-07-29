@@ -276,9 +276,9 @@ function swRelationFilter($filter, $globals = array())
 		$bloomlist = array();
 		foreach($fields as $f=>$h)
 		{
-			if (substr($f,0,1)=='_') continue; // header is not indexed bloom
-			$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
-			if (!empty($h))
+			if (substr($f,0,1)!='_') // _ fields are in header or implicit
+				$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
+			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp')))
 				$bloomlist[] = swNameURL($h);
 		}
 		//print_r($bloomlist);
