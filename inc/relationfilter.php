@@ -62,7 +62,7 @@ function swRelationVirtual($url)
 	//print_r($list2);
 	
 	$header = array_keys($list);
-	$result = new swRelation($header);
+	$result = new swRelation($header,null,null);
 	
 	foreach ($list2 as $v) 
 	{
@@ -160,7 +160,7 @@ function swRelationFilter($filter, $globals = array())
 
 	
 	
-	$result = new swRelation($header);
+	$result = new swRelation($header,null,null);
 
 	//return $result;
 	

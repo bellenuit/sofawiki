@@ -169,7 +169,7 @@ class swExpression
 									case '/':
 									case '*':
 									case '+':
-									case '.': $state = 'start'; break;
+									case '.': $state = 'start'; $this->tokens[] = $ch; break;
 									case ',': if ($state == 'comma' || count($this->tokens) == 0) { $this->tokens[] = '$'; } 
 										      $state = 'comma'; $this->tokens[] = $ch; break;
 									case '=': $state = 'equal'; break;
@@ -376,7 +376,7 @@ class swExpression
 	function compile($s)
 	{
 		
-		
+				
 		$operatorstack = array();
 		$t; $e; $fl; $ch; 
 		$negationpossible;
@@ -392,6 +392,9 @@ class swExpression
 		$negationpossible = true;
 				
 		if (count($this->tokens) == 0) return;
+		
+		// print_r($this->tokens);
+
 		
 		foreach($this->tokens as $t)
 		{

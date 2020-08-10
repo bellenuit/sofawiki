@@ -74,7 +74,8 @@ class swRelationLineHandler
 		$ptag; $ptagerror; $ptag2;
 		
 		$ptag = '';
-		$ptagerror = '{{error}}';
+		$ptagerror = '<span class="error">';
+		$ptagerrorend = '</span>';
 		$ptag2 = PHP_EOL;
 		if (!$internal) $result = '';
 		
@@ -140,7 +141,7 @@ class swRelationLineHandler
 			{
 				case 'assert' : 	if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -151,7 +152,7 @@ class swRelationLineHandler
 										$r->locals = $locals;
 										if (! $r->assert($body))
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error: Assertion error '.$body.$ptag2;
+											$this->result .= $ptag.$ptagerror.$ti.' Error: Assertion error '.$body.$ptagerrorend.$ptag2;
 											$this->errors[]=$il;
 										}
 										$this->stack[]=$r;
@@ -159,7 +160,7 @@ class swRelationLineHandler
 									}
 									break;  
 				case 'beep' : 		{
-										$this->result .= $ptag.$ptagerror.$ti.' Beep is not supported'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Beep is not supported'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									break; // TO DO 
@@ -171,7 +172,7 @@ class swRelationLineHandler
 				
 				case 'data':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Data Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Data Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -197,7 +198,7 @@ class swRelationLineHandler
 									break;
 				case 'deserialize': if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Deserialize Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Deserialize Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -209,7 +210,7 @@ class swRelationLineHandler
 									break;
 				case 'difference':	if (count($this->stack)<2)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Difference Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Difference Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -222,7 +223,7 @@ class swRelationLineHandler
 									break;
 				case 'dup':			if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Dup Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Dup Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -284,7 +285,7 @@ class swRelationLineHandler
 									}
 									else
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Else is not possible here '.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Else is not possible here '.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 
 									}
@@ -297,21 +298,21 @@ class swRelationLineHandler
 											array_pop($ifstack);
 										else
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Endif not possible here'.$ptag2;
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Endif not possible here'.$ptagerrorend.$ptag2;
 											$this->errors[]=$il;
 										}
 									}
 									else
 									{
 										//print_r($lines);echo $line;
-										$this->result .= $ptag.$ptagerror.$ti.' Error : End not possible here'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : End not possible here'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									
 									break; 	
 				case 'extend':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Extend Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Extend Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -331,7 +332,7 @@ class swRelationLineHandler
 									break;				
 				case 'format':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Format Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Format Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -343,7 +344,7 @@ class swRelationLineHandler
 									break;				
 				case 'formatdump':	if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Formatdump Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Formatdump Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -367,7 +368,7 @@ class swRelationLineHandler
 									$plines[] = $line;
 									if (array_key_exists(trim($body), $this->offsets))
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 
 									}
@@ -390,7 +391,7 @@ class swRelationLineHandler
 									}
 									else
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Function missing end'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Function missing end'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									break; 
@@ -424,7 +425,7 @@ class swRelationLineHandler
 									}
 									break; 	
 				case 'import':		{
-										$this->result .= $ptag.$ptagerror.$ti.' Import is not supported'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Import is not supported'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									break;	
@@ -433,7 +434,7 @@ class swRelationLineHandler
 									$tn = $xp->evaluate($this->globals,$locals);
 									if (!$this>validFileName($tn))
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -491,7 +492,7 @@ class swRelationLineHandler
 									break;
 				case 'insert':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Insert Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Insert Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -506,7 +507,7 @@ class swRelationLineHandler
 									break;	
 				case 'intersection':	if (count($this->stack)<2)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Intersection Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Intersection Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -519,7 +520,7 @@ class swRelationLineHandler
 									break;	
 				case 'join':	if (count($this->stack)<2)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Join Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Join Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -535,7 +536,7 @@ class swRelationLineHandler
 									break;									
 				case 'label':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Label Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Label Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -547,7 +548,7 @@ class swRelationLineHandler
 									break;				
 				case 'limit':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Limit Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Limit Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -563,7 +564,7 @@ class swRelationLineHandler
 				case 'memory':	    break; 	
 				case 'order':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Order Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Order Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -575,7 +576,7 @@ class swRelationLineHandler
 									break;	
 				case 'parameter':	if (count($internals)==0)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Parameter stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Parameter stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -590,7 +591,7 @@ class swRelationLineHandler
 									
 				case 'pop':			if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Pop Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Pop Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -601,7 +602,7 @@ class swRelationLineHandler
 									break;	
 				case 'print':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -633,7 +634,7 @@ class swRelationLineHandler
 									$body = trim(join(' ',$fields));
 									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 
 									}
@@ -652,7 +653,7 @@ class swRelationLineHandler
 											}
 											if (array_key_exists($key, $this->offsets))
 											{
-												$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptag2;
+												$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptagerrorend.$ptag2;
 												$this->errors[]=$il;
 											}
 											
@@ -672,7 +673,7 @@ class swRelationLineHandler
 												$this->programs[$key] = join(PHP_EOL,$plines);
 											else
 											{
-												$this->result .= $ptag.$ptagerror.$ti.' Error : Program missing end'.$ptag2;
+												$this->result .= $ptag.$ptagerror.$ti.' Error : Program missing end'.$ptagerrorend.$ptag2;
 												$this->errors[]=$il;
 											}										
 										}
@@ -680,7 +681,7 @@ class swRelationLineHandler
 									break; 				
 				case 'project':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Project Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Project Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -703,7 +704,7 @@ class swRelationLineHandler
 										$enc = array_shift($fields);
 										if (count($fields)==0)
 										{
-											$this->result .= $ptagerror.$ti.' Error : Missing filename'.$ptag2;
+											$this->result .= $ptagerror.$ti.' Error : Missing filename'.$ptagerrorend.$ptag2;
 											$this->errors[] = $il;
 											$body = '';
 										}
@@ -715,16 +716,16 @@ class swRelationLineHandler
 									$tn = $xp->evaluate($this->globals,$locals);
 									
 									if ($tn == '') $tn = ' ';
-									if (!$this>validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
+									if (!$this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
 									{	
-										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
+										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 										$this->errors[] = $il;
 										}
 									else
 									{
 										if ($tn=='')
 										{
-											$this->result .= $ptagerror.$ti.' Error : Empty filename'.$ptag2;
+											$this->result .= $ptagerror.$ti.' Error : Empty filename'.$ptagerrorend.$ptag2;
 											$this->errors[] = $il;
 										}
 										
@@ -734,7 +735,7 @@ class swRelationLineHandler
 												$r = $this->globalrelations[$tn];
 											else
 											{
-												$this->result .= $ptagerror.$ti.' Error : Relation does not exist'.$ptag2;
+												$this->result .= $ptagerror.$ti.' Error : Relation does not exist'.$ptagerrorend.$ptag2;
 												$this->errors[] = $il;
 												$r = new swRelation('',$locals,$this->globals);
 											}
@@ -748,7 +749,7 @@ class swRelationLineHandler
 											$file2 = 'site/cache/'.$tn;
 											if (!file_exists($file1) and !file_exists($file2))
 											{
-												$this->result .= $ptagerror.$ti.' Error : File does not exist '.$tn.$ptag2;
+												$this->result .= $ptagerror.$ti.' Error : File does not exist '.$tn.$ptagerrorend.$ptag2;
 												$this->errors[] = $il;
 												$tip = '';
 											}
@@ -785,7 +786,7 @@ class swRelationLineHandler
 																	break;
 													case 'json':	$r->setJSON(explode(PHP_EOL,$tip));
 																	break;
-													default:		$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
+													default:		$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 																	$this->errors[] = $il;
 																	break;
 												}
@@ -793,7 +794,7 @@ class swRelationLineHandler
 											}
 											else
 											{
-												$this->result .= $ptagerror.$ti.' Error : Empty file'.$ptag2;
+												$this->result .= $ptagerror.$ti.' Error : Empty file'.$ptagerrorend.$ptag2;
 												$this->errors[] = $il;
 											}
 
@@ -810,7 +811,7 @@ class swRelationLineHandler
 									break;	
 				case 'rename':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Rename Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Rename Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -825,7 +826,7 @@ class swRelationLineHandler
 									$body = trim(join(' ',$fields));
 									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 
 									}
@@ -837,13 +838,13 @@ class swRelationLineHandler
 									}
 									else
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Program not defined '.$key.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Program not defined '.$key.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}	
 									break; 
 				case 'select':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Select Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Select Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -858,7 +859,7 @@ class swRelationLineHandler
 									break;	
 				case 'serialize':	if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Serialize Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Serialize Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -890,7 +891,7 @@ class swRelationLineHandler
 										$body = join(' ',$fields);
 										if ($eq != '=')
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Set missing ='.$ptag2;
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Set missing ='.$ptagerrorend.$ptag2;
 											$this->errors[]=$il;
 										}
 										else
@@ -916,7 +917,7 @@ class swRelationLineHandler
 				case 'stop':		$i=$c; break;
 				case 'swap':		if (count($this->stack)<2)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Swap Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Swap Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -929,7 +930,7 @@ class swRelationLineHandler
 									break;	
 				case 'template':	if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Template Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Template Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -938,9 +939,9 @@ class swRelationLineHandler
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
 										$tn = $xp->evaluate($this->globals, $locals);
-										if (!$this>validFileName($tn))
+										if (!$this->validFileName($tn))
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptag2;
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
 											$this->errors[]=$il;
 										}
 										else
@@ -953,7 +954,7 @@ class swRelationLineHandler
 									break;
 				case 'union':		if (count($this->stack)<2)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -967,7 +968,7 @@ class swRelationLineHandler
 								
 				case 'update':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Update Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Update Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -1012,7 +1013,7 @@ class swRelationLineHandler
 									break; 	
 				case 'write':		if (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Write Stack empty'.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Write Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
@@ -1021,9 +1022,9 @@ class swRelationLineHandler
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
 										$tn = $xp->evaluate($this->globals, $locals);
-										if (!$this>validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',$tn)))))
+										if (!$this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',$tn)))))
 										{	
-										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
+										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 										$this->errors[] = $il;
 										}
 										else
@@ -1042,7 +1043,7 @@ class swRelationLineHandler
 																	$this->globalrelations[$tn] = $r->doClone();
 																else
 																{
-																	$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
+																	$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 																	$this->errors[] = $il;
 																}
 																	break;
@@ -1050,7 +1051,7 @@ class swRelationLineHandler
 											//print_r($this->globalrelations[$tn]);
 											if ($written === FALSE)
 											{
-												$this->result .= $ptagerror.$ti.' Error : File not written '.$tn.$ptag2;
+												$this->result .= $ptagerror.$ti.' Error : File not written '.$tn.$ptagerrorend.$ptag2;
 												$this->errors[] = $il;
 											}
 
@@ -1059,7 +1060,7 @@ class swRelationLineHandler
 									}
 									break;
 				default: 			{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : '.$line.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : '.$line.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 			}
@@ -1097,6 +1098,7 @@ class swRelationLineHandler
 		if (substr($s,0,1) == ".") return false;
 		if (stristr($s,':')) return false;
 		if (stristr($s,'/')) return false;
+		return true;
 	}
 		
 	
