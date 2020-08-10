@@ -963,7 +963,7 @@ class swQueryFunction extends swFunction
 											case 'MIN' : $r4[$k][$key.'-min'] = min(@$r3[$k][$key]); break;
 											case 'COUNT' : $r4[$k][$key.'-count'] = count(@$r3[$k][$key]); break;
 											case 'SUM' : 	$s = 0; if(isset($r3[$k][$key]))
-															{ foreach($r3[$k][$key] as $v) $s+=$v; } 
+															{ foreach($r3[$k][$key] as $v) $s+=floatval($v); } 
 															$r4[$k][$key.'-sum'] = $s; break;
 											case 'CONCAT' : $c = array();
 															if(isset($r3[$k][$key]))

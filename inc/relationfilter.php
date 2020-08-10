@@ -13,6 +13,16 @@ function swRelationTemplate($n)
 	return $wiki->content;
 }
 
+function swRelationInclude($n)
+{
+	$wiki = new swWiki;
+	$wiki->name = 'Template:'.$n;
+	$wiki->lookup();
+	if (!$wiki->revision)
+		throw new swRelationError('Template page does not exist.',87);
+	return $wiki->content;
+}
+
 
 function swRelationVirtual($url)
 {

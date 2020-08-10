@@ -20,6 +20,7 @@ class swRelationLineHandler
 	var $programs = array();
 	var $result;
 	var $stack = array();
+	var $currentline;
 	
 	function __construct($m = 'HTML')
 	{
@@ -35,11 +36,11 @@ class swRelationLineHandler
 		}
 		catch (swExpressionError $err)
 		{
-			return $this->result.PHP_EOL.'{{error}}'.$err->getMessage();
+			return '<div class="relation">'.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
 		}
 		catch (swRelationError $err)
 		{
-			return $this->result.PHP_EOL.'{{error}}'.$err->getMessage();
+			return '<div class="relation">'.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
 		}
 	}
 	
@@ -94,6 +95,7 @@ class swRelationLineHandler
 		$rtime = microtime();
 		
 		$parameteroffset = 0;
+		$this->currentline = "";
 		
 		for ($i=0; $i < $c; $i++)
 		{
@@ -104,7 +106,7 @@ class swRelationLineHandler
 				if ($this->offsets[$internal] >0)
 					$il = $i + $this->offsets[$internal]+1-$parameteroffset;
 				else
-					$il = $i -$this->offsets[$internal]-$parameteroffset;
+					$il = $i - $this->offsets[$internal]-$parameteroffset;
 					
 				//echo $il;
 			}
@@ -114,7 +116,8 @@ class swRelationLineHandler
 				$this->errors = array();
 				$il = $i;	
 			}
-			$ti = $il.''; // to text
+			$ti = ($il+1).''; // to text
+			$this->currentline = $ti;
 			$line = trim($lines[$i]); 
 			$line = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $line);
 			$line = str_replace(html_entity_decode("&#x200B;"),'',$line); // editor ZERO WIDTH SPACE
@@ -135,11 +138,6 @@ class swRelationLineHandler
 			//echo $command;
 			switch($command)
 			{
-				case 'aggregator' : {
-										$this->result .= $ptag.$ptagerror.$ti.' Aggregator is not supported'.$ptag2;
-										$this->errors[]=$il;
-									}
-									break;
 				case 'assert' : 	if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptag2;
@@ -162,11 +160,6 @@ class swRelationLineHandler
 									break;  
 				case 'beep' : 		{
 										$this->result .= $ptag.$ptagerror.$ti.' Beep is not supported'.$ptag2;
-										$this->errors[]=$il;
-									}
-									break; // TO DO 
-				case 'chart' : 		{
-										$this->result .= $ptag.$ptagerror.$ti.' Chart is not supported'.$ptag2;
 										$this->errors[]=$il;
 									}
 									break; // TO DO 
@@ -435,10 +428,22 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 									}
 									break;	
-				case 'include':		{
-										$this->result .= $ptag.$ptagerror.$ti.' Include is not supported'.$ptag2;
+				case 'include':		$xp = new swExpression($this->functions);
+									$xp->compile($body);
+									$tn = $xp->evaluate($this->globals,$locals);
+									if (!$this>validFileName($tn))
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptag2;
 										$this->errors[]=$il;
 									}
+									else
+									{
+										$tmp = swRelationInclude($tn);
+										$this->offsets[$tn] = -$i; // give only fixed number on error include
+										$this->result .= $this->run($tmp,$tn,"");									
+									}
+				
+
 									break;
 				case 'input': 		$fieldgroup = explode(',',$body);
 									$this->result .=  $ptag.'<nowiki><form method="post" action="index.php"></nowiki>';
@@ -689,7 +694,7 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'read':		$r = new swRelation('');
+				case 'read':		$r = new swRelation('',$locals,$this->globals);
 									$enc = 'utf8';
 									if (substr(trim($body),0,8)=='encoding')
 									{
@@ -710,7 +715,7 @@ class swRelationLineHandler
 									$tn = $xp->evaluate($this->globals,$locals);
 									
 									if ($tn == '') $tn = ' ';
-									if (!$r->validName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
+									if (!$this>validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
 									{	
 										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
 										$this->errors[] = $il;
@@ -731,7 +736,7 @@ class swRelationLineHandler
 											{
 												$this->result .= $ptagerror.$ti.' Error : Relation does not exist'.$ptag2;
 												$this->errors[] = $il;
-												$r = new swRelation('');
+												$r = new swRelation('',$locals,$this->globals);
 											}
 											$this->stack[] = $r->doClone();
 											//print_r($stack);
@@ -771,7 +776,7 @@ class swRelationLineHandler
 											}
 											if (strlen($tip)>0)
 											{
-												$r = new swRelation('');
+												$r = new swRelation('',$locals,$this->globals);
 												switch(substr($file,-4))
 												{
 													case '.csv': 	$r->setCSV(explode(PHP_EOL,$tip));
@@ -800,7 +805,7 @@ class swRelationLineHandler
 										
 										
 									break;
-				case 'relation':	$r = new swRelation($body);
+				case 'relation':	$r = new swRelation($body, $locals,$this->globals);
 									$this->stack[] = $r;
 									break;	
 				case 'rename':		if (count($this->stack)<1)
@@ -896,6 +901,18 @@ class swRelationLineHandler
 										}	
 
 									break; 
+				case 'stack':		$r = new swRelation('stack, cardinality, column', $locals, $this->globals);
+									$sti = 0;
+									for ($sti=0;$i<count($this->stack);$sti++)
+									{
+										$r2 = $this->stack[$sti];
+										foreach($r2->header as $th)
+										{
+											$r->insert(($sti+1).', '.$r2->cardinality().', "'.$th.'"');
+										}
+									}
+									$this->stack[] = $r;
+									break;
 				case 'stop':		$i=$c; break;
 				case 'swap':		if (count($this->stack)<2)
 									{
@@ -921,7 +938,7 @@ class swRelationLineHandler
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
 										$tn = $xp->evaluate($this->globals, $locals);
-										if (!$r->validName($tn))
+										if (!$this>validFileName($tn))
 										{
 											$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptag2;
 											$this->errors[]=$il;
@@ -1004,7 +1021,7 @@ class swRelationLineHandler
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
 										$tn = $xp->evaluate($this->globals, $locals);
-										if (!$r->validName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
+										if (!$this>validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',$tn)))))
 										{	
 										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptag2;
 										$this->errors[] = $il;
@@ -1073,6 +1090,14 @@ class swRelationLineHandler
 	{
 		// stub
 	}
+	
+	function ValidFileName($s)
+	{
+		if (strlen($s) < 1) return false;
+		if (substr($s,0,1) == ".") return false;
+		if (stristr($s,':')) return false;
+		if (stristr($s,'/')) return false;
+	}
 		
 	
 }
@@ -1088,8 +1113,11 @@ class swRelation
 	var $functions = array();
 	var $aggregators = array();
 	
-	function __construct($columns)
+	function __construct($columns, $l, $g)
 	{
+		$this->locals = $l;
+		$this->globals = $g;
+		
 		if (! is_array($columns))
 			$columns = explode(',',$columns);
 			
@@ -1102,8 +1130,8 @@ class swRelation
 	
 	function addColumn($s)
 	{
-		$s = trim($s);
-		if (! $this->validName($s)) throw new swRelationError('Invalid name '.$s,102);
+		$s = $this->validName(trim($s));
+		if ($s == '') throw new swRelationError('Invalid name '.$s,102);
 		if (! in_array($s,$this->header)) $this->header[] = $s;
 	}
 
@@ -1205,13 +1233,11 @@ class swRelation
 	
 	function doClone()
 	{
-		$result = new swRelation($this->header);
+		$result = new swRelation($this->header,$this->locals, $this->globals);
 		$result->tuples = array_clone($this->tuples);
 		$result->formats = array_clone($this->formats);
 		$result->labels = array_clone($this->labels);
-		$result->globals = $this->globals;
 		$result->functions = $this->functions;
-		$result->locals = $this->locals;
 		return $result;
 		
 	}
@@ -1247,7 +1273,7 @@ class swRelation
 			
 		$this->order($this->header(0));
 		
-		$r = new swRelation('');
+		$r = new swRelation('',$this->locals, $this->globals);
 		$r->addColumn($this->header(0));
 		
 		$n = count($this->tuples);
@@ -1386,6 +1412,7 @@ class swRelation
 		foreach($pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
+			$fields[0] = $this->validName($fields[0]);
 			if (count($fields) != 2)
 				throw new swRelationError('Invalid format',121);
 			$fields[0] = trim($fields[0]);
@@ -1441,12 +1468,12 @@ class swRelation
 		if (count($fields) != count($this->header))
 			throw new swRelationError('Insert Arity',101);
 		$d = array();
-		$c = count($this->header);
+		$c = count($this->header); 
 		for($i=0;$i<$c;$i++)
 		{
 			$d[$this->header[$i]] = $fields[$i];
 		}
-		$tp = new swTuple($d);
+		$tp = new swTuple($d); 
 		$this->tuples[$tp->hash()] = $tp;
 		
 	}
@@ -1561,7 +1588,7 @@ class swRelation
 				}
 				foreach($rightheader as $cf)
 				{
-					$d1[$cf] = $d2[$cf];
+					$d1[$cf] = @$d2[$cf];
 				}	
 				$tx = $xp->evaluate($d1,$this->globals,$this->locals);
 				if ($tx != '0')
@@ -1602,6 +1629,7 @@ class swRelation
 			return;
 		}	
 		
+		$rightheader = array();
 		foreach($r->header as $f)
 		{
 			if (!in_array($f,$this->header))
@@ -1694,8 +1722,9 @@ class swRelation
 				{
 					case 'left'		:	$d11 = $tp1->fields();
 										foreach($r->header as $t)
-											$d11[$t] = '';
-										$p11 = new swTuple($d11);
+											if (! in_array($t, $this->header))
+												$d11[$t] = '';
+										$tp11 = new swTuple($d11);
 										$newtuples[$tp11->hash()] = $tp11;
 										break;
 					case 'natural'	:   break;
@@ -1725,6 +1754,7 @@ class swRelation
 			if (count($fields) < 2)
 				throw new swRelationError('Invalid label',121);
 			$f0 = trim(array_shift($fields));
+			$f0 = $this->validName($f0);
 			$f1 = str_replace('"','',join($fields,' '));
 			if (!in_array($f0, $this->header))
 				throw new swRelationError('Unknown label '.$f0,122);
@@ -1791,6 +1821,15 @@ class swRelation
 	
 	function order2($pairs)
 	{
+		$pairs2 = array();
+		
+		foreach($pairs as $p)
+		{
+			$fields = explode(' ',$p);
+			$fields[0] = $this->validName($fields[0]);
+			$pairs2[] = join(' ',$fields);
+		}
+		
 		$od = new swOrderedDictionary;
 		$od->tuples = $this->tuples;
 		$od->pairs = $pairs;
@@ -1802,6 +1841,7 @@ class swRelation
 	{
 		$list = explode(' ',$t);
 		$field = array_shift($list);
+		$field = $this->validName($field);
 		$reg = array_shift($list);
 		$rest = join(' ',$list);
 		$this->parse2($field,$reg,$rest);
@@ -1976,6 +2016,7 @@ class swRelation
 		foreach($pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
+			$fields[0] = $this->validName($fields[0]);
 			$columns[] = $fields[0];
 			if (count($fields) >= 2)
 			{
@@ -2115,6 +2156,8 @@ class swRelation
 			$fields = explode(' ',trim($p));
 			if (count($fields) != 2)
 				throw new swRelationError('Invalid rename '.$p,121);
+			$fields[0] = $this->validName(trim($fields[0]));
+			$fields[1] = $this->validName(trim($fields[1]));
 			if (! in_array($fields[0], $this->header))
 				throw new swRelationError('Unknown rename '.$fields[0],122);
 			$i = array_search($fields[0], $this->header);
@@ -2179,7 +2222,7 @@ class swRelation
 		if ($observationkey == 'key') $list2[1] = 'key0';
 		if ($observationkey == 'value') $list2[1] = 'value0';
 		
-		$r = new swRelation($list0);
+		$r = new swRelation($list0,$this->locals, $this->globals);
 		
 		$m = count($this->tuples);
 		for($j=0;$j<$m;$j++)
@@ -2250,7 +2293,7 @@ class swRelation
 				if (strpos($line,$separator)===FALSE) $separator = ','; 
 				$fields = explode($separator,$line);
 				foreach($fields as $field)
-					$this->addColumn($this->cleanColumn($field));
+					$this->addColumn($this->cleanColumn(trim($field)));
 				$c = count($fields);
 				$firstline = false;				
 			}
@@ -2529,8 +2572,8 @@ class swRelation
 						$t = $this->format2($t,$fm);
 						$td = ' class="numberformat" | '; 						
 					}
-				}
-				if (!$t) $t = ' ';  // empty table cell would collapse
+				}			
+				if ($t==='')  $t = ' ';  // empty table cell would collapse
 				$fields[]=$td.$t;				
 			}
 			$line = '| '.join(' || ',$fields);
@@ -2557,6 +2600,7 @@ class swRelation
 			$i = strpos($tmp,'{{',$lasti);
 			if ($i !== FALSE)
 			{
+				
 				$i2 = strpos($tmp,'}}',$i);
 				if ($i2 >= 0)
 				{
@@ -2573,16 +2617,16 @@ class swRelation
 						case 'each':
 						case 'last':
 						case 'end':		$selectors[] = $sel;
-										$templates[] = trim(substr($tmp,$lastvalidi,$i-$lastvalidi)).PHP_EOL;
+										$templates[] = substr($tmp,$lastvalidi,$i-$lastvalidi);
 										$lastvalidi = $i2+2; 			
 										break;
 						case 'group':	$selectors[] = $sel2;
-										$templates[] = trim(substr($tmp,$lastvalidi,$i-$lastvalidi)).PHP_EOL; 
+										$templates[] = substr($tmp,$lastvalidi,$i-$lastvalidi); 
 										$lastvalidi = $i2+2; 
 										break;
 						default:		//ignore					
 					}
-					$lasti = $i2+2;
+					$lasti = max($lasti+2,$i2+2);
 						
 				}
 			} 
@@ -2590,6 +2634,7 @@ class swRelation
 			
 		} while($i !== FALSE) ;
 		
+				
 		if (count($selectors)>0)
 			$templates[] = substr($tmp,$lastvalidi);
 		
@@ -2639,7 +2684,9 @@ class swRelation
 										$result.= $line;
 									}
 									break;
-					case 'each' :	foreach($this->header as $f)
+					case 'each' :	
+									
+									foreach($this->header as $f)
 									{
 										$line = str_replace('{{'.$f.'}}',$d[$f],$line);
 									}
@@ -2724,6 +2771,7 @@ class swRelation
 	{
 		$fields = explode(' ',$t);
 		$first = array_shift($fields);
+		$first = $this->validName($first);
 		$body = join(' ',$fields);
 		$fields = explode(' ',$body);
 		$eq = array_shift($fields);
@@ -2774,7 +2822,20 @@ class swRelation
 		
 	function validName($s)
 	{
-		return (strlen($s)< 31 and preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/',$s)); 
+		if (strlen($s)<1) return '';
+		if (substr($s,-1) == '^')
+		{
+			$s2 = substr($s,0,-1);
+			if (array_key_exists($s2,$this->locals))
+				return $this->validName($this->locals[$s2]);
+			if (array_key_exists($s2,$this->globals))
+				return $this->validName($this->globals[$s2]);
+
+		}
+		if (strlen($s)< 31 and preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/',$s))
+			return $s; 
+		else
+			return '';
 	}
 }
 
@@ -2897,7 +2958,7 @@ class swAccumulator
 	
 	function add($t)
 	{
-		$this->list[] = $t;
+		if ($t != '') $this->list[] = $t;
 	}
 	
 	function doClone()
@@ -3144,6 +3205,8 @@ function cText12($d)
     $a;
 	$t;
 	$s;
+	
+	
 
 
 	$a = abs($d);

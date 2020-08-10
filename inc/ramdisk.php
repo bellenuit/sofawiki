@@ -79,7 +79,7 @@ function swFileGet($path)
 			if (!$swRamDiskDB) swInitRamdisk();
 			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
 			{
-				$v = dba_fetch($path,$swRamDiskDB);
+				$v = @dba_fetch($path,$swRamDiskDB);
 				if ($v) {  return $v; }
 				
 				$s = file_get_contents($path);

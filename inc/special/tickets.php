@@ -170,7 +170,7 @@ if (isset($_POST['submitresolve']))
 		
 	$w->content = trim($oldtext).PHP_EOL.
 	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.$title.']]'.PHP_EOL.
+	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
 	'[[assigned::'.$assigned.']]'.PHP_EOL.
 	'[[priority::'.$priority.']]'.PHP_EOL.
 	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.

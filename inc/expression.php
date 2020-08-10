@@ -159,7 +159,8 @@ class swExpression
 			
 			switch($state)
 			{
-				case 'start':	switch($ch)
+				case 'start':
+				case 'comma':	switch($ch)
 								{
 									case '"': $state = 'string'; $acc = ''; break;
 									case '(': 
@@ -168,13 +169,14 @@ class swExpression
 									case '/':
 									case '*':
 									case '+':
-									case '.': 
-									case ',': $this->tokens[] = $ch; break;
+									case '.': $state = 'start'; break;
+									case ',': if ($state == 'comma' || count($this->tokens) == 0) { $this->tokens[] = '$'; } 
+										      $state = 'comma'; $this->tokens[] = $ch; break;
 									case '=': $state = 'equal'; break;
 									case '<': $state = 'lower'; break;
 									case '>': $state = 'greater'; break;
 									case '!': $state = 'not'; break;
-									case ' ': break;
+									case ' ': $state = 'start'; break;
 									case '0':
 									case '1':
 									case '2':
@@ -286,6 +288,8 @@ class swExpression
 				case 'name':	switch($ch)
 								{
 									case '(': $state = 'start'; $this->tokens[] = '@('.$acc;
+										  	  $acc = ''; break;
+									case '^': $state = 'start'; $this->tokens[] = $acc.'^'; 
 											  $acc = ''; break;
 									default: if (($ch >= 'A' && $ch <= 'Z') ||
 											 	($ch >= 'a' && $ch <= 'z') ||
@@ -356,6 +360,7 @@ class swExpression
 		switch($state)
 		{
 			case 'start':	break;
+			case 'comma':	$this->tokens[] = '$'; break;
 			case 'string':	throw new swExpressionError('Tokenize open string '.$acc,13);
 			case 'string1':	$this->tokens[] = '$'.$acc; break;
 			case 'number':
@@ -385,16 +390,17 @@ class swExpression
 		$this->rpn = array();
 		$this->tokenize($s);
 		$negationpossible = true;
-		
-		//print_r($this->tokens);
-		
+				
 		if (count($this->tokens) == 0) return;
 		
 		foreach($this->tokens as $t)
 		{
 			$ch = substr($t,0,1);
 			if ($ch =='-' && $negationpossible) $t = '-u';
-			//echo "($ch)";
+			
+			
+			// echo "<p>".$t."</p>";
+			
 			
 			switch($ch)
 			{
@@ -420,12 +426,17 @@ class swExpression
 								if (substr($e,0,2)=='@(')
 								{
 									$fn = ':'.substr($e,2);
-									if ($fn != ':comma')
+									// if ($fn != ':comma')
 										$this->rpn[] = $fn;
 								}
-								elseif($e != '(' && $e !='1' && $e != ':comma' && floatval($e) == 0)
+								// elseif($e != '(' && $e !='1' && $e != ':comma' && floatval($e) == 0)
+								elseif($e != '(' && $e !='1' && floatval($e) == 0)
 								{
 									$this->rpn[] = $e;
+								}
+								else
+								{
+									// echo $e.' ';
 								}
 							} while ( substr($e,0,2) != '@(' && $e != '(' );
 							$negationpossible = false; break;
@@ -436,25 +447,28 @@ class swExpression
 								$opfound = false;
 								if ($t == $op->label)
 								{
-									//echo "found label";
-									//print_r($op);
-									if (count($operatorstack)>0)
+									$foundhigher = true;
+									while (count($operatorstack)>0 && $foundhigher )
 									{
 										$e = array_pop($operatorstack);
 										if ($op->associativity == 'L' && $op->precedence <= floatval($e))
 										{
+											
 											$optop = array_pop($operatorstack);
-											if ($optop != ':comma')
+											// if ($optop != ':comma')
 												$this->rpn[] = $optop;
 										}
 										elseif ($op->associativity == 'R' && $op->precedence < floatval($e))
 										{
 											$optop = array_pop($operatorstack);
-											if ($optop != ':comma')
+											// if ($optop != ':comma')
 												$this->rpn[] = $optop;
 										}
 										else
+										{
+											$foundhigher = false;
 											$operatorstack[] = $e;
+										}
 									}
 									if ($op->functionlabel == ':and')
 									{
@@ -488,6 +502,11 @@ class swExpression
 								$negationpossible = false;
 							}
 			}
+			/*
+			print_r($operatorstack);
+			echo "<p></p>";
+			print_r($this->rpn);
+			*/
 
 		}
 		
@@ -516,7 +535,11 @@ class swExpression
 				array_splice($this->rpn,$i+1,0,$l);
 			}
 		}
-	
+		/*
+		print_r($operatorstack);
+		echo "<p></p>";
+		print_r($this->rpn);
+		*/
 		
 	}
 
@@ -566,17 +589,8 @@ class swExpression
 													else
 														$this->stack[] = '1';
 													$found = true;
-													break;	
-								case ':init':		if (array_key_exists($aggregatorfirstrun,$localdict))
-													{
-														if ($localdict[$aggregatorfirstrun] != 0)
-															$localdict[$currentlabel] = array_pop($this->stack);
-														else
-															$dummy = array_pop($this->stack);
-													}
-													else
-														throw new swExpressionError('Illegal instruction init '
-															.$currentindex,31);
+													break;
+								case ':comma': 		//nop
 													$found = true;
 													break;	
 								case ':goto':		$jump = '#'.array_pop($this->stack);
@@ -612,6 +626,18 @@ class swExpression
 													$found = true;
 													break;	
 																
+								case ':init':		if (array_key_exists($aggregatorfirstrun,$localdict))
+													{
+														if ($localdict[$aggregatorfirstrun] != 0)
+															$localdict[$currentlabel] = array_pop($this->stack);
+														else
+															$dummy = array_pop($this->stack);
+													}
+													else
+														throw new swExpressionError('Illegal instruction init '
+															.$currentindex,31);
+													$found = true;
+													break;	
 								case ':orleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
 													if (floatval($cond) != 0)
@@ -661,7 +687,23 @@ class swExpression
 							break;
 				case '#':	$currentlabel = $e;
 							break;
-				default:	if (array_key_exists($e,$localdict))
+				default:	if (substr($e,-1)=='^')
+							{
+								$e2 = substr($e,0,-1);
+								
+								if (array_key_exists($e2,$localdict))
+									$this->stack[] = $localdict[$e2];
+								elseif (array_key_exists($e2,$values))
+									$this->stack[] = $values[$e2];
+								elseif (array_key_exists($e2,$locals))
+									$this->stack[] = $locals[$e2];
+								elseif (array_key_exists($e2,$globals))
+									$this->stack[] = $globals[$e2];
+							}
+				
+				
+				
+							if (array_key_exists($e,$localdict))
 								$this->stack[] = $localdict[$e];
 							elseif (array_key_exists($e,$values))
 								$this->stack[] = $values[$e];
@@ -1116,6 +1158,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 				 						$this->args[] = trim($fields[$j]);
 			 						}
 			 						break;
+			 						/*
 			 	case 'init':		if(!$this->isaggregator || $i>0)
 			 							throw new swExpressionError('Invalid instruction #'.$ti,66);
 			 						$fields = explode(' ',$body);
@@ -1135,6 +1178,7 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 						$this->compiledlines[] = '/'.$f;
 			 						$this->compiledlines[] = ':init';
 			 						break;
+			 						*/
 			 	case 'set':			$fields = explode(' ',$body);
 			 						$f = array_shift($fields);
 			 						if ($f == '')
@@ -1753,8 +1797,8 @@ class XPnot extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = floatval(array_pop($stack));
-		if ($a != 0) $stack[] = '1';
-		else $stack[] = '0';	
+		if ($a != 0) $stack[] = '0';
+		else $stack[] = '1';	
 	}
 }
 

@@ -36,7 +36,7 @@ class swNoWikiParser extends swParser
 		}
 		
 		// remove templates and images
-		$s = preg_replace("/\{\{(.+?)\}\}/u", "", $s);
+		$s = preg_replace("/\{\{(.+?)\}\}/u", "", $s);	
 		$s = preg_replace("/\[\[Image:(.+?)\]\]/u", "", $s);
 		$s = preg_replace("/\[\[Media:(.+?)\]\]/u", "", $s);
 		$s = preg_replace("/\[\[Category:(.+?)\]\]/u", "", $s);

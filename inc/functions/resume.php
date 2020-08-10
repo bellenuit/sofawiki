@@ -35,44 +35,60 @@ class swResumeFunction extends swFunction
 		$wiki->revision = NULL;
 		$wiki->lookup();
 		$wiki->parsers = array();
+		$tp = new swTidyParser;
 		$ip = new swImagesParser;
 		$ip->ignorelinks = true;
 		$lp = new swLinksParser;
 		$lp->ignorecategories = true;  
 		$lp->ignorelanguagelinks = true;
 		
-		//remove categories
-		$wiki->content = preg_replace('/\[Category:(.*)\]/','',$wiki->content);
+		$s = $wiki->content;
+				
+		//remove nowiki tag
+		$s = str_replace('<nowiki>','',$s);
+		$s = str_replace('</nowiki>','',$s);
 		
-		$wiki->parsers['tidy'] = $ip;
+		//remove categories
+		$s = preg_replace('/\[Category:(.*)\]/u','',$s);
+		
+		// remove templates 
+		$s =  str_replace("\n"," ",$s);
+		$s =  str_replace("\r"," ",$s);
+		$s =  preg_replace('/\{\{(.*)\}\}/u','',$s);
+		
+		//remove styles
+		$s = preg_replace('#<style(.*?)</style>#','',$s);
+
+		
+		// $s = str_replace('{{','',$s);
+		// $s = str_replace('}}','',$s);
+		
+		$wiki->content = $s;
+		
+		$wiki->parsers['tidy'] = $tp;
 		$wiki->parsers['image'] = $ip;
 		$wiki->parsers['link'] = $lp;
 		$wiki->parsers['nowiki'] = new swNoWikiParser;
-		$s = $wiki->parse();
-		
-		
-		
-		//remove links
+		$s = $wiki->parse(false);
 		
 		$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
-
-
-		if (strlen($s)<$length) return $s;
 		
+	
+		if (strlen($s)<$length) return trim($s);
 		
-		$p = strpos($s."\n","\n",2);
+		$p = @strpos($s."\n","\n",2);
 		
 		$s = substr($s,0,$p);
 		
-		if ($p<$length) return $s;
-		
+		if ($p<$length) return trim($s);
+				
 		$list = explode(". ",$s);
 	
 		$t = '';
 		
 		foreach ($list as $elem)
 		{
-			if (strlen($t)>$length) return $t.'.';
+			if (strlen($t)>$length) return trim($t).'.';
 			
 			if ($t != "")
 			{
@@ -80,7 +96,7 @@ class swResumeFunction extends swFunction
 				if (strlen($test)<=$length*1.5)
 					$t .= '. '.$elem;
 				else
-					return $t.".";
+					return trim($t).".";
 				
 			}
 			else
