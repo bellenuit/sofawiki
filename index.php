@@ -520,7 +520,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 // global edit menus
 if ($user->hasright('create', '*'))
 {
-	if ($action != 'special' && $action != 'modify' && $wiki->status == '')
+	if ($action != 'special' && $action != 'modify' && $action != 'new' && $wiki->status == '')
 		$swEditMenus['new'] = '<a href="'.$wiki->link('edit').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('new',$lang).'</a>';
 	else
 		$swEditMenus['new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow">'.swSystemMessage('new',$lang).'</a>';
