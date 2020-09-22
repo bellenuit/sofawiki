@@ -32,13 +32,22 @@ function swNotify($action,$error,$label,$message,$receiver="",$plain=true)
 	global $swNotifyMail;
 	global $swNotifyMailBCC;
 	global $swNotifyMailCC;
+	global $swNotifyMailReplyTo;
 	global $swNotifyActions;
 	$actions = array_flip($swNotifyActions);
 	
 	if ($swNotifyMail)
 	{
-		$headers = "From: $swNotifyMail" . "\r\n" .
-   		"Reply-To: $swNotifyMail" . "\r\n";
+		$headers = "From: $swNotifyMail" . "\r\n";
+
+		if($swNotifyMailReplyTo != '')
+		{
+			$headers .= "Reply-To: $swNotifyMailReplyTo" . "\r\n";
+		}
+		else
+		{
+			$headers .= "Reply-To: $swNotifyMail" . "\r\n";
+		}
 
    		if($plain)
    		{
