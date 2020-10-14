@@ -19,7 +19,7 @@ function echomem($s,$direct=false)
 }
 
 
-function swNotify($action,$error,$label,$message,$receiver="")
+function swNotify($action,$error,$label,$message,$receiver="",$plain=true)
 {
 	global $username;
 	global $name;
@@ -32,15 +32,32 @@ function swNotify($action,$error,$label,$message,$receiver="")
 	global $swNotifyMail;
 	global $swNotifyMailBCC;
 	global $swNotifyMailCC;
+	global $swNotifyMailReplyTo;
 	global $swNotifyActions;
 	$actions = array_flip($swNotifyActions);
 	
 	if ($swNotifyMail)
 	{
-		$headers = "From: $swNotifyMail" . "\r\n" .
-   		"Reply-To: $swNotifyMail" . "\r\n" .
-   		'Content-type: text/plain; charset=UTF-8' . "\r\n" ;
-   		
+		$headers = "From: $swNotifyMail" . "\r\n";
+
+		if($swNotifyMailReplyTo != '')
+		{
+			$headers .= "Reply-To: $swNotifyMailReplyTo" . "\r\n";
+		}
+		else
+		{
+			$headers .= "Reply-To: $swNotifyMail" . "\r\n";
+		}
+
+   		if($plain)
+   		{
+   			$headers .= 'Content-type: text/plain; charset=UTF-8' . "\r\n" ;
+   		}
+   		else
+   		{
+   			$headers .= 'MIME-version: 1.0' . "\r\n" .
+   			'Content-type: text/html; charset=UTF-8' . "\r\n";	
+   		}
    		
    		
 		if (array_key_exists($action,$actions))
