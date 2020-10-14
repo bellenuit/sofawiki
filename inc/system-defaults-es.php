@@ -147,6 +147,6 @@ $swSystemDefaults["reset-password-help/es"] = "Elija una nueva contraseña con a
 $swSystemDefaults["set-password/es"] = "Establecer nueva contraseña";
 $swSystemDefaults["new-password/es"] = "Nueva contraseña";
 $swSystemDefaults["password-has-been-set/es"] = "La nueva contraseña ha sido establecida";
-$swSystemDefaults["Lost-reset-password-help/es"] = "Introduce tu correo electrónico. Se le enviará por correo electrónico un enlace de restablecimiento";
+$swSystemDefaults["lost-reset-password-help/es"] = "Introduce tu correo electrónico. Se le enviará por correo electrónico un enlace de restablecimiento";
 
 ?>
