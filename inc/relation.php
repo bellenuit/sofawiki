@@ -21,6 +21,9 @@ class swRelationLineHandler
 	var $result;
 	var $stack = array();
 	var $currentline;
+	var $transactiondict;
+	var $transactionerror;
+	var $transactionprefix;
 	
 	function __construct($m = 'HTML')
 	{
@@ -45,7 +48,7 @@ class swRelationLineHandler
 	}
 	
 	
-	function run2($t, $internal = '', $internalbody = '')
+	function run2($t, $internal = '', $internalbody = '', $d = array())
 	{
 		$lines = array();
 		$readlines = array();
@@ -77,12 +80,20 @@ class swRelationLineHandler
 		$ptagerror = '<span class="error">';
 		$ptagerrorend = '</span>';
 		$ptag2 = PHP_EOL;
-		if (!$internal) $result = '';
-		
+		if (!$internal)
+		{
+			 $result = '';
+			 $this->transactiondict = array();
+			 $this->transactionprefix = '';
+			 $this->transactionerror = '';
+		}
+				
 		$plines = array();
 		$poffset;
 		
 		if ($internalbody) $internals = explode(',',$internalbody);
+		
+		$dict = $d;
 		
 		$t = str_replace("\r\n", PHP_EOL, $t);
 		$t = str_replace("\r", PHP_EOL, $t);
@@ -147,9 +158,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										if (! $r->assert($body))
 										{
 											$this->result .= $ptag.$ptagerror.$ti.' Error: Assertion error '.$body.$ptagerrorend.$ptag2;
@@ -179,9 +190,9 @@ class swRelationLineHandler
 									{
 										$found = false;
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										while($i<$c && !$found)
 										{
 											$i++;
@@ -233,22 +244,23 @@ class swRelationLineHandler
 										$this->stack[] = $r->doClone();
 									}
 									break;						
-				case 'echo' :		$locals = array();
+				case 'echo' :		//$locals = array();
 					
-									/*
-									if (count($stack)>0)
+									
+									if (count($this->stack)>0)
 									{
-										$r = $stack[count($stack)-1];
+										$r = $this->stack[count($this->stack)-1];
 										if (count($r->tuples) > 0)
 										{
 											$tp = $r->tuples[0];
-											$locals = $tp->fields;
+											foreach($tp->pfields as $k=>$v)
+												$dict[$k] = $v;
 										}
 									}
-									*/
+									
 									$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									$tx = $xp->evaluate($this->globals, $locals);
+									$tx = $xp->evaluate($dict);
 									$this->result .= $tx.PHP_EOL; // . $ptag2; // ???
 									switch (substr($tx,1))
 									{
@@ -256,7 +268,7 @@ class swRelationLineHandler
 										case '*':
 										case '{':
 										case '|': break;
-										default: $result .= $ptag2 ;// ???
+										default: $this->result .= $ptag2 ;// ???
 									}
 									$xp = null;
 									break;
@@ -302,6 +314,36 @@ class swRelationLineHandler
 											$this->errors[]=$il;
 										}
 									}
+									elseif($line == 'end transaction')
+									{
+										if ($this->transactionerror != '')
+										{
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Transaction error '.$this->transactionerror.$ptagerrorend.$ptag2;
+											$this->errors[]=$il;
+											foreach($this->transactiondict as $p)
+											{
+												unlink($p);
+											}
+										}
+										else
+										{
+											foreach($this->transactiondict as $k=>$p)
+											{
+												if (file_exists($p))
+												{
+													unlink($k);
+													rename($p,$k);
+													$this->result .= $ptag.$ptagerror.$ti.' Error : Transaction errror: missing file  '.$p.$ptagerrorend.$ptag2;
+													$this->errors[]=$il;
+												}
+												
+											}
+
+										}
+										$this->transactiondict = array();
+										$this->transactionprefix = '';
+										$this->transactionerror = '';
+									}
 									else
 									{
 										//print_r($lines);echo $line;
@@ -318,9 +360,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										$r->extend($body);
 										$this->stack[] = $r;
 									}
@@ -398,7 +440,7 @@ class swRelationLineHandler
 				case 'if':			$xp = new swExpression($this->functions);
 									$xp->compile($body);
 									$ifstack[] = $i;
-									if ($xp->evaluate($this->globals,$locals) != '0')
+									if ($xp->evaluate($dict) != '0')
 									{}
 									else
 									{
@@ -424,14 +466,22 @@ class swRelationLineHandler
 										}
 									}
 									break; 	
-				case 'import':		{
+				/*case 'import':		{
 										$this->result .= $ptag.$ptagerror.$ti.' Import is not supported'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
-									break;	
+									break;	*/
+				case 'import':		$xp = new swExpression($this->functions);
+									$xp->compile($body);
+									$te = $xp->evaluate($this->globals,$dict);
+									
+									$r = swRelationImport($te);
+									$this->stack[] = $r;
+									break;
+
 				case 'include':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									$tn = $xp->evaluate($this->globals,$locals);
+									$tn = $xp->evaluate($dict);
 									if (!$this>validFileName($tn))
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
@@ -498,9 +548,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										$r->insert($body);
 										$this->stack[] = $r;
 									}
@@ -526,9 +576,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										$r2 = array_pop($this->stack);
 										$r2->join($r,$body);
 										$this->stack[] = $r2;
@@ -554,9 +604,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										$r->limit($body);
 										$this->stack[] = $r;
 									}
@@ -584,7 +634,7 @@ class swRelationLineHandler
 										$tx = trim(array_shift($internals));
 										$xp = new swExpression($this->functions);
 										$xp->compile($tx);
-										$locals[trim($body)] = $xp->evaluate($this->globals);
+										$dict[trim($body)] = $xp->evaluate($dict);
 										$parameteroffset++;
 									}
 									break;
@@ -688,14 +738,14 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack); //print_r($r);
 										$r->aggregators = $this->aggregators;
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										//$r->locals = $locals;
 										$r->project($body);
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'read':		$r = new swRelation('',$locals,$this->globals);
+				case 'read':		$r = new swRelation('',$locals,$dict);
 									$enc = 'utf8';
 									if (substr(trim($body),0,8)=='encoding')
 									{
@@ -713,7 +763,7 @@ class swRelationLineHandler
 									}
 									$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									$tn = $xp->evaluate($this->globals,$locals);
+									$tn = $xp->evaluate($dict);
 									
 									if ($tn == '') $tn = ' ';
 									if (!$this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
@@ -737,7 +787,7 @@ class swRelationLineHandler
 											{
 												$this->result .= $ptagerror.$ti.' Error : Relation does not exist'.$ptagerrorend.$ptag2;
 												$this->errors[] = $il;
-												$r = new swRelation('',$locals,$this->globals);
+												$r = new swRelation('',$dict);
 											}
 											$this->stack[] = $r->doClone();
 											//print_r($stack);
@@ -745,6 +795,9 @@ class swRelationLineHandler
 										}
 										elseif(true)  // true $currentpath files are in site
 										{
+											if (isset($this->transactiondict[$tn]))
+												$tn = $this->transactiondict[$tn];
+											
 											$file1 = 'site/files/'.$tn;
 											$file2 = 'site/cache/'.$tn;
 											if (!file_exists($file1) and !file_exists($file2))
@@ -777,7 +830,7 @@ class swRelationLineHandler
 											}
 											if (strlen($tip)>0)
 											{
-												$r = new swRelation('',$locals,$this->globals);
+												$r = new swRelation('',$dict);
 												switch(substr($file,-4))
 												{
 													case '.csv': 	$r->setCSV(explode(PHP_EOL,$tip));
@@ -806,7 +859,7 @@ class swRelationLineHandler
 										
 										
 									break;
-				case 'relation':	$r = new swRelation($body, $locals,$this->globals);
+				case 'relation':	$r = new swRelation($body, $dict);
 									$this->stack[] = $r;
 									break;	
 				case 'rename':		if (count($this->stack)<1)
@@ -817,13 +870,17 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
+										$r->globals = $dict;
 										$r->rename1($body);
 										$this->stack[] = $r;
 									}
 									break;										
-				case 'run':			$fields = explode(' ',$body);
-									$key = array_shift($fields);
-									$body = trim(join(' ',$fields));
+				case 'run':			// run pg(x) and run pg (x) are both valid
+									// so we split on paranthesis, not space
+									
+									$fields = explode('(',$body);
+									$key = trim(array_shift($fields));
+									$body = '('.trim(join(' ',$fields));
 									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptagerrorend.$ptag2;
@@ -833,8 +890,18 @@ class swRelationLineHandler
 									elseif (array_key_exists($key, $this->programs))
 									{
 										$tx = $this->programs[$key];
+										
+										
+										$dict2 = array();
+										$dict0 = array();
+										foreach($dict as $k=>$v)
+										{
+											$dict2[$k] = $v;
+										}
+										$dict0 = $dict;
 										$body = substr($body,1,-1);
-										$this->result = $this->run2($tx,$key,$body); //!!!
+										$this->result = $this->run2($tx,$key,$body,$dict); 
+										$dict = $dict0; //!!!
 									}
 									else
 									{
@@ -850,9 +917,9 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										// $r->locals = $locals;
 										$r->select1($body);
 										$this->stack[] = $r;
 									}
@@ -876,12 +943,18 @@ class swRelationLineHandler
 										if (count($r->tuples)>0)
 										{
 											$tp = array_shift($r->tuples);
-											$locals = $tp->fields();
+											//print_r($tp);
+											foreach($tp->pfields as $k=>$v)
+											{
+												$dict[$k] =$v;
+											}
 											array_unshift($r->tuples, $tp);
 											
 										}
 										$this->stack[] = $r;
 									}
+										//print_r($dict);
+										
 										$fields = explode(' ',$body);
 										$key = array_shift($fields);
 										$body = join(' ',$fields);
@@ -898,11 +971,12 @@ class swRelationLineHandler
 										{
 											$xp = new swExpression($this->functions);
 											$xp->compile($body);
-											$this->globals[$key] = $xp->evaluate($this->globals,$locals);
+											$dict[$key] = $xp->evaluate($dict);
+											
 										}	
 
 									break; 
-				case 'stack':		$r = new swRelation('stack, cardinality, column', $locals, $this->globals);
+				case 'stack':		$r = new swRelation('stack, cardinality, column', $dict);
 									$sti = 0;
 									for ($sti=0;$i<count($this->stack);$sti++)
 									{
@@ -938,7 +1012,7 @@ class swRelationLineHandler
 										$r = array_pop($this->stack);
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
-										$tn = $xp->evaluate($this->globals, $locals);
+										$tn = $xp->evaluate($dict);
 										if (!$this->validFileName($tn))
 										{
 											$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
@@ -951,6 +1025,10 @@ class swRelationLineHandler
 										}
 										$this->stack[] = $r;
 									}
+									break;
+				case 'transaction' :$this->transactionprefix = 'tmp-';
+									$this->transactionerror = '';
+									$this->transactiondict = array();
 									break;
 				case 'union':		if (count($this->stack)<2)
 									{
@@ -974,22 +1052,22 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->globals = $this->globals;
+										$r->globals = $dict;
 										$r->functions = $this->functions;
-										$r->locals = $locals;
+										// $r->locals = $locals;
 										$r->update($body);
 										$this->stack[] = $r;
 									}
 									break;	
 				case 'virtual':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									$te = $xp->evaluate($this->globals,$locals);
+									$te = $xp->evaluate($this->globals,$dict);
 									$r = swRelationVirtual($te);
 									$this->stack[] = $r;
 									break;				
 				case 'while':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									if ($xp->evaluate($this->globals) != '0') // no locals
+									if ($xp->evaluate($dict) != '0') // no locals
 									{
 										$whilestack[] = $i;
 									}
@@ -1021,7 +1099,12 @@ class swRelationLineHandler
 										$r = array_pop($this->stack);
 										$xp = new swExpression($this->functions);
 										$xp->compile($body);
-										$tn = $xp->evaluate($this->globals, $locals);
+										$tn = $xp->evaluate($dict);
+										if ($this->transactionprefix != '')
+										{
+											$this->transactiondict[$tn]=$this->transactionprefix.$tn;
+											$tn = $this->transactionprefix.$tn;
+										}
 										if (!$this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',$tn)))))
 										{	
 										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
@@ -1109,15 +1192,13 @@ class swRelation
 	var $header = array();
 	var $tuples = array();
 	var $globals = array();
-	var $locals = array();
 	var $formats = array();
 	var $labels = array();
 	var $functions = array();
 	var $aggregators = array();
 	
-	function __construct($columns, $l, $g)
+	function __construct($columns, $g)
 	{
-		$this->locals = $l;
 		$this->globals = $g;
 		
 		if (! is_array($columns))
@@ -1170,7 +1251,7 @@ class swRelation
 							foreach($this->tuples as $tp)
 							{
 								$d = $tp->fields();
-								if ($xp->evaluate($d, $this->globals, $this->locals) == '0')
+								if ($xp->evaluate($d, $this->globals) == '0')
 									return false;
 							}
 							return true;
@@ -1178,7 +1259,7 @@ class swRelation
 							foreach($this->tuples as $tp)
 							{
 								$d = $tp->fields();
-								if ($xp->evaluate($d, $this->globals, $this->locals) == '0')
+								if ($xp->evaluate($d, $this->globals) == '0')
 									return true;
 							}
 				case 'unique': $xp->compile($expression);
@@ -1186,7 +1267,7 @@ class swRelation
 							foreach($this->tuples as $tp)
 							{
 								$d = $tp->fields();
-								$s = $xp->evaluate($d, $this->globals, $this->locals);
+								$s = $xp->evaluate($d, $this->globals);
 								if (array_key_exists($s, $test))
 									return false;
 								$test[$s] = true;
@@ -1235,7 +1316,7 @@ class swRelation
 	
 	function doClone()
 	{
-		$result = new swRelation($this->header,$this->locals, $this->globals);
+		$result = new swRelation($this->header,$this->globals);
 		$result->tuples = array_clone($this->tuples);
 		$result->formats = array_clone($this->formats);
 		$result->labels = array_clone($this->labels);
@@ -1275,7 +1356,7 @@ class swRelation
 			
 		$this->order($this->header(0));
 		
-		$r = new swRelation('',$this->locals, $this->globals);
+		$r = new swRelation('',$this->globals);
 		$r->addColumn($this->header(0));
 		
 		$n = count($this->tuples);
@@ -1391,8 +1472,8 @@ class swRelation
 		//for ($i=0;$i<$c;$i++)
 		{
 			$d = $tp->fields();
-			$this->locals['rownumber'] = strval($i+1); $i++;
-			$v = $xp->evaluate($d, $this->globals, $this->locals);
+			$this->globals['rownumber'] = strval($i+1); $i++;
+			$v = $xp->evaluate($d, $this->globals);
 			$d[$label] = $v;
 			$tp = new swTuple($d);
 			$newtuples[$tp->hash()] = $tp;
@@ -1456,7 +1537,7 @@ class swRelation
 		$xp = new swExpression($this->functions);
 		$xp->expectedreturn =  count($this->header);
 		$xp->compile($t);
-		$test = $xp->evaluate($this->globals, $this->locals);
+		$test = $xp->evaluate($this->globals);
 		$pairs = array();
 		while (count($xp->stack) >0)
 		{
@@ -1592,7 +1673,7 @@ class swRelation
 				{
 					$d1[$cf] = @$d2[$cf];
 				}	
-				$tx = $xp->evaluate($d1,$this->globals,$this->locals);
+				$tx = $xp->evaluate($d1,$this->globals);
 				if ($tx != '0')
 				{
 					$tp = new swTuple($d1);
@@ -1770,7 +1851,7 @@ class swRelation
 		$xp->expectedreturn = 2;
 		$xp->compile($t);
 		$pairs = array();
-		$pairs[] = $xp->evaluate($this->globals,$this->locals);
+		$pairs[] = $xp->evaluate($this->globals);
 		if (count($xp->stack) > 1)
 			$pairs[] = $xp->stack[1];
 		if (count($pairs) == 1)
@@ -2197,7 +2278,7 @@ class swRelation
 		{
 			$d = $tp->fields();
 			$locals['rownumber'] = $i+1;
-			$result = $xp->evaluate($d,$this->globals,$this->locals);
+			$result = $xp->evaluate($d,$this->globals);
 			if ($result == '0')
 			{
 				unset($this->tuples[$k]);
@@ -2224,7 +2305,7 @@ class swRelation
 		if ($observationkey == 'key') $list2[1] = 'key0';
 		if ($observationkey == 'value') $list2[1] = 'value0';
 		
-		$r = new swRelation($list0,$this->locals, $this->globals);
+		$r = new swRelation($list0,$this->globals);
 		
 		$m = count($this->tuples);
 		for($j=0;$j<$m;$j++)
@@ -2808,10 +2889,10 @@ class swRelation
 		//for ($i=0;$i<$c;$i++)
 		{
 			$d = $tp->fields();
-			$this->locals['rownumber'] = strval($i+1); $i++;
-			if ($xp->evaluate($d, $this->globals, $this->locals))
+			$this->globals['rownumber'] = strval($i+1); $i++;
+			if ($xp->evaluate($d, $this->globals))
 			{
-				$v = $xp2->evaluate($d, $this->globals, $this->locals);
+				$v = $xp2->evaluate($d, $this->globals);
 				$d[$label] = $v;
 				$tp = new swTuple($d);
 			}
@@ -2828,11 +2909,9 @@ class swRelation
 		if (substr($s,-1) == '^')
 		{
 			$s2 = substr($s,0,-1);
-			if (array_key_exists($s2,$this->locals))
-				return $this->validName($this->locals[$s2]);
 			if (array_key_exists($s2,$this->globals))
 				return $this->validName($this->globals[$s2]);
-
+	
 		}
 		if (strlen($s)< 31 and preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/',$s))
 			return $s; 

@@ -229,7 +229,8 @@ class swExpression
 									case '8':
 									case '9': $acc .= $ch; break;
 									case '.': $state = 'numberfraction'; $acc .= $ch; break;
-									case 'e': $state = 'numberexponent'; $acc .= $ch; break;
+									case 'e': 
+									case 'E': $state = 'numberexponent'; $acc .= $ch; break;
 									default:  $state = 'start'; $this->tokens[] = $acc;
 											  $acc = ''; $i--;
 								}
@@ -246,7 +247,8 @@ class swExpression
 									case '7':
 									case '8':
 									case '9': $acc .= $ch; break;
-									case 'e': $state = 'numberexponent'; $acc .= $ch; break;
+									case 'e':
+									case 'E': $state = 'numberexponent'; $acc .= $ch; break;
 									default:  $state = 'start'; $this->tokens[] = $acc;
 											  $acc = ''; $i--;
 								}
@@ -487,7 +489,7 @@ class swExpression
 										$rvi = rand(50000,80000);
 										$this->rpn[] = $rvi;
 										$this->rpn[] = ':orleft';
-										$operatorstack[] = "_orright#".$rvi;
+										$operatorstack[] = ":orright#".$rvi;
 									}
 									else
 									{
@@ -755,12 +757,12 @@ class swExpression
 		
 		if ($a > 10.0e12)
 			// return format(d,"-0.000000000000e").ToText
-			return sprintf('%1.12e+2',$d);
+			return sprintf('%1.12e',$d);
 		elseif ($a < 10.0e-300)
 			return "0";
 		elseif ($a < 10.0e-12)
 			// return format(d,"-0.000000000000e").ToText
-			return sprintf('%%1.12e+2',$d);
+			return sprintf('%1.12e',$d);
 		
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.12f',$d);
@@ -1058,12 +1060,12 @@ class swExpressionFunction
 		
 		if ($a > 10.0e14)
 			// return format(d,"-0.00000000000000e").ToText
-			return sprintf('%1.14e+2',$d);
+			return sprintf('%1.14e',$d);
 		elseif ($a < 10.0e-300)
 			return "0";
 		elseif ($a < 10.0e-14)
 			// return format(d,"-0.00000000000000e").ToText
-			return sprintf('%%1.14e+2',$d);
+			return sprintf('%1.14e',$d);
 		
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.14f',$d);

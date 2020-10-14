@@ -23,9 +23,118 @@ function swRelationInclude($n)
 	return $wiki->content;
 }
 
+function swRelationImport($url)
+{
+	
+	// TO DO FILTER NAMESPACE HERE 
+	global $user;
+	global $swSearchNamespaces;
+	global $swTranscludeNamespaces;
+		
+	$ns = array();
+	$searcheverywhere = FALSE;
+	foreach($swSearchNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	foreach($swTranscludeNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	
+	if (!$searcheverywhere && stristr($url,':'))
+		{
+			$dnf =explode(':',$url);
+			$dns = array_shift($dnf);
+			if (! in_array($dns, $ns) && !$user->hasright('view',$url)) return array();
+	}
+
+
+	
+	
+	$wiki = new swWiki;
+	$wiki->name = $url;
+	$wiki->lookup();
+	if (!$wiki->revision)
+		throw new swRelationError('Import page does not exist.',87);
+		
+	$list = swGetAllFields($wiki->content);
+	
+	// normalize array, to a table, but using only used fields and field
+	$maxcount = 1;
+	foreach($list as $v)
+	{
+		$maxcount = max($maxcount,count($v));
+	}	
+	$list2 = array();
+	foreach($list as $key=>$v)
+	{
+		for($fi=0;$fi<count($v);$fi++)
+		{
+			$list2[$fi][$key] = $v[$fi];
+		}
+		for ($fi=count($v);$fi<$maxcount;$fi++)
+		{
+			$list2[$fi][$key] = $v[count($v)-1];
+		}
+	}
+	
+	//print_r($list2);
+	
+	$header = array_keys($list);
+	$result = new swRelation($header,null,null);
+	
+	foreach ($list2 as $v) 
+	{
+		$d = $v;
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+	}
+	
+	return $result;
+
+}
+
+
 
 function swRelationVirtual($url)
 {
+	// TO DO FILTER NAMESPACE HERE 
+	global $user;
+	global $swSearchNamespaces;
+	global $swTranscludeNamespaces;
+
+	$ns = array();
+	$searcheverywhere = FALSE;
+	foreach($swSearchNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	foreach($swTranscludeNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	
+	if (!$searcheverywhere && stristr($url,':'))
+		{
+			$dnf =explode(':',$url);
+			$dns = array_shift($dnf);
+			if (! in_array($dns, $ns) && !$user->hasright('view',$url)) return array();
+	}
+	
+	
 	$wiki = new swWiki;
 	$wiki->name = $url;
 	$wiki->lookup();

@@ -64,19 +64,19 @@ function markRelationCode()
 		s = s.replace(/".+?"/g, function (x) { return "@q"+btoa(encodeURIComponent(x))+"@" } );
 		
 		//numbers
-		s = s.replace(/(\b\-?\d+\.?\d*?\b)/g,"<span class='number'>$1</span>");
+		s = s.replace(/(\b\-?\d+\.?\d*?([Ee]\-?\d+)?\b)/g,"<span class='number'>$1</span>");
 		
 		//keywords start 
 		
 		s = s.replace(/(\n|\u200B|^)(assert all|assert exists|assert unique|assert columns)\b/g,"$1<span class='keyword'>$2</span>");
 		
-		s = s.replace(/(\n|\u200B|^)(end data|end function|end if|end program|end while)\b/g,"$1<span class='keyword'>$2</span>");
+		s = s.replace(/(\n|\u200B|^)(end data|end function|end if|end program|end transaction|end while)\b/g,"$1<span class='keyword'>$2</span>");
 			
 		s = s.replace(/(\n|\u200B|^)(join|join natural|join left|join right|join outer|join leftsemi|join rightsemi|join leftanti|join rightanti)\b/g,"$1<span class='keyword'>$2</span>");
 		
 		s = s.replace(/(\n|\u200B|^)(read|read latin1|read macroman|read utf8|read windowslatin1)\b/g,"$1<span class='keyword'>$2</span>");	
 		
-		s = s.replace(/(\n|\u200B|^)(beep|compile|data|deserialize|difference|dup|echo|else|extend|format|function|if|import|include|init|input|insert|intersection|label|limit|order|parse|pop|program|print|project|project inline|relation|rename|run|select|serialize|set|stack|swap|template|union|update|while|write)/g,"$1<span class='keyword'>$2</span>");
+		s = s.replace(/(\n|\u200B|^)(beep|compile|data|deserialize|difference|dup|echo|else|extend|format|function|if|import|include|init|input|insert|intersection|label|limit|order|parse|pop|program|print|project|project inline|relation|rename|run|select|serialize|set|stack|swap|template|transaction|union|update|while|write)/g,"$1<span class='keyword'>$2</span>");
 		
 		// wiki
 		s = s.replace(/(\n|\u200B|^)(filter|virtual)/g,"$1<span class='keyword'>$2</span>");
@@ -111,6 +111,7 @@ function markRelationCode()
 			|| lines[j].substring(0,(keywordheader+"while").length) == keywordheader+"while"
 			|| lines[j].substring(0,(keywordheader+"function").length) == keywordheader+"function"
 			|| lines[j].substring(0,(keywordheader+"program").length) == keywordheader+"program"
+			|| lines[j].substring(0,(keywordheader+"transaction").length) == keywordheader+"transaction"
 			|| lines[j].substring(0,(keywordheader+"aggregator").length) == keywordheader+"aggregator")
 			{
 				s += "<p class='prefix"+prefix+"'>"+lines[j]+"\n";
