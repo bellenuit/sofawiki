@@ -1478,7 +1478,7 @@ class swQueryFunction extends swFunction
 								 {
 									foreach ($row as $k=>$v)
 									{
-										  $result .= '[<nowiki>[</nowiki>'.$k.'::'.swHTMLSanitize($v).']] ';
+										  $result .= '[<leftsquare>'.$k.'::'.swHTMLSanitize($v).']] ';
 										  if ($outputformat == 'FIELDS') $result .='<br>';
 									}
 									$result .= '<br>';
