@@ -481,6 +481,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		$s = str_replace('<nowiki>','',$s);
 		$s = str_replace('</nowiki>','',$s);
 		
+		
+		$s = swUnescape($s);
 	
 		
 		$list = swGetAllFields($s);
