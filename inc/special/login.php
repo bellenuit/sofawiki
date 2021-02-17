@@ -43,12 +43,21 @@ $swParsedContent = '
 	$swParsedContent .= '
 	<p><a href="index.php?action=newuser">'.swSystemMessage('new-user',$lang).'</a></p>';
 	
+	if (@$swEmailAccess)
+	
+		$swParsedContent .= '
+	<p><a href="index.php?action=askemailaccess">'.swSystemMessage('email-access',$lang).'</a></p>';
+	
+	else
+	
+		$swParsedContent .= '
+	<p><a href="index.php?action=lostpassword">'.swSystemMessage('lost-password',$lang).'</a></p>';
+	
 	$swParsedContent .= '
-	<p><a href="index.php?action=lostpassword">'.swSystemMessage('lost-password',$lang).'</a></p>
 	<div id="help">
 		'.swSystemMessage('login-help',$lang).'
 	</div>
 </div>
 	';
-
+	
 ?>

@@ -252,9 +252,10 @@ class swRelationLineHandler
 										$r = $this->stack[count($this->stack)-1];
 										if (count($r->tuples) > 0)
 										{
-											$tp = $r->tuples[0];
-											foreach($tp->pfields as $k=>$v)
-												$dict[$k] = $v;
+											$tp = @$r->tuples[0];
+											if ($tp)
+												foreach($tp->pfields as $k=>$v)
+													$dict[$k] = $v;
 										}
 									}
 									
@@ -667,6 +668,7 @@ class swRelationLineHandler
 											case 'fields':	$this->result .= $r->toFields($body); break;
 											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON($body).'</textarea></nowiki>'; break;
 											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab($body).'</textarea></nowiki>'; break;
+											case 'raw':		$this->result .= $r->getTab($body); break;
 											default: 		$this->result .= $r->toHTML($body); break;
 										}
 										
@@ -1873,6 +1875,9 @@ class swRelation
 			
 		$c = count($this->tuples);
 		
+		if ($start < 0)
+		$start = count($this->tuples)-$start-1;
+		
 		if ($length < $c/3 || true)
 		{
 			$tuples2 = array();
@@ -2428,7 +2433,7 @@ class swRelation
 					case 'quote' : // 'error missing end quote, we need to read the following line
 									if ($j<$k-1)
 									{
-										$lines[$j].=' '.$lines[$j+1];
+										$lines[$j].=' '.@$lines[$j+1];
 										unset($lines[$j+1]);
 										$k -= 1;
 										$j -= 2;
@@ -2509,7 +2514,7 @@ class swRelation
 		$firstline = true;
 		foreach($lines as $line)
 		{
-			$fields = explode("\t",$lines);
+			$fields = explode("\t",$line);
 			if ($firstline)
 			{
 				foreach($fields as $field)
@@ -2529,7 +2534,7 @@ class swRelation
 					$d[$this->header[$i]] = $field;
 					$i++;
 				}
-				while($i<=$c)
+				while($i<$c)
 				{
 					$d[$this->header[$i]] = '';
 					$i++;
@@ -2661,7 +2666,7 @@ class swRelation
 			}
 			$line = '| '.join(' || ',$fields);
 			$lines[] = '|-';
-			$lines[] = $line;
+			$lines[] = $line.' '; // add space to force line not to be empty
 		}
 		$lines[] = '|-';
 		$lines[] = '|}';
@@ -3071,7 +3076,7 @@ class swAccumulator
 	
 	private function pConcat()
 	{
-		return join('',$this->list);
+		return join('::',array_unique($this->list));
 	}
 	
 	private function pCount()

@@ -149,4 +149,14 @@ $swSystemDefaults["new-password/es"] = "Nueva contraseña";
 $swSystemDefaults["password-has-been-set/es"] = "La nueva contraseña ha sido establecida";
 $swSystemDefaults["lost-reset-password-help/es"] = "Introduce tu correo electrónico. Se le enviará por correo electrónico un enlace de restablecimiento";
 
+$swSystemDefaults["email-access/es"] = "Acceso al correo electrónico";
+$swSystemDefaults["email-access-help/es"] = "Introduzca su correo electrónico. Se enviará un enlace de acceso por correo";
+$swSystemDefaults["email-access-submit/es"] = "Envíe un enlace";
+$swSystemDefaults["email-access-submit-help/es"] = "Se ha enviado un enlace";
+$swSystemDefaults["your-email-access/es"] = "Su enlace de acceso al correo electrónico";
+$swSystemDefaults["email-access-ok/es"] = "Ya ha iniciado la sesión";
+$swSystemDefaults["your-email-access-message/es"] = "Ha solicitado acceder al sitio web por correo electrónico. Utilice el siguiente enlace";
+
+
+
 ?>

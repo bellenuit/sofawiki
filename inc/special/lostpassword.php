@@ -67,6 +67,9 @@ if ($action == 'lostpasswordsubmit')
 		else
 		{
 			
+			
+			
+			
 			$token = rand(111111111,999999999);
 
 			$p = '[[_token::'.$token.']]';
@@ -79,11 +82,12 @@ if ($action == 'lostpasswordsubmit')
 			$lostuser->user = '';
 			$lostuser->insert();
 			
+			
 			$label = $swMainName.': '.swSystemMessage('your-password-reset',$lang);
-			$msg = swSystemMessage('your-password-reset-message',$lang)."\n".'
-	
-'.$swBaseHref .'?action=resetpassword&email='.$email.'&token='.$token."\n";
-	
+				$msg = swSystemMessage('your-password-reset-message',$lang)."\n".'
+				'.$swBaseHref .'?action=resetpassword&email='.$email.'&token='.$token."\n";
+
+				
 		}
 		
 		swNotify('lostpasswordsubmit',$swError,$label,$msg,$email);
@@ -120,10 +124,11 @@ if ($submitted)
 }
 else
 {
+
 $swParsedContent = $err.'<div id="editzone">
 		<form method="post" action="index.php">
 		<table class="blanktable" ><tr><td>'.swSystemMessage('email',$lang).'</td><td>
-		<input type="text" name="email" value=""/>
+		<input type="text" name="email" value=""/>'.$eac.'
 		<input type="hidden" name="action" value="lostpasswordsubmit" /></td></tr><tr><td></td><td>
 		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" /></td></tr></table>
 	</form>.';

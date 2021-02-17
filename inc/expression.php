@@ -1977,16 +1977,17 @@ class XPSub extends swExpressionFunction
 
 class XPsubstr extends swExpressionFunction
 {
-	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
+	function __construct() { $this->arity = 3; $this->label = ':substr' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		$c = array_pop($stack);		
-		$stack[] = substr($c,$a,$b);		
+		$stack[] = substr($c,$b,$a);		
 	}
 }
+
 
 class XPtan extends swExpressionFunction
 {

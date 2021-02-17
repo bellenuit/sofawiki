@@ -143,6 +143,15 @@ $swSystemDefaults["new-password/de"] = "Neues Passwort";
 $swSystemDefaults["password-has-been-set/de"] = "Das neue Passwort wurde gesetzt.";
 $swSystemDefaults["lost-reset-password-help/de"] = "Geben Sie Ihr Email an. Ein Reset-Link wird Ihnen per Mail zugesandt.";
 
+$swSystemDefaults["email-access/de"] = "E-Mail-Zugang";
+$swSystemDefaults["email-access-help/de"] = "Geben Sie Ihre E-Mail ein. Ein Zugangslink wird per E-Mail gesendet.";
+$swSystemDefaults["email-access-submit/de"] = "Einen Link senden";
+$swSystemDefaults["email-access-submit-help/de"] = "Es wurde ein Link versendet";
+$swSystemDefaults["ihr-email-zugriff/de"] = "Ihr E-Mail-Zugangslink";
+$swSystemDefaults["email-access-ok/de"] = "Sie sind jetzt eingeloggt";
+$swSystemDefaults["your-email-access-message/de"] = "Sie haben darum gebeten, per E-Mail auf die Website zuzugreifen. Verwenden Sie den folgenden Link.";
+
+
 
 
 ?>

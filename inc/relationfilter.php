@@ -245,6 +245,9 @@ function swRelationFilter($filter, $globals = array())
 			$newpairs[] = $f;
 		else
 			$newpairs[] = $f.' "'.$h.'"';
+			
+		if ($f == '_name')
+			$namefilter = swNameURL($h);
 		
 	}
 	// print_r($fields);
@@ -388,6 +391,27 @@ function swRelationFilter($filter, $globals = array())
 		
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
 	{
+		// apply namefilter
+		
+		
+		if ($namefilter && $filter != '_name, _revision')
+		{
+			$namerelation = swRelationFilter('_name, _revision', $globals);
+			$tuples = $namerelation->tuples;
+			
+			foreach($tuples as $t)
+			{
+				$f = $t->fields();
+				if (stripos(swNameURL($f['_name']),$namefilter) === false) 
+				{
+					$tocheck->unsetbit($f['_revision']);
+				
+				}
+			}			
+		}
+		
+		
+		
 		// we create a superbitmap
 		// fields with string must be present
 		// hints must be present
@@ -397,7 +421,7 @@ function swRelationFilter($filter, $globals = array())
 		{
 			if (substr($f,0,1)!='_') // _ fields are in header or implicit
 				$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
-			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp')))
+			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp','_timestamp')))
 				$bloomlist[] = swNameURL($h);
 		}
 		//print_r($bloomlist);
@@ -411,6 +435,7 @@ function swRelationFilter($filter, $globals = array())
 			$checkedbitmap = $checkedbitmap->orop($notgr);
 			$tocheckcount = $tocheck->countbits();
 		}
+		
 				
 		$toc = $tocheck->countbits();
 		$checkedcount += $tocheckcount - $toc;
@@ -472,6 +497,10 @@ function swRelationFilter($filter, $globals = array())
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
 					$fieldlist['_content'][] = $record->content;
+					
+					$fieldlist['_paragraph'] = explode(PHP_EOL, $record->content);
+					
+					
 					$keys =array_keys($fieldlist);
 					foreach($keys as $key)
 					{

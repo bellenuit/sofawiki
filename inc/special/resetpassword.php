@@ -104,14 +104,14 @@ elseif($token != '')
 		<td><input type="submit" name="submitresetpassword" value="'.swSystemMessage('set-password',$lang).'" /></td></tr></table>
 	</form>
 	<div id="help">'.swSystemMessage("reset-password-help",$lang).'
+	</div>
 	</div>';
 }
 else
 {
 	$swParsedContent = $err;
 }
-$swParsedContent .= '
-</div>';
+
 
 
 ?>

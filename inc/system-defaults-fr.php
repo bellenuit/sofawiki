@@ -152,6 +152,15 @@ $swSystemDefaults["new-password/fr"] = "Nouveau mot de passe" ;
 $swSystemDefaults["password-has-been-set/fr"] = "Le nouveau mot de passe a été défini" ;
 $swSystemDefaults["lost-reset-password-help/fr"] = "Entrez votre adresse électronique. Un lien de réinitialisation vous sera envoyé par courrier électronique" ;
 
+$swSystemDefaults ["email-access/fr"] = "Accès au courrier électronique" ;
+$swSystemDefaults["email-access-help/fr"] = "Entrez votre adresse électronique. Un lien d'accès vous sera envoyé par courrier" ;
+$swSystemDefaults["email-access-submit/fr"] = "Envoyer un lien" ;
+$swSystemDefaults["email-access-submit-help/fr"] = "Un lien a été envoyé" ;
+$swSystemDefaults["your-email-access/fr"] = "Votre lien d'accès au courrier électronique" ;
+$swSystemDefaults["email-access-ok/fr"] = "Vous êtes maintenant connecté" ;
+$swSystemDefaults["your-email-access-message/fr"] = "Vous avez demandé à accéder au site web par courrier électronique. Utilisez le lien suivant" ;
+
+
 
 
 
