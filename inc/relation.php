@@ -369,8 +369,9 @@ class swRelationLineHandler
 									}
 									break;	
 				case 'filter':		$gl = array_merge($this->globals,$locals);
-									
-									$r = swRelationFilter($body,$gl);
+									$gl = array_merge($gl,$dict);
+									global $swDebugRefresh;
+									$r = swRelationFilter($body,$gl,$swDebugRefresh);
 									$this->stack[] = $r;
 									break;				
 				case 'format':		if (count($this->stack)<1)
@@ -664,12 +665,11 @@ class swRelationLineHandler
 										
 										switch(trim($body))
 										{
-											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV($body).'</textarea></nowiki>'; break;
-											case 'fields':	$this->result .= $r->toFields($body); break;
-											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON($body).'</textarea></nowiki>'; break;
-											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab($body).'</textarea></nowiki>'; break;
-											case 'raw':		$this->result .= $r->getTab($body); break;
-											default: 		$this->result .= $r->toHTML($body); break;
+											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
+											case 'fields':	$this->result .= $r->toFields(); break;
+											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
+											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
+											case 'raw':		$this->result .= $r->getTab(false); break;																			default: 		$this->result .= $r->toHTML(); break;
 										}
 										
 										
@@ -1028,6 +1028,12 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;
+				case 'trace'	   : if (trim($body) == 'off') 
+										unset($tracestart); 
+									 else
+									 	$tracestart = microtime(true); 
+									 break;
+										
 				case 'transaction' :$this->transactionprefix = 'tmp-';
 									$this->transactionerror = '';
 									$this->transactiondict = array();
@@ -1148,6 +1154,14 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Error : '.$line.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
+			}
+			
+			if (isset($tracestart))
+			{
+				$t = floor((microtime(true)-$tracestart)*1000.0);
+				if ($t>0) 
+					$this->result .= $ptag.$t.' '.$line.$ptag2;
+				$tracestart = microtime(true);
 			}
 			
 		}
@@ -2223,6 +2237,14 @@ class swRelation
 			}
 			if (count($d2)>0)
 			{
+				// add empty string for all other fields
+				for($i=0;$i<$c;$i++)
+				{
+					if (!isset($d2[$newcolumns[$i]]))
+						$d2[$newcolumns[$i]] = '';
+				}
+				
+				
 				$tp = new swTuple($d2);
 				$this->tuples[$tp->hash()] = $tp;
 			}
@@ -2478,12 +2500,12 @@ class swRelation
 		
 	}
 	
-	function getTab()
+	function getTab($header=true)
 	{
 		$lines = array();
 		$c = count($this->header);
 		
-		$lines[] = join("\t",$this->header);
+		if ($header) $lines[] = join("\t",$this->header);
 		
 		foreach($this->tuples as $tp)
 		{

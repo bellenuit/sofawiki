@@ -78,12 +78,15 @@ if (swGetArrayValue($_REQUEST,'submitconsolidate',false) || defined("CRON") )
 		$f = str_replace($root,"",$f);
 		if (stristr($f,'deny-')) continue;
 		$f = str_replace(".txt","",$f);
-		if ($dateend < $f) continue;
+		if ($dateend <= $f) continue;
 		$linkwiki= new swWiki;
 		$linkwiki->name = 'Logs:'.$f;
 		$linkwiki->lookup();
 		
-		if (!$linkwiki->visible())
+		// if timestamp is same day, it doesn't count as recorded
+		$ts = substr($linkwiki->timestamp,0,10);
+		
+		if (!$linkwiki->visible() || $ts == $f)
 		{
 			$datestart = $dateend = $f;
 			$savename = 'Logs:'.$f;

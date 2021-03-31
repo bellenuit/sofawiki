@@ -158,5 +158,10 @@ $swSystemDefaults["email-access-ok/es"] = "Ya ha iniciado la sesión";
 $swSystemDefaults["your-email-access-message/es"] = "Ha solicitado acceder al sitio web por correo electrónico. Utilice el siguiente enlace";
 
 
+$swSystemDefaults["results/es"] = "resultados";
+$swSystemDefaults["result/es"] = "resultado";
+$swSystemDefaults["previous/es"] = "anterior";
+$swSystemDefaults["next/es"] = "siguente";
+
 
 ?>

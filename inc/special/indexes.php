@@ -380,7 +380,6 @@ switch($_REQUEST['index'])
 								$swParsedContent .= '<p>filter: '.$results['filter'];
 								$swParsedContent .= '<br>mode: '.$results['mode'];
 								$swParsedContent .= '<br>namespace: '.$results['namespace'];
-								$swParsedContent .= '<br>goodrevisions: '.count($results['goodrevisions']);
 								$bm = $results['bitmap'];
 								$bm2 = $results['checkedbitmap'];
 						        $swParsedContent .= '<br>overtime: '.$results['overtime'];
@@ -414,14 +413,15 @@ switch($_REQUEST['index'])
 								$swParsedContent .= 'count = '.count($list);
 								
 								$i = 0;
+								$lines = array();
 								foreach($list as $k=>$v)
 								{
 							 		//biggest 25 and last 
 							 		$t = filemtime($querypath.$v.'.txt');
-							 		$d = date('Y-m-d',$t);
+							 		$d = date('Y-m-d H:i:s',$t);
 							 		if ($i<25 || time() - $t < 60*60)
 							 		{
-							 				$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'.txt</a> ';
+							 				
 											$results = array();
 											if ($handle = fopen($querypath.$v.'.txt', 'r'))
 											{
@@ -439,11 +439,15 @@ switch($_REQUEST['index'])
 													
 												}
 											}
-											$swParsedContent .= '<br>' .$d.' '.count($results['chunks']).' ch '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
+											$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'.txt</a><br>' .$d.' '.count($results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
+											
 							 		}
 							 		$i++;
 							 		
 								}
+								
+								krsort($lines);
+								$swParsedContent .= join('',$lines);
 								
 							}
 							

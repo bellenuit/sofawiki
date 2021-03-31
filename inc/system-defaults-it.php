@@ -159,7 +159,10 @@ $swSystemDefaults["your-email-access/it"] = "Il tuo link di accesso all'email";
 $swSystemDefaults["email-access-ok/it"] = "Hai effettuato il login";
 $swSystemDefaults["your-email-access-message/it"] = "Hai chiesto di accedere al sito web via email. Usa il seguente link";
 
-
+$swSystemDefaults["results/it"] = "risultati";
+$swSystemDefaults["result/it"] = "risultato";
+$swSystemDefaults["previous/it"] = "precedente";
+$swSystemDefaults["next/it"] = "successivo";
 
 
 

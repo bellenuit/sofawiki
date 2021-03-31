@@ -151,7 +151,10 @@ $swSystemDefaults["ihr-email-zugriff/de"] = "Ihr E-Mail-Zugangslink";
 $swSystemDefaults["email-access-ok/de"] = "Sie sind jetzt eingeloggt";
 $swSystemDefaults["your-email-access-message/de"] = "Sie haben darum gebeten, per E-Mail auf die Website zuzugreifen. Verwenden Sie den folgenden Link.";
 
-
+$swSystemDefaults["results/de"] = "Resultate";
+$swSystemDefaults["result/de"] = "Resultat";
+$swSystemDefaults["previous/de"] = "Vorherige";
+$swSystemDefaults["next/de"] = "Nächste";
 
 
 ?>

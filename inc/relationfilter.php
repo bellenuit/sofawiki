@@ -9,7 +9,7 @@ function swRelationTemplate($n)
 	$wiki->name = 'Template:'.$n;
 	$wiki->lookup();
 	if (!$wiki->revision)
-		throw new swRelationError('Template page does not exist.',87);
+		throw new swRelationError('Template page "'.$n.'" does not exist.',87);
 	return $wiki->content;
 }
 
@@ -185,8 +185,10 @@ function swRelationVirtual($url)
 }
 
 
-function swRelationFilter($filter, $globals = array())
+function swRelationFilter($filter, $globals = array(), $refresh = false)
 {
+	
+	
 	
 	global $swIndexError;
 	global $swMaxSearchTime;
@@ -282,8 +284,8 @@ function swRelationFilter($filter, $globals = array())
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$cachefile = $cachefilebase.'.txt';
 	
-	global $swDebugRefresh;
-	if ($swDebugRefresh)
+	
+	if ($refresh)
 		{ echotime('refresh'); if (file_exists($cachefile)) unlink($cachefile);}
 	
 	$chunks = array();
@@ -394,7 +396,7 @@ function swRelationFilter($filter, $globals = array())
 		// apply namefilter
 		
 		
-		if ($namefilter && $filter != '_name, _revision')
+		if (@$namefilter && $filter != '_name, _revision')
 		{
 			$namerelation = swRelationFilter('_name, _revision', $globals);
 			$tuples = $namerelation->tuples;
@@ -421,8 +423,14 @@ function swRelationFilter($filter, $globals = array())
 		{
 			if (substr($f,0,1)!='_') // _ fields are in header or implicit
 				$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
-			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp','_timestamp')))
-				$bloomlist[] = swNameURL($h);
+			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp','_timestamp','_name','_namespace','_displayname')))
+			{
+				// split words
+				$hlist = explode(' ',$h);
+				//print_r($hlist);
+				foreach($hlist as $elem)
+					$bloomlist[] = swNameURL($elem);
+			}
 		}
 		//print_r($bloomlist);
 		foreach($bloomlist as $v)
@@ -477,7 +485,7 @@ function swRelationFilter($filter, $globals = array())
 					$swOvertime=true;
 					break;
 				}
-				$record = new swRecord;
+				$record = new swWiki;
 				$record->revision = $k;
 				$record->lookup();
 				
@@ -497,8 +505,27 @@ function swRelationFilter($filter, $globals = array())
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
 					$fieldlist['_content'][] = $record->content;
+				
 					
 					$fieldlist['_paragraph'] = explode(PHP_EOL, $record->content);
+					
+					
+					$s = preg_replace("/[0123456789:\/.]/","-", $record->content);
+					
+					  
+					
+					
+					$fieldlist['_word'] = explode('-', swNameURL($s));
+					
+					$fieldlist['_word'] = array_values(array_filter($fieldlist['_word'], function ($var){return strlen($var)>=3;})); 
+					
+				
+					//print_r($fieldlist['_word']);
+					
+					
+					$ns = swNameURL($record->wikinamespace());
+					if ($ns == '') $ns = 'main';
+					$fieldlist['_namespace'][] = $ns;
 					
 					
 					$keys =array_keys($fieldlist);
@@ -537,8 +564,9 @@ function swRelationFilter($filter, $globals = array())
 								$fieldlist2[$fi][$key] = $v[$fi];
 							}
 							for ($fi=count($v);$fi<$maxcount;$fi++)
-							{
-								$fieldlist2[$fi][$key] = $v[count($v)-1];
+							{	
+								if (count($v) > 0)
+									$fieldlist2[$fi][$key] = $v[count($v)-1];
 							}
 						}
 					}
@@ -568,9 +596,17 @@ function swRelationFilter($filter, $globals = array())
 								elseif ($hint != "*")
 								{
 									if(!isset($fieldlist2[$fi][$key])) $found = false;
-									elseif(stripos(swNameURL($fieldlist2[$fi][$key]),swNameURL($hint)) === false)
+									else 
 									{
-										$found = false; 
+										$hlist = explode(' ',$hint);
+										// print_r($hlist);
+										foreach($hlist as $elem)
+										{
+											//echo "<p>".$elem.' '.$fieldlist2[$fi][$key];
+											if (stripos(swNameURL($fieldlist2[$fi][$key]),swNameURL($elem)) === false)
+												$found = false; 
+										}
+										
 									} 
 								}
 							}
@@ -665,10 +701,13 @@ function swRelationFilter($filter, $globals = array())
 				$handle2 = fopen($cachefile, 'w');
 				$header = array();
 				$header['filter'] = $filter;
+				$header['mode'] = 'relation';
 				$header['overtime'] = $overtime ;
 				$header['chunks'] = serialize($chunks);
 				$header['bitmap'] = serialize($bitmap);
 				$header['checkedbitmap'] = serialize($checkedbitmap);
+				$header['bitmapcount'] = $bitmap->countbits();
+				$header['checkedbitmapcount'] = $checkedbitmap->countbits();
 				$row = array('_header'=>$header);
 				swWriteRow($handle2, $row );
 				fclose($handle2);
@@ -748,6 +787,144 @@ function swRelationFilter($filter, $globals = array())
 	
 }
 
+
+function swRelationSearch($term, $start=1, $limit=25, $template="")
+
+{
+
+	
+global $lang;
+$previous = ' <nowiki><a href=\'index.php?action=search&start='.($start-$limit).'&query='.$term.'\'>'.swSystemMessage('previous',$lang).'</a></nowiki>';
+$next = ' <nowiki><a href=\'index.php?action=search&start='.($start+$limit).'&query='.$term.'\'>'.swSystemMessage('next',$lang).'</a></nowiki>';	
+$results = swSystemMessage('results',$lang);
+$results1 = swSystemMessage('result',$lang);
+
+if ($template && $template != 1)
+	$print = '
+project _name, _paragraph
+template "'.$template.'"';
+else
+	$print = '
+if length(trim(_paragraph)) > 0
+	update _name = "* [["._name."]]<br>"
+else
+	update _name = "* [["._name."]]<br>"
+end if
+project _name, _paragraph	
+print raw';
+
+
+global $swSearchNamespaces;
+$namespace = 'main|'.join('|',array_filter($swSearchNamespaces)); // filter removes empty values
+if (trim($namespace)=='main|') $namespace = "main";
+if (stristr($namespace,'*')) $namespace = '.*';
+$namespace = strtolower($namespace);
+	
+$singlequote = "'";
+$q = '
+set v = "'.swSimpleSanitize($term).'"
+
+// find title in name
+filter _namespace, _name v
+extend _paragraph_count = 100
+project _name, _paragraph_count, _namespace
+
+// find title in text
+filter _namespace, _name, _paragraph v
+project _name, _paragraph count, _namespace
+union
+
+// namespaces
+select _namespace regex "'.$namespace.'"
+
+// if there are sublanguage pages, they should add to the score, but only the main page should be linked
+extend _nameint = regexreplace(_name,"\/\w\w","")
+
+// score
+project _nameint, _paragraph_count sum
+rename _nameint _name, _paragraph_count_sum rating
+order rating 9
+
+// add counter
+dup
+project _name count
+set nc = _name_count
+set start = '.$start.'
+set limit = '.$limit.'
+set ende = min(start+limit-1,nc)
+if nc > 1 
+set ncs = start. " - " . ende . " / ". nc 
+else
+set ncs = nc . " '.$results1.'"
+end if
+
+set other = 0
+
+if '.$start.' > 1 
+set ncs = ncs . "'.$previous.'"
+set other = 1
+end if
+
+if '.($start+$limit-1).' < nc 
+set ncs = ncs . "'.$next.'"
+set other = 1
+end if
+
+echo ncs
+
+pop
+
+// show results with interesting paragraph
+limit '.$start.' '.$limit.'
+
+filter _namespace "main", _name, _paragraph v
+extend row = rownumber
+project inline _name, row min
+select row = row_min
+project _name, _paragraph 
+
+join left
+
+// remove wiki styles
+update _paragraph = trim(nowiki(_paragraph))
+
+// create a query to be split
+set v = v ." "
+set c = length(v)
+set i = 1
+set l = 0
+
+// set query in paragraph bold
+while i < c
+if substr(v,i,1) == " "
+if i > l
+set s = substr(v,l,i-l)
+update _paragraph = regexreplacemod(_paragraph,s,"'.$singlequote.$singlequote.$singlequote .'".s."'.$singlequote.$singlequote.$singlequote .'","i")
+end if
+set l = i + 1
+end if
+set i = i + 1
+end while
+
+'.$print.'
+
+
+echo " "
+echo ncs
+
+// print
+
+echo " "';
+
+
+
+
+$lh = new swRelationLineHandler;
+
+return $lh->run($q);
+
+
+}
 
 
 ?>

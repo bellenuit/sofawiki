@@ -3,12 +3,13 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.1.2';  
+$swVersion = '3.2.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
 $swLangURL = false;
 $swOldStyle = false;
+$swOldSearch = true;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
 
@@ -74,6 +75,7 @@ include_once $swRoot.'/inc/functions/familyname.php';
 include_once $swRoot.'/inc/functions/htmltabletofields.php';
 include_once $swRoot.'/inc/functions/system.php';
 include_once $swRoot.'/inc/functions/fields.php';
+include_once $swRoot.'/inc/functions/schedule.php';
 include_once $swRoot.'/inc/functions/relation.php';
 
 

@@ -19,20 +19,27 @@ class swNoWikiParser extends swParser
 		
 		$s = $wiki->parsedContent;
 		
-		//echo "<nowiki><pre>NOWIKI: ".$s."</pre></nowiki>";
+		// echo "<nowiki><pre>NOWIKI: ".$s."</pre></nowiki>";
 		
 		$s = str_replace('{{}}','',$s);
 		
 		if (substr($s,0,strlen("#DISPLAYNAME"))=="#DISPLAYNAME")
 		{
 			$pos = strpos($s,"\n");
-			$s = substr($s,$pos+1);
+			if ($pos==0)
+				$s = '';
+			else
+				$s = substr($s,$pos+1);
 		}
-		
+				
 		if (substr($s,0,strlen("#CACHE"))=="#CACHE")
 		{
 			$pos = strpos($s,"\n");
-			$s = substr($s,$pos+1);
+			if ($pos==0)
+				$s = '';
+			else
+				$s = substr($s,$pos+1);
+
 		}
 		
 		// remove templates and images

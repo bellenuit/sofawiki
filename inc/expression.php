@@ -107,6 +107,7 @@ class swExpression
 		$this->functions[] = new XPLower;
 		$this->functions[] = new XPRegex;
 		$this->functions[] = new XPRegexReplace;
+		$this->functions[] = new XPRegexReplaceMod;
 		$this->functions[] = new XPReplace;
 		$this->functions[] = new XPSubstr;
 		$this->functions[] = new XPUpper;
@@ -122,6 +123,8 @@ class swExpression
 		$this->functions[] = new XPSQLtoSeconds;
 		
 		$this->functions[] = new XPFormat;
+		
+		$this->functions[] = new XpNowiki;
 
 		$this->expectedreturn = 1 ;
 
@@ -1870,6 +1873,22 @@ class XPregexreplace extends swExpressionFunction
 	}
 }
 
+class XPregexreplaceMod extends swExpressionFunction
+{
+	function __construct() { $this->arity = 4; $this->label = ':regexreplacemod' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 4) throw new swExpressionError('Stack < 4',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		$c = array_pop($stack);	
+		$d = array_pop($stack);	
+		// echo "a $a<br> b $b<br> c $c<br> d $d";
+		$stack[] = preg_replace('/'.$c.'/'.$a,$b,$d);		
+	}
+}
+
+
 class XPreplace extends swExpressionFunction
 {
 	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
@@ -2065,6 +2084,26 @@ class XpFormat extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = floatval(array_pop($stack));	
 		$stack[] = swNumberformat($b,$a);		
+	}
+}
+
+class XpNowiki extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':nowiki' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 1) throw new swExpressionError('Stack < 1',101);
+		$a = array_pop($stack);
+		
+		$w = new swWiki;
+		$w->parsedContent = $a;
+		$p = new swNoWikiParser;
+		$p->dowork($w);
+		$a = $w->parsedContent;
+		
+		
+			
+		$stack[] = $a;		
 	}
 }
 

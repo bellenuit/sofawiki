@@ -158,5 +158,10 @@ $swSystemDefaults["your-email-access/dk"] = "Your Email Acccess Link";
 $swSystemDefaults["email-access-ok/dk"] = "You are now logged in";
 $swSystemDefaults["your-email-access-message/dk"] = "You have asked to access the website by email. Use the following link.";
 
+$swSystemDefaults["results/dk"] = "resultader";
+$swSystemDefaults["result/dk"] = "resultat";
+$swSystemDefaults["previous/dk"] = "tidligere";
+$swSystemDefaults["next/dk"] = "næste"
+
 
 ?>

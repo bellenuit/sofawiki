@@ -13,6 +13,8 @@ $urlquery = swNameURL($query);
 
 $found = false;
 
+if ($swOldSearch) {
+
 if (isset($swQuickSearchRedirect) && $swQuickSearchRedirect && !isset($_REQUEST['allresults']))
 {
 	$wiki = new swWiki; //must be global wiki to be parsed by functions
@@ -343,6 +345,14 @@ if (!$found)
 }
 
 if ($query == '') $swParsedContent = swSystemMessage('query-is-empty-error',$lang);
+
+}
+else
+{
+	$start = 1; if (isset($_REQUEST['start'])) $start = $_REQUEST['start'];
+	$swParsedContent = swRelationSearch($query,$start,25, @$swSearchTemplate); $swParseSpecial = true;
+	
+}
 
 if (isset($swParseSpecial))
 {

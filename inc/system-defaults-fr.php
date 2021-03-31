@@ -161,7 +161,10 @@ $swSystemDefaults["email-access-ok/fr"] = "Vous êtes maintenant connecté" ;
 $swSystemDefaults["your-email-access-message/fr"] = "Vous avez demandé à accéder au site web par courrier électronique. Utilisez le lien suivant" ;
 
 
-
+$swSystemDefaults["results/fr"] = "résultats";
+$swSystemDefaults["result/fr"] = "résultat";
+$swSystemDefaults["previous/fr"] = "précédent";
+$swSystemDefaults["next/fr"] = "suivant";
 
 
 

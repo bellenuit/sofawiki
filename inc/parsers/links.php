@@ -57,6 +57,7 @@ class swLinksParser extends swParser
 			// ignore fields
 			if (stristr($val,"::")) continue; // internal variables
 			
+			$linkwiki = new swWiki();
 			
 			// handle the rest of the links
 			if ($v[2] == "|") // pipe
@@ -65,8 +66,12 @@ class swLinksParser extends swParser
 					$label = $v[3];
 				else
 				{	// pipe trick
-					$label = preg_replace("@(.*):+(.*)@", "$2", $val);  // remove namespace
+					$linkwiki->name = $val;
+					$linkwiki->lookup(true);
+					$label = $linkwiki->getdisplayname();
+					$label = preg_replace("@(.*):+(.*)@", "$2", $label);  // remove namespace
 					$label = preg_replace("@(.*)\(+(.*)@", "$1", $label); // remove label
+					$label = trim($label);
 				}
 			}
 			else
@@ -77,7 +82,7 @@ class swLinksParser extends swParser
 			
 			$val0 = $val;
 			
-			$linkwiki = new swWiki();
+			
 			
 			if (substr($val,0,8) == "Special:")
 			{

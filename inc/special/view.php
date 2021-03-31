@@ -7,7 +7,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 if ($user->hasright("view", $wiki->name))
 {
-	
+			
 	$wiki->lookupLocalName();
 	$wiki->lookup(); 
 	if ($wiki->error)
@@ -77,7 +77,7 @@ else
 	
 	if (!$hookresult)
 	{
-		if (!$swError) $swError = swSystemMessage("no-access-error",$lang);
+		$swError = swSystemMessage("no-access-error",$lang);
 		$swFooter = "";
 	}
 }

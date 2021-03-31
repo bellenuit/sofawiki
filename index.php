@@ -606,6 +606,10 @@ switch ($action)
 				 	 break;
 	case 'resetpassword':    include 'inc/special/resetpassword.php';
 				 	 break;
+	case 'emailaccess':    include 'inc/special/emailaccess.php';
+				 	 break;
+	case 'askemailaccess':    include 'inc/special/askemailaccess.php';
+				 	 break;
 
 	case 'logout':   $swParsedName = 'Logout';
 					 $swParsedContent = swSystemMessage('you-have-logged-out',$lang);

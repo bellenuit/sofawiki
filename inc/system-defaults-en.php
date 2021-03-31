@@ -156,5 +156,9 @@ $swSystemDefaults["your-email-access/en"] = "Your Email Acccess Link";
 $swSystemDefaults["email-access-ok/en"] = "You are now logged in";
 $swSystemDefaults["your-email-access-message/en"] = "You have asked to access the website by email. Use the following link.";
 
+$swSystemDefaults["results/en"] = "results";
+$swSystemDefaults["result/en"] = "result";
+$swSystemDefaults["previous/en"] = "previous";
+$swSystemDefaults["next/en"] = "next";
 
 ?>
