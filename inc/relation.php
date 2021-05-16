@@ -207,6 +207,21 @@ class swRelationLineHandler
 										$this->stack[]=$r;
 									}
 									break;
+				case 'delegate':	if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									$xp = new swExpression($this->functions);
+									$xp->compile($body);
+									$tx = $xp->evaluate($dict);
+									$txs = explode(' ',$tx);
+									$tx0 = array_shift($txs);
+									$tx = join(' ',$txs);
+									$this->result .= '{{'.$tx0.'|';
+									$this->result .= $r->getCSV();
+									$this->result .= '|'.$tx.' }}';
+									break;
 				case 'deserialize': if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Deserialize Stack empty'.$ptagerrorend.$ptag2;
@@ -369,9 +384,8 @@ class swRelationLineHandler
 									}
 									break;	
 				case 'filter':		$gl = array_merge($this->globals,$locals);
-									$gl = array_merge($gl,$dict);
-									global $swDebugRefresh;
-									$r = swRelationFilter($body,$gl,$swDebugRefresh);
+									
+									$r = swRelationFilter($body,$gl);
 									$this->stack[] = $r;
 									break;				
 				case 'format':		if (count($this->stack)<1)
@@ -663,13 +677,17 @@ class swRelationLineHandler
 										
 										// nowiki seems not to break on newlines.
 										
+										
+										
 										switch(trim($body))
 										{
 											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
 											case 'fields':	$this->result .= $r->toFields(); break;
 											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
 											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
-											case 'raw':		$this->result .= $r->getTab(false); break;																			default: 		$this->result .= $r->toHTML(); break;
+											case 'raw':		$this->result .= $r->getTab(); break;
+											default: 		// pass limit as parameter
+															$this->result .= $r->toHTML($body); break;
 										}
 										
 										
@@ -1028,12 +1046,6 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;
-				case 'trace'	   : if (trim($body) == 'off') 
-										unset($tracestart); 
-									 else
-									 	$tracestart = microtime(true); 
-									 break;
-										
 				case 'transaction' :$this->transactionprefix = 'tmp-';
 									$this->transactionerror = '';
 									$this->transactiondict = array();
@@ -1154,14 +1166,6 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Error : '.$line.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
-			}
-			
-			if (isset($tracestart))
-			{
-				$t = floor((microtime(true)-$tracestart)*1000.0);
-				if ($t>0) 
-					$this->result .= $ptag.$t.' '.$line.$ptag2;
-				$tracestart = microtime(true);
 			}
 			
 		}
@@ -2237,14 +2241,6 @@ class swRelation
 			}
 			if (count($d2)>0)
 			{
-				// add empty string for all other fields
-				for($i=0;$i<$c;$i++)
-				{
-					if (!isset($d2[$newcolumns[$i]]))
-						$d2[$newcolumns[$i]] = '';
-				}
-				
-				
 				$tp = new swTuple($d2);
 				$this->tuples[$tp->hash()] = $tp;
 			}
@@ -2369,7 +2365,7 @@ class swRelation
 				$test = $tp->value($f);
 				if (array_key_exists($f,$this->formats))
 				{
-					$fm = $this->formats($f);
+					$fm = $this->format1($f);
 					if ($fm != '')
 						$test = $this->format2($floatval($test),$fm);
 				}
@@ -2500,12 +2496,12 @@ class swRelation
 		
 	}
 	
-	function getTab($header=true)
+	function getTab()
 	{
 		$lines = array();
 		$c = count($this->header);
 		
-		if ($header) $lines[] = join("\t",$this->header);
+		$lines[] = join("\t",$this->header);
 		
 		foreach($this->tuples as $tp)
 		{
@@ -2632,6 +2628,7 @@ class swRelation
 	
 	function toHTML($limit = 0)
 	{
+		
 		$lines = array();
 		$lines[]= '{| class="print" ';
 		
