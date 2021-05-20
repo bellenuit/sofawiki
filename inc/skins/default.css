@@ -169,6 +169,21 @@ table.datatable
 	margin-bottom: 5px;
 }
 
+.sortable th
+{
+    cursor: pointer;
+}
+
+input.sortable
+{
+	width: calc(100% - 7px);
+	border: 1px solid black;
+	padding-left: 5px;
+	padding-right: 0px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
 
 td { vertical-align: top;  width: 50% }
 

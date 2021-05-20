@@ -686,6 +686,7 @@ class swRelationLineHandler
 											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
 											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
 											case 'raw':		$this->result .= $r->getTab(); break;
+											case 'grid':		$this->result .= $r->toHTML('grid'); break;
 											default: 		// pass limit as parameter
 															$this->result .= $r->toHTML($body); break;
 										}
@@ -2628,9 +2629,32 @@ class swRelation
 	
 	function toHTML($limit = 0)
 	{
+		$grid = false;
+		
+		
+		
+		if (substr($limit,0,4) == 'grid')
+		{
+			$limit = substr($limit,4);
+			// $limit = '';
+			$grid = true;
+		}
 		
 		$lines = array();
-		$lines[]= '{| class="print" ';
+		
+		$id = floor(rand(0,10000));
+		
+		
+		if ($grid)
+		{
+			$lines[] = '<nowiki><div><input type="text" id="input'.$id.'" class="sortable" onkeyup="tablefilter('.$id.')" placeholder="Filter..." title="Type in a name"></div></nowiki>';
+
+		}
+		
+		if ($grid)
+			$lines[]= '{| class="print sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
+		else
+			$lines[]= '{| class="print" ';
 		
 		$k = count($this->header);
 		
@@ -2661,8 +2685,9 @@ class swRelation
 		$i = 0;
 		foreach($this->tuples as $tp)
 		{
-			if ($i<$i0) { $i++; continue;}
-			if ($i>=$c) continue; 
+			// if ($i<$i0) { $i++; continue;}
+			if ($i>=$c && !$grid) continue; 
+			// if ($i>=$c) continue; 
 			$i++;
 			
 			$fields = array();
@@ -2683,12 +2708,19 @@ class swRelation
 				if ($t==='')  $t = ' ';  // empty table cell would collapse
 				$fields[]=$td.$t;				
 			}
+			
 			$line = '| '.join(' || ',$fields);
-			$lines[] = '|-';
+			
+			if ($i>$c && $grid) 
+				$lines[] = '|- style="display: none"';
+		    else
+		    $lines[] = '|-';
 			$lines[] = $line.' '; // add space to force line not to be empty
 		}
 		$lines[] = '|-';
 		$lines[] = '|}';
+		if ($grid)
+			$lines[] = '<nowiki><script src="inc/skins/table.js"></script></nowiki>';
 		$result = PHP_EOL.join(PHP_EOL,$lines).PHP_EOL;
 		return $result;
 		

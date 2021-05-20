@@ -40,6 +40,7 @@ class swExpression
 		$this->operators[] =  new swExpressionOperator('<=', ':len',2,6,'L');
 		
 		$this->operators[] =  new swExpressionOperator('regex', ':regex',2,5,'L');
+		$this->operators[] =  new swExpressionOperator('regexi', ':regexi',2,5,'L');
 		$this->operators[] =  new swExpressionOperator('==', ':eqs',2,5,'L');
 		$this->operators[] =  new swExpressionOperator('!==', ':nes',2,5,'L');
 		$this->operators[] =  new swExpressionOperator('>>', ':gts',2,5,'L');
@@ -106,6 +107,7 @@ class swExpression
 		$this->functions[] = new XPLength;
 		$this->functions[] = new XPLower;
 		$this->functions[] = new XPRegex;
+		$this->functions[] = new XPRegexi;
 		$this->functions[] = new XPRegexReplace;
 		$this->functions[] = new XPRegexReplaceMod;
 		$this->functions[] = new XPReplace;
@@ -1859,6 +1861,20 @@ class XPregex extends swExpressionFunction
 		else $stack[] = '0';
 	}
 }
+
+class XPregexi extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':regexi' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if (preg_match('/'.$a.'/i',$b)) $stack[] = '1';
+		else $stack[] = '0';
+	}
+}
+
 
 class XPregexreplace extends swExpressionFunction
 {
