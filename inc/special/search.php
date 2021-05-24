@@ -350,7 +350,7 @@ if ($query == '') $swParsedContent = swSystemMessage('query-is-empty-error',$lan
 else
 {
 	$start = 1; if (isset($_REQUEST['start'])) $start = $_REQUEST['start'];
-	$swParsedContent = swRelationSearch($query,$start,25, @$swSearchTemplate); $swParseSpecial = true;
+	$swParsedContent = swRelationSearch($query,$start,500, @$swSearchTemplate); $swParseSpecial = true;
 	
 }
 

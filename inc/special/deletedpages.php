@@ -23,17 +23,39 @@ foreach($deleted as $rev)
 		$w->lookup();
 		$url = swNameURL($w->name);
 		if ($w->name != '')
-			$list[$url] = '<li><a class="invalid" href="index.php?action=edit&revision='.$rev.'">'.$w->name.'</a></li>' ;
+			$list[$url] = '"'."&lt;nowiki>&lt;a class='invalid' href='index.php?action=history&revision=".$rev."'>".$w->name."&lt;/a>&lt;/nowiki>".'"' ;
 	}
 
 }
 ksort($list);
-$swParsedContent .= join(' ',$list);
 
-$swParsedContent .= '</ul>';
+$data = join(PHP_EOL,$list);
 
 
-$swParseSpecial = false;
+
+$q = '
+relation deleted
+data
+'.$data.'
+end data
+label deleted ""
+print grid
+';
+
+
+
+$lh = new swRelationLineHandler;
+$s = str_replace("&lt;","<",$lh->run($q));
+$swParsedContent .= $s;
+$swParseSpecial = true;
+
+
+// $swParsedContent .= join(' ',$list);
+
+// $swParsedContent .= '</ul>';
+
+
+// $swParseSpecial = false;
 
 
 ?>

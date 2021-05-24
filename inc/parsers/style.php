@@ -102,12 +102,29 @@ class swStyleParser extends swParser
 											}
 											
 											break;
-								case "!":	if ($currentcell != "") 
-												$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
-											$currentcell = str_replace(" !! ","</th><th>",substr($line,2));
-											$currentcelltag = "th";
-											break;
-							 
+								case "!":									
+											$cells = explode(" !! ", substr($line,2));
+											foreach ($cells as $cell)
+											{
+												if ($currentcell !="")
+													$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
+												
+												$currentcelltag = "th";
+												$t = strpos($cell," | ");
+												if ($t>0)
+												{
+													$currentcellstyle = " ".substr($cell,0,$t);
+													$currentcell = substr($cell,$t+3);
+												}
+												else
+												{
+													$currentcell = $cell;
+													$currentcellstyle = "";
+												}	
+											
+											}
+											
+											break;							 
 								default :  $currentcell .= "<br>$line";
 							
 							}

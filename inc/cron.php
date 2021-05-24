@@ -19,7 +19,10 @@ function swCron()
 	}
 	else
 	{
-		switch(rand(0,50))
+		
+		$r = rand(0,50);
+		
+		switch($r)
 		{
 			case 0: echotime('cron index'); $db->init(true); return 'cron index'; // rebuild indexes 
 						

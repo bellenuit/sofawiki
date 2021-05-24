@@ -99,6 +99,13 @@ class swNoWikiParser extends swParser
         
         // hr
        	$s = str_replace("----", " ", $s);
+       	
+       	
+       	// remove templates
+		$s = preg_replace("/{{.+?}}/", "", $s);
+       	
+       	// remove tags
+		$s = preg_replace("/<\/?code.+?>/", "", $s);
 
 		
 		$wiki->parsedContent = $s;

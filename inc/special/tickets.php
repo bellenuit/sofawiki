@@ -18,9 +18,13 @@ $ticketaction = (array_key_exists('ticketaction', $_REQUEST) ? $_REQUEST['ticket
 $swParsedContent = '<nowiki><a href="index.php?name=special:tickets&ticketaction=new">New Ticket</a> <a href="index.php?name=special:tickets&status=open">Open Tickets</a> <a href="index.php?name=special:tickets&assigned='.$username.'">My Tickets</a> <a href="index.php?name=special:tickets&status=resolved">Resolved tickets</a> <a href="index.php?name=special:tickets&status=closed">Closed tickets</a>	<a href="index.php?name=special:tickets&ticketaction=activity">Activity</a> <a href="index.php?name=special:tickets&ticketaction=help">Help</a></nowiki>';
 
 $priorities = array('1 high', '2 normal', '3 low');
-$tuples = swQuery(array('SELECT _name FROM User: WHERE _special == special'));
 
-foreach($tuples as $t) $ticketusers[]=substr($t['_name'],strlen('user:'));
+$table = swRelationToTable('filter _namespace "user", _name, _special "special"
+project _name');
+
+// print_r($table);
+
+foreach($table as $t) { $ticketusers[]=substr($t['_name'],strlen('user:')); }
 foreach($powerusers as $p) $ticketusers[]=$p->username;
 
 $mytickets = true;
@@ -41,9 +45,14 @@ if (isset($_POST['submitopen']))
 {
 
 	//find next id
-	$tuples = swQuery(array('SELECT _name, id FROM Ticket:', 'GROUP id MAX'));
-	$row = @array_pop($tuples);
-	$id = @$row['id-max']+1;
+	$q = 'filter _namespace "ticket", id
+project id max
+print raw';
+	$s = $lh->run($q);
+	$s = explode(PHP_EOL,$s); // tab format
+	array_shift($s); // header;
+	
+	$id = @$s[0]+1;
 	
 	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
 
@@ -266,7 +275,9 @@ if ($ticketaction == 'new')
 if ($ticketaction == 'activity')
 {
 
-		$lines = swQuery(array('SELECT activity, id FROM Ticket:','ORDER activity DESC'));
+		$lines = swRelationToTable('filter _namespace "ticket", activity, id
+order activity z');
+
 		$i=0;
 		$swParsedContent .= "\n".'===Activity===';
 		foreach($lines as $line)
@@ -296,7 +307,10 @@ if ($ticketaction == 'help')
 
 if ($status)
 {
-		$lines = swQuery(array('SELECT id, title, priority, assigned FROM Ticket: WHERE status == '.$status, 'ORDER priority, id DESC'));
+		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, assigned, status "'.$status.'"
+order priority, id 9');
+		
+
 		$i=0;
 		switch($status)
 		{
@@ -321,8 +335,8 @@ if ($mytickets) $assigned = $username; // default
 
 if ($assigned && !$id)
 {
-		
-		$lines = swQuery(array('SELECT id, title, priority, status FROM Ticket: WHERE assigned == '.$assigned, 'WHERE status == open', 'ORDER priority, id DESC'));
+		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, assigned "'.$assigned.'"
+order priority, id 9');
 		$i=0;
 		$swParsedContent .= "\n".'===Tickets assigned to '.$assigned.'===';
 		foreach($lines as $line)

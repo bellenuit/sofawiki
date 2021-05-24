@@ -385,7 +385,9 @@ class swRelationLineHandler
 									break;	
 				case 'filter':		$gl = array_merge($this->globals,$locals);
 									
-									$r = swRelationFilter($body,$gl);
+									global $swDebugRefresh;
+									
+									$r = swRelationFilter($body,$gl,$swDebugRefresh);
 									$this->stack[] = $r;
 									break;				
 				case 'format':		if (count($this->stack)<1)
@@ -622,6 +624,9 @@ class swRelationLineHandler
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
 										$r->functions = $this->functions;
+										
+										
+										
 										//$r->locals = $locals;
 										$r->limit($body);
 										$this->stack[] = $r;
@@ -686,7 +691,7 @@ class swRelationLineHandler
 											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
 											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
 											case 'raw':		$this->result .= $r->getTab(); break;
-											case 'grid':		$this->result .= $r->toHTML('grid'); break;
+											
 											default: 		// pass limit as parameter
 															$this->result .= $r->toHTML($body); break;
 										}
@@ -762,8 +767,13 @@ class swRelationLineHandler
 										$r->globals = $dict;
 										$r->functions = $this->functions;
 										//$r->locals = $locals;
+										
+										
+										
 										$r->project($body);
 										$this->stack[] = $r;
+										
+										//echo "project"; print_r($r);
 									}
 									break;	
 				case 'read':		$r = new swRelation('',$locals,$dict);
@@ -1444,7 +1454,10 @@ class swRelation
 					unset($this->tuples[$tp->hash()]);
 			}
 			else
+			{
+				
 				throw new swRelationError('Difference different columns',302);
+			}
 			
 		}
 		
@@ -2237,11 +2250,17 @@ class swRelation
 				switch($stats[$i])
 				{
 					case 'count' : $d2[$newcolumns[$i]] = 0; break;
-					case 'sum' : $d2[$newcolumns[$i]] = 0; break;
+					case 'sum' : $d2[$newcolumns[$i]] = 0;  break;
 				}
 			}
 			if (count($d2)>0)
 			{
+				// we need to add all other columns too, with empty values
+				foreach($newcolumns as $nc)
+				{
+					if (!isset($d2[$nc])) $d2[$nc] = '';
+				}
+				
 				$tp = new swTuple($d2);
 				$this->tuples[$tp->hash()] = $tp;
 			}
@@ -2629,7 +2648,10 @@ class swRelation
 	
 	function toHTML($limit = 0)
 	{
+				
 		$grid = false;
+		$edit = '';
+		$editfile = '';
 		
 		
 		
@@ -2639,11 +2661,43 @@ class swRelation
 			// $limit = '';
 			$grid = true;
 		}
+		elseif (substr($limit,0,4) == 'edit')
+		{
+			
+			$edit = ' contenteditable ';
+			$grid = true;
+			$editfile = substr($limit,4);
+			
+			$xp = new swExpression($this->functions);
+			$xp->compile($editfile);
+			$dict = array();
+			$editfile = $xp->evaluate($dict);	
+			$limit = '';
+		}
+
+		
+		
 		
 		$lines = array();
+		global $name;
+		global $q;
 		
 		$id = floor(rand(0,10000));
 		
+		if ($edit)
+		{
+			$lines[] = '<nowiki><form id="form'.$id.'" method="post" action="index.php" file="'.$editfile.'" target="_blank"><input type="submit" id="submit'.$id.'" value="Code" disabled>'
+			. '<input type="hidden" name="name" value="special:relation">'
+			. '<textarea name="q" style="display:none">'.$this->getCSV().'</textarea>'
+			. '</form></nowiki>';
+		}
+		
+		/*
+		if ($grid && $limit)
+		{
+			$lines[] = '<nowiki><button>Up</button><button>Down</button></nowiki>';
+		}
+		*/
 		
 		if ($grid)
 		{
@@ -2652,21 +2706,34 @@ class swRelation
 		}
 		
 		if ($grid)
-			$lines[]= '{| class="print sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
+			$lines[]= '{| class="sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
 		else
 			$lines[]= '{| class="print" ';
 		
 		$k = count($this->header);
 		
-		$ls = array();
+		$line = '';
 		foreach($this->header as $f)
 		{
 			if (isset($this->labels[$f]))
-				$ls[] = $this->labels[$f];
+				$ls = $this->labels[$f];
 			else
-				$ls[] = $f;
+				$ls = $f;
+			
+			if (@$this->formats[$f])
+			{
+				$td = ' class="numberformat" | '; 				
+			}
+			else
+			{
+				$td = '';
+			}
+				
+			if ($line) $line .= ' !! '.$td.$ls;
+			
+			else  $line = '! '.$td.$ls;
 		}
-		$line = '! '.join(' !! ',$ls);
+		//$line = '! '.join(' !! ',$ls);
 		$lines[]= '|-';
 		$lines[]= $line;
 		
@@ -2704,7 +2771,15 @@ class swRelation
 						$t = $this->format2($t,$fm);
 						$td = ' class="numberformat" | '; 						
 					}
-				}			
+				}
+				if ($edit && $td)
+				{
+					$td = $edit.$td;
+				}
+				elseif ($edit)
+				{
+					$td = $edit.' | ';
+				}		
 				if ($t==='')  $t = ' ';  // empty table cell would collapse
 				$fields[]=$td.$t;				
 			}
@@ -2902,7 +2977,11 @@ class swRelation
 			if ($tp->sameFamily($e))
 				$this->tuples[$tp->hash()] = $tp;
 			else
+			{
+				//print_r($this);
+				//print_r($r);
 				throw new swRelationError('Union different columns',302);
+			}
 		}
 	}
 	
@@ -3017,11 +3096,14 @@ class swTuple
 	
 	function sameFamily($t)
 	{
-		if ($this->arity() != $t->arity()) return false;
+		if ($this->arity() != $t->arity()) {  return false; }
 		foreach($this->pfields as $k=>$e)
 		{
 			if (!array_key_exists($k, $t->pfields)) 
+			{
+				//echo $k;	
 				return false;
+			}
 		}
 		return true;
 	}
@@ -3232,6 +3314,16 @@ class swAccumulator
 		return cText12($acc);
 	}
 	
+	private function pFirst()
+	{
+		return array_shift($this->list);
+	}
+
+	private function pLast()
+	{
+		return array_pop($this->list);
+	}
+
 	function reduce()
 	{
 		switch ($this->method)
@@ -3247,6 +3339,8 @@ class swAccumulator
 			case 'medians'  :	return $this->pMedianS();
 			case 'stddev'  	:	return $this->pStdev();
 			case 'concat'  	:	return $this->pConcat();
+			case 'first'  	:	return $this->pFirst();
+			case 'last'  	:	return $this->pLast();
 			case 'custom'  	:	return $this->pCustom();
 		}
 	}
@@ -3371,6 +3465,42 @@ function cText12($d)
 	
 	return $s;
 	
+}
+
+function swRelationToTable($q)
+{
+	$lh = new swRelationLineHandler;
+	$s = $lh->run($q.PHP_EOL.'print raw'); 
+	
+	// '<div class="relation">'.
+	// '</div>'
+	
+	$s = substr($s,strlen('<div class="relation">'));
+	$s = substr($s,0,-strlen('</div>'));
+	
+	
+	// echo urlencode($s);
+
+	$lines = explode(PHP_EOL,$s); // $lines
+
+	$header = array_shift($lines);
+	
+	// print_r($header);
+	
+	$fields = explode("\t",$header);
+	
+	
+	$result = array();
+	$i = 0;
+	foreach($lines as $line)
+	{
+		$linefields = explode("\t",$line);
+		// print_r($linefields);
+		foreach($fields as $field)
+			$result[$i][$field] = array_shift($linefields);
+		$i++;
+	}
+	return $result;
 }
 
 

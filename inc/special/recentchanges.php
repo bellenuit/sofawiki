@@ -14,9 +14,9 @@ $item = new swWiki;
 $now = date("Y-m-d H:i:s",time()-60*60*24*30);
 $lastrevisiontime = date("Y-m-d H:i:s",time());
 
-for ($r = $last; $r > $last - 100 && $r>0; $r--)
+for ($r = $last; $r > $last - 200 && $r>0; $r--)
 {
-	if ($i>50 && $lastrevisiontime<$now) continue;
+	if ($i>100 && $lastrevisiontime<$now) continue;
 	
 	$item = new swWiki;
 	$item->revision = $r;

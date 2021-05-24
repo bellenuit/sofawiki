@@ -127,6 +127,7 @@ class swExpression
 		$this->functions[] = new XPFormat;
 		
 		$this->functions[] = new XpNowiki;
+		$this->functions[] = new XpResume;
 
 		$this->expectedreturn = 1 ;
 
@@ -2105,7 +2106,7 @@ class XpFormat extends swExpressionFunction
 
 class XpNowiki extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':nowiki' ;}
+	function __construct() { $this->arity = 1; $this->label = ':nowiki' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',101);
@@ -2120,6 +2121,22 @@ class XpNowiki extends swExpressionFunction
 		
 			
 		$stack[] = $a;		
+	}
+}
+
+class XpResume extends swExpressionFunction
+{
+	function __construct() { $this->arity = 3; $this->label = ':resume' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 3) throw new swExpressionError('Stack < 3',101);
+		
+		
+		$raw = array_pop($stack);
+		$length = array_pop($stack);
+		$s = array_pop($stack);
+			
+		$stack[] = swResumeFromtext($s,$length,$raw);		
 	}
 }
 

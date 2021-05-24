@@ -12,18 +12,29 @@ function swSitemap()
 		global $db;
 		global $swBaseHrefFolder;
 		
+		echo "sitemap1";
+		
 		if (!$swCreateSitemap) return;
+		
+		echo "sitemap2";
 			
 		$swMaxOverallSearchTime /= 40;
+		
+		$table = swRelationToTable('filter _namespace "main", _name _short
+select _short not (regex "^#REDIRECT")
+project _name
+order _name a
+');
+		
 	
-		$filter = 'SELECT _name WHERE _content !=* #REDIRECT';
-		$swMaxOverallSearchTime *= 40;
-		$revisions = swFilter($filter,'','query');
+		// $filter = 'SELECT _name WHERE _content !=* #REDIRECT';
+		// $swMaxOverallSearchTime *= 40;
+		// $revisions = swFilter($filter,'','query');
 		
 		$resultlist []= '<?xml version="1.0" encoding = "UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">';
 		
-		foreach ($revisions as $row)
+		foreach ($table as $row)
 		{
 			$url = swNameURL($row['_name']);
 			
@@ -45,7 +56,8 @@ function swSitemap()
 	
 	global $swRoot;
 	$file = $swRoot.'/sitemap.xml';
-	if ($handle = fopen($file, 'w')) { fwrite($handle, $result); fclose($handle); }
+	unlink($file);
+	if ($handle = fopen($file, 'c')) { fwrite($handle, $result); fclose($handle); }
 	else { echo swException('Write error sitemap'); $error = 'Write error sitemap';  return; }
 
 }

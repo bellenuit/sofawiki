@@ -187,7 +187,17 @@ function swRelationVirtual($url)
 
 function swRelationFilter($filter, $globals = array(), $refresh = false)
 {
-	
+	// Filter syntax: field hint? (, field hint?)*
+	// Fields can be all normal fields and all internal fields
+	// Some special internal fields: _namespace, _word, paragraph
+	// Wildcard field * can be used, if at least one field has a hint (else it would return the entire website
+	// Hints can be expressions
+	// Without hint, the fields is always included in the result even if it does not exist
+	// With a wildcard hint *, the field must be present
+	// With a text hint, the url-version of the hint must be present in the url-version of the field
+	// If the hint as spaces, all words must be present, but not necessarily in that order (AND)
+	// If the hint has pipes, at least one of the part must be present (OR)
+	// If a fields is present multiple times, there are multiple results. Fields with less occurences are padded
 	
 	
 	global $swIndexError;
@@ -216,6 +226,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$fields = array(); 
 	$getAllFields = false;
 	$newpairs = array();
+	$namefilter	= nulL;
+	$namespacefilter = nulL;
 	foreach($pairs as $p)
 	{
 		
@@ -227,32 +239,63 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (count($elems)>0)
 		{
 			$h = join(' ',$elems); 
+			
+			$xp = new swExpression();
+			$xp->compile($h);
+			$h = $xp->evaluate($globals);
+			
+			/*
 			if (substr($h,0,1) != '"' && substr($h,-1,1) != '"')
 			{
-				$h = '"'.$globals[$h].'"';
+				$h = '"'.@$globals[$h].'"';
 			}
 			elseif (substr($h,0,1) != '"')
 				throw new swExpressionError('filter missing start quote '.$f,88);
 			elseif (substr($h,-1,1) != '"')
 				throw new swExpressionError('filter missing end quote '.$f,88);
 			$h = substr($h,1,-1);
+			*/
+			
 			if ($h=="") $h = '*';
 		}
 		if ($f == '*')	
 			$getAllFields = true;
+		elseif ($h == '*')
+		{
+			$hors2 = $fields[$f] = "*";
+		}
 		else	
-			$fields[$f] = $h;
-		
+			// make each individual url but keep spaces as separator
+		{
+			$hors = explode('|',$h);
+			$hors2 = array();
+			foreach ($hors as $hor)
+			{
+				$hands = explode(' ',$hor);
+				$hands2 = array();
+				
+				//print_r($hands2);
+				
+				foreach($hands as $hand)
+				{
+					$hands2[] = swNameURL($hand);
+				}
+				
+				$hors2[] = $hands2;
+			}
+			$fields[$f] = $hors2;
+		}	
 		if ($h == null)
 			$newpairs[] = $f;
 		else
 			$newpairs[] = $f.' "'.$h.'"';
-			
 		if ($f == '_name')
-			$namefilter = swNameURL($h);
+			$namefilter = $hors2;
+		if ($f == '_namespace')
+			$namespacefilter = $hors2;
 		
 	}
-	// print_r($fields);
+	//print_r($fields);
 	$filter = join(', ',$newpairs); // needed values for cache.
 	echotime('filter '.$filter);
 	
@@ -262,7 +305,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$found = false;
 		foreach($fields as $hint)
 		{
-			if ($hint != '')
+			if ($hint)
 				$found = true;
 		}
 		if (!$found)
@@ -271,7 +314,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 
 	$header = array_keys($fields);
-
 	
 	
 	$result = new swRelation($header,null,null);
@@ -283,7 +325,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$mdfilter = urlencode($mdfilter);
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$cachefile = $cachefilebase.'.txt';
-	
 	
 	if ($refresh)
 		{ echotime('refresh'); if (file_exists($cachefile)) unlink($cachefile);}
@@ -315,7 +356,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			{
 				$chunkfile = $cachefilebase.'-'.$chunk.'.txt';
 				$s = file_get_contents($chunkfile);
-				$goodrevisionchunk = unserialize($s);
+				$goodrevisionchunk = @unserialize($s);
 				unset($s);
 				if (is_array($goodrevisionchunk))
 					$goodrevisions = array_merge($goodrevisions,$goodrevisionchunk);
@@ -390,62 +431,129 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		echotime('overtime overall');	
 		$swOvertime = true;
 	}	
-		
+	$tocheckcount = $tocheck->countbits();	
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
 	{
-		// apply namefilter
 		
 		
-		if (@$namefilter && $filter != '_name, _revision')
+		if (($namefilter || $namespacefilter) && $filter != '_name, _revision')
 		{
 			$namerelation = swRelationFilter('_name, _revision', $globals);
 			$tuples = $namerelation->tuples;
 			
+			
 			foreach($tuples as $t)
 			{
 				$f = $t->fields();
-				if (stripos(swNameURL($f['_name']),$namefilter) === false) 
-				{
-					$tocheck->unsetbit($f['_revision']);
+				$n = swNameURL($f['_name']);
 				
+				if ($namespacefilter and $namespacefilter != '*')
+				{
+					$orfound = false;
+					
+					foreach($namespacefilter as $hor)
+					{
+						$andfound = true;
+						
+						if (!is_array($hor)) print_r($namespacefilter);
+						else
+						foreach($hor as $hand)
+						{
+							if ($hand && strstr($n,':') && !strstr($n,$hand.':')) $andfound = false;
+						}
+						
+						
+						if ($andfound) $orfound = true;
+					}
+					
+					if (!$orfound) 
+					{
+						$tocheck->unsetbit($f['_revision']);
+						continue;
+					}
 				}
-			}			
+				
+				if ($namefilter and $namefilter != '*')
+				{
+					$orfound = false;
+					
+					foreach($namefilter as $hor)
+					{
+						$andfound = true;
+						
+						foreach($hor as $hand)
+						{
+							if ($hand && !strstr($n,$hand)) $andfound = false;
+						}
+
+						
+						if ($andfound) $orfound = true;
+					}
+					
+					if (!$orfound) 
+					{
+						$tocheck->unsetbit($f['_revision']);
+						continue;
+					}
+				}
+				
+			}	
 		}
-		
-		
-		
-		// we create a superbitmap
-		// fields with string must be present
-		// hints must be present
-		
-		$bloomlist = array();
-		foreach($fields as $f=>$h)
+		$tocheckcount = $tocheck->countbits();
+		if ($filter != '_name, _revision')
+			echotime('namefilter '.$tocheckcount); 			
+
+			
+		$bigbloom = new swBitmap();
+		$bigbloom->init($tocheck->length,true);
+		foreach($fields as $field=>$hors)
 		{
-			if (substr($f,0,1)!='_') // _ fields are in header or implicit
-				$bloomlist[] = '--'.swNameURL($f).'--'; // -- represents [[ or :: or ]]
-			if (!empty($h) && !in_array($f,array('_revision','_status','_user','_timestamp','_timestamp','_name','_namespace','_displayname')))
+			
+			
+			if (substr($field,0,1) != '_') 
 			{
-				// split words
-				$hlist = explode(' ',$h);
-				//print_r($hlist);
-				foreach($hlist as $elem)
-					$bloomlist[] = swNameURL($elem);
+				$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
+				$gr->redim($tocheck->length, true);
+				$bigbloom = $bigbloom->andop($gr);
+			
+				if (is_array($hors))
+				{
+					$bor = new swBitmap();
+					$bor->init($tocheck->length,false);
+					
+					foreach($hors as $hor)
+					{
+						$band = new swBitmap();
+						$band->init($tocheck->length,true);
+						
+						foreach($hor as $hand)
+						{
+							if ($hand != '')
+							{
+								$gr = swGetBloomBitmapFromTerm($hand);
+								$gr->redim($tocheck->length, true);
+								$band = $band->andop($gr);
+							}
+						}
+	
+						
+						$bor = $bor->orop($band);
+						
+					}
+					$bigbloom = $bigbloom->andop($bor);	
+				}
 			}
 		}
-		//print_r($bloomlist);
-		foreach($bloomlist as $v)
-		{
-			if (strlen(swNameURL($v))<3) continue; // bloom needs at least3 characters
-			$gr = swGetBloomBitmapFromTerm($v);
-			$gr->redim($tocheck->length, true);
-			$tocheck = $tocheck->andop($gr);
-			$notgr = $gr->notop();
-			$checkedbitmap = $checkedbitmap->orop($notgr);
-			$tocheckcount = $tocheck->countbits();
-		}
+		$tocheck = $tocheck->andop($bigbloom);	
 		
+		$tocheckcount = $tocheck->countbits();
+		if ($filter != '_name, _revision')
+			echotime('bloom '.$tocheckcount); 			
 				
 		$toc = $tocheck->countbits();
+		
+		
+		
 		$checkedcount += $tocheckcount - $toc;
 		if ($toc > 0 ) echotime('loop '.$toc);
 		
@@ -454,9 +562,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
 
 		// print_r($fields);
+		
+		
+
 			
 		if ($toc>0) 
+		
 		{
+				//	echo " do ".$toc;
+			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
 				
@@ -505,6 +619,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
 					$fieldlist['_content'][] = $record->content;
+					$fieldlist['_short'][] = substr($record->content,0,160);
 				
 					
 					$fieldlist['_paragraph'] = explode(PHP_EOL, $record->content);
@@ -581,40 +696,58 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						$found = true;
 						foreach($fields as $key=>$hint)
 						{
-							// echo $key.$hint;
-							if (!$found) continue;
+							$fieldfound = false;
 							if ($hint=='')
 							{
-								// pass
+								$fieldfound = true;
+								//echo "not";
 							}
-							else
+							elseif (array_key_exists($key,$fieldlist2[$fi]))
 							{
-								if (!array_key_exists($key,$fieldlist2[$fi]))
+								if ($hint == "*") 
 								{
-									$found = false; 
-								}
-								elseif ($hint != "*")
-								{
-									if(!isset($fieldlist2[$fi][$key])) $found = false;
-									else 
+									$fieldfound = true;
+																	}
+								else
+								{									
+									$flv =  swNameURL($fieldlist2[$fi][$key]);
+									//echo $flv.' ';
+									
+									$orfound = false;
+									
+									
+									foreach($hint as $hor)
 									{
-										$hlist = explode(' ',$hint);
-										// print_r($hlist);
-										foreach($hlist as $elem)
+										$andfound = true;
+										
+										foreach($hor as $hand)
 										{
-											//echo "<p>".$elem.' '.$fieldlist2[$fi][$key];
-											if (stripos(swNameURL($fieldlist2[$fi][$key]),swNameURL($elem)) === false)
-												$found = false; 
+											
+											if ($hand != '' && !strstr($flv,$hand)) $andfound = false;
 										}
 										
-									} 
+										if ($andfound) $orfound = true;
+									}
+									
+									if ($orfound) 
+									{
+										$fieldfound = true;
+									}
+
+									
 								}
+								
 							}
+							
+							if (!$fieldfound) $found = false;
 						}
+						
 						if ($found)
 							$rows[$revision.'-'.$fi] = $fieldlist2[$fi];
+						
 
 					}
+					
 					
 					
 					$maxcount = count($rows); 
@@ -660,10 +793,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 			echotime('checked '.$checkedcount);
 			
-			if (true) {
+			
+			// do not cache if _content is part ( to expensive ) 
+			
+			if (!array_key_exists('_content',$fields)) {
 			
 				swSemaphoreSignal();
 				echotime("filter write");
+				
+				
 					
 				if (isset($touched))
 				{
@@ -760,7 +898,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		{
 			$dnf =explode(':',$dn);
 			$dns = array_shift($dnf);
-			if (! in_array($dns, $ns) && !$user->hasright('view',$dn)) continue;
+			if (! in_array($dns, $ns) && $user && !$user->hasright('view',$dn)) continue;
 		}
 		
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);
@@ -788,7 +926,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 }
 
 
-function swRelationSearch($term, $start=1, $limit=25, $template="")
+function swRelationSearch($term, $start=1, $limit=100, $template="")
 
 {
 
@@ -805,46 +943,39 @@ project _name, _paragraph
 template "'.$template.'"';
 else
 	$print = '
-if length(trim(_paragraph)) > 0
-	update _name = "* [["._name."]]<br>"
-else
-	update _name = "* [["._name."]]<br>"
-end if
-project _name, _paragraph	
-print raw';
+update _name = "<br>[["._name."]]<br>". _paragraph 
+project _name
+label _name ""
+print grid '.$limit;
 
 
 global $swSearchNamespaces;
+
 $namespace = 'main|'.join('|',array_filter($swSearchNamespaces)); // filter removes empty values
-if (trim($namespace)=='main|') $namespace = "main";
-if (stristr($namespace,'*')) $namespace = '.*';
+if (trim($namespace)=='main') $namespace = "main";
+if (stristr($namespace,'*')) $namespace = '*';
 $namespace = strtolower($namespace);
-	
+
+//echo "($namespace)";
+
+
+// note when result is empty, script fails with union, because aggregation has other arity than normal column
+
+$term = swSimpleSanitize($term);
 $singlequote = "'";
+
 $q = '
-set v = "'.swSimpleSanitize($term).'"
 
-// find title in name
-filter _namespace, _name v
-extend _paragraph_count = 100
-project _name, _paragraph_count, _namespace
-
-// find title in text
-filter _namespace, _name, _paragraph v
-project _name, _paragraph count, _namespace
+filter _namespace "'.$namespace.'", _name, _paragraph "'.$term.'"
+filter _namespace "'.$namespace.'", _name "'.$term.'", _paragraph
 union
-
-// namespaces
-select _namespace regex "'.$namespace.'"
-
-// if there are sublanguage pages, they should add to the score, but only the main page should be linked
+select trim(_paragraph) !== "" and substr(_paragraph,0,1) !== "#" and substr(_paragraph,0,2) !== "{{" and substr(_paragraph,0,6) !== "<code>"  and substr(_paragraph,0,2) !== "{|"
 extend _nameint = regexreplace(_name,"\/\w\w","")
-
-// score
-project _nameint, _paragraph_count sum
-rename _nameint _name, _paragraph_count_sum rating
-order rating 9
-
+// print grid 20
+project _nameint, _paragraph count, _paragraph first
+rename _nameint _name, _paragraph_first _paragraph
+order _paragraph_count 9
+project _name, _paragraph
 // add counter
 dup
 project _name count
@@ -852,23 +983,26 @@ set nc = _name_count
 set start = '.$start.'
 set limit = '.$limit.'
 set ende = min(start+limit-1,nc)
-if nc > 1 
-set ncs = start. " - " . ende . " / ". nc 
+
+if nc = 1
+	set ncs = nc . " '.$results1.'"
 else
-set ncs = nc . " '.$results1.'"
-end if
-
+	set ncs = nc . " '.$results.'"
+	
+if nc > limit
+	set ncs =  start. " - " . ende . " / ". ncs
+end if 
+	
 set other = 0
-
 if '.$start.' > 1 
 set ncs = ncs . "'.$previous.'"
 set other = 1
 end if
-
 if '.($start+$limit-1).' < nc 
 set ncs = ncs . "'.$next.'"
 set other = 1
 end if
+
 
 echo ncs
 
@@ -877,7 +1011,7 @@ pop
 // show results with interesting paragraph
 limit '.$start.' '.$limit.'
 
-filter _namespace "main", _name, _paragraph v
+filter _namespace "main", _name, _paragraph "'.$term.'"
 extend row = rownumber
 project inline _name, row min
 select row = row_min
@@ -886,20 +1020,20 @@ project _name, _paragraph
 join left
 
 // remove wiki styles
-update _paragraph = trim(nowiki(_paragraph))
+update _paragraph = (resume(_paragraph,160,1)
 
 // create a query to be split
-set v = v ." "
+set v = "'.$term.'" ." "
 set c = length(v)
 set i = 1
 set l = 0
 
 // set query in paragraph bold
 while i < c
-if substr(v,i,1) == " "
+if substr(v,i,1) == " " or substr(v,i,1) == "|"
 if i > l
 set s = substr(v,l,i-l)
-update _paragraph = regexreplacemod(_paragraph,s,"'.$singlequote.$singlequote.$singlequote .'".s."'.$singlequote.$singlequote.$singlequote .'","i")
+update _paragraph = regexreplacemod(_paragraph,s,"<b>".s."</b>","i")
 end if
 set l = i + 1
 end if
@@ -909,10 +1043,8 @@ end while
 '.$print.'
 
 
-echo " "
-echo ncs
 
-// print
+
 
 echo " "';
 
@@ -921,7 +1053,12 @@ echo " "';
 
 $lh = new swRelationLineHandler;
 
-return $lh->run($q);
+
+$s = $lh->run($q);
+
+$s = str_replace("_name\t_paragraph",'',$s); // hack because raw includes header
+
+return $s;
 
 
 }
