@@ -455,28 +455,10 @@ switch($_REQUEST['index'])
 							break;
 						
 
-	case "indexnames": $result = swFilter('SELECT _revision, _name WHERE _name *','*'); 
+	case "indexnames": $result = swRelationToTable('filter _name, _revision'); 
 						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
 	
 	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;
-	
-	case "indexfields" : 	$swParsedContent .= '<h3>Index Fields</h3>';
-							$revisions = swFilter('SELECT _field','*','query');
-							foreach($revisions as $row)
-							{
-									$fields[] =  $row['_field'];
-							}
-							sort($fields);
-							foreach($fields as $field)
-							{
-								if (!$field) continue;
-								if (isset($swOvertime)) continue;
-								$result2 = swFilter('SELECT _revision, '.$field.' WHERE '.$field.' * ','*'); 
-								$c = count($result2);
-								
-								$swParsedContent .= $c. ' '.$field.'<br>';
-							}
-							if (isset($result2)) unset($result2);
 	
 	
 }

@@ -255,21 +255,22 @@ class swInstalledTemplatesFunction extends swFunction
 	function dowork($args)
 	{
 		
-		$revisions = swFilter('SELECT name WHERE name =* Template:','*','query','');
+		$revisions = swRelationToTable('filter _namespace "template", _name');
+		
 		
 		$lines = array();
 		foreach ($revisions as $row)
 		{
-			if (isset($row['name']))
+			if (isset($row['_name']))
 			{
-				$name = $row['name'];
+				$name = $row['_name'];
 				if (is_array($name))
 					$name = array_pop($name);
 					
 		
 				$templatename = substr($name,strlen('Template:'));
 			
-				$lines[$name] = "[[$name|$templatename]]";
+				$lines[$name] = "[[$name]]";
 			}
 		}
 		

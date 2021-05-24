@@ -11,7 +11,7 @@ class swFamilyNameFunction extends swFunction
 
 	function info()
 	{
-	 	return "(name) defines family name for albphabetical order, using excptions";
+	 	return "(name) defines family name for albphabetical order, using exceptions";
 	}
 
 	
@@ -25,14 +25,18 @@ class swFamilyNameFunction extends swFunction
 		global $swFamilyNameDict ;
 		if (!is_array($swFamilyNameDict)) 
 		{
-			$q = 'SELECT _name, familyname WHERE familyname';
-			$revisions = swFilter($q,'*','query','current');
+			
+			
+			$revisions = swRelationTotable('filter _name, familyname "*"');
+			
+						
 			foreach($revisions as $tuple)
 			{
 				$swFamilyNameDict[$tuple['_name']] = $tuple['familyname'];
 			}
 		}
 		
+				
 		if (isset($swFamilyNameDict[$n])) return swNameURL($swFamilyNameDict[$n]);
 		
 		if (stristr($n,' '))

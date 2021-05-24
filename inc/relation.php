@@ -294,7 +294,7 @@ class swRelationLineHandler
 										while($i<$c && $loopcounter>0)
 										{
 											$i++;
-											$mline = trim($lines[$i]);
+											$mline = trim(@$lines[$i]);
 											if (strpos($mline,'// ')>-1)
 												$mline = trim(substr($mline,0,strpos($mline,'// ')));
 											if (substr($mline,0,2) == 'if')

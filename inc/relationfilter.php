@@ -984,10 +984,13 @@ set start = '.$start.'
 set limit = '.$limit.'
 set ende = min(start+limit-1,nc)
 
+
+
 if nc = 1
 	set ncs = nc . " '.$results1.'"
 else
 	set ncs = nc . " '.$results.'"
+end if
 	
 if nc > limit
 	set ncs =  start. " - " . ende . " / ". ncs
@@ -1002,7 +1005,6 @@ if '.($start+$limit-1).' < nc
 set ncs = ncs . "'.$next.'"
 set other = 1
 end if
-
 
 echo ncs
 
