@@ -56,7 +56,8 @@ function swCron()
 						$mode = swGetValue($s,'mode');
 						if ($overtime)
 						{
-							swFilter($filter,$namespace,$mode);
+							swRelationToTable($filter);
+							
 							$filterlist .= '<br>'.$filter;
 							$i+=9;
 						}

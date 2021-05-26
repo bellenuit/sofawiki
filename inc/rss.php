@@ -8,8 +8,6 @@ function swRSS($query,$rssname)
 		global $swMainName;
 		global $swBaseHrefFolder;
 				
-		//$lines = explode("\n",$query);
-		//$list0 = swQuery($lines);
 		
 		$list0 = swRelationToTable($query);
 		

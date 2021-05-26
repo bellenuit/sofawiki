@@ -68,7 +68,7 @@ function swGetBloomBitmapFromTerm($term)
 	
 	if (strlen(swNameURL($term))<3) return $bm;
 	
-	echotime('bloom '.$term);
+	// echotime('bloom '.$term);
 	
 	if (!$swBloomIndex)
 	{

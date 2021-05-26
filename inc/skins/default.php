@@ -150,7 +150,7 @@ xmlhttp.onreadystatechange=function()
 				xmlhttp.send();
 				document.title = document.title+"-";
 				document.getElementById("searchovertime").innerHTML +="...";
-			}, 3000);
+			}, 2000);
 		}
 		else
 			document.title = document.title+".";

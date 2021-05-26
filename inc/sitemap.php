@@ -27,9 +27,6 @@ order _name a
 ');
 		
 	
-		// $filter = 'SELECT _name WHERE _content !=* #REDIRECT';
-		// $swMaxOverallSearchTime *= 40;
-		// $revisions = swFilter($filter,'','query');
 		
 		$resultlist []= '<?xml version="1.0" encoding = "UTF-8"?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">';

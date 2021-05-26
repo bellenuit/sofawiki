@@ -64,6 +64,7 @@ $swParsedContent = "'''Version''' {{version}}
 '''Pages''' {{countpages}}
 '''Revisions''' {{countrevisions}}
 '''Base path''' ".$swRoot."
+'''RAM disk''' ".$swRamdiskPath."
 
 ====Installed Functions====
 {{functions}}
@@ -90,6 +91,10 @@ Server Signature " .getenv('SERVER_SIGNATURE')."
 
 ";
 
+if ($swRamdiskPath == 'memcache')
+{
+	$swParsedContent .= print_r($swMemcache->getStats(), true);
+}
 
 
 // print_r($_ENV);

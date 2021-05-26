@@ -11,6 +11,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swRamDiskDBpath = $swRoot.'/site/indexes/records.db';
 $swRamDiskDBfilter = '/site/revisions/';
+$swMemcache;
 
 function swInitRamdisk()
 {
@@ -19,6 +20,7 @@ function swInitRamdisk()
 	global $swRamDiskDB;
 	global $swRoot;
 	global $swRamDiskDBpath;
+	global $swMemcache;
 	if (is_dir($swRamdiskPath)) 
 	{
 		 
@@ -39,6 +41,18 @@ function swInitRamdisk()
 	 }
 	 return;
 	 
+	}
+	elseif ($swRamdiskPath=='memcache')
+	{ 
+		$swMemcache = new Memcache;
+		if (!@$swMemcache->connect('localhost', 11211))
+		{
+			echotime('Could not connect do memcache');
+		}
+
+		$version = $swMemcache->getVersion();
+		echotime('memcache server: '.$version);
+		return;
 	}
 	elseif ($swRamdiskPath=='db')
 	{
@@ -70,11 +84,24 @@ function swFileGet($path)
 	global $swRoot;
 	global $swRamDiskDBpath; 
 	global $swRamDiskDBfilter;
+	global $swMemcache;
 	
 	if (isset($swRamdiskPath) && $swRamdiskPath != '')
 	{
 		
-		if ($swRamdiskPath=='db')
+		if ($swRamdiskPath=='memcache')
+		{
+			if (!$swMemcache) swInitRamdisk();
+			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
+			{
+				$v = @$swMemcache->get($path);
+				if ($v) {  return $v; }
+				$s = file_get_contents($path);
+				$memcached->set($path,$s,60*60*24*30);
+				return $s;			
+			}
+		}
+		elseif ($swRamdiskPath=='db')
 		{
 			if (!$swRamDiskDB) swInitRamdisk();
 			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
@@ -97,6 +124,7 @@ function swFileGet($path)
 			$s = file_get_contents($path);
 			return $s;
 		}
+		
 		
 		
 		
@@ -129,6 +157,7 @@ function swUnlink($path)
 	global $swRoot;
 	global $swRamDiskDBpath;
 	global $swRamDiskDBfilter;
+	global $swMemcache;
 	
 	if (file_exists($path))
 		unlink($path);
@@ -136,7 +165,14 @@ function swUnlink($path)
 	if (isset($swRamdiskPath) && $swRamdiskPath != '')
 	{
 		
-		if ($swRamdiskPath=='db')
+		if ($swRamdiskPath=='memcached')
+		{
+			if (!stristr($path,$swRamDiskDBfilter)) return;
+			if (!$swMemcache) return;
+			@$swMemcache->delete($path);
+			
+		}
+		elseif ($swRamdiskPath=='db')
 		{
 			if (!stristr($path,$swRamDiskDBfilter)) return;
 			
