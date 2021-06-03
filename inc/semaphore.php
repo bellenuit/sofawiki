@@ -21,15 +21,15 @@ We just need to protect the write operation
 $swSempahore = false;
 $swSemaphoreTimeOut = 15;
 
-function swSemaphoreSignal() 
+function swSemaphoreSignal($path='') 
 {
 	global $swSempahore;
 	global $swRoot;
 	global $swSemaphoreTimeOut;
 	
+	$md5path = md5($path);
 	
-	
-	$file = $swRoot."/site/indexes/semaphore.txt";
+	$file = $swRoot.'/site/indexes/'.$md5path.'semaphore.txt';
 	
 	if ($swSempahore) return;
 	
@@ -42,7 +42,7 @@ function swSemaphoreSignal()
 			fclose($handle);
 			return;
 		}
-		echotime("semaphore wait");
+		echotime("semaphore wait ".$md5path);
 		sleep(1);
 		$i++;
 	}
@@ -63,14 +63,17 @@ function swSemaphoreSignal()
 }
 
 
-function swSemaphoreRelease()
+function swSemaphoreRelease($path='')
 {
 	global $swSempahore;
 	global $swRoot;
 	
+	$md5path = md5($path);
+	
+	$file = $swRoot.'/site/indexes/'.$md5path.'semaphore.txt';
+
 	
 	
-	$file = $swRoot."/site/indexes/semaphore.txt";
 	@unlink($file);
 	$swSempahore = false;
 }

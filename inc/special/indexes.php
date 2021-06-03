@@ -347,6 +347,27 @@ switch($_REQUEST['index'])
 							
 							if (isset($_REQUEST['q']))
 							{
+								if (stristr($_REQUEST['q'],'.db'))
+								{
+									$path = $querypath.$_REQUEST['q'];
+									$results = array();
+									if ($bdb = dba_open($path, 'wdt', 'db4'))
+									{
+										$results['filter'] = dba_fetch('_filter',$bdb);
+										$results['bitmapcount'] = dba_fetch('_bitmapcount',$bdb);
+										$results['checkedbitmapcount'] = dba_fetch('_checkedbitmapcount',$bdb);
+										$results['overtime'] = unserialize(dba_fetch('_overtime',$bdb));
+										$results['mode'] = 'relation';
+										$results['namespace'] = '-';
+										$results['bitmap'] = unserialize(dba_fetch('_bitmap',$bdb));
+										$results['checkedbitmap'] = unserialize(dba_fetch('_checkedbitmap',$bdb));
+										
+									}
+								}
+								
+								else
+								{
+								
 								$path = $querypath.$_REQUEST['q'].'.txt';
 								if ($handle = fopen($path, 'r'))
 								{
@@ -375,22 +396,49 @@ switch($_REQUEST['index'])
 								}
 								
 								
+								}
 								
-								
-								$swParsedContent .= '<p>filter: '.$results['filter'];
-								$swParsedContent .= '<br>mode: '.$results['mode'];
-								$swParsedContent .= '<br>namespace: '.$results['namespace'];
-								$bm = $results['bitmap'];
-								$bm2 = $results['checkedbitmap'];
-						        $swParsedContent .= '<br>overtime: '.$results['overtime'];
+								$swParsedContent .= '<p>filter: '.@$results['filter'];
+								$swParsedContent .= '<br>mode: '.@$results['mode'];
+								$swParsedContent .= '<br>namespace: '.@$results['namespace'];
+								$bm = @$results['bitmap'];
+								$bm2 = @$results['checkedbitmap'];
+						        $swParsedContent .= '<br>overtime: '.@$results['overtime'];
 						        $t = filemtime($path);
 							 	$d = date('Y-m-d',$t);
 						        $swParsedContent .= '<br>modification: '.$d;
+						        if ($bm)
 								$swParsedContent .= '<p>Good: '.$bm->countbits().'/'.$bm->length.' <br>'.bitmap2canvas($bm, false);
+								if ($bm2)
 								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, false,2);
 								$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'.txt</a> ';
 								
-								
+								if (stristr($_REQUEST['q'],'.db'))
+								{
+									$key = dba_firstkey($bdb);
+									$fields = array_keys(unserialize(dba_fetch($key,$bdb)));
+									
+									$swParsedContent .= '<p>relation '.join(', ',$fields).'<br>data';
+	
+									
+									while($key)
+									{
+										if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
+										
+										$fields = array_values(unserialize(dba_fetch($key,$bdb)));
+										
+										
+										$swParsedContent .= '<br>"'.join('", "',$fields).'"';
+										
+												
+										$key = dba_nextkey($bdb);
+									}
+									$swParsedContent .= '<br>end data';
+
+									
+								}
+								else
+								{
 								
 								$swParsedContent .='<p><pre>'.file_get_contents($path);
 								
@@ -406,6 +454,8 @@ switch($_REQUEST['index'])
 								{
 									$swParsedContent .= print_r($results['goodrevisions'],true);
 								}
+								
+								}
 							}
 							else
 							{
@@ -417,13 +467,13 @@ switch($_REQUEST['index'])
 								foreach($list as $k=>$v)
 								{
 							 		//biggest 25 and last 
-							 		$t = filemtime($querypath.$v.'.txt');
+							 		$t = filemtime($querypath.$v);
 							 		$d = date('Y-m-d H:i:s',$t);
 							 		if ($i<25 || time() - $t < 60*60)
 							 		{
 							 				
 											$results = array();
-											if ($handle = fopen($querypath.$v.'.txt', 'r'))
+											if (substr($v,-4)=='.txt' && $handle = fopen($querypath.$v, 'r'))
 											{
 												
 												while ($arr = swReadField($handle))
@@ -438,8 +488,20 @@ switch($_REQUEST['index'])
 													}
 													
 												}
+												
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.count(@$results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
 											}
-											$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'.txt</a><br>' .$d.' '.count($results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
+											else
+											{
+												$bdb = dba_open($querypath.$v,'r','db4');
+												$results['filter'] = dba_fetch('_filter',$bdb);
+												
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' <br>filter '.@$results['filter'];
+												
+											}
+											
+											
+											
 											
 							 		}
 							 		$i++;
@@ -448,6 +510,7 @@ switch($_REQUEST['index'])
 								
 								krsort($lines);
 								$swParsedContent .= join('',$lines);
+								
 								
 							}
 							
@@ -477,7 +540,18 @@ function querylist()
 	  	$key = sprintf('%05d',filesize($file));
 	   	$fn = str_replace($querypath,'',$file);
 		if (stristr($fn,'-')) continue;
-	   	$fn = substr($fn,0,-4);
+	   	// $fn = substr($fn,0,-4);
+	   	$list[$key.' '.$fn] = $fn;
+	 }
+	 
+	 $files = glob($querypath.'*.db');
+	  
+	 foreach($files as $file)
+	 {
+	  	$key = sprintf('%05d',filesize($file));
+	   	$fn = str_replace($querypath,'',$file);
+		if (stristr($fn,'-')) continue;
+	   	// $fn = substr($fn,0,-4);
 	   	$list[$key.' '.$fn] = $fn;
 	 }
 	 krsort($list);

@@ -21,7 +21,7 @@ class swBitmap extends swPersistance
 		else
 			$this->map = str_repeat(chr(0),$bytes);
 			
-		$compressionmode = true;
+		$this->compressionmode = true;
 	}
 	
 	function redim($l, $default = false)
@@ -59,6 +59,7 @@ class swBitmap extends swPersistance
 	
 	function hexit()
 	{
+		$this->compressionmode = true;
 		$this->maphex = bin2hex($this->map);
 		if ($this->compressionmode)
 		{

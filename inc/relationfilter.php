@@ -326,103 +326,51 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$cachefile = $cachefilebase.'.txt';
 	
+	$bdbfile = $cachefilebase.'.db';
+	
 	if ($refresh)
-		{ echotime('refresh'); if (file_exists($cachefile)) unlink($cachefile);}
+		{ echotime('refresh'); if (file_exists($bdbfile)) unlink($bdbfile);}
 	
 	$chunks = array();
-	if (file_exists($cachefile)) 
+	
+	if (file_exists($bdbfile))
+		$bdb = @dba_open($bdbfile, 'wdt', 'db4');
+	else
+		$bdb = @dba_open($bdbfile, 'c', 'db4');	
+	if (!$bdb)
 	{
-		if ($handle = fopen($cachefile, 'r'))
-		{
-			// one file for header			
-			while ($arr = swReadField($handle))
-			{
-				if (@$arr['_primary'] == '_header')
-				{
-					$bitmap = unserialize($arr['bitmap']);
-					$checkedbitmap = unserialize($arr['checkedbitmap']);
-					if (isset($arr['chunks']))
-					$chunks = unserialize($arr['chunks']);
-					unset($arr);
-				}
-			}
-			fclose($handle);
-			//echomem('primary');
-			echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'" target="_blank">'.md5($mdfilter).'.txt</a> ');
-			
-			// 1+ file for revisions
-			$goodrevisions = array();
-			foreach($chunks as $chunk)
-			{
-				$chunkfile = $cachefilebase.'-'.$chunk.'.txt';
-				$s = file_get_contents($chunkfile);
-				$goodrevisionchunk = @unserialize($s);
-				unset($s);
-				if (is_array($goodrevisionchunk))
-					$goodrevisions = array_merge($goodrevisions,$goodrevisionchunk);
-				else
-				{
-					$goodrevisions = array(); //reset;
-					$bitmap = new swBitmap;
-					$checkedbitmap = new swBitmap;  
-					unset($chunks); 
-				}
-			}
-			echotime('cached '.count($goodrevisions));
-			echomem('cached');
-		}
+		echotime('db failed '.$bdbfile);
+		return;
 	}
 	
-	$cachechanged = false;
-	$db->init();
+	// echo $bdbfile;
 	
-	
-	
-	if (!is_a($bitmap, 'swBitmap'))  $bitmap = new swBitmap;
-	if (!is_a($checkedbitmap, 'swBitmap'))  $checkedbitmap = new swBitmap;
+	echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'.db" target="_blank">'.md5($mdfilter).'.db</a> ');
 
+	
+	if ($s = dba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
+	if ($s = dba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
+
+	echotime('cached '.count($bitmap->countbits()));
+	echotime('cb '.$checkedbitmap->countbits());
+	
+	$db->init();
 	$maxlastrevision = $db->lastrevision;
-	$indexedbitmap = $db->indexedbitmap->duplicate();
-	if ($indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($indexedbitmap->length); // fallback
+	if ($db->indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($db->indexedbitmap->length); // fallback
+	
+	
 	$bitmap->redim($maxlastrevision+1,false);
 	$checkedbitmap->redim($maxlastrevision+1,false);
-	$currentbitmap = $db->currentbitmap->duplicate();
-	$deletedbitmap = $db->deletedbitmap->duplicate();
-	$notchecked = $checkedbitmap->notop();
-	$tocheck = $indexedbitmap->andop($notchecked);
-	unset($notchecked);
-	$tocheck = $currentbitmap->andop($tocheck);
-	$tocheckcount = $tocheck->countbits();
+	
+	$tocheckbitmap = $checkedbitmap->notop();
+	$tocheckbitmap = $tocheckbitmap->andop($db->indexedbitmap);
+
+	$tocheckcount = $tocheckbitmap->countbits();
+
 	if ($tocheckcount>0) 
 	{ 
 		echotime('tocheck '.$tocheckcount); 
 	}
-	$checkedcount = 0;
-	
-	foreach($goodrevisions as $k=>$v)
-	{
-		$kr = substr($k,0,strpos($k,'-')); 
-		if($indexedbitmap->getbit($kr) && !$currentbitmap->getbit($kr))
-		{
-			$bitmap->unsetbit($kr);
-			unset($goodrevisions[$k]);
-			$cachechanged = true; 
-			$checkedcount++;
-		}
-		if($deletedbitmap->getbit($kr))
-		{
-			$bitmap->unsetbit($kr);
-			unset($goodrevisions[$k]);
-			$cachechanged = true; 
-			$checkedcount++;
-		}
-		if (!$indexedbitmap->getbit($kr))
-		{
-			$db->UpdateIndexes($kr); // fallback
-		}
-	}
-
-	
 	
 	$nowtime = microtime(true);	
 	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
@@ -430,9 +378,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		echotime('overtime overall');	
 		$swOvertime = true;
-	}	
-	$tocheckcount = $tocheck->countbits();	
-	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
+	}
+		
+	if ($tocheckcount > 0 && $dur<=$swMaxOverallSearchTime)
 	{
 		
 		
@@ -468,7 +416,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					
 					if (!$orfound) 
 					{
-						$tocheck->unsetbit($f['_revision']);
+						$tocheckbitmap->unsetbit($f['_revision']);
+						$checkedbitmap->setbit($f['_revision']);
 						continue;
 					}
 				}
@@ -492,20 +441,21 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					
 					if (!$orfound) 
 					{
-						$tocheck->unsetbit($f['_revision']);
+						$tocheckbitmap->unsetbit($f['_revision']);
+						$checkedbitmap->setbit($f['_revision']);
 						continue;
 					}
 				}
 				
 			}	
 		}
-		$tocheckcount = $tocheck->countbits();
+		$tocheckcount = $tocheckbitmap->countbits();
 		if ($filter != '_name, _revision')
 			echotime('namefilter '.$tocheckcount); 			
 
 			
 		$bigbloom = new swBitmap();
-		$bigbloom->init($tocheck->length,true);
+		$bigbloom->init($tocheckbitmap->length,true);
 		foreach($fields as $field=>$hors)
 		{
 			
@@ -513,25 +463,25 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			if (substr($field,0,1) != '_') 
 			{
 				$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
-				$gr->redim($tocheck->length, true);
+				$gr->redim($tocheckbitmap->length, true);
 				$bigbloom = $bigbloom->andop($gr);
 			
 				if (is_array($hors))
 				{
 					$bor = new swBitmap();
-					$bor->init($tocheck->length,false);
+					$bor->init($tocheckbitmap->length,false);
 					
 					foreach($hors as $hor)
 					{
 						$band = new swBitmap();
-						$band->init($tocheck->length,true);
+						$band->init($tocheckbitmap->length,true);
 						
 						foreach($hor as $hand)
 						{
 							if ($hand != '')
 							{
 								$gr = swGetBloomBitmapFromTerm($hand);
-								$gr->redim($tocheck->length, true);
+								$gr->redim($$tocheckbitmap->length, true);
 								$band = $band->andop($gr);
 							}
 						}
@@ -544,44 +494,37 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				}
 			}
 		}
-		$tocheck = $tocheck->andop($bigbloom);	
+		$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
+		$nottocheck = $bigbloom->notop();
 		
-		$tocheckcount = $tocheck->countbits();
+		$checkedbitmap = $checkedbitmap->orop($nottocheck);
+		
+		
+		$tocheckcount = $tocheckbitmap->countbits();
 		if ($filter != '_name, _revision')
 			echotime('bloom '.$tocheckcount); 			
-				
-		$toc = $tocheck->countbits();
-		
-		
-		
-		$checkedcount += $tocheckcount - $toc;
-		if ($toc > 0 ) echotime('loop '.$toc);
+						
 		
 		$starttime = microtime(true);
-		if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
-		if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
-
-		// print_r($fields);
 		
-		
-
-			
-		if ($toc>0) 
-		
+		if ($tocheckcount>0) 		
 		{
-				//	echo " do ".$toc;
+			echotime('loop '.$tocheckcount);
+			if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
+			if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
+			$checkedcount = 0;
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
 				
-				if (!$tocheck->getbit($k)) continue; // we already have ecluded it from the list
+				if (!$tocheckbitmap->getbit($k)) continue; // we already have ecluded it from the list
 				if ($checkedbitmap->getbit($k)) continue; // it has been checked, should not happen here any more
-			 	if(!$indexedbitmap->getbit($k)) continue; // it has not been indexed, should not happen here any more
-				if(!$currentbitmap->getbit($k)) { $bitmap->unsetbit($k); continue; } // should not happen here any more
-				if($deletedbitmap->getbit($k)) { $bitmap->unsetbit($k); $checkedbitmap->setbit($k); $checkedcount++; continue; }
+			 	if(!$db->indexedbitmap->getbit($k)) continue; // it has not been indexed, should not happen here any more
+				if(!$db->currentbitmap->getbit($k)) { $checkedbitmap->setbit($k); $bitmap->unsetbit($k); $checkedcount++; continue; } // should not happen here any more
+				if($db->deletedbitmap->getbit($k)) { $checkedbitmap->setbit($k); $bitmap->unsetbit($k); $checkedcount++; continue; }
 				// should not happen here any more
 				$checkedcount++;
-				
+	
 				$nowtime = microtime(true);	
 				$dur = sprintf("%04d",($nowtime-$starttime)*1000);
 				if ($dur>$swMaxSearchTime) 
@@ -626,12 +569,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					
 					
 					$s = preg_replace("/[0123456789:\/.]/","-", $record->content);
-					
-					  
-					
-					
 					$fieldlist['_word'] = explode('-', swNameURL($s));
-					
 					$fieldlist['_word'] = array_values(array_filter($fieldlist['_word'], function ($var){return strlen($var)>=3;})); 
 					
 				
@@ -775,90 +713,20 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				if (count($rows)>0)
 				{
 					foreach($rows as $primary=>$line)
-					{
-						$goodrevisionchunknew[$primary] = $goodrevisions[$primary] = serialize($line);
-					}
+						dba_replace($primary,serialize($line),$bdb);
 					$bitmap->setbit($k);
-
-					$touched = true;
-					
 				}
+				$checkedbitmap->setbit($k);
 				
 			}
 			
 			
-			// save to cache
-			$bitmap->hexit();
-			$checkedbitmap->hexit();
-						
 			echotime('checked '.$checkedcount);
-			
-			
-			// do not cache if _content is part ( to expensive ) 
-			
-			if (!array_key_exists('_content',$fields)) {
-			
-				swSemaphoreSignal();
-				echotime("filter write");
-				
-				
-					
-				if (isset($touched))
-				{
-					if (!isset($chunks) || count($chunks)==0)
-						$chunks = array('1');
-					$chunk = array_pop($chunks); $chunks[] = $chunk;
-					//echotime('grc '.count($goodrevisionchunk));
-					if (isset($goodrevisionchunk) && count($goodrevisionchunk) > 10000)
-					{
-						$chunk++;
-						$chunks[] = $chunk;
-						$chunkfile = $cachefilebase.'-'.$chunk.'.txt';
-						
-						$goodrevisionchunk = $goodrevisionchunknew;
-						
-					}
-					elseif(isset($goodrevisionchunk) && is_array($goodrevisionchunk) && isset($goodrevisionchunknew) && is_array($goodrevisionchunknew)) 
-					{
-						$goodrevisionchunk=$goodrevisionchunk + $goodrevisionchunknew;
-						//echotime('grc2 '.count($goodrevisionchunk));
-					}
-					else
-					{
-						$goodrevisionchunk = @$goodrevisionchunknew;
-					}
-					$chunkfile = $cachefilebase.'-'.$chunk.'.txt';
-					$handle2 = fopen($chunkfile, 'w');
-					fwrite($handle2,serialize($goodrevisionchunk));
-					fclose($handle2);
-					unset($goodrevisionchunk);
-					unset($goodrevisionchunknew);
-				}
-				
-				
-				$handle2 = fopen($cachefile, 'w');
-				$header = array();
-				$header['filter'] = $filter;
-				$header['mode'] = 'relation';
-				$header['overtime'] = $overtime ;
-				$header['chunks'] = serialize($chunks);
-				$header['bitmap'] = serialize($bitmap);
-				$header['checkedbitmap'] = serialize($checkedbitmap);
-				$header['bitmapcount'] = $bitmap->countbits();
-				$header['checkedbitmapcount'] = $checkedbitmap->countbits();
-				$row = array('_header'=>$header);
-				swWriteRow($handle2, $row );
-				fclose($handle2);
-				swSemaphoreRelease();
-			}			
-			
-			echotime('good '.count($goodrevisions));
 			echomem("filter");	
-			} // if toc>0
+		}
 	
 	}
 	
-	//print_r($goodrevisions);
 	
 	// TO DO FILTER NAMESPACE HERE 
 	global $user;
@@ -882,16 +750,26 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ($sp != ':') $ns[$sp]= $sp;
 	}
 	
-	//print_r($goodrevisions);
-	
-	// $searcheverywhere = true;
 	
 	$d = array();	
 	
-	foreach ($goodrevisions as $v) 
-	{	
-		$d = unserialize($v);
+	$key = dba_firstkey($bdb);
+
+	
+	while($key)
+	{
+		if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
 		
+		$keys = explode('-',$key);
+		$kr = $keys[0];
+		
+		if (!$db->currentbitmap->getbit($kr))
+		{
+			dba_delete($key,$bdb);
+			$bitmap->unsetbit($kr);
+		}
+		
+		$d = unserialize(dba_fetch($key,$bdb));
 		$dn = @$d['_url'];
 		
 		if (!$searcheverywhere && stristr($dn,':'))
@@ -908,18 +786,26 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
-		
-		//print_r($tp);
+
+				
+		$key = dba_nextkey($bdb);
 	}
 	
+	dba_replace('_filter',$filter,$bdb);
+	dba_replace('_overtime',serialize($overtime),$bdb);
+	dba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
+	dba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
+	$bitmap->hexit();
+	dba_replace('_bitmap',serialize($bitmap),$bdb);
+	$checkedbitmap->hexit();
+	dba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+	dba_close($bdb);
 	
 	foreach($d as $key=>$val)
 	{
 		if (!in_array($key, $result->header))
 			$result->addColumn($key);
 	}
-	
-	//print_r($result);
 	
 	return $result;
 	
