@@ -3065,7 +3065,8 @@ class swTuple
 		$keys = array();
 		$values = array();
 		$this->pfields = array_clone($list);
-		$keys = array_keys($list);
+		if (is_array($list))
+			$keys = array_keys($list);
 		sort($keys);
 		foreach($keys as $k)
 		{
@@ -3354,7 +3355,12 @@ class swRelationError extends Exception
 	
 }
 
-function array_clone($arr) { return array_slice($arr, 0, null, true); }
+function array_clone($arr) 
+{ 
+  if (is_array($arr)) 
+	return array_slice($arr, 0, null, true);
+  else return array();
+ }
 
 function swNumberformat($d,$f)
 {	

@@ -180,48 +180,79 @@ class swBitmap extends swPersistance
 	function andop($bitmap)
 	{
 		// returns a bitmap as result of AND between this and bitmap
-		if ($this->map == '') $this->dehexit();		
-		$s1 = $this->map;
-		if ($bitmap->map == '') $bitmap->dehexit();		
-		$s2 = $bitmap->map;
-		
-		$pl=strlen($s1);
-		if (strlen($s1) != strlen($s2))
-		{
-			$pl = max(strlen($s1),strlen($s2));
-			$s1 = str_pad($s1,$pl,chr(0));
-			$s2 = str_pad($s1,$pl,chr(0));
-		}
-		
-		$s3 = $s1 & $s2;
 		
 		$result = new swBitmap;
-		$result->length = $pl*8;
+		$result->length = max($this->length, $bitmap->length);
+
+		// if length is not the same, we need to duplicate the shorter first
+	    
+	    if ($this->length < $result->length)
+	    {
+		    $b = $this->duplicate();
+		    $b->redim($result->length,0); // default 0 with AND
+		    $s1 = $b->map;
+		}
+		else
+		{
+			if ($this->map == '') $this->dehexit();	
+		    $s1 = $this->map;
+		}
+		
+		if ($bitmap->length < $result->length)
+	    {
+		    $b = $bitmap->duplicate();
+		    $b->redim($result->length,0); // default 0 with AND
+		    $s2 = $b->map;
+		}
+		else
+		{
+			if ($bitmap->map == '') $bitmap->dehexit();	
+		    $s2 = $bitmap->map;
+		}
+				
+		$s3 = $s1 & $s2;
+		
 		$result->map = $s3;
 		$result->touched = true;
+		
 		return $result;
 	}
 	
 	function orop($bitmap)
 	{
 		// returns a bitmap as result of OR between this and bitmap
-		if ($this->map == '') $this->dehexit();		
-		$s1 = $this->map;
-		if ($bitmap->map == '') $bitmap->dehexit();		
-		$s2 = $bitmap->map;
 
-		$pl=strlen($s1);
-		if (strlen($s1) != strlen($s2))
+		$result = new swBitmap;
+		$result->length = max($this->length, $bitmap->length);
+
+		// if length is not the same, we need to duplicate the shorter first
+	    
+	    if ($this->length < $result->length)
+	    {
+		    $b = $this->duplicate();
+		    $b->redim($result->length,0); 
+		    $s1 = $b->map;
+		}
+		else
 		{
-			$pl = max(strlen($s1),strlen($s2));
-			$s1 = str_pad($s1,$pl,chr(0));
-			$s2 = str_pad($s1,$pl,chr(0));
+			if ($this->map == '') $this->dehexit();	
+		    $s1 = $this->map;
+		}
+		
+		if ($bitmap->length < $result->length)
+	    {
+		    $b = $bitmap->duplicate();
+		    $b->redim($result->length,0); 
+		    $s2 = $b->map;
+		}
+		else
+		{
+			if ($bitmap->map == '') $bitmap->dehexit();	
+		    $s2 = $bitmap->map;
 		}
 
 		$s3 = $s1 | $s2;
 		
-		$result = new swBitmap;
-		$result->length = $pl*8;
 		$result->map = $s3;
 		$result->touched = true;
 		return $result;

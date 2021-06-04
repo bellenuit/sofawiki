@@ -19,6 +19,3 @@ $swParseSpecial = true;
 
 
 ?>
-
-
-?>

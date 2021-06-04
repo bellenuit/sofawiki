@@ -23,7 +23,6 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <a href="index.php?name=special:indexes&index=urls">urls</a>
-<a href="index.php?name=special:indexes&index=short">short</a>
 <a href="index.php?name=special:indexes&index=bloom">bloom</a>
 <a href="index.php?name=special:indexes&index=queries">queries</a>';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
@@ -220,23 +219,36 @@ switch($_REQUEST['index'])
 
 	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
 	
-						 $path = $swRoot.'/site/indexes/urls.txt';
-						 $s = file_get_contents($path);
-						 $lines = array();
-						 for($i=0;$i<strlen($s);$i+=48) $lines[]=substr($s,$i,48);
-						// $lines = file($path,FILE_IGNORE_NEW_LINES || FILE_SKIP_EMPTY_LINES);
-						 $bm = new swBitmap;
-						 foreach($lines as $line)
-						 {
-						 	$fields = explode("\t",$line);
-							$r = $fields[0];
-						 	$bm->setbit($r);
-						 } 
-	
+						$urldbpath = $db->pathbase.'indexes/urls.db';
+						if (file_exists($urldbpath))
+							$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+						if (!$urldb)
+						{
+							echotime('urldb failed');
+						}
+						else
+						{
+							$k = dba_firstkey($urldb);
 							
-						  $swParsedContent .= '<p>length: '.$bm->length;
-						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							$result = array();
+							
+							$revisions = 0;
+							$urls = 0;
+							
+							if (substr($k,0,1)==' ') $revisions++; else $urls++;
+							
+							while($k = dba_nextkey($urldb))
+							{
+								
+								if (substr($k,0,1)==' ') $revisions++;
+ 								else $urls++;
+							}
+							$swParsedContent .= '<p>'.$revisions.' revisions';
+							$swParsedContent .= '<p>'.$urls.' urls';
+						}
+						
+
+	
 						  break;
 
 	case 'short': 		$swParsedContent .= '<h3>short</h3>';
@@ -314,13 +326,38 @@ switch($_REQUEST['index'])
 						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
 						 			
 						 			$bm2 = swGetBloomBitmapFromTerm($_REQUEST['term']);
-						 			$bm2 = $bm2->andop($db->currentbitmap);
-						 			
+						 			$c0 = $bm2->countbits();
 						 			$n = $db->currentbitmap->countbits();
+						 			
+						 			
+						 			$bm2 = $bm2->andop($db->currentbitmap);
+						 			//$bm2 = $bm2->andop($test);
+						 			
+						 			
 						 			$c = $bm2->countbits();
 						 		
-									$swParsedContent .= $c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,2);
+									$swParsedContent .= '<p>'.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,2);
+									
+									$swParsedContent .= '<p>Term : '.join(' ',swGetHashesFromTerm($_REQUEST['term']));
+									
+									// show raw bloom
+									
+									/*
+									$bitmap = new swBitmap;
+									$path = $swRoot.'/site/indexes/bloom.raw';
+									$raw = file_get_contents($path);
+									$bitmap->init(strlen($raw)*8);
+									$bitmap->map = $raw;
+									
+									$c = $bitmap->countbits();
+									$n = $bitmap->length;
+									
+									$swParsedContent .= '<p>Bloom countbits '.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%';*/
 
+																		 
+									
+									
+									
 						 		}
 						 		//$swParsedContent .= '<p>'.swGetBloomDensity();
 							break;
@@ -415,25 +452,29 @@ switch($_REQUEST['index'])
 								
 								if (stristr($_REQUEST['q'],'.db'))
 								{
-									$key = dba_firstkey($bdb);
-									$fields = array_keys(unserialize(dba_fetch($key,$bdb)));
-									
-									$swParsedContent .= '<p>relation '.join(', ',$fields).'<br>data';
-	
-									
-									while($key)
+									if ($bm && $bm->countbits())
 									{
-										if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
+									
+										$key = dba_firstkey($bdb);
+										$fields = array_keys(unserialize(dba_fetch($key,$bdb)));
 										
-										$fields = array_values(unserialize(dba_fetch($key,$bdb)));
+										$swParsedContent .= '<p>relation '.join(', ',$fields).'<br>data';
+		
 										
-										
-										$swParsedContent .= '<br>"'.join('", "',$fields).'"';
-										
-												
-										$key = dba_nextkey($bdb);
+										while($key)
+										{
+											if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
+											
+											$fields = array_values(unserialize(dba_fetch($key,$bdb)));
+											
+											
+											$swParsedContent .= '<br>"'.join('", "',$fields).'"';
+											
+													
+											$key = dba_nextkey($bdb);
+										}
+										$swParsedContent .= '<br>end data';
 									}
-									$swParsedContent .= '<br>end data';
 
 									
 								}

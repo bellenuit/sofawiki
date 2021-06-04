@@ -333,14 +333,24 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	$chunks = array();
 	
+	$bdbrwritable = true;
+	
 	if (file_exists($bdbfile))
 		$bdb = @dba_open($bdbfile, 'wdt', 'db4');
 	else
 		$bdb = @dba_open($bdbfile, 'c', 'db4');	
 	if (!$bdb)
 	{
-		echotime('db failed '.$bdbfile);
-		return;
+		// try read only
+		$bdb = @dba_open($bdbfile, 'rdt', 'db4');
+		
+				
+		if (!$bdb)
+			throw new swExpressionError('db failed '.md5($mdfilter),88);
+			
+		$bdbrwritable = false;
+		echotime("bdb readonly");
+
 	}
 	
 	// echo $bdbfile;
@@ -351,8 +361,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	if ($s = dba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
 	if ($s = dba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
 
-	echotime('cached '.count($bitmap->countbits()));
-	echotime('cb '.$checkedbitmap->countbits());
+	echotime('cached '. $bitmap->countbits());
 	
 	$db->init();
 	$maxlastrevision = $db->lastrevision;
@@ -384,74 +393,96 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	{
 		
 		
-		if (($namefilter || $namespacefilter) && $filter != '_name, _revision')
+		if (($namefilter || $namespacefilter))
 		{
-			$namerelation = swRelationFilter('_name, _revision', $globals);
-			$tuples = $namerelation->tuples;
 			
-			
-			foreach($tuples as $t)
+			$urldbpath = $db->pathbase.'indexes/urls.db';
+			if (file_exists($urldbpath))
+			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+			if (!$urldb)
 			{
-				$f = $t->fields();
-				$n = swNameURL($f['_name']);
+				echotime('urldb failed');
+			}
+			else
+			{
+				$n = dba_firstkey($urldb);
 				
-				if ($namespacefilter and $namespacefilter != '*')
+				do 
 				{
-					$orfound = false;
+					if (substr($n,0,1)==' ') continue; // revision
 					
-					foreach($namespacefilter as $hor)
+					
+				
+					if ($namespacefilter and $namespacefilter != '*')
 					{
-						$andfound = true;
+						$orfound = false;
 						
-						if (!is_array($hor)) print_r($namespacefilter);
-						else
-						foreach($hor as $hand)
+						foreach($namespacefilter as $hor)
 						{
-							if ($hand && strstr($n,':') && !strstr($n,$hand.':')) $andfound = false;
+							$andfound = true;
+							
+							if (!is_array($hor)) print_r($namespacefilter);
+							else
+							foreach($hor as $hand)
+							{
+								if ($hand && strstr($n,':') && !strstr($n,$hand.':')) $andfound = false;
+							}
+							
+							
+							if ($andfound) $orfound = true;
 						}
 						
-						
-						if ($andfound) $orfound = true;
-					}
-					
-					if (!$orfound) 
-					{
-						$tocheckbitmap->unsetbit($f['_revision']);
-						$checkedbitmap->setbit($f['_revision']);
-						continue;
-					}
-				}
-				
-				if ($namefilter and $namefilter != '*')
-				{
-					$orfound = false;
-					
-					foreach($namefilter as $hor)
-					{
-						$andfound = true;
-						
-						foreach($hor as $hand)
+						if (!$orfound) 
 						{
-							if ($hand && !strstr($n,$hand)) $andfound = false;
+							$revisions = explode(' ',dba_fetch($n,$urldb));
+							
+							foreach($revisions as $r)
+							{
+								$tocheckbitmap->unsetbit($r);
+								$checkedbitmap->setbit($r);
+							}
+							continue;
 						}
+					}
+					
+					if ($namefilter and $namefilter != '*')
+					{
+						$orfound = false;
+						
+						foreach($namefilter as $hor)
+						{
+							$andfound = true;
+							
+							foreach($hor as $hand)
+							{
+								if ($hand && !strstr($n,$hand)) $andfound = false;
+							}
+	
+							
+							if ($andfound) $orfound = true;
+						}
+						
+						if (!$orfound) 
+						{
+							$revisions = explode(' ',dba_fetch($n,$urldb));
+							
+							foreach($revisions as $r)
+							{
+								$tocheckbitmap->unsetbit($r);
+								$checkedbitmap->setbit($r);
+							}
+							continue;
+						}
+					}
+				
+				} while ($n = dba_nextkey($urldb));
+			
+			} // else db failed		
 
-						
-						if ($andfound) $orfound = true;
-					}
-					
-					if (!$orfound) 
-					{
-						$tocheckbitmap->unsetbit($f['_revision']);
-						$checkedbitmap->setbit($f['_revision']);
-						continue;
-					}
-				}
-				
-			}	
 		}
 		$tocheckcount = $tocheckbitmap->countbits();
-		if ($filter != '_name, _revision')
-			echotime('namefilter '.$tocheckcount); 			
+		
+		echotime('namefilter '.$tocheckcount); 			
 
 			
 		$bigbloom = new swBitmap();
@@ -501,8 +532,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		
 		$tocheckcount = $tocheckbitmap->countbits();
-		if ($filter != '_name, _revision')
-			echotime('bloom '.$tocheckcount); 			
+		echotime('bloom '.$tocheckcount); 			
 						
 		
 		$starttime = microtime(true);
@@ -558,6 +588,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_revision'][] = $record->revision;
 					$fieldlist['_status'][] = $record->status;
 					$fieldlist['_name'][] = $record->name;
+					$fieldlist['_displayname'][] = $record->getdisplayname();
 					$fieldlist['_url'][] = swNameURL($record->name);
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
@@ -710,7 +741,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				
 				
 
-				if (count($rows)>0)
+				if (count($rows)>0 && $bdbrwritable)
 				{
 					foreach($rows as $primary=>$line)
 						dba_replace($primary,serialize($line),$bdb);
@@ -791,15 +822,18 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$key = dba_nextkey($bdb);
 	}
 	
-	dba_replace('_filter',$filter,$bdb);
-	dba_replace('_overtime',serialize($overtime),$bdb);
-	dba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
-	dba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
+	if ($bdbrwritable)
+	{
+		dba_replace('_filter',$filter,$bdb);
+		dba_replace('_overtime',serialize($overtime),$bdb);
+		dba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
+		dba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
 	$bitmap->hexit();
-	dba_replace('_bitmap',serialize($bitmap),$bdb);
+		dba_replace('_bitmap',serialize($bitmap),$bdb);
 	$checkedbitmap->hexit();
-	dba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
-	dba_close($bdb);
+		dba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+		dba_close($bdb);
+	}
 	
 	foreach($d as $key=>$val)
 	{
@@ -829,7 +863,7 @@ project _name, _paragraph
 template "'.$template.'"';
 else
 	$print = '
-update _name = "<br>[["._name."]]<br>". _paragraph 
+update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph 
 project _name
 label _name ""
 print grid '.$limit;
@@ -852,8 +886,9 @@ $singlequote = "'";
 
 $q = '
 
-filter _namespace "'.$namespace.'", _name, _paragraph "'.$term.'"
-filter _namespace "'.$namespace.'", _name "'.$term.'", _paragraph
+filter _namespace "'.$namespace.'", _name, _displayname, _paragraph "'.$term.'"
+write "paragraphs"
+filter _namespace "'.$namespace.'", _name "'.$term.'", _displayname, _paragraph
 union
 select trim(_paragraph) !== "" and substr(_paragraph,0,1) !== "#" and substr(_paragraph,0,2) !== "{{" and substr(_paragraph,0,6) !== "<code>"  and substr(_paragraph,0,2) !== "{|"
 extend _nameint = regexreplace(_name,"\/\w\w","")
@@ -899,7 +934,8 @@ pop
 // show results with interesting paragraph
 limit '.$start.' '.$limit.'
 
-filter _namespace "main", _name, _paragraph "'.$term.'"
+// filter _namespace "main", _name, _paragraph "'.$term.'"
+read "paragraphs"
 extend row = rownumber
 project inline _name, row min
 select row = row_min

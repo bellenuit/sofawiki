@@ -45,55 +45,35 @@ function swGetAllRevisionsFromName($name)
 	global $swAllRevisionsCache;
 	if (isset($swAllRevisionsCache[$name]))
 		return $swAllRevisionsCache[$name];
+	global $db;	
+	
+	$url= swNameURL($name);
+	
+	$revs = array();	
+	$urldbpath = $db->pathbase.'indexes/urls.db';
+	if (file_exists($urldbpath))
+		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+	if (!$urldb)
+	{
+		echotime('urldb failed');
+	}
+	else
+	{
+		if (dba_exists($url,$urldb))
+		{
+			$s = dba_fetch($url,$urldb);
+			$revs = explode(' ',$s);
+			rsort($revs,SORT_NUMERIC);
+		}
+		dba_close($urldb);
+	}
+	$swAllRevisionsCache[$name] = $revs;
+	return $revs;
+		
 	
 	$r = new swRecord;
 	$r->name = $name;
 	$md = $r->md5Name();
-	
-	$list = array();
-	global $swRoot;
-	$path = $swRoot.'/site/indexes/urls.txt';
-	if (file_exists($path) && $fpt = fopen($path,'r'))
-	{
-		$blocksize = 960;
-		$count = filesize($path) / $blocksize;
-		for ($i=0;$i<=$count;$i++)
-		{
-			@fseek($fpt, $blocksize*$i);
-			
-			if ($i==$count)
-				$chunksize = filesize($path) - $blocksize*$i;
-			else
-				$chunksize = $blocksize;
-			$chunkcount = $chunksize / 48;
-			
-			$chunk = @fread($fpt,$chunksize);
-			
-			for ($j=0;$j<$chunkcount;$j++)
-			{
-				$offset = $j*48;
-				$rev = trim(substr($chunk,$offset,9));
-				$st = substr($chunk,$offset+10,2);
-				$mdc = substr($chunk,$offset+12,32);
-			
-				if ($mdc == $md)
-					$list[] = $rev;
-			}
-			
-			/*
-			
-			$rev = trim(substr(@fread($fpt,10),0,9));
-			$st = @fread($fpt,2);
-			$mdc = @fread($fpt,32);
-			
-			if ($mdc == $md)
-				$list[] = $rev;
-			*/
-		}
-	}
-	echotime('got '. count($list));
-	$swAllRevisionsCache[$name] = $list;
-	return $list;
 	
 }	
 
@@ -320,32 +300,41 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		$url = swNameURL($r->name);
 		
-		
-		// format line fixed length, but compatible with text 
-		// $rev pad to 9, add tab = 10
-		// $status 1, add tab = 2
-		// $md5 32
-		// PHP_EOL can be 1 or 2, we prepad to 4
-		// total 48
-		
-		$line = str_pad($rev,9,' ')."\t";
-		$line .= substr($r->status,0,1)."\t";
-		$line .= $r->md5Name(); // 32
-		$line .= substr('    '.PHP_EOL,-4);
-		
-		global $swRoot;
-		$path = $this->pathbase.'indexes/urls.txt';
-		$fpt = fopen($path,'c');
-		@fseek($fpt, 48*($rev-1));
-		@fwrite($fpt, $line);
-		@fclose($fpt);
-		
-		/*
-		if (strlen($source) <= 512)
+				
+		$urldbpath = $this->pathbase.'indexes/urls.db';
+		if (file_exists($urldbpath))
+			$urldb = @dba_open($urldbpath, 'wdt', 'db4');
+		else
+			$urldb = @dba_open($urldbpath, 'c', 'db4');	
+		if (!$urldb)
 		{
-			$r->writecurrent(true);
+			echotime('urldb failed');
 		}
-		*/
+		else
+		{
+			// double index
+			// url as key
+			
+			$s = '';
+			if (dba_exists($url,$urldb))
+			{
+				$s = dba_fetch($url,$urldb);
+				$revs = explode(' ',$s);
+				$revs[] = $rev;
+				rsort($revs,SORT_NUMERIC);
+				dba_replace($url, join(' ',$revs), $urldb);
+			}
+			else
+				dba_replace($url,$rev, $urldb);
+			
+			// revision as key - preceded by the non-url-character space
+			// and value = status1 + " " + url
+			
+			dba_replace(' '.$rev,substr($r->status,0,1).' '.$url, $urldb);			
+			
+			dba_close($urldb);
+		}
+		
 		
 		return true;
 
@@ -396,16 +385,7 @@ class swDB extends swPersistance //extend may be obsolete
 		global $swError, $swIndexError, $swOvertime;
 	
 		echotime("rebuild ".$lastindex);  
-		swSemaphoreSignal();
-		$path = $this->pathbase.'indexes/urls.txt';
-		if (file_exists($path) && filesize($path)<48*($lastindex-1))
-		{
-			$fpt = fopen($path,'c');
-			@fseek($fpt, 48*($lastindex-1));
-			@fwrite($fpt, " ");
-			@fclose($fpt);
-		}
-		
+	
 		global $swMaxOverallSearchTime;
 		global $rebuildstarttime;
 		if (!$rebuildstarttime)
@@ -432,16 +412,78 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->rebuildBitmaps();
 		$swIndexError = false;
 		echotime('indexes built '.$c.' open '.$r);	
-		swSemaphoreRelease();
 	}	
 	
 	function rebuildBitmaps()
 	{
 		echotime('rebuildbitmaps');  
-		swSemaphoreSignal();
 		
+		global $db;
 		$current = array();
-		$path = $this->pathbase.'indexes/urls.txt';
+		$urldbpath = $db->pathbase.'indexes/urls.db';
+		if (file_exists($urldbpath))
+			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+		if (!$urldb)
+		{
+			echotime('urldb failed');
+		}
+		else
+		{
+			$this->indexedbitmap->init($db->lastrevision);
+			$this->currentbitmap->init($db->lastrevision);  
+			$this->deletedbitmap->init($db->lastrevision); 
+			$this->protectedbitmap->init($db->lastrevision);
+			
+			for ($i=1;$i<=$db->lastrevision;$i++)
+			{
+				$rev =$i;
+				if(dba_exists(' '.$i, $urldb))
+					$line = dba_fetch(' '.$i,$urldb);
+				else
+					$line = '';
+				$st = substr($line,0,1);
+				$url = substr($line,3);
+				
+				
+				$error = false;
+				switch($st)
+				{
+					case 'o':	$this->currentbitmap->setbit($rev);
+								$this->deletedbitmap->unsetbit($rev);
+								$this->protectedbitmap->unsetbit($rev);
+								break;
+					case 'd':	$this->currentbitmap->setbit($rev);
+								$this->deletedbitmap->setbit($rev);
+								$this->protectedbitmap->unsetbit($rev);
+								break;
+					case 'p':	$this->currentbitmap->setbit($rev);
+								$this->deletedbitmap->unsetbit($rev);
+								$this->protectedbitmap->setbit($rev);
+								break;
+					case '-':	break; // filled gap
+					case '':	$error = true;
+				}
+				if (!$error)
+				{
+					$this->indexedbitmap->setbit($rev);
+					if (isset($current[$url]))
+					{
+						$rold = $current[$url];
+						$this->currentbitmap->unsetbit($rold);
+					}
+					$current[$url] = $rev;
+				}
+				
+				
+			}
+			
+			
+			dba_close($urldb);
+		}
+
+		
+		/*
+		
 		if (file_exists($path) && $fpt = fopen($path,'r'))
 		{
 			$count = filesize($path) / 48;
@@ -484,12 +526,13 @@ class swDB extends swPersistance //extend may be obsolete
 						$rold = $current[$mdc];
 						$this->currentbitmap->unsetbit($rold);
 					}
-					$current[$mdc] = $rev;
+					$current[$mdc/ = $rev;
 				}
 				
 			}
 		}
 		swSemaphoreRelease();
+		*/
 		echotime('bitmaps built');
 	}
 	

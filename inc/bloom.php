@@ -8,6 +8,40 @@ include_once "bitmap.php";
 include_once "utilities.php";
 
 
+/* on design
+
+http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
+false positive is minmized with
+k = ln(2)*m/n
+where
+k = number of hashes used per trigram
+m = bitdepth of bloom filter
+n = number of trigrams
+
+or n = ln(2)*m/k
+
+our design
+ln2 ~~ 0.7
+k = 3
+m = 1024
+
+-> n = 240
+
+it is set therefore for 240 trigrams per revision
+false positives: 15%
+
+if the text is longer, false positive rises to 25%
+
+if we would to have less than 10% for 500 length, we would need double the bit depth, but not necessarily more hashes per trigram.
+
+note that the trigram has also its probability there.
+
+*/
+
+
+
+
+
 function swFNVhash($s, $size, $prime, $offset) // Fowler-Noll-Vo hash function
 {
 	$hash = $offset;
@@ -25,6 +59,8 @@ function swFNVhash($s, $size, $prime, $offset) // Fowler-Noll-Vo hash function
 function swGetHashesFromTerm($s)
 {
 
+				
+		
 		$s = swNameURL($s);
 		
 		//echotime('s '.$s);
@@ -56,6 +92,11 @@ function swGetHashesFromTerm($s)
 	
 }
 
+function swGetHashesFromRevision($rev)
+{
+	
+}
+
 
 
 function swGetBloomBitmapFromTerm($term)
@@ -78,7 +119,7 @@ function swGetBloomBitmapFromTerm($term)
 						 			
 	$hashes = swGetHashesFromTerm($term);
 	
-	// echo "TERM=$term;";	
+	
 	
 	foreach($hashes as $h)
 	{
@@ -88,20 +129,13 @@ function swGetBloomBitmapFromTerm($term)
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
 		
-		//echotime($blocks);
-					
 		for ($i = 0; $i<=$blocks; $i++)
 		{
-			
-			
-			//echotime($h.' '.$i);
-			
+						
 			$col = 0;
 			$offset = ($i * 1024 + $h) * 8192 + $col;
 			fseek($swBloomIndex,$offset); 
 			$test = fread($swBloomIndex,8192); 
-			
-			//echotime($offset);
 			
 			$hbm->map .= $test;
 		}
@@ -170,6 +204,9 @@ function swIndexBloom($numberofrevisions = 1000)
 	
 	$i = 0; $rev = 0;
 	$rev = $db->lastrevision;
+	
+	$revisionpath = $swRoot.'/site/revisions/';
+	
 	while ($i < $numberofrevisions) 
 	{
 		$rev--;
@@ -187,6 +224,8 @@ function swIndexBloom($numberofrevisions = 1000)
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
 		if ($dur>3*$swMaxSearchTime) { echotime('searchtime'); break;}
 		
+		/*
+		
 		$w = new swRecord;
 		$w->revision = $rev;
 		$w->error = '';
@@ -198,6 +237,11 @@ function swIndexBloom($numberofrevisions = 1000)
 		}
 		
 		$text = $w->name.' '.$w->content;
+		
+		*/
+		
+		$text = swFileGet($revisionpath.$rev.'.txt');
+		
 		$hashes = swGetHashesFromTerm($text);
 		//echotime('rev '.$rev.' gothashes '.count($hashes));
 		$offsetmax = 0;
