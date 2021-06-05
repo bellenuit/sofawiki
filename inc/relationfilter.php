@@ -190,7 +190,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	// Filter syntax: field hint? (, field hint?)*
 	// Fields can be all normal fields and all internal fields
 	// Some special internal fields: _namespace, _word, paragraph
-	// Wildcard field * can be used, if at least one field has a hint (else it would return the entire website
+	// Wildcard field * and _content can be used, if at least one field has a hint (else it would return the entire website)
 	// Hints can be expressions
 	// Without hint, the fields is always included in the result even if it does not exist
 	// With a wildcard hint *, the field must be present
@@ -225,6 +225,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$pairs = explode(',',$filter);
 	$fields = array(); 
 	$getAllFields = false;
+	$getContent = false;
 	$newpairs = array();
 	$namefilter	= nulL;
 	$namespacefilter = nulL;
@@ -244,28 +245,24 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$xp->compile($h);
 			$h = $xp->evaluate($globals);
 			
-			/*
-			if (substr($h,0,1) != '"' && substr($h,-1,1) != '"')
-			{
-				$h = '"'.@$globals[$h].'"';
-			}
-			elseif (substr($h,0,1) != '"')
-				throw new swExpressionError('filter missing start quote '.$f,88);
-			elseif (substr($h,-1,1) != '"')
-				throw new swExpressionError('filter missing end quote '.$f,88);
-			$h = substr($h,1,-1);
-			*/
-			
-			if ($h=="") $h = '*';
 		}
 		if ($f == '*')	
 			$getAllFields = true;
+		elseif ($f == '_content' && $h=='')
+		{
+			$getContent = true;
+			$hors2 = $fields[$f] = null;
+		}	
 		elseif ($h == '*')
 		{
 			$hors2 = $fields[$f] = "*";
 		}
-		else	
+		elseif 	($h == '')
+		{
+			$hors2 = $fields[$f] = null;
+		}
 			// make each individual url but keep spaces as separator
+		else
 		{
 			$hors = explode('|',$h);
 			$hors2 = array();
@@ -295,12 +292,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$namespacefilter = $hors2;
 		
 	}
-	//print_r($fields);
+	// print_r($fields);
 	$filter = join(', ',$newpairs); // needed values for cache.
 	echotime('filter '.$filter);
 	
 	// if * there must be at least one hint, we cannot return the entire database
-	if ($getAllFields)
+	if ($getAllFields || $getContent)
 	{
 		$found = false;
 		foreach($fields as $hint)
@@ -309,7 +306,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				$found = true;
 		}
 		if (!$found)
-			throw new swExpressionError('filter missing at least one hint on * '.$f,88);
+			throw new swExpressionError('filter missing at least one hint on * or when using _content',88);
 	}
 	
 
@@ -490,8 +487,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		foreach($fields as $field=>$hors)
 		{
 			
-			
-			if (substr($field,0,1) != '_') 
+			// only external fields that must be present
+			// if there is only one field, it must always be present
+			if (($hors || count($fields)==1) && substr($field,0,1) != '_') 
 			{
 				$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
 				$gr->redim($tocheckbitmap->length, true);
@@ -509,7 +507,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						foreach($hor as $hand)
 						{
-							if ($hand != '')
+							if ($hand != '' && strlen($hand)>2)
 							{
 								$gr = swGetBloomBitmapFromTerm($hand);
 								$gr->redim($$tocheckbitmap->length, true);
@@ -543,6 +541,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
 			if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
 			$checkedcount = 0;
+			
+			
+			// print_r($fields);
+			
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
@@ -593,6 +595,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
 					$fieldlist['_content'][] = $record->content;
+					$fieldlist['_length'][] = strlen($record->content);
 					$fieldlist['_short'][] = substr($record->content,0,160);
 				
 					
@@ -663,24 +666,28 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					{
 						$revision = $fieldlist2[$fi]['_revision'];
 						$found = true;
+												
 						foreach($fields as $key=>$hint)
 						{
 							$fieldfound = false;
-							if ($hint=='')
-							{
+							if ($hint== null)
+							{								
+								if (!array_key_exists($key,$fieldlist2[$fi]))
+									$fieldlist2[$fi][$key] = '';
+								
 								$fieldfound = true;
-								//echo "not";
+								
 							}
 							elseif (array_key_exists($key,$fieldlist2[$fi]))
 							{
-								if ($hint == "*") 
+								if ($hint=='*')
 								{
 									$fieldfound = true;
 																	}
 								else
 								{									
 									$flv =  swNameURL($fieldlist2[$fi][$key]);
-									//echo $flv.' ';
+									// echo $flv.' ';
 									
 									$orfound = false;
 									
@@ -709,10 +716,20 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							}
 							
 							if (!$fieldfound) $found = false;
+							
+							
 						}
 						
+						
+						
 						if ($found)
+						{
 							$rows[$revision.'-'.$fi] = $fieldlist2[$fi];
+							
+							
+						
+							
+						}
 						
 
 					}
@@ -740,11 +757,32 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				}
 				
 				
+				
+				
 
 				if (count($rows)>0 && $bdbrwritable)
 				{
+					// print_r($rows);
+					
 					foreach($rows as $primary=>$line)
-						dba_replace($primary,serialize($line),$bdb);
+					{
+						$linehascontent = false;
+						foreach($line as $key=>$value)
+						{
+
+							//print_r($line);
+							if (array_key_exists($key,$fields) || ( $key != '_revision' && $key != '_url') )
+							{
+								if ($value) 
+								{
+									$linehascontent = true;
+								}
+							}
+						}
+						
+						if ($linehascontent)
+							dba_replace($primary,serialize($line),$bdb);
+					}
 					$bitmap->setbit($k);
 				}
 				$checkedbitmap->setbit($k);
@@ -809,11 +847,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$dns = array_shift($dnf);
 			if (! in_array($dns, $ns) && $user && !$user->hasright('view',$dn)) continue;
 		}
-		
+				
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);
 		if (!in_array('_url',$result->header)) unset($d['_url']);
 		
-		//print_r($d);
+		
 		
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;

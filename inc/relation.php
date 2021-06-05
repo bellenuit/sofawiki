@@ -1591,7 +1591,8 @@ class swRelation
 			$d[$this->header[$i]] = $fields[$i];
 		}
 		$tp = new swTuple($d); 
-		$this->tuples[$tp->hash()] = $tp;
+		if ($tp->hasValues())
+			$this->tuples[$tp->hash()] = $tp;
 		
 	}
 	
@@ -3031,7 +3032,8 @@ class swRelation
 				$d[$label] = $v;
 				$tp = new swTuple($d);
 			}
-			$newtuples[$tp->hash()] = $tp;
+			if ($tp->hasvalues())
+				$newtuples[$tp->hash()] = $tp;
 		}
 		$this->tuples = $newtuples;
 
@@ -3094,6 +3096,15 @@ class swTuple
 	{
 		return array_key_exists($k, $this->pfields);
 	}
+
+	function hasValues()
+	{
+		foreach ($this->pfields as $k=>$v)
+		{
+			if ($v) return true;
+		}
+	}
+
 	
 	function sameFamily($t)
 	{
