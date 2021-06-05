@@ -510,7 +510,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							if ($hand != '' && strlen($hand)>2)
 							{
 								$gr = swGetBloomBitmapFromTerm($hand);
-								$gr->redim($$tocheckbitmap->length, true);
+								$gr->redim($tocheckbitmap->length, true);
 								$band = $band->andop($gr);
 							}
 						}

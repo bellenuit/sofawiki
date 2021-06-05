@@ -1327,21 +1327,26 @@ class swRelation
 	
 	function cleanColumn($s)
 	{
+		//echo $s . "= ";
+		
 		$result; 
 		$i; $c; 
 		$ch; 
-		$list1 = 'abcdefghijklmnoprsqtuvwxyz';
+		$list1 = '_abcdefghijklmnoprsqtuvwxyz';
 		$list = 'abcdefghijklmnoprsqtuvwxyz0123456789_';
 		
 		$c = strlen($s);
 		$ch = substr($s,0,1);
 		
-		if (!stristr($list1,$ch)) $result = '_'; else $result = $ch;
-		for($i = 1; $i<$c; $i++)
+		if (!stristr($list1,$ch)) $result = '_'; else $result = '';
+		for($i = 0; $i<$c; $i++)
 		{
 			$ch = substr($s,$i,1);
 			if (!stristr($list,$ch)) $result .= '_'; else $result .= $ch;
 		}
+		
+		//echo $result . "; ";
+		
 		return $result;		
 	}
 	
@@ -1379,31 +1384,42 @@ class swRelation
 		$d = array();
 		$lastobservation;
 		$nulltext = '';
-		
+				
 		if (count($this->header)< 3)
 			throw new swRelationError('Deserialize less than 3 properties',602);
 		if (count($this->header)> 3)
 			throw new swRelationError('Deserialize more than 3 properties',602);
 			
-		$this->order($this->header(0));
+		$this->order($this->header[0]);
 		
 		$r = new swRelation('',$this->globals);
-		$r->addColumn($this->header(0));
+		// $r->addColumn($this->header[0]);
 		
 		$n = count($this->tuples);
-		for ($i = 0; $i<$n; $i++)
+		
+		foreach($this->tuples as $tp)
 		{
-			$tp = $this->tuples[$i];
-			$r->addColumn($this->cleanColumn($tp->value($this->header[1])));
+			$cc = $this->cleanColumn($tp->value($this->header[1]));
+			
+			if (!in_array($cc,$this->header))
+			{
+				$r->addColumn($cc);
+				if (isset($this->formats[$this->header[1]]))
+				$this->formats[$cc] = $this->formats[$this->header[1]];
+				$this->labels[$cc] = $tp->value($this->header[1]);
+			}
+			
 		}	
+		// print_r($r->header);
 		
-		$m = count($r->header); //???
-		
-		$lastobservation = '';
-		for ($i=0; $i<$n; $i++)
+		sort($r->header);
+		array_unshift($r->header,$this->header[0]);
+				
+		$lastobservation = null;
+		$d = null;
+		foreach($this->tuples as $tp)
 		{
-			$tp = $this->tuples[$i];
-			if ($tp->value[$this->header[0]] != 'lastobservation')
+			if ($tp->value($this->header[0]) != $lastobservation)
 			{
 				if ($d)
 				{
@@ -1416,11 +1432,14 @@ class swRelation
 					$r->tuples[$tp2->hash()] = $tp2;
 				}
 				$d = array();
-				$d[$this->header[0]] = $tp[$this->header[0]];
-				$lastobservation = $tp[$this->header[0]];
+				$d[$this->header[0]] = $tp->value($this->header[0]);
+				$lastobservation = $tp->value($this->header[0]);
 			}
-			$d[$p[$this->header[1]]] = $tp[$this->header[2]];
+			$d[$this->cleanColumn($tp->value($this->header[1]))] = $tp->value($this->header[2]);
 		}
+		
+		
+	
 		if ($d)
 		{
 			foreach($r->header as $mf)

@@ -201,7 +201,10 @@ table.datatable th
 	width: auto;
 }
 
-.relation table.print td.numberformat
+.relation table.print td.numberformat 
+{ text-align:right }
+
+.relation table.print th.numberformat 
 { text-align:right }
 
 
