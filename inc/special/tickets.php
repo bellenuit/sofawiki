@@ -336,6 +336,8 @@ if ($mytickets) $assigned = $username; // default
 if ($assigned && !$id)
 {
 		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, assigned "'.$assigned.'"
+select status !== "closed"
+select status !== "resolved"
 order priority, id 9');
 		$i=0;
 		$swParsedContent .= "\n".'===Tickets assigned to '.$assigned.'===';

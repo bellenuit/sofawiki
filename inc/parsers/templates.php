@@ -20,6 +20,7 @@ class swTemplateParser extends swParser
 		$s = $wiki->parsedContent;
 		
 		
+				
 		global $swFunctions;
 		$this->functions = $swFunctions;
 		global $swTranscludeNamespaces;
@@ -64,6 +65,7 @@ class swTemplateParser extends swParser
 		{
 			$s0 = $s;
 			$val0 = substr($matches[0],3,-2);
+			
 			
 			// we must protect pipe characters inside [[ ]] because they are parsed later in links.php
 			

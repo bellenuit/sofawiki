@@ -383,7 +383,7 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'filter':		$gl = array_merge($this->globals,$locals);
+				case 'filter':		$gl = array_merge($dict, $this->globals,$locals);
 									
 									global $swDebugRefresh;
 									
@@ -689,6 +689,8 @@ class swRelationLineHandler
 											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
 											case 'fields':	$this->result .= $r->toFields(); break;
 											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
+											case 'space':	$this->result .= $r->getSpace(); break;
+
 											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
 											case 'raw':		$this->result .= $r->getTab(); break;
 											
@@ -1920,12 +1922,14 @@ class swRelation
 		//echo $start.'/'.$length;
 		if ($start == 0)
 			throw new swRelationError('Limit Start 0',88);
-		if ($start > count($this->tuples))
-			throw new swRelationError('Limit Start > count',88);
 		if ($length < 0)
 			throw new swRelationError('Limit Length < 0',88);
 			
 		$c = count($this->tuples);
+		
+		if ($start > $c)
+			{ $this->tuples = array(); return; }
+		
 		
 		if ($start < 0)
 		$start = count($this->tuples)-$start-1;
@@ -2536,7 +2540,7 @@ class swRelation
 		
 	}
 	
-	function getTab()
+		function getTab()
 	{
 		$lines = array();
 		$c = count($this->header);
@@ -2563,7 +2567,37 @@ class swRelation
 		}
 		return join(PHP_EOL,$lines);
 	}
+
 	
+	function getSpace()
+	{
+		$lines = array();
+		$c = count($this->header);
+				
+		foreach($this->tuples as $tp)
+		{
+			$fields = array();
+			for($i=0;$i<$c;$i++)
+			{
+				$f = $this->header[$i];
+				$test = $tp->value($f);
+				if (array_key_exists($f,$this->formats))
+				{
+					$fm = $this->formats($f);
+					if ($fm != '')
+						$test = $this->format2($floatval($test),$fm);
+				}
+				$fields[] = $test;
+				
+			}
+			$lines[] = join(' ',$fields);
+		}
+		return join(PHP_EOL,$lines);
+	}
+	
+
+
+
 	function setTab($lines)
 	{
 		$this->header = array();
@@ -3503,41 +3537,6 @@ function cText12($d)
 	
 }
 
-function swRelationToTable($q)
-{
-	$lh = new swRelationLineHandler;
-	$s = $lh->run($q.PHP_EOL.'print raw'); 
-	
-	// '<div class="relation">'.
-	// '</div>'
-	
-	$s = substr($s,strlen('<div class="relation">'));
-	$s = substr($s,0,-strlen('</div>'));
-	
-	
-	// echo urlencode($s);
-
-	$lines = explode(PHP_EOL,$s); // $lines
-
-	$header = array_shift($lines);
-	
-	// print_r($header);
-	
-	$fields = explode("\t",$header);
-	
-	
-	$result = array();
-	$i = 0;
-	foreach($lines as $line)
-	{
-		$linefields = explode("\t",$line);
-		// print_r($linefields);
-		foreach($fields as $field)
-			$result[$i][$field] = array_shift($linefields);
-		$i++;
-	}
-	return $result;
-}
 
 
 ?>

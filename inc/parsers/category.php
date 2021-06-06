@@ -18,7 +18,7 @@ class swCategoryParser extends swParser
 		{
 			
 			global $swSearchNamespaces;
-			$namespaces = strtolower(join(' ',$swSearchNamespaces).' ');
+			$namespaces = 'main|'.strtolower(join('|',array_filter($swSearchNamespaces)).' ');
 			
 			$wn = $wiki->originalName;
 			$wn = substr($wn,strlen('category:'));
@@ -31,7 +31,7 @@ class swCategoryParser extends swParser
 			{
 				$s = $wiki->parsedContent;
 				
-				$q = 'filter _namespace, _name, _category "'.$wn.'"
+				$q = 'filter _namespace "'.$namespaces.'", _name, _category "'.$wn.'"
 select _category regexi "^'.$wn.'$"
 update _name = "[["._name."]]"
 update _name = "[[:".substr(_name,2,99) where _namespace regex "image|category"
@@ -49,7 +49,7 @@ print grid';
 			else
 			
 			{
-				$q = 'filter _name, _category "'.$wn.'"
+				$q = 'filter _namespace "'.$namespaces.'", _name, _category "'.$wn.'"
 select _category regexi "^'.$wn.'$"';
 				$revisions = swRelationToTable($q);
 				$names = array();
@@ -69,6 +69,9 @@ select _category regexi "^'.$wn.'$"';
 					
 				}
 				ksort($names);
+				
+				$gprefix = '<div id="categoryList"><ul>';
+				$gpostfix = '</ul></div>';
 				
 				$hookresult = swInternalCategoryHook($names,$wn);
 				if ($hookresult)
@@ -108,8 +111,7 @@ select _category regexi "^'.$wn.'$"';
 				
 				// now we have a sorted lists of all names;
 				
-				$gprefix = '<div id="categoryList"><ul>';
-				$gpostfix = '</ul></div>';
+				
 				$separator = "\n";
 				$limit = 0;
 				// function can reorder list and apply custom templates for each name

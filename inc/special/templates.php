@@ -11,7 +11,7 @@ update _name = "[["._name."]]"
 project _name
 order _name a
 label _name "" 
-print grid 100';
+print grid';
 
 $lh = new swRelationLineHandler;
 $swParsedContent .= $lh->run($q);

@@ -376,7 +376,10 @@ switch($_REQUEST['index'])
 								$path = $querypath.$_REQUEST['q'].'.txt';
 								swUnlink($path);
 								
-								$swParsedContent .= 'reset '.$_REQUEST['q'].'.txt';
+								if (substr($_REQUEST['q'],-3) !== '.db')
+									$swParsedContent .= 'reset '.$_REQUEST['q'].'.txt';
+								else
+									$swParsedContent .= 'reset '.$_REQUEST['q'];
 								
 								break;
 								
@@ -448,7 +451,12 @@ switch($_REQUEST['index'])
 								$swParsedContent .= '<p>Good: '.$bm->countbits().'/'.$bm->length.' <br>'.bitmap2canvas($bm, false);
 								if ($bm2)
 								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, false,2);
-								$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'.txt</a> ';
+								
+								if (substr($_REQUEST['q'],-3) !== '.db')
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'.txt</a> ';
+								else
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
+
 								
 								if (stristr($_REQUEST['q'],'.db'))
 								{
@@ -509,7 +517,8 @@ switch($_REQUEST['index'])
 								{
 							 		//biggest 25 and last 
 							 		$t = filemtime($querypath.$v);
-							 		$d = date('Y-m-d H:i:s',$t);
+							 		$filesize = floor(filesize($querypath.$v)/1024);
+							 		$d = date('Y-m-d H:i',$t);
 							 		if ($i<25 || time() - $t < 60*60)
 							 		{
 							 				
@@ -530,14 +539,14 @@ switch($_REQUEST['index'])
 													
 												}
 												
-												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.count(@$results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.@count(@$results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
 											}
 											else
 											{
 												$bdb = dba_open($querypath.$v,'r','db4');
 												$results['filter'] = dba_fetch('_filter',$bdb);
 												
-												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' <br>filter '.@$results['filter'];
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.$filesize.' kB <br>filter '.@$results['filter'];
 												
 											}
 											

@@ -200,6 +200,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	// If a fields is present multiple times, there are multiple results. Fields with less occurences are padded
 	
 	
+	if (!trim($filter)) return new swRelation('',null,null);
+	
 	global $swIndexError;
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
@@ -243,7 +245,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			$xp = new swExpression();
 			$xp->compile($h);
+			
+			// print_r($globals);
+			
 			$h = $xp->evaluate($globals);
+			
+			
 			
 		}
 		if ($f == '*')	
@@ -292,6 +299,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$namespacefilter = $hors2;
 		
 	}
+	// print_r($newpairs);
+	
 	// print_r($fields);
 	$filter = join(', ',$newpairs); // needed values for cache.
 	echotime('filter '.$filter);
@@ -349,6 +358,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		echotime("bdb readonly");
 
 	}
+	if ($bdbrwritable)
+		dba_replace('_filter',$filter,$bdb);
+	
 	
 	// echo $bdbfile;
 	
@@ -372,7 +384,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$tocheckbitmap = $tocheckbitmap->andop($db->indexedbitmap);
 
 	$tocheckcount = $tocheckbitmap->countbits();
-
+	
 	if ($tocheckcount>0) 
 	{ 
 		echotime('tocheck '.$tocheckcount); 
@@ -392,6 +404,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		if (($namefilter || $namespacefilter))
 		{
+			// sprint_r($namespacefilter);
 			
 			$urldbpath = $db->pathbase.'indexes/urls.db';
 			if (file_exists($urldbpath))
@@ -404,11 +417,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			{
 				$n = dba_firstkey($urldb);
 				
+				
 				do 
 				{
 					if (substr($n,0,1)==' ') continue; // revision
 					
-					
+					if (!stristr($n,':')) $n = 'main:'.$n;
 				
 					if ($namespacefilter and $namespacefilter != '*')
 					{
@@ -418,16 +432,19 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						{
 							$andfound = true;
 							
-							if (!is_array($hor)) print_r($namespacefilter);
-							else
+							if (is_array($hor))
 							foreach($hor as $hand)
 							{
-								if ($hand && strstr($n,':') && !strstr($n,$hand.':')) $andfound = false;
+								// echo $hand.' ';
+																
+								if ($hand && !strstr($n,$hand.':')) $andfound = false;
 							}
 							
 							
 							if ($andfound) $orfound = true;
 						}
+						
+						
 						
 						if (!$orfound) 
 						{
@@ -484,19 +501,45 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 		$bigbloom = new swBitmap();
 		$bigbloom->init($tocheckbitmap->length,true);
+		
+		// only external fields that must be present
+		// if there is only one field, it must always be present
+		
+		/* special fields an bloom
+
+		exclude for value
+		_displayname, _length, _namespace
+		
+		exclude for label
+		_displayname, _length, _namespace, _template, _content, _short, _paragraph, _word
+		
+		
+		_category can stay, beause it must be present as [category]
+		
+		
+		*/
+
+		$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word');
+		$notinvalues = array('_displayname', '_length', '_namespace');
+		
+		
 		foreach($fields as $field=>$hors)
 		{
 			
-			// only external fields that must be present
-			// if there is only one field, it must always be present
-			if (($hors || count($fields)==1) && substr($field,0,1) != '_') 
+			if ($hors || count($fields)==1) 
 			{
-				$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
-				$gr->redim($tocheckbitmap->length, true);
-				$bigbloom = $bigbloom->andop($gr);
-			
-				if (is_array($hors))
+				
+				if (! in_array($field,$notinlabels))
 				{
+					// echo ' ,'.$field;
+					$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
+					$gr->redim($tocheckbitmap->length, true);
+					$bigbloom = $bigbloom->andop($gr);
+				}
+				
+				if (! in_array($field,$notinvalues) && is_array($hors))
+				{
+					// echo ' .'.$field;
 					$bor = new swBitmap();
 					$bor->init($tocheckbitmap->length,false);
 					
@@ -615,8 +658,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_namespace'][] = $ns;
 					
 					
+					
+					
 					$keys =array_keys($fieldlist);
-					foreach($keys as $key)
+					foreach($keys as $key) 
 					{
 						if (substr($key,0,1) != '_')
 						{
@@ -861,8 +906,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	
 	if ($bdbrwritable)
-	{
-		dba_replace('_filter',$filter,$bdb);
+	{	
+		// dba_replace('_filter',$filter,$bdb);
 		dba_replace('_overtime',serialize($overtime),$bdb);
 		dba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
 		dba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
@@ -870,8 +915,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		dba_replace('_bitmap',serialize($bitmap),$bdb);
 	$checkedbitmap->hexit();
 		dba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
-		dba_close($bdb);
+		
 	}
+	
+	dba_close($bdb);
 	
 	foreach($d as $key=>$val)
 	{
@@ -882,6 +929,44 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	return $result;
 	
 }
+
+
+function swRelationToTable($q)
+{
+	$lh = new swRelationLineHandler;
+	$s = $lh->run($q.PHP_EOL.'print raw'); 
+	
+	// '<div class="relation">'.
+	// '</div>'
+	
+	$s = substr($s,strlen('<div class="relation">'));
+	$s = substr($s,0,-strlen('</div>'));
+	
+	
+	// echo urlencode($s);
+
+	$lines = explode(PHP_EOL,$s); // $lines
+
+	$header = array_shift($lines);
+	
+	// print_r($header);
+	
+	$fields = explode("\t",$header);
+	
+	
+	$result = array();
+	$i = 0;
+	foreach($lines as $line)
+	{
+		$linefields = explode("\t",$line);
+		// print_r($linefields);
+		foreach($fields as $field)
+			$result[$i][$field] = array_shift($linefields);
+		$i++;
+	}
+	return $result;
+}
+
 
 
 function swRelationSearch($term, $start=1, $limit=100, $template="")
@@ -909,7 +994,9 @@ print grid '.$limit;
 
 global $swSearchNamespaces;
 
-$namespace = 'main|'.join('|',array_filter($swSearchNamespaces)); // filter removes empty values
+$spaces = array_filter($swSearchNamespaces);
+if (!in_array('main',$spaces)) $spaces[] = 'main';
+$namespace = join('|',$spaces); // filter removes empty values
 if (trim($namespace)=='main') $namespace = "main";
 if (stristr($namespace,'*')) $namespace = '*';
 $namespace = strtolower($namespace);

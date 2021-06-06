@@ -67,6 +67,14 @@ class swExtValueFunction extends swFunction
 		$list = array();
 		if (isset($wiki->internalfields[$field]))
 			$list = $wiki->internalfields[$field];
+		else
+		{   switch($field)
+			{
+				case '_name' : $list = array($wiki->name); break;
+				default: 
+			}
+		}
+		
 		
 		if (!is_array($list) || count($list)==0) return "";
 		

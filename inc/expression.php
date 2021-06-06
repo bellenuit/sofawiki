@@ -564,6 +564,16 @@ class swExpression
 		$aggregatorfirstrun = 'aggregatorfirstrun';
 		$currentindex = '';
 		
+		$globals['_pipe'] = '|';
+		$globals['_colon'] = ':';
+		$globals['_leftsquare'] = '[';
+		$globals['_rightsuare'] = ']';
+		$globals['_leftcurly'] = '{';
+		$globals['_rightcurly'] = '}';
+		$globals['_lt'] = '<';
+		$globals['_gt'] = '>';
+		$globals['_amp'] = '&';
+		
 		$this->stack = array();
 		
 		if (count($this->rpn) == 0) return '';
