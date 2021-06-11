@@ -376,6 +376,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$maxlastrevision = $db->lastrevision;
 	if ($db->indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($db->indexedbitmap->length); // fallback
 	
+	//echo " indexed ".$db->indexedbitmap->length;
+	//echo " checked ".$checkedbitmap->length;
+	//echo $checkedbitmap->getbit($checkedbitmap->length-1);
+	
 	
 	$bitmap->redim($maxlastrevision+1,false);
 	$checkedbitmap->redim($maxlastrevision+1,false);
@@ -500,7 +504,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 
 			
 		$bigbloom = new swBitmap();
-		$bigbloom->init($tocheckbitmap->length,true);
+		
+		$bigbloom->init($db->bloombitmap->length,true);
+		
 		
 		// only external fields that must be present
 		// if there is only one field, it must always be present
@@ -522,10 +528,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word');
 		$notinvalues = array('_displayname', '_length', '_namespace');
 		
+		// echo " bigbefore ".$bigbloom->length;
 		
 		foreach($fields as $field=>$hors)
 		{
 			
+			// echo $bigbloom->length;
 			if ($hors || count($fields)==1) 
 			{
 				
@@ -533,7 +541,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				{
 					// echo ' ,'.$field;
 					$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
-					$gr->redim($tocheckbitmap->length, true);
+					// echo ' field '.$field.' '.$gr->length;
 					$bigbloom = $bigbloom->andop($gr);
 				}
 				
@@ -541,19 +549,19 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				{
 					// echo ' .'.$field;
 					$bor = new swBitmap();
-					$bor->init($tocheckbitmap->length,false);
+					$bor->init($bigbloom->length,false);
 					
 					foreach($hors as $hor)
 					{
 						$band = new swBitmap();
-						$band->init($tocheckbitmap->length,true);
+						$band->init($bigbloom->length,true);
 						
 						foreach($hor as $hand)
 						{
 							if ($hand != '' && strlen($hand)>2)
 							{
 								$gr = swGetBloomBitmapFromTerm($hand);
-								$gr->redim($tocheckbitmap->length, true);
+								$gr->redim($bigbloom->length, true);
 								$band = $band->andop($gr);
 							}
 						}
@@ -565,11 +573,29 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$bigbloom = $bigbloom->andop($bor);	
 				}
 			}
+			//echo ' bbl '.$bigbloom->length;
 		}
+		// echo ' bigafter '.$bigbloom->length;
+		
+		$bigbloom->redim($tocheckbitmap->length,true);
+		
 		$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
 		$nottocheck = $bigbloom->notop();
 		
+		//echo " big ".$bigbloom->length;
+		//echo "(".$bigbloom->getbit($bigbloom->length-1).")";
+		
 		$checkedbitmap = $checkedbitmap->orop($nottocheck);
+		
+		// echo " big ".$bigbloom->length;
+		
+		// always check the newest revisions
+		/*
+		for($i=$maxlastrevision;$i>=$maxlastrevision-8;$i--)
+		{
+			$tocheckbitmap->setbit($i);
+		}
+		*/
 		
 		
 		$tocheckcount = $tocheckbitmap->countbits();
@@ -867,6 +893,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	$d = array();	
 	
+	dba_sync($bdb);
+	
 	$key = dba_firstkey($bdb);
 
 	
@@ -920,11 +948,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	dba_close($bdb);
 	
+	
+	if ($d)
 	foreach($d as $key=>$val)
 	{
 		if (!in_array($key, $result->header))
 			$result->addColumn($key);
 	}
+	
+	
 	
 	return $result;
 	
@@ -943,7 +975,7 @@ function swRelationToTable($q)
 	$s = substr($s,0,-strlen('</div>'));
 	
 	
-	// echo urlencode($s);
+	// echo $s;
 
 	$lines = explode(PHP_EOL,$s); // $lines
 

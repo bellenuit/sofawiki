@@ -105,7 +105,10 @@ function swGetBloomBitmapFromTerm($term)
 	global $swBloomIndex;
 	
 	$bm = new swBitmap;
-	$bm->init($db->lastrevision+1, true);
+	
+	// echo " gbbft ";
+	
+	$bm->init($db->bloombitmap->length, true);
 	
 	if (strlen(swNameURL($term))<3) return $bm;
 	
@@ -124,7 +127,7 @@ function swGetBloomBitmapFromTerm($term)
 	foreach($hashes as $h)
 	{
 		$hbm = new swBitmap;
-		$hbm->init($db->lastrevision+1, true);
+		$hbm->init($db->bloombitmap->length, true);
 		$hbm->map = '';
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
@@ -145,8 +148,8 @@ function swGetBloomBitmapFromTerm($term)
 	$bm->map = substr($bm->map,0,strlen($db->bloombitmap->map));
 	
 	// add all non indexed	
-	$notindexed = $db->bloombitmap->notop();
-	$bm = $bm->orop($notindexed);
+	//$notindexed = $db->bloombitmap->notop();
+	// $bm = $bm->orop($notindexed);
 	
 	//echotime('bloom end');
 		

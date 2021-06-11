@@ -48,11 +48,12 @@ if (isset($_POST['submitopen']))
 	$q = 'filter _namespace "ticket", id
 project id max
 print raw';
+	$lh = new swRelationLineHandler;
 	$s = $lh->run($q);
 	$s = explode(PHP_EOL,$s); // tab format
 	array_shift($s); // header;
 	
-	$id = @$s[0]+1;
+	$id = (int)@$s[0]+1;
 	
 	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
 
@@ -278,13 +279,17 @@ if ($ticketaction == 'activity')
 		$lines = swRelationToTable('filter _namespace "ticket", activity, id
 order activity z');
 
+		
+
+
+
 		$i=0;
 		$swParsedContent .= "\n".'===Activity===';
 		foreach($lines as $line)
 		{
 			if ($i > 100) break;
-			$link = '<nowiki><a href="index.php?name=special:tickets&id='.$line['id'].'">ticket #'.$line['id'].'</a></nowiki>';
-			$swParsedContent .= "\n".str_replace('ticket #'.$line['id'],$link,$line['activity']);
+			$link = '<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki>';
+			$swParsedContent .= "\n".str_replace('ticket #'.@$line['id'],$link,@$line['activity']);
 		  $i++;
 		}
 		$mytickets = false;
@@ -309,6 +314,8 @@ if ($status)
 {
 		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, assigned, status "'.$status.'"
 order priority, id 9');
+
+// print_r($lines);
 		
 
 		$i=0;
@@ -323,7 +330,7 @@ order priority, id 9');
 		foreach($lines as $line)
 		{
 			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.$line['id'].'">ticket #'.$line['id'].'</a></nowiki> (assigned to '.$line['assigned'].' with priority '.substr($line['priority'],2).'): '.$line['title'];
+			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned to '.@$line['assigned'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
 		  $i++;
 		}
 		$mytickets = false;
@@ -344,7 +351,7 @@ order priority, id 9');
 		foreach($lines as $line)
 		{
 			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.$line['id'].'">ticket #'.$line['id'].'</a></nowiki> ('.substr($line['priority'],2).'): '.$line['title'];
+			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> ('.substr(@$line['priority'],2).'): '.@$line['title'];
 		  $i++;
 		}
 }

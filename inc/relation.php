@@ -1965,6 +1965,8 @@ class swRelation
 	
 	function order2($pairs)
 	{
+		if (count($this->tuples)<2) return;
+		
 		$pairs2 = array();
 		
 		foreach($pairs as $p)
@@ -3014,29 +3016,25 @@ class swRelation
 	
 	function union($r)
 	{
+		if (!count($r->tuples)) return;
+		
+		
 		$e = $this->emptyTuple();
+		$e2 = $r->emptyTuple();
 		
-		$c = count($r->tuples);
+		if (!$e->sameFamily($e2))
+			throw new swRelationError('Union different columns ('.join(',',$this->header).') ('.join(',',$r->header).')' ,302);
 		
-/*
-		echo "union ";
-		print_r($e); 
-		echo " with ";
-		print_r($r->tuples);
-*/
+		$this->tuples = array_merge($this->tuples, $r->tuples);
+		
+		/*
 		
 		
 		foreach($r->tuples as $tp)
 		{
-			if ($tp->sameFamily($e))
-				$this->tuples[$tp->hash()] = $tp;
-			else
-			{
-				//print_r($this);
-				//print_r($r);
-				throw new swRelationError('Union different columns',302);
-			}
+		    $this->tuples[$tp->hash()] = $tp;
 		}
+		*/
 	}
 	
 	function update($t)

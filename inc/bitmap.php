@@ -14,39 +14,36 @@ class swBitmap extends swPersistance
 	function init($l, $default = false)
 	{
 		//creates the bit string, filled with default value
-		$this->length = intval($l);
-		$bytes = ($l + 7) >> 3;
-		if ($default)
-			$this->map = str_repeat(chr(255),$bytes);
-		else
-			$this->map = str_repeat(chr(0),$bytes);
+		$this->length = 0;
+		$this->redim($l,$default);
 			
 		$this->compressionmode = true;
 	}
 	
 	function redim($l, $default = false)
 	{
+		if (intval($l)<$this->length) return; // can only grow
+		
 		if ($this->map == '') $this->dehexit();	
 		$oldlength = $this->length;
-		$this->length = max(intval($l),$this->length);
+		$this->length = intval($l);
 		
+		$bytes = ($this->length + 7) >> 3;	
 		
-		
-		
-		
-		$bytes = ($this->length + 7) >> 3;
 		$thisbytes = strlen($this->map);
-		if ($bytes <= $thisbytes) return;  // can only grow.
+		
 		
 		if ($default)
 			$this->map = str_pad($this->map,$bytes,chr(255));
 		else
 			$this->map = str_pad($this->map,$bytes,chr(0));
+						
 			
-			
-		// we need a special operation on the last current byte
+		// Note the last current byte is padding.
+		// This is ok, if we can never access them further than the length.
+		// Because str_pad is only bitewise, we need to set explicitely now set the bits between length and the next byte
 		
-		for ($i = $oldlength; $i < ((($oldlength-1) >> 3)+1) << 3; $i++)
+		for ($i = $oldlength; $i < min($this->length, $oldlength+8); $i++)
 		{
 			if ($default)
 				$this->setbit($i);
@@ -55,6 +52,8 @@ class swBitmap extends swPersistance
 				
 		}
 		
+		
+				
 	}
 	
 	function hexit()
@@ -97,18 +96,19 @@ class swBitmap extends swPersistance
 	{
 		$n = intval($n);
 		if ($n<0) return; 
-		if ($n=='') return; 
 		$this->touched = true;
+		
 		
 		if ($n>=$this->length)
 			$this->redim($n+1);
+			
 		
 		// sets nth bit to true
 		$byte = $n >> 3;
 		$bit = $n - ($byte << 3);
 		$bitmask = 128 >> $bit;
 
-		if ($this->map == '') $this->dehexit();		
+		if ($this->map == '') $this->dehexit();	
 		$ch = $this->map[$byte];
 		$ch = ord($ch);
 		$ch = $ch | $bitmask;
@@ -118,13 +118,14 @@ class swBitmap extends swPersistance
 	
 	function unsetbit($n)
 	{
-		if ($n<0) return; 
-		if ($n=='') return; 
-		$this->touched = true;
+		$n = intval($n);
 		
+		if ($n<0) return; 
+		$this->touched = true;
+
 		if ($n>=$this->length)
 			$this->redim($n+1);
-
+			
 		// sets nth bit to false  
 		$byte = $n >> 3;
 		$bit = $n - ($byte << 3);
@@ -141,17 +142,17 @@ class swBitmap extends swPersistance
 	
 	function getbit($n)
 	{
+		$n = intval($n);
+		
 		if ($n>=$this->length) return false;
 		if ($n<0) return false;
-		if ($n=='') return false;
 		
 		// gets the value of the nth bit
 		$byte = $n >> 3;
 		$bit = $n - ($byte << 3);
 		$bitmask = 128 >> $bit;
 		
-		//echo $this->length.' '.$n.' '.$byte.' ';
-		if ($this->map == '') $this->dehexit();		
+		if ($this->map == '') $this->dehexit();	
 		$ch = $this->map[$byte];
 		$ch = ord($ch);
 		$ch = $ch & $bitmask;
@@ -179,87 +180,44 @@ class swBitmap extends swPersistance
 	
 	function andop($bitmap)
 	{
-		// returns a bitmap as result of AND between this and bitmap
+		// returns a bitmap as result of OR between this and bitmap
 		
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
-
-		// if length is not the same, we need to duplicate the shorter first
-	    
-	    if ($this->length < $result->length)
-	    {
-		    $b = $this->duplicate();
-		    $b->redim($result->length,0); // default 0 with AND
-		    $s1 = $b->map;
-		}
-		else
-		{
-			if ($this->map == '') $this->dehexit();	
-		    $s1 = $this->map;
-		}
 		
-		if ($bitmap->length < $result->length)
-	    {
-		    $b = $bitmap->duplicate();
-		    $b->redim($result->length,0); // default 0 with AND
-		    $s2 = $b->map;
-		}
-		else
-		{
-			if ($bitmap->map == '') $bitmap->dehexit();	
-		    $s2 = $bitmap->map;
-		}
+		$b1 = $this->duplicate(); 
+		$b1->redim($result->length,0);
+		$b2 = $bitmap->duplicate(); 
+		$b2->redim($result->length,0);
 				
-		$s3 = $s1 & $s2;
-		
-		$result->map = $s3;
+		$result->map = $b1->map & $b2->map;		
+
 		$result->touched = true;
-		
 		return $result;
+
 	}
 	
 	function orop($bitmap)
 	{
 		// returns a bitmap as result of OR between this and bitmap
-
+		
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
-
-		// if length is not the same, we need to duplicate the shorter first
-	    
-	    if ($this->length < $result->length)
-	    {
-		    $b = $this->duplicate();
-		    $b->redim($result->length,0); 
-		    $s1 = $b->map;
-		}
-		else
-		{
-			if ($this->map == '') $this->dehexit();	
-		    $s1 = $this->map;
-		}
 		
-		if ($bitmap->length < $result->length)
-	    {
-		    $b = $bitmap->duplicate();
-		    $b->redim($result->length,0); 
-		    $s2 = $b->map;
-		}
-		else
-		{
-			if ($bitmap->map == '') $bitmap->dehexit();	
-		    $s2 = $bitmap->map;
-		}
+		$b1 = $this->duplicate(); 
+		$b1->redim($result->length,0);
+		$b2 = $bitmap->duplicate(); 
+		$b2->redim($result->length,0);
+				
+		$result->map = $b1->map | $b2->map;		
 
-		$s3 = $s1 | $s2;
-		
-		$result->map = $s3;
 		$result->touched = true;
 		return $result;
 	}
 	
 	function notop()
 	{
+		
 		$result = new swBitmap;
 		$result->redim($this->length, true);
 		if ($this->map == '') $this->dehexit();		
@@ -281,6 +239,18 @@ class swBitmap extends swPersistance
 			$ch = ord($ch);
 			$result .= sprintf('%08d',decbin($ch)).' ';
 		}
+		
+		// cut if too long
+		$mod = 8 - $this->length % 8;
+		
+		$result = trim($result);
+		
+		if ($mod < 8)
+			$result = substr($result,0,-$mod);
+		
+		$result = trim($result);
+		
+				
 		return $result;
 	}
 	
@@ -314,12 +284,302 @@ class swBitmap extends swPersistance
 		{
 			if ($this->getbit($i))
 				$result[$i] = $i;
+				
 		}
 		return $result;
 	}
 
 	
 }
+
+function bitmapUnitTest()
+{
+	
+	$b2 = new swBitmap;
+	
+	$b1 = new swBitmap;
+	$dump = $b1->dump();
+	if ($dump !== '') { echo '<br>1 []  <> ['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->setbit(0);
+	$dump = $b1->dump();
+	if ($dump !== '1') { echo '<br>2 [1]  <> ['.$dump.']'.$b1->length; }
+
+	$b1 = new swBitmap;
+	$b1->unsetbit(0);
+	$dump = $b1->dump();
+	if ($dump !== '0') { echo '<br>3 [0]  <> ['.$dump.']'; }
+
+	
+	$b1 = new swBitmap;
+	$b1->init(1, true);
+	$dump = $b1->dump();
+	if ($dump !== '1') { echo '<br>4   1 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$b1->init(2, true);
+	$dump = $b1->dump();
+	if ($dump !== '11') { echo '<br>5  11 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(6, true);
+	$dump = $b1->dump();
+	if ($dump !== '111111') { echo '<br>6   111111 <>['.$dump.']'; }
+
+	
+	$b1 = new swBitmap;
+	$b1->init(7, true);
+	$dump = $b1->dump();
+	if ($dump !== '1111111') { echo '<br>7   1111111 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$b1->init(8, true);
+	$dump = $b1->dump();
+	if ($dump !== '11111111') { echo '<br>8   11111111 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(10, true);
+	$dump = $b1->dump();
+	if ($dump !== '11111111 11') { echo '<br>9   11111111 11 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$dump = $b1->dump();
+	if ($dump !== '') { echo '<br>10 []  <> ['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(1, false);
+	$dump = $b1->dump();
+	if ($dump !== '0') { echo '<br>11   0 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$b1->init(2, false);
+	$dump = $b1->dump();
+	if ($dump !== '00') { echo '<br>12  00 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(6, false);
+	$dump = $b1->dump();
+	if ($dump !== '000000') { echo '<br>13   000000 <>['.$dump.']'; }
+
+	
+	$b1 = new swBitmap;
+	$b1->init(7, false);
+	$dump = $b1->dump();
+	if ($dump !== '0000000') { echo '<br>14   0000000 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$b1->init(8, false);
+	$dump = $b1->dump();
+	if ($dump !== '00000000') { echo '<br>15   000000000 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(10, false);
+	$dump = $b1->dump();
+	if ($dump !== '00000000 00') { echo '<br>16   000000000 00 <>['.$dump.']'; }
+
+	$b1 = new swBitmap;
+	$b1->init(4, true);
+	$b1->redim(7, false);
+	$dump = $b1->dump();
+	if ($dump !== '1111000') { echo '<br>17   1111000 <>['.$dump.']'; }
+
+
+	$b1 = new swBitmap;
+	$b1->init(4, false);
+	$b1->redim(7, true);
+	$dump = $b1->dump();
+	if ($dump !== '0000111') { echo '<br>18   0000111 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(4, false);
+	$b1->redim(7, true);
+	$b1->setbit(1);
+	$dump = $b1->dump();
+	if ($dump !== '0100111') { echo '<br>19   0100111 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(4, false);
+	$b1->redim(9, true);
+	$b1->setbit(1);
+	$dump = $b1->dump();
+	if ($dump !== '01001111 1') { echo '<br>20   0100111 1 <>['.$dump.']'; }
+	
+	$b1 = new swBitmap;
+	$b1->init(4, false);
+	$b1->redim(12, true);
+	$b1->setbit(1);
+	$dump = $b1->dump();
+	if ($dump !== '01001111 1111') { echo '<br>21   0100111 1111 <>['.$dump.']'; }
+	
+		
+	for ($i = 0; $i < 10; $i++)
+	{
+		$list = array();
+		for ($j = 0; $j < 8; $j++)
+		{
+			$list[] = rand(0,40);
+		}
+		$b1 = new swBitmap;
+		foreach($list as $v)
+		{
+			$b1->setbit($v);
+		}
+		foreach($list as $v)
+		{
+			if (!$b1->getbit($v))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " failed for $v";
+				echo "<p>".$b1->dump()."<p>";
+				
+				break;
+			}
+		}
+	}
+	
+	//not op
+	
+	for ($i = 0; $i < 1; $i++)
+	{
+		$list = array();
+		for ($j = 0; $j < 8; $j++)
+		{
+			$list[] = rand(0,40);
+		}
+		$b1 = new swBitmap;
+		foreach($list as $v)
+		{
+			$b1->setbit($v);
+		}
+		$b2 = $b1->notop();
+		
+		foreach($list as $v)
+		{
+			if ($b2->getbit($v))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " failed for $v";
+				echo "<p>".$b2->dump()."<p>";
+				
+				break;
+			}
+		}
+		echo "<p>".$b1->dump().' '.$b1->length;
+		echo "<br>".$b2->dump().' '.$b2->length;
+
+		
+	}
+	
+	
+	// orop
+	for ($i = 0; $i < 1; $i++)
+	{
+		
+		//echo ".";
+		$list = array();
+		for ($j = 0; $j < 8; $j++)
+		{
+			$list[] = rand(0,40);
+			$list2[] = rand(0,40);
+		}
+		$b1 = new swBitmap;
+		$b2 = new swBitmap;
+		foreach($list as $v)
+		{
+			$b1->setbit($v);
+		}
+		foreach($list2 as $v)
+		{
+			$b2->setbit($v);
+		}
+		$b3 = $b1->orop($b2);
+		
+
+		foreach($list as $v)
+		{
+			if (!$b3->getbit($v))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " failed for $v";
+				echo "<p>".$b1->dump()."<p>";
+				
+				//break;
+			}
+		}
+		foreach($list2 as $v)
+		{
+			if (!$b3->getbit($v))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " failed for $v";
+				echo "<p>".$b3->dump()."<p>";
+				
+				// sbreak;
+			}
+		}
+		echo "<p>".$b1->dump().' '.$b1->length;
+		echo "<br>".$b2->dump().' '.$b2->length;
+		echo "<br>".$b3->dump().' '.$b3->length;
+
+	}
+	
+		// andop
+	for ($i = 0; $i < 1; $i++)
+	{
+		
+		//echo ".";
+		$list = array();
+		for ($j = 0; $j < 15; $j++)
+		{
+			$list[] = rand(0,40);
+			$list2[] = rand(0,40);
+		}
+		$b1 = new swBitmap;
+		$b2 = new swBitmap;
+		foreach($list as $v)
+		{
+			$b1->setbit($v);
+		}
+		foreach($list2 as $v)
+		{
+			$b2->setbit($v);
+		}
+		$b3 = $b1->andop($b2);
+		
+
+		foreach($list as $v)
+		{
+			if (!$b3->getbit($v) and in_array($v, $list2))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " failed for $v";
+				echo "<p>".$b1->dump()."<p>";
+				
+				//break;
+			}
+		}
+		echo "<p>".$b1->dump().' '.$b1->length;
+		echo "<br>".$b2->dump().' '.$b2->length;
+		echo "<br>".$b3->dump().' '.$b3->length;
+
+	}
+
+
+	
+
+
+	
+
+}
+
+
+// bitmapUnitTest();
 
 
 

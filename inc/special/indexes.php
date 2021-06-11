@@ -340,6 +340,12 @@ switch($_REQUEST['index'])
 									
 									$swParsedContent .= '<p>Term : '.join(' ',swGetHashesFromTerm($_REQUEST['term']));
 									
+									
+									// if ($c0 < 2000)
+									$arr = $bm->toarray();
+									rsort($arr);
+									$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
+									
 									// show raw bloom
 									
 									/*
@@ -651,6 +657,8 @@ function bitmap2canvas($bm,$listrevisions=1,$id='1')
 		return $result;
 	
 }
+
+
 
 $swParseSpecial = false;
 
