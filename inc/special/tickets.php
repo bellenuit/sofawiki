@@ -20,7 +20,7 @@ $swParsedContent = '<nowiki><a href="index.php?name=special:tickets&ticketaction
 $priorities = array('1 high', '2 normal', '3 low');
 
 $table = swRelationToTable('filter _namespace "user", _name, _special "special"
-project _name');
+project _name'); 
 
 // print_r($table);
 
@@ -298,12 +298,13 @@ order activity z');
 }
 if ($ticketaction == 'help')
 {
-	$swParsedContent .= "\n".'===New Ticket===';
+	$swParsedContent .= "\n".'===Tickets help===';
 	$swParsedContent .= "\n".'Any user having access to special:special can open, comment, resolve and close tickets.'
-	."\n".'Any of these users can open tickets. Tickets have a title, text (wikitext), are assigned to a user and have a priority (1 high, 2 normal, 3 low).'
-	."\n".'My Tickets are tickets assigned to the current user.'
-	."\n".'Any of these users can comment a ticket, reassign it, change the priority and set it to resolved.'
-	."\n".'The initial creator of the ticket can close a resolved ticket or reopen it.'; 
+	."\n".'Any of these users can \'\'open tickets\'\'. Tickets have a title, text (wikitext), are assigned to a user and have a priority (1 high, 2 normal, 3 low).'
+	."\n".'My Tickets are tickets \'\'assigned\'\' to the current user.'
+	."\n".'Any of these users can \'\'comment\'\' a ticket, \'\'reassign\'\' it, change the \'\'priority\'\', set it to \'\'resolved\'\' and \'\'reopen\'\' a resolved ticket.'
+	."\n".'Only the initial creator of the ticket can \'\'close\'\' a resolved ticket.'
+	."\n".'You cannot add directly files to a ticket, but you can upload files normally and refer to them with a media link.'; 
 	$mytickets = false;
 	$assigned = '';
 }
@@ -315,7 +316,7 @@ if ($status)
 		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, assigned, status "'.$status.'"
 order priority, id 9');
 
-// print_r($lines);
+
 		
 
 		$i=0;
@@ -385,11 +386,15 @@ if ($id)
 			$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table><tr><td>Comment</td><td><textarea name="text" rows="10" cols="80" style="width:95%"></textarea></td></tr><tr><td>Reassign to </td><td>'.swhtmlselect('assigned',$ticketusers,@$fields['assigned'][0],'').'</td></tr><tr><td>Change Priority</td> <td>'.swhtmlselect('priority',$priorities,@$fields['priority'][0],'').'</td></tr><tr><td></td><td><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitcomment" value="Comment Ticket" /><input type="submit" name="submitresolve" value="Set Resolved" /></td></tr></table></form></nowiki>';
 			
 			break;
-			case 'resolved':  // only creator can close or reopen.
+			case 'resolved':  // only creator can close, but anybody can reopen.
 			
 			if ($username == @$fields['creator'][0])
 			{
 				$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitreopen" value="Reopen Ticket" /><input type="submit" name="submitclose" value="Close Ticket" /></form></nowiki>';
+			}
+			else
+			{
+				$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitreopen" value="Reopen Ticket" /></form></nowiki>';
 			}
 			break;
 			

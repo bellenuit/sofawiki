@@ -924,10 +924,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);
 		if (!in_array('_url',$result->header)) unset($d['_url']);
 		
-		
-		
-		$tp = new swTuple($d);
-		$result->tuples[$tp->hash()] = $tp;
+		if (!empty($d))
+		{
+			$tp = new swTuple($d);
+			$result->tuples[$tp->hash()] = $tp;
+		}
 
 				
 		$key = dba_nextkey($bdb);

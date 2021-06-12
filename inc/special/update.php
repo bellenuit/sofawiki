@@ -94,12 +94,12 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 		if ( is_dir($f) )
 		{
 			@mkdir($newfile);
-			@chmod($newfile,0770);
+			@chmod($newfile,0775);
 			echo '<p>mkdir '.$newfile;
 		}
 		elseif (rename($f,$newfile)   )
 		{
-			chmod($newfile,0750);
+			chmod($newfile,0664);
 			echo '<p>rename '.$newfile;  
 		}
 		else
@@ -111,17 +111,17 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 	}
 	
 	if (rename($swRoot.'/install/sofawiki/api.php',$swRoot.'/api.php'))
-	{ chmod($swRoot.'/api.php',0750);
+	{ chmod($swRoot.'/api.php',0664);
 	echo '<p>rename api.php'; }
 	else
 	{ echo '<p><b>error</b> rename api.php'; }
 	if (rename($swRoot.'/install/sofawiki/index.php',$swRoot.'/index.php') )
-	{ 	chmod($swRoot.'/index.php',0750);
+	{ 	chmod($swRoot.'/index.php',0664);
 		echo '<p>rename index.php'; }
 	else
 	{ echo '<p><b>error</b> rename index.php'; } 
 	if (rename($swRoot.'/install/sofawiki/cron.php',$swRoot.'/cron.php') )
-	{ chmod($swRoot.'/cron.php',0750);
+	{ chmod($swRoot.'/cron.php',0664);
 		echo '<p>rename cron.php'; }
 	else
 	{ echo '<p><b>error</b> rename cron.php'; }

@@ -660,6 +660,19 @@ class swRelationLineHandler
 									}
 									break;
 									
+				case 'pivot':		if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Pivot Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$r->pivot($body);
+										$this->stack[] = $r;
+									}
+									break;	
+				
 				case 'pop':			if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Pop Stack empty'.$ptagerrorend.$ptag2;
@@ -1331,6 +1344,8 @@ class swRelation
 	{
 		//echo $s . "= ";
 		
+		//if ($s == '*') return '_all';
+		
 		$result; 
 		$i; $c; 
 		$ch; 
@@ -1412,9 +1427,12 @@ class swRelation
 			}
 			
 		}	
-		// print_r($r->header);
+		
+		$theformat = @$this->formats[$this->header[2]];
 		
 		sort($r->header);
+		// star must be at the end
+		
 		array_unshift($r->header,$this->header[0]);
 				
 		$lastobservation = null;
@@ -1448,6 +1466,9 @@ class swRelation
 			{
 				if (!array_key_exists($mf, $d))
 					$d[$mf] = $nulltext;
+					
+				if ($mf != $this->header[0])
+					$this->formats[$mf] = $theformat;
 			}
 			$tp2 = new swTuple($d);
 			$r->tuples[$tp2->hash()] = $tp2;
@@ -2073,7 +2094,7 @@ class swRelation
 		return join(PHP_EOL,$lines);
 		
 	}
-	
+		
 	function project($t)
 	{
 		if (substr($t,0,6)=='inline')
@@ -2086,6 +2107,47 @@ class swRelation
 				$this->join($r2,'cross');
 			return;
 		}
+		
+		if (substr($t,0,5)=='pivot')
+		{
+			$list = explode(',',$t);
+			$aggregation = array_pop($list);
+			$list2 = explode(' ',$aggregation);
+			$aggregator = array_pop($list2);
+			$aggregandum = array_pop($list2);
+			
+			$aggregatformat = @$this->formats[$aggregandum];
+			
+			
+			$first = $this->doClone();
+			$second = $this->doClone();
+			$all = $this->doClone();
+			$this->project(substr($t,6));
+			
+			$first->project($this->header[0].', '.$aggregandum.' '.$aggregator);
+			$first->extend($this->header[1]. ' = "_all" ');
+			
+			$this->union($first);
+			
+			$second->project($this->header[1].', '.$aggregandum.' '.$aggregator);
+			$second->extend($this->header[0]. ' = "_all" ');
+			
+			$this->union($second);
+			
+			$all->project($aggregandum.' '.$aggregator);
+			$all->extend($this->header[0]. ' = "_all" ');
+			$all->extend($this->header[1]. ' = "_all" ');
+			
+			$this->union($all);
+			
+			if ($aggregatformat)
+				$this->format1($aggregandum.'_'.$aggregator.' '.$aggregatformat);
+					
+			$this->deserialize();
+				
+			return;
+		}
+
 		
 		if (substr($t,0,6)=='rollup')
 		{
@@ -3194,6 +3256,8 @@ class swOrderedDictionary
 		$btp = $b;
 		$adict = $atp->fields();
 		$bdict = $btp->fields();
+		
+		if (empty($adict) || empty($bdict) ) return 0; // should not happen with tuples, as they should not be empty.
 		
 		foreach($this->pairs as $p)
 		{
