@@ -53,7 +53,7 @@ function swGetAllRevisionsFromName($name)
 	$urldbpath = $db->pathbase.'indexes/urls.db';
 	if (file_exists($urldbpath))
 		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-	if (!$urldb)
+	if (!@$urldb)
 	{
 		echotime('urldb failed');
 	}
@@ -194,6 +194,14 @@ class swDB extends swPersistance //extend may be obsolete
 		if (file_exists($this->shortbitmap->persistance))
 			$this->shortbitmap->open();
 			
+		$urldbpath = $this->pathbase.'indexes/urls.db';
+		if (!file_exists($urldbpath))
+		{
+			$urldb = @dba_open($urldbpath, 'c', 'db4');	
+			@dba_close($urldb);
+		}
+
+			
 		$lastwrite = $this->GetLastRevisionFolderItem($force);
 		echotime("db-init ".$this->lastrevision."/" .$lastwrite);
 		
@@ -306,7 +314,7 @@ class swDB extends swPersistance //extend may be obsolete
 			$urldb = @dba_open($urldbpath, 'wdt', 'db4');
 		else
 			$urldb = @dba_open($urldbpath, 'c', 'db4');	
-		if (!$urldb)
+		if (!@$urldb)
 		{
 			echotime('urldb failed');
 		}
@@ -423,7 +431,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$urldbpath = $db->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
 			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-		if (!$urldb)
+		if (!@$urldb)
 		{
 			echotime('urldb failed');
 		}

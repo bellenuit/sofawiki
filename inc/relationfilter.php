@@ -413,7 +413,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$urldbpath = $db->pathbase.'indexes/urls.db';
 			if (file_exists($urldbpath))
 			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-			if (!$urldb)
+			if (!@$urldb)
 			{
 				echotime('urldb failed');
 			}
