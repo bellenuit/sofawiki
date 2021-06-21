@@ -169,21 +169,21 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 	
 	
 	$id = md5(rand());
-	$result = '<nowiki><script src="inc/skins/chart.min.js"></script><div class="linechart" style="width:'.$width.'"><canvas class="linechart" id="'.$id.'" style=" max-width:700px"></canvas></div></nowiki>'.PHP_EOL;
+	$result = '<nowiki><script src="inc/skins/chart.min.js"></script><div class="linechart" style="width:'.$width.'"><canvas class="linechart" id="'.$id.'" style=" max-width:700px"></canvas></div></nowiki>';
 	
 	if ($rough)
 	{
-		$result .= '<nowiki><script src="inc/skins/rough.js"></script>'.PHP_EOL;
-		$result .= '<nowiki><script src="inc/skins/chartjs-plugin-rough.min.js"></script></nowiki>'.PHP_EOL;
+		$result .= '<nowiki><script src="inc/skins/rough.js"></script>';
+		$result .= '<nowiki><script src="inc/skins/chartjs-plugin-rough.min.js"></script></nowiki>';
 		$result .= '<nowiki><script>Chart.defaults.global.defaultFontFamily = "Comic Sans MS";
-Chart.defaults.global.defaultFontSize = 14;</script></nowiki>'.PHP_EOL;		
+Chart.defaults.global.defaultFontSize = 14;</script></nowiki>';		
 	}
 	
 	// put in globals, as json does not seem to work
 	if (!$legend == 'none')
-		$result .= '<nowiki><script>Chart.defaults.global.legend.display = false; </script></nowiki>'.PHP_EOL;
+		$result .= '<nowiki><script>Chart.defaults.global.legend.display = false; </script></nowiki>';
 	else
-		$result .= '<nowiki><script>Chart.defaults.global.legend.position = "'.$legend.'"; </script></nowiki>'.PHP_EOL;
+		$result .= '<nowiki><script>Chart.defaults.global.legend.position = "'.$legend.'"; </script></nowiki>';
 	
 		
 	
