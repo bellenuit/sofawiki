@@ -66,6 +66,27 @@ function swRelationImport($url)
 		
 	$list = swGetAllFields($wiki->content);
 	
+	// special characters
+	$rel = new swRelation('',null,null);
+	foreach(array_keys($list) as $raw)
+	{
+		if (count($list[$raw]))	
+		{	
+			$clean = $rel->cleanColumn($raw);
+			if ($clean != $raw)
+			{
+				// print_r($list[$raw]);
+				
+				$list[$clean] = $list[$raw];
+				unset($list[$raw]);
+			}
+		}
+		else
+			unset($list[$raw]);
+		
+	}
+	
+	
 	// normalize array, to a table, but using only used fields and field
 	$maxcount = 1;
 	foreach($list as $v)
@@ -79,6 +100,7 @@ function swRelationImport($url)
 		{
 			$list2[$fi][$key] = $v[$fi];
 		}
+		if (count($v))
 		for ($fi=count($v);$fi<$maxcount;$fi++)
 		{
 			$list2[$fi][$key] = $v[count($v)-1];
@@ -654,6 +676,27 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				$row=array();
 				
 				$fieldlist = $record->internalfields;
+				
+				// special characters
+				$rel = new swRelation('',null,null);
+				foreach(array_keys($fieldlist) as $raw)
+				{
+					if (count($fieldlist[$raw]))	
+					{	
+						$clean = $rel->cleanColumn($raw);
+						if ($clean != $raw)
+						{
+							$fieldlist[$clean] = $fieldlist[$raw];
+							unset($fieldlist[$raw]);
+						}
+					}
+					else
+						unset($fieldlist[$raw]);
+					
+				}
+
+				
+				
 
 				{					
 					$fieldlist['_revision'][] = $record->revision;
@@ -795,7 +838,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if ($found)
 						{
-							$rows[$revision.'-'.$fi] = $fieldlist2[$fi];
+							$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
 							
 							
 						
@@ -957,7 +1000,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$result->addColumn($key);
 	}
 	
-	
+	// print_r($result);
 	
 	return $result;
 	
@@ -1021,6 +1064,7 @@ else
 	$print = '
 update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph 
 project _name
+
 label _name ""
 print grid '.$limit;
 
@@ -1122,6 +1166,8 @@ end if
 set i = i + 1
 end while
 
+
+
 '.$print.'
 
 
@@ -1136,7 +1182,11 @@ echo " "';
 $lh = new swRelationLineHandler;
 
 
+// echo $q;
+
 $s = $lh->run($q);
+
+// echo $s;
 
 $s = str_replace("_name\t_paragraph",'',$s); // hack because raw includes header
 

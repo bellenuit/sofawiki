@@ -33,8 +33,28 @@ function swLengthSort($a,$b)
 		return ($sa < $sb); // longer first
 }
 
+function swEscape($s)
+{
+	  	// wikitext relevant characters must be protected when dealing with external data (filter, import)
+	  	
+	  	// escape characters
+  		$s = str_replace(':','<colon>',$s);
+  		$s = str_replace('[','<leftsquare>',$s);
+  		$s = str_replace(']','<rightsquare>',$s);
+  		$s = str_replace('{','<leftcurly>',$s);
+  		$s = str_replace('}','<rightcurly>',$s);
+  		$s = str_replace('|','<pipe>',$s);
+  		//$s = str_replace(' ','<space>',$s);
+  		$s = str_replace('&lt;','<lt>',$s);
+  		$s = str_replace('&gt;','<gt>',$s);
+  		$s = str_replace('\\','<backslash>',$s);
+  		return $s;
+}
+
 function swUnescape($s)
 {
+	  	// used in expressions and on final rendering
+	  	
 	  	// escape characters
   		$s = str_replace('<colon>',':',$s);
   		$s = str_replace('<leftsquare>','[',$s);
@@ -88,41 +108,53 @@ function swStrReplace($pattern, $replace, $s)
 function swGetValue($s, $key, $getArray = false)
 {
 	// equivalent to fields parser
-	
-	$pattern = '[['.$key.'::';
-	$results = array();
-	$result = "";
-	$pos = true;
-	while ($pos !== FALSE)
-	{
-		$pos = strpos($s, $pattern);
-		if ($pos !== FALSE)
-		{
-			$pos0 = $pos + strlen($pattern);
-			$pos2 = strpos($s,']]',$pos0);
-			if ($pos2 !== FALSE)
-			{
-				$result = substr($s,$pos0, $pos2-$pos0);
-				$rs =explode('::',$result);
-				foreach($rs as $r)
-				{
-					if (!$getArray) return $r;
-					$results[] = $r;
-				}
-				
-			}
-		}
-		$s = substr($s,$pos+1); 
 		
-	}
-	if (!$getArray)
+	// reject if invalid key
+	if (!preg_match('@[A-Za-z_][^\n\][|#<>{},:+\/]*@',$key))
+	
+// [A-Za-z_] First letter of field name must be a latin letter or underscore
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+
 	{
-		if (count($results)>0)
-			return $results[0];
+		echo $key;
+		
+		if ($getArray)
+			return array();
 		else
 			return '';
 	}
-	return $results;
+	
+	$result=array();
+	
+	$key = preg_quote($key);
+	preg_match_all('@\[\['.$key.'::((?:.|\n)*?)\]\]@', $s, $matches, PREG_SET_ORDER);
+
+// \[\[ two opening square braquets
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+// :: The field separator
+// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
+// \]\]: Closing brackets
+
+	// print_r($matches);
+	
+	foreach ($matches as $v)
+	{
+		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		
+		$value = $v[1];
+				
+		$values = explode('::',$value);
+		
+		foreach($values as $v)
+		{
+			if (!$getArray) return $v;
+			
+			$result[]=$v;
+		}	
+		
+	}
+	if (!$getArray) return '';
+	return $result;
 	
 }
 
@@ -130,62 +162,98 @@ function swGetValue($s, $key, $getArray = false)
 function swGetAllFields($s,$allowinternalvariables=false)
 {
 	
-		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
-		
-		$result=array();
-		
-		foreach ($matches as $v)
-		{
-			
-			$val = $v[1]; // link
-			//echotime('field0 '.$val);
-			// handle fields
-			
-			if (!$allowinternalvariables)
-				if (substr($val,0,1)=='_' && substr($val,0,strlen('_description')) != '_description')
-				continue;
-			
-			
-			//echotime('field '.$val);
-			if ($delim = stripos($val,'::'))	// we show only values		
-			{ 
-				$val = $v[1].$v[2].$v[3]; // we use everything 
-				
-				$fieldstring = substr($val,$delim+2);  
-				$key = substr($val,0,$delim);
-				
-				$fields = explode('::',$fieldstring);
-				
-				$t = '';
-				foreach ($fields as $f)
-				{
-					$result[$key][]=$f;
-				}
+// old		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
 
-				
-			}
-			elseif(substr(strtolower($val),0,strlen('category:')) == 'category:')
-			{
-				$result['_category'][]=substr($v[1],strlen('category:'));
-			}
-			else
-			{
-				$result['_link'][]=$v[1];
-			}
-			
-		}
+	$result=array();
+	
+	// real fields
+	
+	preg_match_all("@\[\[([A-Za-z_][^\n\][|#<>{},:+\/]*?)::((?:.|\n)*?)\]\]@", $s, $matches, PREG_SET_ORDER);
 		
-		preg_match_all("@\{\{(.*?)\}\}@", $s, $matches, PREG_SET_ORDER);
-		foreach ($matches as $v)
-		{
-			if (substr($v[1],0,1) != '{') // not use args
-			{
-				$fields = explode('|',$v[1]);
-				$result['_template'][]=$fields[0];
-			}
-			
-		}
-		return $result;
+		
+// \[\[([A-Za-z_][^\s\][|#<>{}m,:]*?)::((?:.|\n)+?)\]\] the search pattern
+// \[\[ two opening square braquets
+// [A-Za-z_] First letter of field name must be a latin letter or underscore
+// [^\s\][|#<>{}m,:]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+// :: The field separator
+// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
+// \]\]: Closing brackets
+		
+	foreach ($matches as $v)
+	{
+		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		
+		$key = $v[1];
+		$value = $v[2];
+		
+		if (!$allowinternalvariables && substr($key,0,1)=='_') continue; // earlier we allowed here also _description
+		
+		$values = explode('::',$value);
+		
+		foreach($values as $v)
+			$result[$key][]=$v;
+	}	
+	
+	// categories
+	
+	$result['_category'] = array();
+	
+	preg_match_all("@\[\[(?:C|c)ategory:([^:](?:.)*?)(?:\||\]\])@", $s, $matches, PREG_SET_ORDER);	
+	
+	foreach ($matches as $v)
+	{
+		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		
+		$value = $v[1];
+		
+		$result['_category'][] = $value;
+		
+	}
+	
+	// links
+	
+	$result['_link'] = array();
+	
+	preg_match_all("@\[\[(.*?)(?:(?:\|)(.*?))?\]\]@", $s, $matches, PREG_SET_ORDER);	
+	
+	
+	
+	foreach ($matches as $v)
+	{
+		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		if (strstr($v[0], '::') || strstr($v[0], 'Category:')) continue;
+		
+		$value = $v[1];
+		
+		if (!in_array($value, $result['_link']))
+		$result['_link'][] = $value;
+		
+	}	
+	
+	// templates
+	
+	$result['_template'] = array();
+
+	
+		
+	preg_match_all("@\{\{(.*?)(?:\||\}\})@", $s, $matches, PREG_SET_ORDER);
+	
+	foreach ($matches as $v)
+	{
+		if (substr($v[1],0,1) == '{') continue;
+		
+		if (!in_array($v[1],$result['_template']))
+			$result['_template'][]=$v[1];
+	
+	}
+	
+	// remove empty templates, links and categories
+	foreach(array_keys($result) as $key)
+	{
+		if (!count($result[$key])) unset($result[$key]);
+	}
+	
+	return $result;
 
 }
 

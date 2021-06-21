@@ -113,6 +113,7 @@ function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,
 		{
 			$fieldlist2[$fi][$key] = $v[$fi];
 		}
+		if (@count($v)>0)
 		for ($fi=@count($v);$fi<$maxcount;$fi++)
 		{
 			$fieldlist2[$fi][$key] = $v[@count($v)-1];
@@ -880,6 +881,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 							foreach($fieldlist[$key] as $v)
 								$fieldlist['_any'][] = $v; // to do avoid duplicates
 						}
+												
+						
 					}
 					unset($key);
 					unset($keys);

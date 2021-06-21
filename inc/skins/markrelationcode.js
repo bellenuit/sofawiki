@@ -76,7 +76,7 @@ function markRelationCode()
 		
 		s = s.replace(/(\n|\u200B|^)(read|read latin1|read macroman|read utf8|read windowslatin1)\b/g,"$1<span class='keyword'>$2</span>");	
 		
-		s = s.replace(/(\n|\u200B|^)(beep|compile|data|deserialize|difference|dup|echo|else|extend|format|function|if|import|include|init|input|insert|intersection|label|limit|order|parse|pivot|pop|program|print|project|project inline|relation|rename|run|select|serialize|set|stack|swap|template|transaction|union|update|while|write)/g,"$1<span class='keyword'>$2</span>");
+		s = s.replace(/(\n|\u200B|^)(beep|compile|data|deserialize|difference|delegate|dup|echo|else|extend|format|function|if|import|include|init|input|insert|intersection|label|limit|order|parse|pivot|pop|program|print|project|project inline|relation|rename|run|select|serialize|set|stack|swap|template|transaction|union|update|while|write)/g,"$1<span class='keyword'>$2</span>");
 		
 		// wiki
 		s = s.replace(/(\n|\u200B|^)(filter|virtual)/g,"$1<span class='keyword'>$2</span>");

@@ -143,7 +143,7 @@ class swExpression
 	{
 		$i; $c; 
 		$ch; $state; $acc;
-
+		
 
 		// strings # hex
 		// functions @ (
@@ -573,6 +573,13 @@ class swExpression
 		$globals['_lt'] = '<';
 		$globals['_gt'] = '>';
 		$globals['_amp'] = '&';
+		
+		// unescapge
+		
+		foreach($values as $k=>$v)
+		{
+			$values[$k] = swUnescape($v);
+		}
 		
 		$this->stack = array();
 		

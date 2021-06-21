@@ -542,6 +542,7 @@ class swQueryFunction extends swFunction
 										// pad
 										foreach($w->internalfields as $k=>$v)
 										{
+											if (count($v))
 											for($vi=count($v);$vi<$maxrows;$vi++)
 											{
 												$rs[$vi][$k] = $rs[count($v)-1][$k];

@@ -103,6 +103,9 @@ echo '<meta name="title" content="'. $t. '">
 	echo "<br/>";
 	foreach($swLoginMenus as $item) {echo $item."<br/>\r\n" ; }
 	echo "<span class='error'>$swError</span>\r\n";
+	
+		
+	
 	if (isset($swUserDebug) && $swUserDebug && $user->hasright('modify','*')) echo "<br><span class='debug'>$swDebug</span>\r\n";
 ?>
 </div><!-- editmenu -->
@@ -116,10 +119,18 @@ echo '<meta name="title" content="'. $t. '">
 <div id='content'><div id='parsedcontent'><?php echo "
 
 $swParsedContent
-" ?>
+" ;
+
+
+
+
+?>
+
+
 
 </div><div id="info">
-<?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);?>
+<?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);	
+?>
 </div>
 
 </div><!-- content -->

@@ -175,6 +175,7 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 									}
 									break; // TO DO 
+				
 				case 'compile':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
 									$this->result .= join(' ',$xp->rpn).$ptag2;
@@ -212,15 +213,18 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
+									
 									$xp = new swExpression($this->functions);
 									$xp->compile($body);
 									$tx = $xp->evaluate($dict);
 									$txs = explode(' ',$tx);
 									$tx0 = array_shift($txs);
 									$tx = join(' ',$txs);
+									$r = array_pop($this->stack);
 									$this->result .= '{{'.$tx0.'|';
-									$this->result .= $r->getCSV();
+									$this->result .= $r->getCSVFormatted();
 									$this->result .= '|'.$tx.' }}';
+									$this->stack[]=$r;
 									break;
 				case 'deserialize': if (count($this->stack)<1)
 									{
@@ -1567,7 +1571,7 @@ class swRelation
 	}
 	
 	function format12($pairs)
-	{
+	{		
 		foreach($pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
@@ -1601,7 +1605,7 @@ class swRelation
 		foreach($lines as $line)
 		{
 			$d = array();
-			$d['line'] = $line;
+			$d['line'] = swEscape($line);
 			$tp = new swTuple($d);
 			$this->tuples[$tp->hash] = $tp;
 
@@ -2471,16 +2475,53 @@ class swRelation
 			{
 				$f = $this->header[$i];
 				$test = $tp->value($f);
+				if (is_numeric($test))
+					$fields[] = $test;
+				else
+					$fields[] = '"'.str_replace('"','""', swUnescape($test)).'"';
+				
+			}
+			$lines[] = join(',',$fields);
+		}
+		return join(PHP_EOL,$lines);
+	}
+
+	function getCSVFormatted()
+	{
+		$lines = array();
+		
+		$fields = array();
+		foreach($this->header as $f)
+		{
+			if (array_key_exists($f,$this->labels))
+				$fields[] = '"'.$this->labels[$f].'"';
+			else
+				$fields[] = $f;
+				
+		}
+		
+		$c = count($this->header);
+		
+		$lines[] = join(',',$fields);
+		
+		
+		foreach($this->tuples as $tp)
+		{
+			$fields = array();
+			for($i=0;$i<$c;$i++)
+			{
+				$f = $this->header[$i];
+				$test = $tp->value($f);
 				if (array_key_exists($f,$this->formats))
 				{
-					$fm = $this->format1($f);
+					$fm = $this->formats[$f];
 					if ($fm != '')
-						$test = $this->format2($floatval($test),$fm);
+						$test = $this->format2(floatval($test),$fm);
 				}
 				if (is_numeric($test))
 					$fields[] = $test;
 				else
-					$fields[] = '"'.str_replace('"','""', $test).'"';
+					$fields[] = '"'.str_replace('"','""', swUnescape($test)).'"';
 				
 			}
 			$lines[] = join(',',$fields);
@@ -2582,7 +2623,7 @@ class swRelation
 				if ($c == count($this->header))
 				{
 					for($i=0;$i<$c;$i++)
-						$d[$this->header[$i]] = $fields[$i];
+						$d[$this->header[$i]] = swEscape($fields[$i]);
 				}
 				else
 				{
@@ -2624,7 +2665,7 @@ class swRelation
 					if ($fm != '')
 						$test = $this->format2($floatval($test),$fm);
 				}
-				$fields[] = $test;
+				$fields[] = swUnescape($test);
 				
 			}
 			$lines[] = join("\t",$fields);
@@ -2687,7 +2728,7 @@ class swRelation
 				foreach($fields as $field)
 				{
 					if ($i>=$c) continue;
-					$d[$this->header[$i]] = $field;
+					$d[$this->header[$i]] = swEscape($field);
 					$i++;
 				}
 				while($i<$c)
@@ -2899,6 +2940,8 @@ class swRelation
 					$td = $edit.' | ';
 				}		
 				if ($t==='')  $t = ' ';  // empty table cell would collapse
+				//$t = str_replace('|','<pipe>',$t); // protect wikitext not a good idea if it is already wikitext like link
+				//$t = str_replace(PHP_EOL,'<br>',$t); // protect wikitext not a good idea if it is already wikitext like link 
 				$fields[]=$td.$t;				
 			}
 			

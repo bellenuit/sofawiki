@@ -178,7 +178,7 @@ class swRecord extends swPersistance
 		if ($this->persistance && $this->revision) // allready open
 		{
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
-			$this->name =  swNameURL($this->name);
+			$this->name =  swNameURL($this->name); 
 			return;
 		}
 		
@@ -201,6 +201,7 @@ class swRecord extends swPersistance
 		}
 		elseif ($this->revision)
 		{
+			
 			// we have a serialized version that is faster to read
 			$s = '';
 			global $swRamdiskPath;
@@ -268,8 +269,6 @@ class swRecord extends swPersistance
 			$this->content = substr($s,$pos+strlen("[[_ ]]"));
 			
 			
-			
-			
 			if ($this->encoding != "UTF8")
 			{
 				// most "latin1" encoding is actuallay windows cp1252
@@ -288,6 +287,7 @@ class swRecord extends swPersistance
 				
 			}
 			
+			
 			// bug character 146 not displayed in UTF 8
 			$t146 = utf8_encode(chr(146));
 			$this->name = str_replace($t146, "'", $this->name);
@@ -305,7 +305,6 @@ class swRecord extends swPersistance
 				echotime($s);
 			}
 
-			
 			
 			$this->internalfields = swGetAllFields($this->content, true);
 			

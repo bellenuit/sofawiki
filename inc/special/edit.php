@@ -2,6 +2,8 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+
+
 $wikis = array();
 if ($action == "editmulti" || $action == "modifymulti") 
 {
@@ -136,6 +138,7 @@ switch ($wiki->status)
 	default:
 						
 						
+
 						
 						
 						$swParsedContent .= "\n<table class='blanktable' style='width:100%'>\n<tr>";
@@ -146,11 +149,13 @@ switch ($wiki->status)
 						foreach ($wikis as $wikilang=>$wiki)
 						{
 							
-							//print_r($wiki);
+														
 							$wiki->persistance = false;
 							if ($action != 'new')
 								$wiki->lookup(); // by revision again.
 							$wiki->comment = '';
+							
+							
 							
 							
 							$swParsedContent .= "\n<td valign=top $wikiwidth>";
@@ -195,6 +200,7 @@ switch ($wiki->status)
 								$swError = ''; // This page does not exist. 
 							}
 							
+
 							
 							$swParsedContent .= '
  <form method="post" action="index.php?action=modify">

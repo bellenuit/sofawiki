@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.3.2';  
+$swVersion = '3.4.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -77,6 +77,7 @@ include_once $swRoot.'/inc/functions/system.php';
 include_once $swRoot.'/inc/functions/fields.php';
 include_once $swRoot.'/inc/functions/schedule.php';
 include_once $swRoot.'/inc/functions/relation.php';
+include_once $swRoot.'/inc/functions/charts.php';
 
 
 
