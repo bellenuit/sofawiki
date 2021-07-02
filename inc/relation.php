@@ -33,6 +33,9 @@ class swRelationLineHandler
 	
 	function run($t, $internal = '', $internalbody = '')
 	{
+		
+		
+		
 		try 
 		{
 			return $this->run2($t, $internal, $internalbody);
@@ -150,6 +153,21 @@ class swRelationLineHandler
 			//echo $command;
 			switch($command)
 			{
+				case 'analyze' : 	if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$r->globals = $dict;
+										$r->functions = $this->functions;
+										$r->analyze($body);
+										$this->stack[]=$r;
+
+									}
+									break;  
 				case 'assert' : 	if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptagerrorend.$ptag2;
@@ -169,8 +187,7 @@ class swRelationLineHandler
 										$this->stack[]=$r;
 
 									}
-									break;  
-				case 'beep' : 		{
+									break; case 'beep' : 		{
 										$this->result .= $ptag.$ptagerror.$ti.' Beep is not supported'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
@@ -982,7 +999,7 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$r->serialize();
+										$r->serialize1();
 										$this->stack[] = $r;
 									}
 									break;	
@@ -1028,12 +1045,12 @@ class swRelationLineHandler
 									break; 
 				case 'stack':		$r = new swRelation('stack, cardinality, column', $dict);
 									$sti = 0;
-									for ($sti=0;$i<count($this->stack);$sti++)
+									foreach($this->stack as $r2)
 									{
-										$r2 = $this->stack[$sti];
+										$sti++;
 										foreach($r2->header as $th)
 										{
-											$r->insert(($sti+1).', '.$r2->cardinality().', "'.$th.'"');
+											$r->insert(($sti).', '.$r2->cardinality().', "'.$th.'"');
 										}
 									}
 									$this->stack[] = $r;
@@ -1267,6 +1284,144 @@ class swRelation
 		if ($s == '') throw new swRelationError('Invalid name '.$s,102);
 		if (! in_array($s,$this->header)) $this->header[] = $s;
 	}
+	
+	function analyze($t)
+	{
+		
+		echotime('analyze '.$t);
+		$h = $this->header;
+		if (strstr($t,'first'))
+		{
+			$t = str_replace('first','',$t);
+		}
+		else
+		{
+			array_shift($h);
+		}
+		
+		if (trim($t) == '' ) $t = 'means';
+		
+		switch(trim($t))
+		{
+			case 'means' :  $this->labels = array();
+			
+							$aggs = array('count','sum','min','max','avg','median','stddev','var');
+							
+							$r0 = $this->doClone();
+							$this->select1('0'); false;
+							$this->extend('means = ""');
+							$this->project('means, '.join(', ',$h));
+							
+							foreach($aggs as $agg)
+							{	
+								$r1 = $r0->doClone();
+								$p = array();
+								$rn = array();							
+
+								foreach($h as $v)
+								{
+									$p[] = $v.' '.$agg;
+									$rn[] = $v.'_'.$agg.' '.$v;
+								}
+								// print_r($rn);
+								
+								$r1->project2($p);
+								$r1->rename12($rn);
+								$r1->extend('means = "'.$agg.'"');
+								
+															
+								$this->union($r1);
+							
+							}
+								break;
+							
+			case 'correlation' : $acc = array();
+								 
+								 foreach($h as $keyx)
+								 {									
+									foreach($h as $keyy)
+									{
+										$acc[$keyx][$keyy]['x'] = new swAccumulator('avg');
+										$acc[$keyx][$keyy]['y'] = new swAccumulator('avg');
+										$acc[$keyx][$keyy]['xstddev'] = new swAccumulator('stddev');
+										$acc[$keyx][$keyy]['ystddev'] = new swAccumulator('stddev');
+										$acc[$keyx][$keyy]['xy'] = new swAccumulator('avg');
+									}
+								 }
+			
+								 foreach($this->tuples as $t)
+								 {
+									 foreach($h as $keyx)
+									 {
+										 $x = $t->value($keyx);
+										 										 	
+										 foreach($h as $keyy)
+										 {
+										 	$y = $t->value($keyy);
+										 	if ($x != '' && $y != '')
+										 	{
+										 		$acc[$keyx][$keyy]['x'] ->add(floatVal($x));
+										 		$acc[$keyx][$keyy]['y'] ->add(floatVal($y));
+										 		$acc[$keyx][$keyy]['xstddev'] ->add(floatVal($x));
+										 		$acc[$keyx][$keyy]['ystddev'] ->add(floatVal($y));
+										 		$acc[$keyx][$keyy]['xy']->add(floatVal($x)*floatVal($y));
+										 	}
+										 }
+									 }
+								 }
+								 								 
+								 $this->select1('0'); false;
+								 $this->extend('correlation = ""');
+								 $this->project('correlation, '.join(', ',$h));
+								 
+								 foreach($h as $keyx)
+								 {
+									 $cols = array($keyx);
+									 
+									 foreach($h as $keyy)
+									 {
+										 $xvar = $acc[$keyx][$keyy]['xstddev']->reduce();
+										 $yvar = $acc[$keyx][$keyy]['ystddev']->reduce();
+										 $xavg = $acc[$keyx][$keyy]['x']->reduce();
+										 $yavg = $acc[$keyx][$keyy]['y']->reduce();
+										 $xyavg = $acc[$keyx][$keyy]['xy']->reduce();
+										 
+										 if (intval($xvar) * intval($yvar) != 0)
+										 	$cov = ($xyavg - $xavg * $yavg) / ($xvar * $yvar);
+										 else
+										 	$cov = 0;	
+										 								 	
+										 	
+										 $cols[] = $cov;
+										 
+										 /*
+											 
+											 E(X) = avg(X)
+
+											 cov(X,Y) = E(XY) - E(X)E(Y)
+
+											 var(X) = E(XX) - E(X)*E(X)
+
+											 r(X,Y) = cov(X,Y) / sqrt( var(x) * var(y))
+ 
+										 */
+										 
+										 
+										 
+										 
+									 }
+									 
+									 $this->insert2($cols);
+								 }
+
+								 
+								 
+								 				
+		}
+		
+		echotime('analyze end');
+	}
+
 
 	function arity()
 	{
@@ -1375,7 +1530,7 @@ class swRelation
 	{
 		$result = new swRelation($this->header,$this->globals);
 		$result->tuples = array_clone($this->tuples);
-		$result->formats = array_clone($this->formats);
+		$result->formats = array_clone($this->formats); 
 		$result->labels = array_clone($this->labels);
 		$result->functions = $this->functions;
 		return $result;
@@ -2440,14 +2595,11 @@ class swRelation
 		if ($observationkey == 'key') $list2[1] = 'key0';
 		if ($observationkey == 'value') $list2[1] = 'value0';
 		
-		$r = new swRelation($list0,$this->globals);
+		$r = new swRelation($list2,$this->globals);
 		
-		$m = count($this->tuples);
-		for($j=0;$j<$m;$j++)
+		foreach($this->tuples as $tp)
 		{
-			$tp = $this->tuples[$j];
-			
-			for($i=1;$i<$n;$i++) // 0 or 1???
+			for($i=0;$i<$n-1;$i++) // 0 or 1???
 			{
 				$d = array();
 				$d[$list2[0]] = $tp->value($observationkey);
@@ -3474,6 +3626,20 @@ class swAccumulator
 		$v = sqrt($acc2/count($this->list) - $acc/count($this->list)*$acc/count($this->list));
 		return cText12($v);
 	}
+
+	private function PVar()
+	{
+		if (count($this->list)==0) return "";
+		$acc = 0;
+		$acc2 = 0;
+		foreach($this->list as $t)
+		{
+			$acc += floatval($t);
+			$acc2 += floatval($t) * floatval($t);
+		}
+		$v = $acc2/count($this->list) - $acc/count($this->list)*$acc/count($this->list);
+		return cText12($v);
+	}
 	
 	private function pSum()
 	{
@@ -3508,6 +3674,7 @@ class swAccumulator
 			case 'maxs'  	:	return $this->pMaxs();
 			case 'medians'  :	return $this->pMedianS();
 			case 'stddev'  	:	return $this->pStdev();
+			case 'var'  	:	return $this->PVar();
 			case 'concat'  	:	return $this->pConcat();
 			case 'first'  	:	return $this->pFirst();
 			case 'last'  	:	return $this->pLast();

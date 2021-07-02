@@ -25,6 +25,7 @@ class swStyleParser extends swParser
 		
 		$s = $wiki->parsedContent;
 		
+		
 		//echo "<p>STYLE</p>$s";
 
 		// keep only \n

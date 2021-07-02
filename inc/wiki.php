@@ -20,7 +20,7 @@ class swWiki extends swRecord
 		
 		global $lang;
 		$this->originalName = $this->name;
-		$this->parsedContent = $this->content;
+		$this->parsedContent = $this->content; 
 		$this->displayname = $this->localname($lang);
 		
 		// do not parse special namespaces
@@ -35,10 +35,12 @@ class swWiki extends swRecord
 							 $this->parsedContent = "<pre>$s</pre>";
 							 break;
 			
-			default:  $docache = false;
-					  foreach ($this->parsers as $parser)
+			default:  $docache = false; 
+					  foreach ($this->parsers as $key=>$parser)
 								{	
-										
+										//echo $key.' ';
+										// $ok = array('cache','redirection','displayname','tidy','category','fields', 'images','style','tidy','image','link','nowiki');
+										// if (!in_array($key,$ok)) continue;
 										//echo '<pre>'.$s.'</pre>';
 										//echo $parser->info();
 										
@@ -54,8 +56,9 @@ class swWiki extends swRecord
 										//print_r($parser); 
 										
 										// get all <nowiki> tags and replace with magic word
-										$s = $this->parsedContent;
+										$s = $this->parsedContent; 
 										preg_match_all("/<nowiki>(.*)<\/nowiki>/Us", $s, $matches, PREG_SET_ORDER);
+										
 										
 										$nowikis = array();
 										$i = 0;
@@ -77,7 +80,7 @@ class swWiki extends swRecord
 										
 										// put nowiki tags back
 										
-										$s = $this->parsedContent;
+										$s = $this->parsedContent; 
 										foreach($nowikis as $k=>$v)
 										{
 											

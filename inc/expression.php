@@ -774,6 +774,7 @@ class swExpression
         $a;
 		$t;
 		$s;
+	
 
 
 		$a = abs($d);
@@ -1077,7 +1078,6 @@ class swExpressionFunction
         $a;
 		$t;
 		$s;
-
 
 		$a = abs($d);
 		

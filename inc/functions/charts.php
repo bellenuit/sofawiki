@@ -788,7 +788,10 @@ class swMatrixChart extends swFunction
 				$v = @$values[$x][$y];
 				$v = sprintf("%02d",$v);
 				
-				$vcol = ($v - $vmin)/($vmax -$vmin);
+				if ($vmax != $vmin)
+					$vcol = ($v - $vmin)/($vmax -$vmin);
+				else
+					$vcol = 0;
 				
 				
 				$cmix = array();

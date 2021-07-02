@@ -116,7 +116,7 @@ function swGetValue($s, $key, $getArray = false)
 // [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
 
 	{
-		echo $key;
+		// echo $key;
 		
 		if ($getArray)
 			return array();
