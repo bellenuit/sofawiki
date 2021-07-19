@@ -23,6 +23,8 @@ class swWiki extends swRecord
 		$this->parsedContent = $this->content; 
 		$this->displayname = $this->localname($lang);
 		
+		echotime('parse '.$this->name);
+		
 		// do not parse special namespaces
 		switch ($this->wikinamespace())
 		{
@@ -36,13 +38,12 @@ class swWiki extends swRecord
 							 break;
 			
 			default:  $docache = false; 
+			
+					
+			
 					  foreach ($this->parsers as $key=>$parser)
 								{	
-										//echo $key.' ';
-										// $ok = array('cache','redirection','displayname','tidy','category','fields', 'images','style','tidy','image','link','nowiki');
-										// if (!in_array($key,$ok)) continue;
-										//echo '<pre>'.$s.'</pre>';
-										//echo $parser->info();
+										
 										
 										if (is_a($parser,'swCacheParser'))
 										{
@@ -52,31 +53,46 @@ class swWiki extends swRecord
 											continue;
 										}
 										
+										
+										
 										//echo  $this->parsedContent;
 										//print_r($parser); 
 										
 										// get all <nowiki> tags and replace with magic word
 										$s = $this->parsedContent; 
-										preg_match_all("/<nowiki>(.*)<\/nowiki>/Us", $s, $matches, PREG_SET_ORDER);
+										
+										//echotime('nowiki start');
 										
 										
 										$nowikis = array();
-										$i = 0;
-										foreach ($matches as $v)
+										if (stristr($s,'<nowiki>'))
 										{
-											$i++;
-											$k = "(NOWIKI$i)"; 
-											$nowikis[$k] = $v[0];
-											$s = str_replace($v[0],$k,$s);
+											
+											
+											
+											preg_match_all("/<nowiki>(.*)<\/nowiki>/Us", $s, $matches, PREG_SET_ORDER);
+											
+											
+											
+											$i = 0;
+											foreach ($matches as $v)
+											{
+												$i++;
+												$k = "(NOWIKI$i)"; 
+												$nowikis[$k] = $v[0];
+												$s = str_replace($v[0],$k,$s);
+											}
+											
 										}
 										
-										
+										//echotime('nowiki end');
 										
 										
 										$this->parsedContent = $s;
 										
-										
+										//echotime('parse start');
 										$parser->dowork($this); 
+										//echotime('parse done');
 										
 										// put nowiki tags back
 										

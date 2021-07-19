@@ -547,7 +547,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		*/
 
-		$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word');
+		$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any');
 		$notinvalues = array('_displayname', '_length', '_namespace');
 		
 		// echo " bigbefore ".$bigbloom->length;

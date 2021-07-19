@@ -430,6 +430,31 @@ class swRecord extends swPersistance
 		echotime('oldrev '. $this->revision);
 		if ($this->revision>0)
 			$db->currentbitmap->unsetbit($this->revision);
+			
+		
+		// check valid names
+		if (trim($this->name)=='')
+		{ swException('Write error empty name'); $this->error = 'Write error empty name $this->revision';  return; }
+		
+		if (
+		strstr($this->name,'<') || 
+		strstr($this->name,'>') ||
+		strstr($this->name,'*') || 
+		strstr($this->name,'[') ||
+		strstr($this->name,']') ||
+		strstr($this->name,'{') ||
+		strstr($this->name,'}') ||
+		strstr($this->name,'|') ||
+		trim($this->name)=='')
+		{ swException('Write error invalid characters'); $this->error = 'Write error invalid characters ';  return; }	
+		
+		if (strstr($this->name,'/'))
+		{ 
+			$fs = explode('/',$this->name);
+			global $swLanguages;
+			if (! in_array(array_pop($fs),$swLanguages))
+			swException('Write error missing language'); $this->error = 'Write error missing language';  return; }
+		
 		
 		echotime('write '. $this->name);
 		

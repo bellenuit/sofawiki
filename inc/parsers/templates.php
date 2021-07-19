@@ -61,21 +61,41 @@ class swTemplateParser extends swParser
 		
 		// single { and } are now valid inside templates
 		
-		
-		
-		while (stristr($s,'}}') && preg_match('@((?:.|\n)+?)\}\}@',$s,$endmatches) && $s0 != $s) // start to first }}
+		while ($s0 != $s) // start to first }}
 		{
+			
+			
+			
 			$s0 = $s;
 			
-			if (stristr($endmatches[1],'{{') && preg_match('@\{\{((?:.|\n)+?)$@',$endmatches[1],$matches)) // last {{ to end
+			$endpos = strpos($s,'}}');  //echo $endpos;
+			if ($endpos === FALSE ) continue;
+			
+			$startpos = strrpos(substr($s,0,$endpos),'{{'); //echo $startpos;
+			if ($startpos === FALSE ) continue;
+			
+			$val0 = substr($s,$startpos+2,$endpos-$startpos-2);
+			$valheader = substr($s,0,$startpos);
+			$valfooter = substr($s,$endpos+2);
+			
+			
+			
+			if ($val0) // last {{ to end
 			{
 				
-				$val0 = $matches[1];
+				
+				
+				// should not have {{ nor }}
+				
+				if (stristr($val0,"{{") || stristr($val0,"}}") ) { $wiki->parsedContent = $val0; return; } 
+				
 								
 				$val0protected = preg_replace("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@",'[[$1&pipeprotected;$3]]',$val0);
 				$verylongvals = explode("|",$val0protected);
 				
 				$vals = array();
+				
+				
 			
 			
 				foreach($verylongvals as $v)
@@ -103,12 +123,12 @@ class swTemplateParser extends swParser
 				
 				$vheader = trim($vals[0]);
 				
+				// echotime('template '.$vheader);
+				
+				
 				if (array_key_exists($vheader,$this->functions)) // template is function
 				{
 					$f = $this->functions[$vheader];
-									
-					
-					
 					$c = $f->dowork($vals);
 									
 				}
@@ -172,17 +192,15 @@ class swTemplateParser extends swParser
 				
 				// if (!strstr($s,'{{'.$val0.'}}')) echo "something went wrong<p>{{".$val0."}}<p>$s";
 				
-				$s = str_replace('{{'.$val0.'}}',$c,$s);
-				$s = str_replace('{{'.$val0."\n".'}}',$c,$s); //don't know why last \n can be missing
+				
+				
+				$s = $valheader.$c.$valfooter;
 				
 			
 			}
 			
 			  
 		}
-				
-		
-	
 				
 		$wiki->parsedContent = $s;
 		

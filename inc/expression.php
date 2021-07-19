@@ -128,6 +128,7 @@ class swExpression
 		
 		$this->functions[] = new XpNowiki;
 		$this->functions[] = new XpResume;
+		$this->functions[] = new XpTemplate;
 
 		$this->expectedreturn = 1 ;
 
@@ -567,7 +568,7 @@ class swExpression
 		$globals['_pipe'] = '|';
 		$globals['_colon'] = ':';
 		$globals['_leftsquare'] = '[';
-		$globals['_rightsuare'] = ']';
+		$globals['_rightsquare'] = ']';
 		$globals['_leftcurly'] = '{';
 		$globals['_rightcurly'] = '}';
 		$globals['_lt'] = '<';
@@ -2156,6 +2157,27 @@ class XpResume extends swExpressionFunction
 		$stack[] = swResumeFromtext($s,$length,$raw);		
 	}
 }
+
+class XpTemplate extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':template' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 1) throw new swExpressionError('Stack < 1',101);
+		$a = array_pop($stack);
+		
+		$w = new swWiki;
+		$w->parsedContent = '{{'.$a.'}}'; //echo $w->parsedContent;
+		$p = new swTemplateParser;
+		$p->dowork($w);
+		$a = $w->parsedContent;
+		
+		
+			
+		$stack[] = $a;		
+	}
+}
+
 
 function TrimTrailingZeroes($nbr) {
     if(strpos($nbr,'.')!==false) $nbr = rtrim($nbr,'0');

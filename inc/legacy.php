@@ -33,6 +33,10 @@ function swException($message)
 		$receiver = "";
 		swLog($username,$name,$action,$query,$lang,$referer,$time,$error,$label,$message,$receiver);
 		*/
+		
+		echotime($message);
+		global $swError;
+		$swError = $message;
 	
 }
 

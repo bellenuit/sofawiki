@@ -15,12 +15,15 @@ $swLazy = true; // implement lazy writing, no filter update when new records are
 $swHasWritten = false;
 
 define('SOFAWIKIINDEX',true);
+
 include 'api.php';
+
 
 if (swGetDeny($_SERVER['REMOTE_ADDR'])) 
 {
    die('invalid acces '.$_SERVER['REMOTE_ADDR']);
 } 
+
 
 
 // to keep session longer than some minutes use in .htaccess php_value session.cookie_lifetime 0 
@@ -262,6 +265,8 @@ if ($action == 'logout')
 	$user->content = $swAllUserRights;
 	unset($realuser);
 }
+
+echotime('user '.$username);
 
 
 //session_write_close(); 1.9.0 moved down to end
@@ -900,16 +905,20 @@ $menudomains = swGetValue($user->content,'_menu',true);
 	}
 }
 
-echotime("parsed");
+
 
 // do cron job
 
 if ($action != 'indexerror' && rand(0,100)<2)
+{
+	echotime("cron");
 	swCron();
+}
 
 $db->close(); 
 session_write_close();
 
+echotime("skin");
 
 // apply page skin
 if (!array_key_exists(@$skin,$swSkins)) $skin = 'default';

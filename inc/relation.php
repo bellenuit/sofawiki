@@ -206,22 +206,48 @@ class swRelationLineHandler
 									}
 									else
 									{
-										$found = false;
 										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										$r->functions = $this->functions;
-										//$r->locals = $locals;
-										while($i<$c && !$found)
+										
+										echotime('data start');
+										// if we know there is no expressionm, then we can read 50% faster a CSV file
+										if (trim($body) == "csv") 
 										{
-											$i++;
-											$il++;
-											$ti = $il;
-											$line = trim($lines[$i]);
-											if ($line != 'end data')
-												$r->insert($line);
-											else
-												$found = true;
+											$found = false;
+											
+											$csvlines = array( join(',',$r->header) );
+											while($i<$c && !$found)
+											{
+												$i++;
+												$il++;
+												$ti = $il;
+												$line = trim($lines[$i]);
+												if ($line != 'end data')
+													$csvlines[] = $line;
+												else
+													$found = true;
+											}
+											$r->setCSV($csvlines);
 										}
+										else
+										{
+											$found = false;
+											
+											$r->globals = $dict;
+											$r->functions = $this->functions;
+											
+											while($i<$c && !$found)
+											{
+												$i++;
+												$il++;
+												$ti = $il;
+												$line = trim($lines[$i]);
+												if ($line != 'end data')
+													$r->insert($line);
+												else
+													$found = true;
+											}
+										}
+										echotime('data end '.$r->cardinality());
 										$this->stack[]=$r;
 									}
 									break;
@@ -2947,7 +2973,7 @@ class swRelation
 			
 			foreach($d as $k=>$v)
 			{
-				$lines[] = '[<nowiki>[</nowiki>'.$k.'::'.$v.']]';
+				$lines[] = '<leftsquare><leftsquare>'.$k.'::'.$v.'<rightsquare><rightsquare>';
 			}
 			
 			$lines[] = '';
@@ -3273,6 +3299,8 @@ class swRelation
 	
 	function union($r)
 	{
+		echotime('union start '.count($this->tuples).'+'.count($r->tuples));
+		
 		if (!count($r->tuples)) return;
 		
 		
@@ -3292,6 +3320,8 @@ class swRelation
 		    $this->tuples[$tp->hash()] = $tp;
 		}
 		*/
+		
+		echotime('union end ='.count($this->tuples));
 	}
 	
 	function update($t)

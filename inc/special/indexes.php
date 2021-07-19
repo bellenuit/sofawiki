@@ -379,13 +379,11 @@ switch($_REQUEST['index'])
 						
 							if (isset($_REQUEST['q']) && isset($_REQUEST['reset']) )
 							{
-								$path = $querypath.$_REQUEST['q'].'.txt';
-								swUnlink($path);
-								
-								if (substr($_REQUEST['q'],-3) !== '.db')
-									$swParsedContent .= 'reset '.$_REQUEST['q'].'.txt';
-								else
-									$swParsedContent .= 'reset '.$_REQUEST['q'];
+								$path = $_REQUEST['q'];
+								if (!stristr($path,'.db'))
+									$path = $path.'.txt';
+								swUnlink($querypath.$path);
+								$swParsedContent .= 'reset '.$path;
 								
 								break;
 								
