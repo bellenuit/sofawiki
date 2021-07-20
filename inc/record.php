@@ -448,13 +448,14 @@ class swRecord extends swPersistance
 		trim($this->name)=='')
 		{ swException('Write error invalid characters'); $this->error = 'Write error invalid characters ';  return; }	
 		
+		/* does not work
 		if (strstr($this->name,'/'))
 		{ 
 			$fs = explode('/',$this->name);
-			global $swLanguages;
-			if (! in_array(array_pop($fs),$swLanguages))
-			swException('Write error missing language'); $this->error = 'Write error missing language';  return; }
-		
+			
+			if (strlen(array_pop($fs)) != 2)
+			swException('Write error wrong language'); $this->error = 'Write error wrong language';  return; }
+		*/
 		
 		echotime('write '. $this->name);
 		
