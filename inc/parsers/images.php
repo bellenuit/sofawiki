@@ -112,10 +112,10 @@ class swImagesParser extends swParser
 			$options = explode('|',$v[1]);
 			
 			$val = $options[0];
-			$width = intval(@$options[1]);
-			$height = intval(@$options[2]);
-			$crop = @$options[3];
-			$alttag = @$options[4];
+			if (isset($options[1])) $width = intval($options[1]); else $width = 0;
+			if (isset($options[2])) $height = intval($options[2]); else $height = 0;
+			if (isset($options[3])) $crop = $options[3]; else $crop = '';
+			if (isset($options[4])) $alttag = $options[4]; else $alttag = '';
 			
 			//print_r($options);
 			
