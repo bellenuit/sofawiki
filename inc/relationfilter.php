@@ -470,19 +470,19 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							if ($andfound) $orfound = true;
 						}
 						
+						$revisions = explode(' ',dba_fetch($n,$urldb));
 						
-						
-						if (!$orfound) 
+						if ($orfound)
 						{
-							$revisions = explode(' ',dba_fetch($n,$urldb));
-							
-							foreach($revisions as $r)
-							{
+							array_shift($revisions);
+						}
+						
+						foreach($revisions as $r)
+						{
 								$tocheckbitmap->unsetbit($r);
 								$checkedbitmap->setbit($r);
-							}
-							continue;
 						}
+						if (!$orfound) continue;
 					}
 					
 					if ($namefilter and $namefilter != '*')
@@ -502,17 +502,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							if ($andfound) $orfound = true;
 						}
 						
-						if (!$orfound) 
+						$revisions = explode(' ',dba_fetch($n,$urldb));
+						
+						foreach($revisions as $r)
 						{
-							$revisions = explode(' ',dba_fetch($n,$urldb));
-							
-							foreach($revisions as $r)
-							{
 								$tocheckbitmap->unsetbit($r);
 								$checkedbitmap->setbit($r);
-							}
-							continue;
 						}
+						if (!$orfound) continue;
+						
 					}
 				
 				} while ($n = dba_nextkey($urldb));
