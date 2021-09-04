@@ -169,7 +169,6 @@ function swIndexBloom($numberofrevisions = 1000)
 	global $db;
 	global $swBloomIndex;
 	global $swMaxSearchTime;
-	global $swRamdiskPath;
 	
 	$path = $swRoot.'/site/indexes/bloom.raw';
 	if (file_exists($path)) chmod($path,0777);
@@ -178,19 +177,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	if (!$db->bloombitmap) return;
 	$db->bloombitmap->redim($db->lastrevision+1);
 		
-	if ($swRamdiskPath != '' && false) //ne marche pas,Permission denied
-	{
-		echotime('to ram');
-		$path2 = $swRamdiskPath.'bloom.txt';
-		$raw = file_get_contents($path);
-		file_put_contents($path2,$raw);
-		
-		chmod($path2,0777);
-		echotime('done');
-		$fpt = fopen($path2,'c+');
-	}
-	else
-		$fpt = fopen($path,'c+');
+	$fpt = fopen($path,'c+');
 	
 	$block = floor(($db->lastrevision+1)/65536);
 	$fs = (($block + 1) * 1024) * 8192 ;
@@ -221,7 +208,39 @@ function swIndexBloom($numberofrevisions = 1000)
 		if (!$db->indexedbitmap->getbit($rev)) continue;
 		if ($db->bloombitmap->getbit($rev)) continue;
 		
-		
+		// sometimes the bloombitmap is corrupt or empty, but the bloom is actually there for the current revision
+		// in this case no need to read the file. 
+		// we check if some bits for this revisions are already set
+		// if this is the case, we simply set the bloom bitmap and go on
+		$found = false;
+		for($h = 0;$h<1024;$h++)
+		{
+			// file structure 
+			// block of 1024 rows each 8192 bytes wide = 65536 values
+			
+			$block = floor($rev/65536);
+			$col = floor(($rev % 65536)/8);
+			$offset = ($block * 1024 + $h) * 8192 + $col;
+			
+			// sets nth bit to true
+			$byte = $rev >> 3;
+			$bit = $rev - ($byte << 3);
+			
+			// new try read all to bitmap
+			$p = $offset*8 + $bit;
+			
+			if ($bitmap->getbit($p))
+			{
+				$found = true;
+				$h=1024;
+			}
+		}
+		if ($found)
+		{
+			$db->bloombitmap->setbit($rev);
+			continue;
+		}
+		//end check bloombitmap
 		
 		$nowtime = microtime(true);	
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
@@ -286,15 +305,7 @@ function swIndexBloom($numberofrevisions = 1000)
 	// echo "offsetmax $offsetmax; ";
 	
 	echotime('indexbloom end '.$rev);
-	
-	if ($swRamdiskPath != '' && false)
-	{
-		echotime('from ram');
-		$raw = file_get_contents($path2);
-		file_put_contents($path,$raw);
-		echotime('done');
-	}
-	
+		
 	// new try read all to bitmap
 	echotime('from bitmap '.$bitmap->length);
 	
