@@ -323,7 +323,7 @@ class swRelationLineHandler
 									
 									$xp = new swExpression($this->functions);
 									$xp->compile($body);
-									$tx = $xp->evaluate($dict);
+									$tx = $xp->evaluate($dict,$this->globals);
 									$this->result .= $tx.PHP_EOL; // . $ptag2; // ???
 									switch (substr($tx,1))
 									{
@@ -593,11 +593,13 @@ class swRelationLineHandler
 									
 									if (isset($_POST['submitinput']))
 									{
-										// print_r($inputfields);
+										//print_r($inputfields);
+										//print_r($_POST);
 										foreach($inputfields as $key)
 										{
 											$this->globals[$key] = @$_POST[$key];
 										}
+										// print_r($this->globals);
 									}
 									else
 									{

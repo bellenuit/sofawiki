@@ -416,6 +416,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		echotime('tocheck '.$tocheckcount); 
 	}
 	
+	/*
 	$nowtime = microtime(true);	
 	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
 	if ($dur>$swMaxOverallSearchTime) {
@@ -423,6 +424,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		echotime('overtime overall');	
 		$swOvertime = true;
 	}
+	*/
+	$dur = 0; // check always at least 50 records
 		
 	if ($tocheckcount > 0 && $dur<=$swMaxOverallSearchTime)
 	{
@@ -648,7 +651,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 				$nowtime = microtime(true);	
 				$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-				if ($dur>$swMaxSearchTime) 
+				if ($dur>$swMaxSearchTime && $checkedcount > 50)  //check at least 50 records
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
@@ -656,7 +659,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
-				if ($dur>$swMaxOverallSearchTime) 
+				if ($dur>$swMaxOverallSearchTime && $checkedcount > 50) //check at least 50 records
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
