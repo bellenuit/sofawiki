@@ -46,6 +46,8 @@ class swResumeFunction extends swFunction
 
 function swResumeFromText($s,$length,$raw)
 {
+	
+
 					
 	//remove nowiki tag
 	$s = str_replace('<nowiki>','',$s);
@@ -54,17 +56,30 @@ function swResumeFromText($s,$length,$raw)
 	//remove categories
 	$s = preg_replace('/\[Category:(.*)\]/u','',$s);
 	
-	// remove templates 
-	$s =  str_replace("\n"," ",$s);
-	$s =  str_replace("\r"," ",$s);
-	$s =  preg_replace('/\{\{(.*)\}\}/u','',$s);
+	$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
 	
-	//remove styles
-	$s = preg_replace('#<style(.*?)</style>#','',$s);
+	$s = preg_replace("#<code>[\S\s]*?</code>#m", "", $s);
+	$s = preg_replace("#<script>[\S\s]*?</script>#m", "", $s);
+	$s = preg_replace('#<style>[\S\s]*?</style>#m','',$s);
+	$s = preg_replace('#{{[\S\s]*?<}}#m','',$s);
+
+	$s = preg_replace("/^\{\|.*/", "", $s);
+	$s = preg_replace("/^\|.*?|/", "", $s);
+	$s = preg_replace("/^!.*?!/", "", $s);
+	$s = preg_replace("/^\|\}.*/", "", $s);
+	
+	if ($raw)
+	{
+		$s = preg_replace('#\[\[(.*?)\]\]#m','$1',$s);
+	}
 
 	
 	// $s = str_replace('{{','',$s);
 	// $s = str_replace('}}','',$s);
+	
+	
+	// other text to clean
+	
 	
 	$wiki = new swWiki;
 	
@@ -83,20 +98,12 @@ function swResumeFromText($s,$length,$raw)
 	$wiki->parsers['link'] = $lp;
 	$wiki->parsers['nowiki'] = new swNoWikiParser;
 	$s = $wiki->parse(false);
+
 	
-	// other text to clean
-	
-	$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
-	
-	$s = preg_replace("/<code>[\S\s]*?<\/code>/m", "", $s);
-	
-	$s = preg_replace("/^\{\|.*/", "", $s);
-	$s = preg_replace("/^\|.*?|/", "", $s);
-	$s = preg_replace("/^!.*?!/", "", $s);
-	$s = preg_replace("/\{\{.*?\}\}/m", "", $s);
 	
 	$s = str_replace('|','',$s);
-
+	
+	
 	if (strlen($s)<$length) return trim($s);
 	
 	$p = @strpos($s."\n","\n",2);
@@ -130,6 +137,9 @@ function swResumeFromText($s,$length,$raw)
 				$t = $elem;
 		}
 	}
+	
+	
+	
 	return trim($t);
 }
 

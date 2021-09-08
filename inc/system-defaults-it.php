@@ -164,6 +164,7 @@ $swSystemDefaults["result/it"] = "risultato";
 $swSystemDefaults["previous/it"] = "precedente";
 $swSystemDefaults["next/it"] = "successivo";
 
+$swSystemDefaults["cacherefresh/it"] = "Cache Refresh";
 
 
 ?>

@@ -161,7 +161,8 @@ $swSystemDefaults["your-email-access-message/dk"] = "You have asked to access th
 $swSystemDefaults["results/dk"] = "resultader";
 $swSystemDefaults["result/dk"] = "resultat";
 $swSystemDefaults["previous/dk"] = "tidligere";
-$swSystemDefaults["next/dk"] = "næste"
+$swSystemDefaults["next/dk"] = "næste";
 
+$swSystemDefaults["cacherefresh/dk"] = "Cache Refresh";
 
 ?>

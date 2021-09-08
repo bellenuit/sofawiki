@@ -163,5 +163,5 @@ $swSystemDefaults["result/es"] = "resultado";
 $swSystemDefaults["previous/es"] = "anterior";
 $swSystemDefaults["next/es"] = "siguente";
 
-
+$swSystemDefaults["cacherefresh/es"] = "Cache Refresh";
 ?>

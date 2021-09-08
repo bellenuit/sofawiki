@@ -1099,6 +1099,7 @@ extend _nameint = regexreplace(_name,"\/\w\w","")
 project _nameint, _paragraph count, _paragraph first
 rename _nameint _name, _paragraph_first _paragraph
 order _paragraph_count 9
+
 project _name, _paragraph
 // add counter
 dup

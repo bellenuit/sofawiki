@@ -344,6 +344,8 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		
 		
+		swIndexBloom(10);
+		
 		return true;
 
 	}

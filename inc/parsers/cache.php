@@ -50,6 +50,13 @@ class swCacheParser extends swParser
 			{
 				$s = file_get_contents($path);
 				$wiki->parsedContent = $s;
+				
+				global $swEditMenus;
+				global $user;
+				if ($user->hasright('modify', $wiki->namewithoutlanguage()))
+					$swEditMenus['cacherefresh'] = '<a href="index.php?action=view&cacherefresh=1&name='.swNameURL($wiki->namewithoutlanguage()).'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('cacherefresh',$lang).'</a>';
+
+				
 				echotime('use cached');
 				
 				// mute other parsers
@@ -58,6 +65,8 @@ class swCacheParser extends swParser
 			}
 			else
 			{
+				// if (isset($_REQUEST['cacherefresh']) && file_exists($path)) { unlink($path); echotime('cache deleted'); }
+				
 				$wiki->parsedContent = trim(substr($s,$pos2));
 				
 				

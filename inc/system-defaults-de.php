@@ -156,5 +156,6 @@ $swSystemDefaults["result/de"] = "Resultat";
 $swSystemDefaults["previous/de"] = "Vorherige";
 $swSystemDefaults["next/de"] = "Nächste";
 
+$swSystemDefaults["cacherefresh/de"] = "Cache zurücksetzen";
 
 ?>
