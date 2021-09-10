@@ -42,11 +42,11 @@ class swRelationLineHandler
 		}
 		catch (swExpressionError $err)
 		{
-			return '<div class="relation">'.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
+			return '<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
 		}
 		catch (swRelationError $err)
 		{
-			return '<div class="relation">'.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
+			return '<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
 		}
 	}
 	
@@ -1251,7 +1251,7 @@ class swRelationLineHandler
 		if ($swOvertime)
 			$overtimetext .= '<nowiki><div class="overtime">'.swSystemMessage('there-may-be-more-results',$lang).'</div></nowiki>'; 
 		if (!$internal)
-			return '<div class="relation">'.$this->result.$overtimetext.'</div>' ; 
+			return '<div class="relation">'.PHP_EOL.$this->result.$overtimetext.'</div>' ; 
 		else
 			return $this->result;
 			

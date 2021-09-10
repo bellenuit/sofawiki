@@ -37,10 +37,7 @@ elseif (@$swCustomSearch)
 	$wiki->content = str_replace("{{limit}}",$limit,$wiki->content);
 	$wiki->content = str_replace("{{previous}}",$previous,$wiki->content);
 	$wiki->content = str_replace("{{next}}",$next,$wiki->content);
-
-	
-	
-	
+		
 
 	$swParseSpecial = true;
 	

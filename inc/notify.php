@@ -209,16 +209,18 @@ function swLogDeny($ip,$denyend='')
 		$t = '';
 	}
 	
-	$d0 = swGetValue($t,$ip);
-	$t = str_replace("[[$ip::$d0]]","",$t);
+	//$d0 = swGetValue($t,$ip);
+	//$t = str_replace("[[$ip::$d0]]","",$t);
+	if (strstr($t,"[[$ip::$denyend]]")) return;
+
 	$t .= "[[$ip::$denyend]]";
 	if ($handle = fopen($file, 'w')) { fwrite($handle, $t); fclose($handle); }
 	else  echotime('error fopen w '.$file);
 
 	global $username, $name, $lang, $referer, $error, $message, $receiver;
 	$timestamp = date("Y-m-d H:i:s",time());
-	$label = "$ip $denyend";
-	swLog($username,$name,'deny','',$lang,$referer,$timestamp,$error,$label,$message,$receiver);
+	$label = "deny until $denyend";
+	swLog($ip,$name,'deny','',$lang,$referer,'',$error,$label,$message,$receiver);
 	
 
 }

@@ -234,6 +234,12 @@ else
 			$action = $failaction;
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
+		// log bots who are asking often for login without password
+		elseif (@$swStrongDeny>0 && $action == 'login')
+		{
+			if (rand(0,100) < $swStrongDeny) swLogWrongPassword($_SERVER['REMOTE_ADDR']);
+		}
+
 		$user = new swUser;
 		$user->name = '';
 		$user->pass = '';

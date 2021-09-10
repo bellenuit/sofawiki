@@ -425,7 +425,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$swOvertime = true;
 	}
 	*/
-	$dur = 0; // check always at least 50 records
+	$dur = 0; // check always at least 10 records
 		
 	if ($tocheckcount > 0 && $dur<=$swMaxOverallSearchTime)
 	{
@@ -651,7 +651,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 				$nowtime = microtime(true);	
 				$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-				if ($dur>$swMaxSearchTime && $checkedcount > 50)  //check at least 50 records
+				if ($dur>$swMaxSearchTime && $checkedcount > 10)  //check at least 10 records
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
@@ -659,7 +659,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
-				if ($dur>$swMaxOverallSearchTime && $checkedcount > 50) //check at least 50 records
+				if ($dur>$swMaxOverallSearchTime && $checkedcount > 10) //check at least 10 records
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
@@ -1016,7 +1016,7 @@ function swRelationToTable($q)
 	// '<div class="relation">'.
 	// '</div>'
 	
-	$s = substr($s,strlen('<div class="relation">'));
+	$s = substr($s,strlen('<div class="relation">'.PHP_EOL));
 	$s = substr($s,0,-strlen('</div>'));
 	
 	

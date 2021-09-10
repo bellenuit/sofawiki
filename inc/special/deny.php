@@ -54,6 +54,9 @@ $swParsedContent .= "\nIP <input type='text' name='ip' value='$ip' /> ";
 $swParsedContent .= "\n<input type='submit' name='submitallow' value='Allow' />";
 $swParsedContent .= "\n</p></form>";
 
+$swParsedContent .= '<p>Configuration<br>$swDenyCount ='.@$swDenyCount. ' (threshold unsuccessful logins to block for the day)';
+$swParsedContent .= '<br>$swStrongDeny ='.@$swStrongDeny. ' (probability 0-100% that empty login action triggers unsuccessful login)';
+
 
 $rawlines = array();
 
@@ -77,7 +80,10 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 	if (file_exists($file)) 
 	{
 		$t = file_get_contents($file);
-		$swParsedContent .= "<pre>Denied: <b>".$t."</b></pre>";
+		$ts = explode(']]',$t);
+		natsort($ts);
+		$ts = array_filter($ts); // remove empry
+		$swParsedContent .= "<p>Denied: <br><b>".join(']]<br>',$ts)."]]</b>";
 	}
 	
 	
@@ -99,8 +105,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		}
 	} 
 	arsort($rawlines); 
-	$swParsedContent .= "\n\n<pre>\n\n</pre>\n";
-	$swParsedContent .= "\n\n<pre>".join("\n",$rawlines)."\n</pre>\n";	
+	$swParsedContent .= "<p>".join("<br>",$rawlines);	
 
 } 
  
