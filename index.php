@@ -239,7 +239,8 @@ else
 		{
 			if (rand(0,100) < $swStrongDeny) swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
-
+		
+		
 		$user = new swUser;
 		$user->name = '';
 		$user->pass = '';
@@ -882,12 +883,7 @@ switch ($action)
 						break;
 	
 	
-	case 'indexerror':		$swParsedName = 'Site indexing';
-						$swParsedContent = 'The site is reindexing and currently not available. Please come back in ten minutes. ('
-						.sprintf('%0d',100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem()).'%)';
-						$swFooter = '';
-						$swEditMenus = array();
-						$swOvertime = false;
+	case 'indexerror':	include 'inc/special/indexerror.php';
 						break;
 	default: 			
 						if (isset($swActionHookFile))
@@ -915,9 +911,9 @@ $menudomains = swGetValue($user->content,'_menu',true);
 
 // do cron job
 
-if ($action != 'indexerror' && rand(0,100)<2)
+//if ($action != 'indexerror' && rand(0,100)<2)
+if ($action != 'indexerror')
 {
-	echotime("cron");
 	swCron();
 }
 
@@ -957,7 +953,7 @@ if (function_exists('swLogHook'))
 	swLogHook($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 	
 }
-
+swUpdateRamDiskDB();
 
 swLog($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 swSemaphoreRelease();

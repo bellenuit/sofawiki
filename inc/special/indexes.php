@@ -158,8 +158,9 @@ if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) ||
 	{	
 		$swIndexError = true;
 		$swParsedContent = $done;
-		$swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
+		$swParsedContent .= "\n<form method='get' action='index.php?'><p><pre>";
 		$swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
+		$swParsedContent .= "\n</pre><input type='hidden' name='action' value='rebuildindex'>";
 		$swParsedContent .= "\n<input type='submit' name='submit' value='Reopen' style='color:red'/>";
 		$swParsedContent .= "\n</p></form>";
 		echo $swParsedContent;
@@ -261,31 +262,35 @@ switch($_REQUEST['index'])
 
 							break;
 	case 'indexberkeley' :  
-							swIndexRamDiskDB();							
+							swIndexRamDiskDB();		
+							$swParsedContent .= '<h3>Berkeley indexed</h3>';	
+							break;				
 
 	case 'berkeley': 		$swParsedContent .= '<h3>Berkeley</h3>';
+							
 						  swInitRamdisk();
 						  if (isset($swRamDiskDB) && $swRamDiskDB)
 						  {
 							  $counter = 0;
-							  $k = dba_firstkey($swRamDiskDB);
 							  $bm = new swBitmap($db->lastrevision);
+							  $k = dba_firstkey($swRamDiskDB);
 							  if ($k)
 							  	$counter = 1;
 							  while ($k = dba_nextkey($swRamDiskDB))
 							  { 
-								  if ($pos = strpos($k,$swRamDiskDBfilter))
-								  {
-									  $pos +=strlen($swRamDiskDBfilter);
-									  $k2 = substr($k,$pos);
-									  $k2 = substr($k2,0,-4);
-									  //echo $k2;
+								  
+								  
+								// $swParsedContent .=  PHP_EOL.'key '.$k;
+									  $k2 = substr($k,0,-4);
+									 
+
 									  $bm->setbit(intval($k2));
 									  $counter++;
-								  }
+								  
 								  
 								 
 							  }
+							  //$swParsedContent .= '<p>is slow';
 							  $swParsedContent .= '<p>length: '.$counter;
 							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
 							  
@@ -659,6 +664,8 @@ function bitmap2canvas($bm,$listrevisions=1,$id='1')
 
 
 $swParseSpecial = false;
+
+if ($swIndexError) include 'inc/special/indexerror.php';
 
 
 // print_r($_ENV);

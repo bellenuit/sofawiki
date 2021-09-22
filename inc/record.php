@@ -2,6 +2,8 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+$swCurrentRecords = array();
+
 
 class swRecord extends swPersistance
 {
@@ -172,13 +174,22 @@ class swRecord extends swPersistance
 		
 		global $db;
 		global $lang;
+		global $swCurrentRecords;
 		$this->error = '';
 		
+		/*
+		if($this->revision)
+		{
+			$this = $swCurrentRecords[$this->revision];
+			return;
+		}
+		*/
 		
 		if ($this->persistance && $this->revision) // allready open
 		{
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			$this->name =  swNameURL($this->name); 
+			$swCurrentRecords[$this->revision] = $this;
 			return;
 		}
 		
@@ -194,8 +205,7 @@ class swRecord extends swPersistance
 			
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			$this->name =  swNameURL($this->name);
-
-						
+			$swCurrentRecords[$this->revision] = $this;			
 			return;
 			
 		}
@@ -232,11 +242,12 @@ class swRecord extends swPersistance
 						$this->persistance = $file;
 						$this->open();
 						$this->error = '';
+						$swCurrentRecords[$this->revision] = $this;
 						return;
 					}
 				}
 				
-				// echotime('long '.$this->revision);
+				// echotime('lookup '.$this->revision);
 				$file = swGetPath($this->revision);
 				
 				if (!file_exists($file)) 
@@ -246,8 +257,9 @@ class swRecord extends swPersistance
 					$this->error ='missing '.$fname;  
 					return;
 				}
-				if ($this->name)
-						echotime('read '.$this->name);
+				//if ($this->name)
+				//		echotime('read '.$this->name);
+				
 				$s = swFileGet($file);
 			}
 			
@@ -308,13 +320,15 @@ class swRecord extends swPersistance
 			
 			$this->internalfields = swGetAllFields($this->content, true);
 			
-			//echotime($this->content);
+			$swCurrentRecords[$this->revision] = $this;
 			
 			if ($hasshort) return;
 			
 			$db->updateIndexes($this->revision);
 			if ($db->currentbitmap->getbit($this->revision))
+			{
 				$this->writecurrent();
+			}
 			return;
 		}
 		else
@@ -355,13 +369,12 @@ class swRecord extends swPersistance
 	function writecurrent()
 	{
 		global $db;
-		swSemaphoreSignal();
 		
+				
 		// do not write invalid revisions with missing files
 		if ($this->status != '')
 		{
 			$db->updateIndexes($this->revision);
-			
 			$file = $this->currentPath();
 			$rec2 = new swRecord;
 			if (file_exists($file))
@@ -387,23 +400,25 @@ class swRecord extends swPersistance
 				$s = substr($s,0,512);
 				$s = str_pad($s,512,' ');
 				$path = $swRoot.'/site/indexes/short.txt';
+				swSemaphoreSignal($path);
 				$fpt = fopen($path,'c');
 				@fseek($fpt, 512*($this->revision-1));
 				@fwrite($fpt, $s);
 				@fclose($fpt);
+				swSemaphoreRelease($path);
 				$db->shortbitmap->setbit($this->revision);
 			}
 			else
 			{
-				$cp = swGetPath($this->revision,true);
-				$this->persistance = $cp;
-				$this->save();
-				swFileGet($cp); // force cache
-			}
-			
-			
+				$cp = swGetPath($this->revision,true); // save revision as object, to be reused
+				if (!file_exists($cp)) // is always the same
+				{
+					$this->persistance = $cp;
+					$this->save();
+				}
+			}			
 		}
-		swSemaphoreRelease();
+		
 	}
 	
 	function source()
@@ -426,7 +441,7 @@ class swRecord extends swPersistance
 		global $db;
 		$db->init();
 		echotime('writefile '. $this->name);
-		swSemaphoreSignal();
+
 		echotime('oldrev '. $this->revision);
 		if ($this->revision>0)
 			$db->currentbitmap->unsetbit($this->revision);
@@ -484,7 +499,7 @@ class swRecord extends swPersistance
 		
 		$this->internalfields = swGetAllFields($this->content);
 		$this->writecurrent();	
-		swSemaphoreRelease();
+
 
 	}
 	

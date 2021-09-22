@@ -12,11 +12,11 @@ function swSitemap()
 		global $db;
 		global $swBaseHrefFolder;
 		
-		echo "sitemap1";
+		//echo "sitemap1";
 		
 		if (!$swCreateSitemap) return;
 		
-		echo "sitemap2";
+		// echo "sitemap2";
 			
 		$swMaxOverallSearchTime /= 40;
 		

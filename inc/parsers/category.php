@@ -52,7 +52,10 @@ print grid';
 				$q = 'filter _namespace "'.$namespaces.'", _name, _category "'.$wn.'"
 select _category regexi "^'.$wn.'$"';
 				$revisions = swRelationToTable($q);
+				//echo $q;
+				//vprint_r($revisions);
 				$names = array();
+	
 				
 				foreach($revisions as $row)
 				{

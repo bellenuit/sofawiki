@@ -3,72 +3,97 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 
+function swRelationFilterOvertimeRetake()
+{
+	// check if there is a recent filter that has overtime set
+	
+	
+
+	global $swRoot;
+	
+	$files = glob($swRoot.'/site/queries/*.db');
+	if (count($files)>0)
+	{
+	
+		$files = array_combine(array_map("filemtime", $files),$files);
+		arsort($files);
+		
+		$i = 0;
+
+		foreach($files as $mtime=>$file)
+		{
+			$i++;
+			if ($i>250) return;
+			
+			$bdb = @dba_open($file, 'wdt', 'db4'); // force write. don't open if used
+			if (!$bdb) continue;
+			
+			$s = dba_fetch('_overtime',$bdb);
+			$overtime = false;			
+			// unserialize does not work on a simple boolean, we hack			
+			if ($s == 'b:1;' ) $overtime  = true;
+			
+			if (!$overtime) { @dba_close($bdb); continue; }
+			
+			$filter = dba_fetch('_filter',$bdb);
+						
+			@dba_close($bdb); 
+			
+			if (!$filter) continue;
+			
+			echotime( 'cron overtime filter '.$filter );
+			
+			if (!defined("CRON")) $swMaxSearchTime = 1000;
+			swRelationfilter($filter);
+			echotime('max searchtime '.$swMaxSearchTime);
+			
+			break;
+		}
+		
+	}
+
+}
+
+
 function swCron()
 {
 	global $db; 
 	global $action; 
 	global $swIndexError;
+	global $swOvertime;
 	global $swRoot;
 	
-	$db->init(true);
-	if ($action == 'indexerror' || $swIndexError) return;
+	
+	
+	//$db->init(true);
+	// if ($action == 'indexerror' || $swIndexError) return;
+	if ($swIndexError) return;
+	if ($swOvertime) return;
 	
 	if (function_exists('swInternalCronHook') && swInternalCronHook()) 
 	{
+
 		// everything is handled by configuration.php
 	}
 	else
 	{
 		
-		$r = rand(0,50);
+		$r = rand(0,100);
+		
+		if ($r > 20) return;
 		
 		switch($r)
 		{
 			case 0: echotime('cron index'); $db->init(true); return 'cron index'; // rebuild indexes 
 						
-			case 2: echotime('cron bitmap'); $db->rebuildBitmaps(); return 'cron bitmap';  
+			case 1: echotime('cron bitmap'); $db->rebuildBitmaps(); return 'cron bitmap';  
 						
-			case 3: echotime('cron sitemap'); swSitemap();  return 'cron sitemap';  
+			case 2: echotime('cron sitemap'); swSitemap();  return 'cron sitemap';  
 
-			case 4: echotime('cron bloom'); swIndexBloom(100); return 'cron bloom';  
+			case 3: echotime('cron bloom'); swIndexBloom(10); return 'cron bloom';  
 			
-			case 5: 
-	
-				// check if there is a recent search that has overtime set
 				
-				$files = glob($swRoot.'/site/queries/*.txt');
-				if (count($files)>0)
-				{
-					$files = array_combine($files, array_map("filemtime", $files));
-					arsort($files);
-					
-					$i=0;
-					$filterlist='';
-					foreach($files as $k=>$m)
-					{
-						
-						$fn = str_replace($swRoot.'/site/queries/*.txt','',$k);
-						if (stristr($fn,'-')) continue; // check only indexfile
-						$s = file_get_contents($k); // slow on big files
-						$overtime = swGetValue($s,'overtime');
-						$filter = swGetValue($s,'filter');
-						$namespace = swGetValue($s,'namespace');
-						$mode = swGetValue($s,'mode');
-						if ($overtime)
-						{
-							swRelationToTable($filter);
-							
-							$filterlist .= '<br>'.$filter;
-							$i+=9;
-						}
-						$i++;
-						if ($i>200) break;
-					}
-					return 'cron overtime filter '.$filterlist;
-				}
-					break;
-				
-			  case 6: echotime('cron logs'); 
+			case 4: echotime('cron logs'); 
 			  		  
 			  		  if (!defined("CRON")) define('CRON',true);
 			  		  global $swParsedContent;
@@ -79,14 +104,22 @@ function swCron()
 			  
 			  		  return "cron logs"; 
 			  		  break; 
-			  case 7: echotime('cron IndexRamDiskDB'); 
+			case 5: echotime('cron IndexRamDiskDB'); 
 			  		  swIndexRamDiskDB();	
 			  		  break;
+			  		  
+
 			
-			default: return "cron pause";
+			default:  echotime( 'cron overtime');
+			
+					  swRelationFilterOvertimeRetake();
+					  
+					  echotime('cron end');
 		
 		}
 	}
+	
+	
 }
 
 

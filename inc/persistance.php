@@ -30,7 +30,7 @@ class swPersistance
     /**********************/ 
     function save() 
     { 
-        swSemaphoreSignal();
+        swSemaphoreSignal($this->persistance);
         $s = serialize(get_object_vars($this));
         swUnlink($this->persistance);
         if($f = @fopen($this->persistance,"w")) 
@@ -42,7 +42,7 @@ class swPersistance
             
         }  
         else echotime("Could not open file ".$this->persistance." for writing, at Persistant::save"); 
-        swSemaphoreRelease();
+        swSemaphoreRelease($this->persistance);
         
     } 
     /**********************/ 
@@ -51,7 +51,7 @@ class swPersistance
         $vars = array();
         if (file_exists($this->persistance))
         {
-       	 	$s=swFileGet($this->persistance); 
+       	 	$s=file_get_contents($this->persistance); 
        	 	$vars = @unserialize($s);
        	 	if ($vars === FALSE) unlink($this->persistance); // file is corrupt.
        		if (!$vars) 

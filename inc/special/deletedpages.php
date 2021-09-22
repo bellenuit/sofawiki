@@ -11,43 +11,55 @@ $swParsedContent = "";
 $currentbitmap = $db->currentbitmap->duplicate();
 $deleted = $db->deletedbitmap->toarray();
 
-$swParsedContent .= '<ul>';
+$urldbpath = $db->pathbase.'indexes/urls.db';
+if (file_exists($urldbpath))
+		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+if (!@$urldb)
+{
+	echotime('urldb failed');
+}
+
+
+$listmenu = array();
+$list = array();
+
+$alpha = @$_REQUEST['alpha'];
+if (!$alpha)$alpha = 'a';
 
 $list = array();
+$i = 0;
 foreach($deleted as $rev)
 {
 	if ($currentbitmap->getbit($rev))
 	{
-		$w = new swRecord;
-		$w->revision = $rev;
-		$w->lookup();
-		$url = swNameURL($w->name);
-		if ($w->name != '')
-			$list[$url] = '"'."&lt;nowiki>&lt;a class='invalid' href='index.php?action=history&revision=".$rev."'>".$w->name."&lt;/a>&lt;/nowiki>".'"' ;
+		// $i++; if ($i>10) continue;
+		if ($urldb && dba_exists(' '.$rev,$urldb))
+		{
+			$s = dba_fetch(' '.$rev,$urldb);
+			$url = swNameURL(substr($s,2));
+			if (!$url) continue;
+			
+			$u = substr($url,0,1);
+			if ($u == $alpha)	
+				$list[$url] = '<li><a class="invalid" href="index.php?action=history&revision='.$rev.'">'.$url.'</a></li>' ;
+			
+			$listmenu[$u] = '<a href="index.php?name=special:deleted-pages&alpha='.$u.'">'.$u.'</a> ' ;
+			if ($u == $alpha)
+				$listmenu[$u] = '<a href="index.php?name=special:deleted-pages&alpha='.$u.'"><b>'.$u.'</b></a> ' ;
+		}
 	}
 
 }
+dba_close($urldb);
 ksort($list);
+ksort($listmenu);
 
-$data = join(PHP_EOL,$list);
+$swParsedContent .= '<p>'.join(' ',$listmenu);
 
-
-
-$q = '
-relation deleted
-data
-'.$data.'
-end data
-label deleted ""
-print grid
-';
+$swParsedContent .= '<ul>'.join('',$list).'</ul>';
 
 
-
-$lh = new swRelationLineHandler;
-$s = str_replace("&lt;","<",$lh->run($q));
-$swParsedContent .= $s;
-$swParseSpecial = true;
+$swParseSpecial = false;
 
 
 // $swParsedContent .= join(' ',$list);

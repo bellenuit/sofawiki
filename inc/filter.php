@@ -918,7 +918,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			
 			if (true) {
 			
-				swSemaphoreSignal();
+				swSemaphoreSignal($cachefile);
 				echotime("filter write");
 					
 				if (isset($touched))
@@ -966,7 +966,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				$row = array('_header'=>$header);
 				swWriteRow($handle2, $row );
 				fclose($handle2);
-				swSemaphoreRelease();
+				swSemaphoreRelease($cachefile);
 			}			
 			
 			echotime('good '.count($goodrevisions));

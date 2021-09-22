@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.4.8';  
+$swVersion = '3.4.9';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -78,7 +78,6 @@ include_once $swRoot.'/inc/functions/fields.php';
 include_once $swRoot.'/inc/functions/schedule.php';
 include_once $swRoot.'/inc/functions/relation.php';
 include_once $swRoot.'/inc/functions/charts.php';
-include_once $swRoot.'/inc/functions/accessdenied.php';
 
 
 
@@ -169,7 +168,8 @@ $swQuickSearchinTitle = false;
 $swMaxSearchTime = 3000;
 $swMaxOverallSearchTime = 15000;
 $swDenyCount = 5;
-$swLogCount = 0;
+$swLogCount = 500;
+$swLogNameSpace = '';
 $swMaxFileSize = 8000000;
 
 $swNewUserFormFields = array();

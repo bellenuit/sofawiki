@@ -352,8 +352,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$mdfilter = $filter;
 	$mdfilter = urlencode($mdfilter);
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
-	$cachefile = $cachefilebase.'.txt';
-	
 	$bdbfile = $cachefilebase.'.db';
 	
 	if ($refresh)
@@ -391,8 +389,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($s = dba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
 	if ($s = dba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
-
-	echotime('cached '. $bitmap->countbits());
+	
+	$cached = $bitmap->countbits();
+	echotime('cached '. $cached);
 	
 	$db->init();
 	$maxlastrevision = $db->lastrevision;
@@ -401,6 +400,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	//echo " indexed ".$db->indexedbitmap->length;
 	//echo " checked ".$checkedbitmap->length;
 	//echo $checkedbitmap->getbit($checkedbitmap->length-1);
+	// echotime('after init');
 	
 	
 	$bitmap->redim($maxlastrevision+1,false);
@@ -408,32 +408,22 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	$tocheckbitmap = $checkedbitmap->notop();
 	$tocheckbitmap = $tocheckbitmap->andop($db->indexedbitmap);
+	
+	$tocheckbitmap = $tocheckbitmap->andop($db->currentbitmap);
 
 	$tocheckcount = $tocheckbitmap->countbits();
 	
-	if ($tocheckcount>0) 
-	{ 
-		echotime('tocheck '.$tocheckcount); 
-	}
+	echotime('tocheck '.$tocheckcount); 
+
 	
-	/*
-	$nowtime = microtime(true);	
-	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
-	if ($dur>$swMaxOverallSearchTime) {
-		
-		echotime('overtime overall');	
-		$swOvertime = true;
-	}
-	*/
-	$dur = 0; // check always at least 10 records
+	$dur = 0; // check always at least 50 records
 		
 	if ($tocheckcount > 0 && $dur<=$swMaxOverallSearchTime)
 	{
 		
 		
-		if (($namefilter || $namespacefilter))
+		if ((!$cached || $tocheckcount > 50) && ($namefilter || $namespacefilter))
 		{
-			// sprint_r($namespacefilter);
 			
 			$urldbpath = $db->pathbase.'indexes/urls.db';
 			if (file_exists($urldbpath))
@@ -443,49 +433,51 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				echotime('urldb failed');
 			}
 			else
-			{
-				$n = dba_firstkey($urldb);
+			{				
 				
+				$r0 = dba_firstkey($urldb);		
 				
 				do 
 				{
-					if (substr($n,0,1)==' ') continue; // revision
 					
-					if (!stristr($n,':')) $n = 'main:'.$n;
-				
+					if (substr($r0,0,1)!=' ') continue; // url
+					
+					$r = substr($r0,1); // space revision
+					
+					if (!$tocheckbitmap->getbit($r)) continue;
+					
+					$n = dba_fetch($r0,$urldb);
+					$n = substr($n,2); // status space
+					
+					if (!stristr($n,':')) $n= 'main:'.$n;
+										
 					if ($namespacefilter and $namespacefilter != '*')
 					{
 						$orfound = false;
 						
 						foreach($namespacefilter as $hor)
 						{
-							$andfound = true;
-							
-							if (is_array($hor))
+							$andfound = true;				
 							foreach($hor as $hand)
-							{
-								// echo $hand.' ';
-																
+							{																
 								if ($hand && !strstr($n,$hand.':')) $andfound = false;
-							}
-							
-							
+							}						
 							if ($andfound) $orfound = true;
 						}
 						
-						$revisions = explode(' ',dba_fetch($n,$urldb));
-						
-						if ($orfound)
+						if (!$orfound)
+						{	
+							
+							
+							$tocheckbitmap->unsetbit($r);
+							$checkedbitmap->setbit($r);
+							continue;
+						}
+						else
 						{
-							array_shift($revisions);
+							
 						}
 						
-						foreach($revisions as $r)
-						{
-								$tocheckbitmap->unsetbit($r);
-								$checkedbitmap->setbit($r);
-						}
-						if (!$orfound) continue;
 					}
 					
 					if ($namefilter and $namefilter != '*')
@@ -499,140 +491,140 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							foreach($hor as $hand)
 							{
 								if ($hand && !strstr($n,$hand)) $andfound = false;
-							}
-	
+							}	
 							
 							if ($andfound) $orfound = true;
 						}
 						
-						$revisions = explode(' ',dba_fetch($n,$urldb));
-						
-						foreach($revisions as $r)
+						if (!$orfound)
 						{
-								$tocheckbitmap->unsetbit($r);
-								$checkedbitmap->setbit($r);
+							$tocheckbitmap->unsetbit($r);
+							$checkedbitmap->setbit($r);
 						}
-						if (!$orfound) continue;
 						
 					}
 				
-				} while ($n = dba_nextkey($urldb));
+				} while ($r0 = dba_nextkey($urldb));
+				
 			
 			} // else db failed		
 
-		}
-		$tocheckcount = $tocheckbitmap->countbits();
-		
-		echotime('namefilter '.$tocheckcount); 			
-
+			$tocheckcount = $tocheckbitmap->countbits();
+			echotime('namefilter '.$tocheckcount); 	
 			
-		$bigbloom = new swBitmap();
-		
-		$bigbloom->init($db->bloombitmap->length,true);
-		
-		
-		// only external fields that must be present
-		// if there is only one field, it must always be present
-		
-		/* special fields an bloom
-
-		exclude for value
-		_displayname, _length, _namespace
-		
-		exclude for label
-		_displayname, _length, _namespace, _template, _content, _short, _paragraph, _word
-		
-		
-		_category can stay, beause it must be present as [category]
-		
-		
-		*/
-
-		$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any');
-		$notinvalues = array('_displayname', '_length', '_namespace');
-		
-		// echo " bigbefore ".$bigbloom->length;
-		
-		foreach($fields as $field=>$hors)
+		}
+				
+		if (!$cached) //bloom
 		{
 			
-			// echo $bigbloom->length;
-			if ($hors || count($fields)==1) 
+			$bigbloom = new swBitmap();
+		
+			$bigbloom->init($db->bloombitmap->length,true);
+		
+		
+			// only external fields that must be present
+			// if there is only one field, it must always be present
+			
+			/* special fields an bloom
+	
+			exclude for value
+			_displayname, _length, _namespace, _status
+			
+			exclude for label
+			_displayname, _length, _namespace, _template, _content, _short, _paragraph, _word, _status
+			
+			
+			_category can stay, beause it must be present as [category]
+			
+			
+			*/
+	
+			$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any', '_status');
+			$notinvalues = array('_displayname', '_length', '_namespace', '_status');
+			
+			// echo " bigbefore ".$bigbloom->length;
+			
+			foreach($fields as $field=>$hors)
 			{
 				
-				if (! in_array($field,$notinlabels))
+				// echo $bigbloom->length;
+				if ($hors || count($fields)==1) 
 				{
-					// echo ' ,'.$field;
-					$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
-					// echo ' field '.$field.' '.$gr->length;
-					$bigbloom = $bigbloom->andop($gr);
-				}
-				
-				if (! in_array($field,$notinvalues) && is_array($hors))
-				{
-					// echo ' .'.$field;
-					$bor = new swBitmap();
-					$bor->init($bigbloom->length,false);
 					
-					foreach($hors as $hor)
+					if (! in_array($field,$notinlabels))
 					{
-						$band = new swBitmap();
-						$band->init($bigbloom->length,true);
-						
-						foreach($hor as $hand)
-						{
-							if ($hand != '' && strlen($hand)>2)
-							{
-								$gr = swGetBloomBitmapFromTerm($hand);
-								$gr->redim($bigbloom->length, true);
-								$band = $band->andop($gr);
-							}
-						}
-	
-						
-						$bor = $bor->orop($band);
-						
+						// echo ' ,'.$field;
+						$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
+						// echo ' field '.$field.' '.$gr->length;
+						$bigbloom = $bigbloom->andop($gr);
 					}
-					$bigbloom = $bigbloom->andop($bor);	
-				}
-			}
-			//echo ' bbl '.$bigbloom->length;
-		}
-		// echo ' bigafter '.$bigbloom->length;
-		
-		$bigbloom->redim($tocheckbitmap->length,true);
-		
-		$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
-		$nottocheck = $bigbloom->notop();
-		
-		//echo " big ".$bigbloom->length;
-		//echo "(".$bigbloom->getbit($bigbloom->length-1).")";
-		
-		$checkedbitmap = $checkedbitmap->orop($nottocheck);
-		
-		// echo " big ".$bigbloom->length;
-		
-		// always check the newest revisions
-		/*
-		for($i=$maxlastrevision;$i>=$maxlastrevision-8;$i--)
-		{
-			$tocheckbitmap->setbit($i);
-		}
-		*/
-		
-		
-		$tocheckcount = $tocheckbitmap->countbits();
-		echotime('bloom '.$tocheckcount); 			
+					
+					if (! in_array($field,$notinvalues) && is_array($hors))
+					{
+						// echo ' .'.$field;
+						$bor = new swBitmap();
+						$bor->init($bigbloom->length,false);
 						
+						foreach($hors as $hor)
+						{
+							$band = new swBitmap();
+							$band->init($bigbloom->length,true);
+							
+							foreach($hor as $hand)
+							{
+								if ($hand != '' && strlen($hand)>2)
+								{
+									$gr = swGetBloomBitmapFromTerm($hand);
+									$gr->redim($bigbloom->length, true);
+									$band = $band->andop($gr);
+								}
+							}
+		
+							
+							$bor = $bor->orop($band);
+							
+						}
+						$bigbloom = $bigbloom->andop($bor);	
+					}
+				}
+				//echo ' bbl '.$bigbloom->length;
+			}
+			// echo ' bigafter '.$bigbloom->length;
+			
+			$bigbloom->redim($tocheckbitmap->length,true);
+			
+			$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
+			$nottocheck = $bigbloom->notop();
+			
+			//echo " big ".$bigbloom->length;
+			//echo "(".$bigbloom->getbit($bigbloom->length-1).")";
+			
+			$checkedbitmap = $checkedbitmap->orop($nottocheck);
+			
+			// echo " big ".$bigbloom->length;
+			
+			// always check the newest revisions
+			/*
+			for($i=$maxlastrevision;$i>=$maxlastrevision-8;$i--)
+			{
+				$tocheckbitmap->setbit($i);
+			}
+			*/
+			
+			
+			$tocheckcount = $tocheckbitmap->countbits();
+			echotime('bloom '.$tocheckcount); 			
+		}			
 		
 		$starttime = microtime(true);
 		
 		if ($tocheckcount>0) 		
 		{
-			echotime('loop '.$tocheckcount);
+			//echotime('loop '.$tocheckcount);
 			if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
 			if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
 			$checkedcount = 0;
+			$checkedlength = 0;
 			
 			
 			// print_r($fields);
@@ -651,7 +643,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 				$nowtime = microtime(true);	
 				$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-				if ($dur>$swMaxSearchTime && $checkedcount > 10)  //check at least 10 records
+				if (($dur>$swMaxSearchTime && $checkedcount >= 10) || $dur>$swMaxSearchTime * 2 )  //check at least 10 records
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
@@ -659,7 +651,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
-				if ($dur>$swMaxOverallSearchTime && $checkedcount > 10) //check at least 10 records
+				if (($dur>$swMaxOverallSearchTime && $checkedcount >= 10) || $dur>$swMaxOverallSearchTime * 2) //check at least 10 records
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
@@ -668,12 +660,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				}
 				$record = new swWiki;
 				$record->revision = $k;
+				//echotime('lookup '.$k);
 				$record->lookup();
+				//echotime('read '.$record->name);
 				
 				if ($record->error == '') $checkedbitmap->setbit($k); else continue;
 				$urlname = swNameURL($record->name);				
 				
 				$content = $record->name.' '.$record->content;
+				$checkedlength += strlen($content);
 				$row=array();
 				
 				$fieldlist = $record->internalfields;
@@ -906,6 +901,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			
 			echotime('checked '.$checkedcount);
+			echotime('length '.floor($checkedlength/1024/1024).' MB');
 			echomem("filter");	
 		}
 	
@@ -1002,6 +998,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	
 	// print_r($result);
+	echotime('filter end');
 	
 	return $result;
 	
@@ -1011,16 +1008,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 function swRelationToTable($q)
 {
 	$lh = new swRelationLineHandler;
-	$s = $lh->run($q.PHP_EOL.'print raw'); 
+	$s = $lh->run($q.PHP_EOL.'print raw','','',false); 
 	
 	// '<div class="relation">'.
 	// '</div>'
 	
-	$s = substr($s,strlen('<div class="relation">'.PHP_EOL));
-	$s = substr($s,0,-strlen('</div>'));
+	//$s = substr($s,strlen('<div class="relation">'.PHP_EOL));
+	//$s = substr($s,0,-strlen('</div>'));
 	
-	
-	// echo $s;
+	//echo PHP_EOL."swRelationToTable".PHP_EOL;
+	//echo '('.$s.')';
+	//echo PHP_EOL;
 
 	$lines = explode(PHP_EOL,$s); // $lines
 

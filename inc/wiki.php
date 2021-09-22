@@ -125,7 +125,7 @@ class swWiki extends swRecord
 		
 		
 		
-		//print_r($this->interlanguageLinks);
+		echotime('parse end');
 		
 		
 		return $this->parsedContent;

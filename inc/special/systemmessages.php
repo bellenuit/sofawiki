@@ -5,8 +5,6 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 $swParsedName = "Special:System Messages";
 
 $swParsedContent .= "===Translations===";
-$swParsedContent .= "\nMissing translations are marked _MISSING.";
-
 
 $lines= array();
 
@@ -40,7 +38,8 @@ swap
 join left
 update data = "<nowiki>_MISSING</nowiki>" where data == ""
 '."extend link = \"<nowiki><a href='index.php?action=edit&name=system:\".key.\"/\".lang.\"'>\".key.\"/\".lang.\"</a></nowiki>\"".'
-order key, lang
+project link, data
+order link
 print grid';
 
 //echo $q;

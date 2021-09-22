@@ -17,7 +17,7 @@ difference
 order _name a
 update _name = "[["._name."]]"
 ​label _name ""
-print grid 100
+print 
 ';
 
 $lh = new swRelationLineHandler;

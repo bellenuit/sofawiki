@@ -7,14 +7,13 @@ $swParsedContent = "The 100 longest pages in main namespace. Note: This page is 
 
 
 $q = '
-filter _namespace "main", _name, _content "*"
-extend size = length(_content)
-project _name, size
+filter _namespace "main", _name, _length
+project _name, _length
 update _name = "[["._name."]]"
-order size 9
+order _length 9
 limit 1 100
-label _name "", size ""
-print grid
+label _name "", _length ""
+print
 ';
 
 $lh = new swRelationLineHandler;

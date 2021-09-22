@@ -18,6 +18,8 @@ update Year_concat = replace(Year_concat,\"::\",\" \")
 rename Year_concat Year
 print raw
 
+
+
 filter datestart \"".$y."\", uniquevisitors, uniquepageviews, hits, totaltime, _namespace \"logs\"
 extend datemonth = substr(datestart,0,7)
 update totaltime = totaltime / 1000
@@ -27,19 +29,27 @@ label datemonth \"Month\", uniquevisitors_sum \"Unique visitors\", uniquepagevie
 format uniquevisitors_sum \"%1.0n\", uniquepageviews_sum \"%1.0n\", hits_sum \"%1.0n\", totaltime_sum \"%1.3n\"
 print
 
+
+
 format uniquevisitors_sum \"%1.0f\", uniquepageviews_sum \"%1.0f\", hits_sum \"%1.0f\", totaltime_sum \"%1.3f\"
 order datemonth a
 project datemonth, uniquevisitors_sum, uniquepageviews_sum, hits_sum
 delegate \"linechart -tensions 0.3\"
 
+
+
 echo \"====Most viewed pages ".$y."====\"
 
-filter datestart \"".$y."\", name, uniqueviews
+filter datestart \"".$y."\", _namespace \"logs\", name, uniqueviews
+
 project name, uniqueviews sum
 order uniqueviews_sum 9
+limit 1 100
 label name \"Name\", uniqueviews_sum \"Unique views\"
 format uniqueviews_sum \"%1.0n\"
 print grid 25
+
+
 
 echo \"====Popular search keywords ".$y."====\"
 
@@ -47,6 +57,7 @@ filter datestart \"".$y."\", query, queryhits
 select trim(query) !== \"\"
 project query, queryhits sum
 order queryhits_sum 9
+limit 1 100
 label query \"Query\", queryhits_sum \"Query hits\"
 format queryhits_sum \"%1.0n\"
 print grid 25

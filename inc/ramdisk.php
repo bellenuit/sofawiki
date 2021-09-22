@@ -86,16 +86,21 @@ function swFileGet($path)
 	global $swRamDiskDBfilter;
 	global $swMemcache;
 	
+	// echotime("swFileGet($path)");
+	
 	if (isset($swRamdiskPath) && $swRamdiskPath != '')
 	{
-		
 		if ($swRamdiskPath=='memcache')
 		{
 			if (!$swMemcache) swInitRamdisk();
 			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
 			{
 				$v = @$swMemcache->get($path);
-				if ($v) {  return $v; }
+				if ($v) 
+				{  
+					echotime('berkeley sucess '.floor(strlen($s)/1024).' KB '.$path);
+					return $v; 		
+				}
 				$s = file_get_contents($path);
 				$memcached->set($path,$s,60*60*24*30);
 				return $s;			
@@ -106,11 +111,18 @@ function swFileGet($path)
 			if (!$swRamDiskDB) swInitRamdisk();
 			if ($swRamDiskDB && stristr($path,$swRamDiskDBfilter))
 			{
-				$v = @dba_fetch($path,$swRamDiskDB);
-				if ($v) {  return $v; }
 				
+				$pos = stripos($path,$swRamDiskDBfilter) + strlen($swRamDiskDBfilter);
+				$path2 = substr($path,$pos);
+				
+				
+				$v = @dba_fetch($path2,$swRamDiskDB);
+				if ($v)
+				{
+					return $v;
+				}
 				$s = file_get_contents($path);
-				$swRamDiskJobs[$path] = $s;
+				$swRamDiskJobs[$path2] = $s;
 				
 				if (count($swRamDiskJobs) % 50 == 0)
 				{
@@ -122,6 +134,7 @@ function swFileGet($path)
 				return $s;
 			}
 			$s = file_get_contents($path);
+			echotime('berkeley not '.floor(strlen($s)/1024).' KB '.$path);
 			return $s;
 		}
 		
@@ -213,9 +226,9 @@ function swIndexRamDiskDB()
 	$c = @count($swRamDiskJobs);
 	$list = array();
 	
-	for($i=0;$i<10000;$i++)
+	for($i=0;$i<200;$i++)
 	{ 
-		//echo $k.' ';
+		if (!$db->currentbitmap->getbit($i)) continue;
 		$list[$k] = 1;
 		$w = new swWiki;
 		$w->revision = $k;
@@ -230,7 +243,7 @@ function swIndexRamDiskDB()
 		}
 		$c = $c2;
 		$n = microtime(true);
-		if ($n-$s > 10) $i = 10000;
+		if ($n-$s > 500) $i = 500;
 	}
 	swUpdateRamDiskDB();
 
@@ -249,8 +262,8 @@ function swUpdateRamDiskDB()
 	if ($swRamDiskDB)
 	{
 		foreach($swRamDiskJobs as $k=>$v)
-			@dba_replace($k,$v,$swRamDiskDB);
-		echotime('insert berkeley db ok');	
+		{	@dba_replace($k,$v,$swRamDiskDB);
+		echotime('insert berkeley db '.$k);	}
 		$swRamDiskJobs = array();				
 	}
 	else

@@ -12,7 +12,7 @@ order _name a
 update _name = "[["._name."]]"
 update _short = substr(_short,10,999)
 ​label _name "Name", _short "Redirect to"
-print grid 100
+print 100
 ';
 
 $lh = new swRelationLineHandler;

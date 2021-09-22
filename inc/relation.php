@@ -31,23 +31,33 @@ class swRelationLineHandler
 		$this->context = array();
 	}
 	
-	function run($t, $internal = '', $internalbody = '')
+	function run($t, $internal = '', $internalbody = '', $usedivider = true)
 	{
 		
 		
-		
+		echotime('relation '.strlen($t));
 		try 
 		{
-			return $this->run2($t, $internal, $internalbody);
+			$result = $this->run2($t, $internal, $internalbody);
 		}
 		catch (swExpressionError $err)
 		{
-			return '<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
+			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
 		}
 		catch (swRelationError $err)
 		{
-			return '<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span></div>';
+			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
 		}
+		echotime('relation end '.strlen($t));
+		
+		if ($usedivider)
+		
+			return PHP_EOL.'<div class="relation">'.PHP_EOL.$result.PHP_EOL.'</div>'.PHP_EOL;
+		
+		else
+		
+			return $result;
+		
 	}
 	
 	
@@ -996,7 +1006,7 @@ class swRelationLineHandler
 										$dict0 = $dict;
 										$body = substr($body,1,-1);
 										$this->result = $this->run2($tx,$key,$body,$dict); 
-										$dict = $dict0; //!!!
+										$dict = $dict0; 
 									}
 									else
 									{
@@ -1251,7 +1261,7 @@ class swRelationLineHandler
 		if ($swOvertime)
 			$overtimetext .= '<nowiki><div class="overtime">'.swSystemMessage('there-may-be-more-results',$lang).'</div></nowiki>'; 
 		if (!$internal)
-			return '<div class="relation">'.PHP_EOL.$this->result.$overtimetext.'</div>' ; 
+			return $this->result.$overtimetext; 
 		else
 			return $this->result;
 			
@@ -1292,7 +1302,7 @@ class swRelation
 	var $functions = array();
 	var $aggregators = array();
 	
-	function __construct($columns, $g)
+	function __construct($columns, $g = array())
 	{
 		$this->globals = $g;
 		
@@ -1668,6 +1678,8 @@ class swRelation
 	
 	function difference($r)
 	{
+		if (count($this->tuples)+count($this->tuples)>10000) echotime('difference '.count($this->tuples));
+		
 		$e; $tp;
 		$i; $c;
 		
@@ -1705,6 +1717,8 @@ class swRelation
 	
 	function extend($t)
 	{
+		if (count($this->tuples)>10000) echotime('extend '.count($this->tuples));
+		
 		$fields = explode(' ',$t);
 		$first = array_shift($fields);
 		$body = join(' ',$fields);
@@ -1846,6 +1860,8 @@ class swRelation
 	
 	function join($r,$expression)
 	{
+		if (count($this->tuples)+count($this->tuples)>10000) echotime('join '.count($this->tuples));
+		
 		if ($expression == 'cross') { $this->join($r,'1'); return; }
 		if ($expression == 'rightsemi') { $r->join($this, 'leftsemi'); $this->header = $r->header; $this->tuples = $r->tuples; return ; }
 		if ($expression == 'rightanti') { $r->join($this, 'leftanti'); $this->header = $r->header; $this->tuples = $r->tuples; return ; }
@@ -2149,8 +2165,8 @@ class swRelation
 			foreach($this->tuples as $tp)
 			{
 				$i++;
-				if ($i<$start) continue;
-				if ($i>=$start+$length) continue;
+				if ($i<intval($start)) continue;
+				if ($i>=intval($start)+intval($length)) continue;
 				$tuples2[$tp->hash()] = $tp;
 			}
 			$this->tuples = $tuples2;
@@ -2166,6 +2182,11 @@ class swRelation
 	
 	function order($t)
 	{
+		if (count($this->tuples)<2) return;
+		
+		if (count($this->tuples)>10000) echotime('order '.count($this->tuples));
+
+		
 		$pairs = explode(',',$t);
 		$this->order2($pairs);	
 	}
@@ -2173,8 +2194,7 @@ class swRelation
 	
 	function order2($pairs)
 	{
-		if (count($this->tuples)<2) return;
-		
+				
 		$pairs2 = array();
 		
 		foreach($pairs as $p)
@@ -2189,6 +2209,7 @@ class swRelation
 		$od->pairs = $pairs;
 		$od->order();
 		$this->tuples = $od->tuples;
+		
 	}
 	
 	function parse($t)
@@ -2284,6 +2305,8 @@ class swRelation
 		
 	function project($t)
 	{
+		if (count($this->tuples)>10000) echotime('project '.count($this->tuples));
+		
 		if (substr($t,0,6)=='inline')
 		{
 			$r2 = $this->doClone();
@@ -2588,6 +2611,8 @@ class swRelation
 	
 	function select1($condition)
 	{
+		if (count($this->tuples)>10000) echotime('select '.count($this->tuples));
+		
 		$xp = new swExpression($this->functions);
 		$xp->compile($condition);
 		
@@ -2988,6 +3013,8 @@ class swRelation
 	function toHTML($limit = 0)
 	{
 				
+		if (count($this->tuples)>10000) echotime('toHTML '.count($this->tuples));
+		
 		$grid = false;
 		$edit = '';
 		$editfile = '';
@@ -3301,7 +3328,7 @@ class swRelation
 	
 	function union($r)
 	{
-		echotime('union start '.count($this->tuples).'+'.count($r->tuples));
+		if (count($this->tuples)+count($this->tuples)>10000) echotime('union '.count($this->tuples));
 		
 		if (!count($r->tuples)) return;
 		
@@ -3323,11 +3350,13 @@ class swRelation
 		}
 		*/
 		
-		echotime('union end ='.count($this->tuples));
+		//echotime('union end ='.count($this->tuples));
 	}
 	
 	function update($t)
 	{
+		if (count($this->tuples)>10000) echotime('update '.count($this->tuples));
+		
 		$fields = explode(' ',$t);
 		$first = array_shift($fields);
 		$first = $this->validName($first);
@@ -3471,9 +3500,39 @@ class swOrderedDictionary
 {
 	var $pairs = array();
 	var $tuples = array();
+	var $pfields = array();
+	var $porders = array();
+	var $pfieldcount = 0;
 	
 	function order()
 	{
+		if (count($this->tuples)<2) return;
+		
+		// test on first
+		$tp = array_pop($this->tuples);
+		$tpfields = $tp->fields();
+		array_push($this->tuples,$tp);
+		
+		// init orderfields only once
+		$this->pfields = array();
+		$this->porders = array();
+		$this->pfieldcount = 0;
+	
+		
+		foreach($this->pairs as $p)
+		{
+			$fields = explode(' ',trim($p));
+			if (@count($fields < 2)) $fields[] = 'A';
+			
+			if (! array_key_exists($fields[0],$tpfields) ) 
+				throw new swRelationError('Dict Compare missing field '. $fields[0],609);
+			
+			$this->pfields[] = $fields[0];
+			$this->porders[] = $fields[1];		
+			$this->pfieldcount++;
+		}
+		
+		
 		uasort($this->tuples, function($a,$b) { return $this->compare($a, $b) ; } );
 	}
 	
@@ -3486,18 +3545,13 @@ class swOrderedDictionary
 		
 		if (empty($adict) || empty($bdict) ) return 0; // should not happen with tuples, as they should not be empty.
 		
-		foreach($this->pairs as $p)
+		for($i=0;$i<$this->pfieldcount;$i++)
 		{
-			$fields = explode(' ',trim($p));
-			if (@count($fields < 2)) $fields[] = 'A';
-			if (! array_key_exists($fields[0],$adict) 
-				|| ! array_key_exists($fields[0],$bdict) ) 
-				throw new swRelationError('Dict Compare missing field '. $fields[0],609);
 			
-			$atext = $adict[$fields[0]];
-			$btext = $bdict[$fields[0]];
+			$atext = $adict[$this->pfields[$i]];
+			$btext = $bdict[$this->pfields[$i]];
 						
-			switch ($fields[1])
+			switch ($this->porders[$i])
 			{
 				case 'A' : $test = strcmp($atext,$btext); if ($test != 0) return $test; break;
 				case 'Z' : $test = strcmp($atext,$btext); if ($test != 0) return -$test; break;
@@ -3509,7 +3563,7 @@ class swOrderedDictionary
 				case '9' : if (floatval($atext) > floatval($btext)) return -1;
 							if (floatval($atext) < floatval($btext)) return 1;
 							break;
-				default: 	throw new swRelationError('Invalid order parameter',501);
+				default: 	throw new swRelationError('Invalid order parameter '.$this->porders[$i],501);
 
 			}
 		}
@@ -3583,7 +3637,7 @@ class swAccumulator
 	private function pMax()
 	{
 		if (count($this->list)==0) return "";
-		$acc = floatval(array_shift($this->list));
+		$acc = floatval(array_pop($this->list));
 		foreach($this->list as $t)
 			if (floatval($t) > $acc)
 				$acc = floatval($t);
@@ -3593,7 +3647,7 @@ class swAccumulator
 	private function pMaxS()
 	{
 		if (count($this->list)==0) return "";
-		$acc = array_shift($this->list);
+		$acc = array_pop($this->list);
 		foreach($this->list as $t)
 			if (strcasecmp($t,$acc) > 0)
 				$acc = $t;
@@ -3628,7 +3682,7 @@ class swAccumulator
 	private function pMin()
 	{
 		if (count($this->list)==0) return "";
-		$acc = floatval(array_shift($this->list));
+		$acc = floatval(array_pop($this->list));
 		foreach($this->list as $t)
 			if (floatval($t) < $acc)
 				$acc = floatval($t);
@@ -3638,7 +3692,7 @@ class swAccumulator
 	private function pMinS()
 	{
 		if (count($this->list)==0) return "";
-		$acc = array_shift($this->list);
+		$acc = array_pop($this->list);
 		foreach($this->list as $t)
 			if (strcasecmp($t,$acc) < 0)
 				$acc = $t;

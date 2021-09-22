@@ -277,12 +277,25 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			$uniquepages[$pagename] += 1;
 		}
 		arsort($uniquepages); $i=0;
+		$swLogNameSpaceList = explode('::',@$swLogNameSpace); 
 		foreach($uniquepages as $hitpage=>$views)
 		{
 			$i++;
+			if (isset($swLogCount) && $swLogCount && $i>=$swLogCount)
+			{
+
+				$found = false;
+				foreach($swLogNameSpaceList as $elem)
+				{
+					if (strpos($hitpage,$elem) === 0) $found = true;
+				}
+				if (!$found) continue;
+			}
 			$viewpercentage = sprintf("%0.1f",100*$views/count($uniquepageviews)).'%';
 			$statlines[]= "$i. [[name::$hitpage]][[uniqueviews::$views]][[viewpercentage::$viewpercentage]]";
-			if (isset($swLogCount) && $swLogCount && $i>=$swLogCount) break;  
+			
+			
+			
 		}
 		
 		$statlines[]= "[[title::Search keywords]]";

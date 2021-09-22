@@ -162,8 +162,8 @@ function swGetBloomBitmapFromTerm($term)
 function swIndexBloom($numberofrevisions = 1000)
 {
 	
-	swSemaphoreSignal();
-	echotime('indexbloom');
+	
+	echotime('indexbloom'); return;
 	
 	global $swRoot;
 	global $db;
@@ -176,21 +176,24 @@ function swIndexBloom($numberofrevisions = 1000)
 	
 	if (!$db->bloombitmap) return;
 	$db->bloombitmap->redim($db->lastrevision+1);
-		
-	$fpt = fopen($path,'c+');
 	
+	
+	swSemaphoreSignal('bloom1');	
+	$fpt = fopen($path,'c+');
 	$block = floor(($db->lastrevision+1)/65536);
 	$fs = (($block + 1) * 1024) * 8192 ;
 	fseek($fpt,$fs);
 	fwrite($fpt," "); // write to force file size;
+	@fclose($fpt);
+	swSemaphoreRelease('bloom1');
 	
 	// new try read all to bitmap
-	echotime('to bitmap');
+	// echotime('to bitmap');
 	$bitmap = new swBitmap;
 	$raw = file_get_contents($path);
 	$bitmap->init(strlen($raw)*8);
 	$bitmap->map = $raw;
-	echotime('done');
+	// echotime('done');
 	
 	$i = 0; $rev = 0;
 	$rev = $db->lastrevision;
@@ -304,25 +307,28 @@ function swIndexBloom($numberofrevisions = 1000)
 		
 	// echo "offsetmax $offsetmax; ";
 	
-	echotime('indexbloom end '.$rev);
+	// echotime('indexbloom end '.$rev);
 		
 	// new try read all to bitmap
-	echotime('from bitmap '.$bitmap->length);
+	// echotime('from bitmap '.$bitmap->length);
 	
 	$minblock = floor($rev/65536);
 	$fileoffset = $minblock * 1024 * 8192;
 	$stream = substr($bitmap->map,$fileoffset);
-	echotime('offset '.$fileoffset);
+	//echotime('offset '.$fileoffset);
 	
+	swSemaphoreSignal('bloom2');	
+	$fpt = fopen($path,'c+');
 	fseek($fpt,$fileoffset);
 	fwrite($fpt,$stream);
 	@fclose($fpt);
-	echotime('done');
+	swSemaphoreRelease('bloom2');
+	//echotime('done');
 	
 	
 	
 	return $i;
-	 swSemaphoreRelease();
+	 
 	
 }
 

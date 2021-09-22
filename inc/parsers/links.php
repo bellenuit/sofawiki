@@ -86,14 +86,14 @@ class swLinksParser extends swParser
 			
 			$val0 = $val;
 						
-			if (substr($val,0,8) == "Special:")
+			if (strtolower(substr($val,0,8)) == "special:")
 			{
 				
 				$linkwiki->name = $val;
 				$s = str_replace($v[0], "<a href='".$linkwiki->link('','')."'>$label</a>",$s);
 				continue;
 			}
-			elseif (substr($val,0,9) == "Category:")
+			elseif (strtolower(substr($val,0,9)) == "category:")
 			{
 				$linkwiki->name = $val;
 				$linkwiki->lookupLocalName();
@@ -132,14 +132,14 @@ class swLinksParser extends swParser
 				
 				if (!$this->ignorecategories)
 				{
-						if (substr($val,0,10) == ":Category:") 
+						if (strtolower(substr($val,0,10)) == ":category:") 
 							{ 
 								$val = substr($val,1); 
 								$linkwiki->name = $val;
 								$linkwiki->lookupLocalName();
 								$linkwiki->lookup(true);
 								$v2 = $linkwiki->getdisplayname();
-								if (substr($v2,0,9) == "Category:")
+								if (strtolower(substr($v2,0,9)) == "category:")
 								$v2 = substr($v2,9);
 								
 								if ($v[2] == "|")
@@ -243,7 +243,7 @@ class swLinksParser extends swParser
 						
 						
 							if ($user->hasright('modify', $wiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label </a>",$s);
+								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
 							else
 								$s = str_replace($v[0], $label,$s);
 						}

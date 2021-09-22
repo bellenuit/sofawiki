@@ -47,16 +47,22 @@ class swImagesParser extends swParser
 				global $swRoot;
 				$swEditMenus['imagecacherefresh'] = '<a href="'.$wiki->link('editview','--').'&imagecacherefresh=1" rel="nofollow">'.swSystemMessage('Image Cache Refresh',$lang).'</a>';
 				
-				$checkis = md5_file($swRoot.'/site/files/'.$file);
-// 				print_r($wiki->internalfields['imagechecksum']);
-				$checkshould = @$wiki->internalfields['imagechecksum'][0];
-// 				echo $checkshould;
-				if ($checkis == $checkshould)
-					$swEditMenus['imagechecksum'] = "checksum ok";
-				elseif ( $checkshould == '')
-					$swEditMenus['imagechecksum'] = "no checksum";
+				if (file_exists($swRoot.'/site/files/'.$file))
+				{
+					$checkis = md5_file($swRoot.'/site/files/'.$file);
+	
+					$checkshould = @$wiki->internalfields['imagechecksum'][0];
+
+					if ($checkis == $checkshould)
+						$swEditMenus['imagechecksum'] = "checksum ok";
+					elseif ( $checkshould == '')
+						$swEditMenus['imagechecksum'] = "no checksum";
+					else
+						$swEditMenus['imagechecksum'] = "checksum error (is ".$checkis.'  should be '.$checkshould;
+				}	
 				else
-					$swEditMenus['imagechecksum'] = "checksum error (is ".$checkis.'  should be '.$checkshould;
+					$swEditMenus['imagechecksum'] = "file missing";
+
 			
 			}
 			

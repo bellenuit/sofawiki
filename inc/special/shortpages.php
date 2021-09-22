@@ -3,19 +3,21 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Short Pages";
-$swParsedContent = "The 100 shortest pages in main namespace, without redirects but with subpages. Note: This page is slow, because _content is not cached.<br><br>";
+$swParsedContent = "The 100 shortest pages in main namespace, without redirects.<br><br>";
 
 
 $q = '
-filter _namespace "main", _name, _content "*"
-select _content not (regex "^#REDIRECT")
-extend size = length(_content)
-project _name, size
+filter _namespace "main", _name, _length
+project _name, _length
+filter _namespace "main", _name, _length, _content "-redirect"
+select _content regex "#REDIRECT"
+project _name, _length
+difference
 update _name = "[["._name."]]"
-order size 1
+order _length 1
 limit 1 100
-label _name "", size ""
-print grid
+label _name "", _length ""
+print
 ';
 
 $lh = new swRelationLineHandler;

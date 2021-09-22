@@ -13,9 +13,9 @@ function echotime($s)
 function echomem($s,$direct=false)
 {
 	global $swDebug;
-	$k = sprintf('%0d',memory_get_usage()/1024);
+	$k = sprintf('%0d',memory_get_usage()/1024/1024);
 	if ($direct) echo '<p>'.$k.'k '.$s;
-	$swDebug .=  '____ '.$k.'k '.$s.'<br>';
+	$swDebug .=  '____ '.$k.' MB '.$s.'<br>';
 }
 
 
@@ -212,7 +212,7 @@ function swLogDeny($ip,$denyend='')
 	//$d0 = swGetValue($t,$ip);
 	//$t = str_replace("[[$ip::$d0]]","",$t);
 	if (strstr($t,"[[$ip::$denyend]]")) return;
-
+	
 	$t .= "[[$ip::$denyend]]";
 	if ($handle = fopen($file, 'w')) { fwrite($handle, $t); fclose($handle); }
 	else  echotime('error fopen w '.$file);

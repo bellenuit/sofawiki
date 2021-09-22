@@ -153,37 +153,32 @@ class swDB extends swPersistance //extend may be obsolete
 		if (file_exists($this->indexedbitmap->persistance))
 			$this->indexedbitmap->open();
 		else
-			$bitmaperror = true;
-		
+			$bitmaperror = 'indexed null';	
+			
 		$this->lastrevision=$this->indexedbitmap->length-1;
 				
 		$this->currentbitmap = new swBitmap;
-		//$this->currentbitmap->hasbak = true;
 		$this->currentbitmap->persistance = $this->pathbase.'indexes/currentbitmap.txt';
 		if ($this->lastrevision>0 && file_exists($this->currentbitmap->persistance))
 			$this->currentbitmap->open();
 		else
-			$bitmaperror = true;
+			$bitmaperror = 'current null';
 						
+			
+		$this->protectedbitmap = new swBitmap;
+		$this->protectedbitmap->persistance = $this->pathbase.'indexes/protectedbitmap.txt';
+		if ($this->lastrevision>0 && file_exists($this->protectedbitmap->persistance))
+			$this->protectedbitmap->open();
+		else
+			$bitmaperror = 'protected null';
+			
 		$this->deletedbitmap = new swBitmap;
-		//$this->deletedbitmap->hasbak = true;
 		$this->deletedbitmap->persistance = $this->pathbase.'indexes/deletedbitmap.txt';
 		if ($this->lastrevision>0 && file_exists($this->deletedbitmap->persistance))
 			$this->deletedbitmap->open();
 		else
-			$bitmaperror = true;
-			
-		$this->protectedbitmap = new swBitmap;
-		//$this->protectedbitmap->hasbak = true;
-		$this->protectedbitmap->persistance = $this->pathbase.'indexes/protectedbitmap.txt';
-		if ( $this->lastrevision>0 && file_exists($this->protectedbitmap->persistance))
-			$this->protectedbitmap->open();
-		else
-			$bitmaperror = true;
-			
-		if ($bitmaperror)
-			$this->rebuildBitmaps();
-			
+			$bitmaperror = 'deleted null';
+
 		$this->bloombitmap = new swBitmap;
 		$this->bloombitmap->persistance = $this->pathbase.'indexes/bloombitmap.txt';
 		if (file_exists($this->bloombitmap->persistance))
@@ -194,15 +189,21 @@ class swDB extends swPersistance //extend may be obsolete
 		if (file_exists($this->shortbitmap->persistance))
 			$this->shortbitmap->open();
 			
-		$urldbpath = $this->pathbase.'indexes/urls.db';
-		if (!file_exists($urldbpath))
+		
+			
+		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
+		
+		// 95% full 
+		if ($this->indexedbitmap->countbits() / $lastwrite < 0.95 ) $bitmaperror = 'index less 95';
+		if ($this->currentbitmap->countbits()==0 ) $bitmaperror = 'current 0';
+		if ($this->lastrevision == 0) $bitmaperror = 'lastrevision 0';
+		
+		if ($bitmaperror)
 		{
-			$urldb = @dba_open($urldbpath, 'c', 'db4');	
-			@dba_close($urldb);
+			echotime($bitmaperror);
+			$this->rebuildBitmaps();
 		}
 
-			
-		$lastwrite = $this->GetLastRevisionFolderItem($force);
 		echotime("db-init ".$this->lastrevision."/" .$lastwrite);
 		
 		// always cleaning latest changes
@@ -247,6 +248,7 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->protectedbitmap->touched = false;
 			$this->protectedbitmap->save();
+			echotime('proteced save');
 		}
 		
 		if ($this->bloombitmap->touched)
@@ -273,7 +275,6 @@ class swDB extends swPersistance //extend may be obsolete
 		$r->revision = $rev;
 		$this->currentupdaterev = $rev;
 		if (!$source = $r->readHeader()) return false;
-		echotime('update '.$rev);
 		$this->indexedbitmap->setbit($rev);
 		if ($r->status == '') return false;
 		if ($r->revision == 0) return false;
@@ -308,7 +309,7 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		$url = swNameURL($r->name);
 		
-				
+		//swSemaphoreSignal('url.db');	
 		$urldbpath = $this->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
 			$urldb = @dba_open($urldbpath, 'wdt', 'db4');
@@ -316,7 +317,7 @@ class swDB extends swPersistance //extend may be obsolete
 			$urldb = @dba_open($urldbpath, 'c', 'db4');	
 		if (!@$urldb)
 		{
-			echotime('urldb failed');
+			// echotime('urldb failed');
 		}
 		else
 		{
@@ -342,9 +343,9 @@ class swDB extends swPersistance //extend may be obsolete
 			
 			dba_close($urldb);
 		}
+		// swSemaphoreRelese('url.db');
 		
-		
-		swIndexBloom(10);
+		// swIndexBloom(10);
 		
 		return true;
 
@@ -419,9 +420,13 @@ class swDB extends swPersistance //extend may be obsolete
 			$this->UpdateIndexes($r);
 			$c++;
 		}
-		$this->rebuildBitmaps();
-		$swIndexError = false;
-		echotime('indexes built '.$c.' open '.$r);	
+		if (!$swIndexError)
+		{
+			 $this->rebuildBitmaps();
+			 $swIndexError = false;
+			 echotime('indexes built '.$c.' open '.$r);	
+			 swIndexBloom(10);
+		}
 	}	
 	
 	function rebuildBitmaps()
@@ -431,6 +436,7 @@ class swDB extends swPersistance //extend may be obsolete
 		global $db;
 		$current = array();
 		$urldbpath = $db->pathbase.'indexes/urls.db';
+		$k=0;
 		if (file_exists($urldbpath))
 			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
 		if (!@$urldb)
@@ -439,14 +445,47 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		else
 		{
+			global $swMaxOverallSearchTime;
+			global $rebuildstarttime;
+			if (!$rebuildstarttime)
+				$rebuildstarttime = microtime(true);	
+			$overtime = false;
+			
+			
 			$this->indexedbitmap->init($db->lastrevision);
 			$this->currentbitmap->init($db->lastrevision);  
 			$this->deletedbitmap->init($db->lastrevision); 
 			$this->protectedbitmap->init($db->lastrevision);
 			
+			
+			
 			for ($i=1;$i<=$db->lastrevision;$i++)
 			{
+				
+				
 				$rev =$i;
+				
+				// if ($this->indexedbitmap->getbit($rev)) continue;
+				
+				// problem, how to keep a partial index?
+				
+				/*
+					$nowtime = microtime(true);	
+				$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
+				if (false && intval($dur)>intval($swMaxOverallSearchTime))
+				{
+					echotime('overtime INDEX');
+					echotime($swMaxOverallSearchTime);
+					$swOvertime = true;
+					$swError = "Index incomplete. Please reload";
+					$swIndexError = true;
+					$overtime = true;
+					break;
+				}
+				*/
+
+				$k++;
+				
 				if(dba_exists(' '.$i, $urldb))
 					$line = dba_fetch(' '.$i,$urldb);
 				else
@@ -492,58 +531,7 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 
 		
-		/*
-		
-		if (file_exists($path) && $fpt = fopen($path,'r'))
-		{
-			$count = filesize($path) / 48;
-			
-			$this->indexedbitmap->init($count);
-			$this->currentbitmap->init($count);  
-			$this->deletedbitmap->init($count); 
-			$this->protectedbitmap->init($count);
-			
-			for ($i=0;$i<$count;$i++)
-			{
-				@fseek($fpt, 48*$i);
-				$rev = trim(substr(@fread($fpt,10),0,9));
-				$st = substr(@fread($fpt,2),0,1);
-				$mdc = @fread($fpt,32);
-			
-				$error = false;
-				switch($st)
-				{
-					case 'o':	$this->currentbitmap->setbit($rev);
-								$this->deletedbitmap->unsetbit($rev);
-								$this->protectedbitmap->unsetbit($rev);
-								break;
-					case 'd':	$this->currentbitmap->setbit($rev);
-								$this->deletedbitmap->setbit($rev);
-								$this->protectedbitmap->unsetbit($rev);
-								break;
-					case 'p':	$this->currentbitmap->setbit($rev);
-								$this->deletedbitmap->unsetbit($rev);
-								$this->protectedbitmap->setbit($rev);
-								break;
-					case '-':	break; // filled gap
-					case '':	$error = true;
-				}
-				if (!$error)
-				{
-					$this->indexedbitmap->setbit($rev);
-					if (isset($current[$mdc]))
-					{
-						$rold = $current[$mdc];
-						$this->currentbitmap->unsetbit($rold);
-					}
-					$current[$mdc/ = $rev;
-				}
-				
-			}
-		}
-		swSemaphoreRelease();
-		*/
-		echotime('bitmaps built');
+		echotime('bitmaps built ' .$k.' / '.$db->lastrevision);
 	}
 	
 	

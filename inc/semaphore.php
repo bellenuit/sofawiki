@@ -19,13 +19,15 @@ We just need to protect the write operation
 
 */
 $swSempahore = false;
-$swSemaphoreTimeOut = 15;
+$swSemaphoreTimeOut = 5;
 
 function swSemaphoreSignal($path='') 
 {
 	global $swSempahore;
 	global $swRoot;
 	global $swSemaphoreTimeOut;
+	
+	// echotime("signal ".$path);
 	
 	$md5path = md5($path);
 	
@@ -46,7 +48,7 @@ function swSemaphoreSignal($path='')
 		sleep(1);
 		$i++;
 	}
-	echotime("semaphore overruled");
+	echotime("semaphore overruled ".$path);
 	global $username;
 	global $name;
 	global $action;
@@ -67,6 +69,8 @@ function swSemaphoreRelease($path='')
 {
 	global $swSempahore;
 	global $swRoot;
+	
+	// echotime("release ".$path);
 	
 	$md5path = md5($path);
 	

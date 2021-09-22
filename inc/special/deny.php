@@ -26,8 +26,8 @@ $dateend = swGetArrayValue($_POST,'dateend');
 $denyend = swGetArrayValue($_POST,'denyend');
 if (trim($denyend) == '') $denyend = date("Y-m-d",time());
 $ip = swGetArrayValue($_POST,'ip');
-if (!$datestart) $datestart = max($minfile, date("Y-m-d",time()-29*86400));
-if (!$dateend) $dateend = $maxfile;
+if (!$datestart) $datestart = 'deny-'.date("Y-m-d",time()-30*86400);
+if (!$dateend) $dateend = 'deny-'.date("Y-m-d",time());
 
 // $swParsedContent .= "\n</select>";
 $swParsedContent .= "\n<p>Deny Manager:<br>Search for unsuccessful logins. After $swDenyCount attempts, IP will be blocked for the day";

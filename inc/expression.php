@@ -1876,6 +1876,8 @@ class XPregex extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
+		$a = str_replace('/','\/',$a);  // does not 
+		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
 		if (preg_match('/'.$a.'/',$b)) $stack[] = '1';
 		else $stack[] = '0';
 	}
@@ -1889,6 +1891,8 @@ class XPregexi extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
+		$a = str_replace('/','\/',$a);  // does not 
+		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
 		if (preg_match('/'.$a.'/i',$b)) $stack[] = '1';
 		else $stack[] = '0';
 	}
@@ -1903,7 +1907,9 @@ class XPregexreplace extends swExpressionFunction
 		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		$c = array_pop($stack);		
+		$c = array_pop($stack);	
+		$b = str_replace('/','\/',$b);  // does not 
+		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
 		$stack[] = preg_replace('/'.$b.'/',$a,$c);		
 	}
 }
@@ -1918,6 +1924,8 @@ class XPregexreplaceMod extends swExpressionFunction
 		$b = array_pop($stack);
 		$c = array_pop($stack);	
 		$d = array_pop($stack);	
+		$b = str_replace('/','\/',$b);  // does not 
+		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
 		// echo "a $a<br> b $b<br> c $c<br> d $d";
 		$stack[] = preg_replace('/'.$c.'/'.$a,$b,$d);		
 	}
@@ -2038,7 +2046,7 @@ class XPsubstr extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		$c = array_pop($stack);		
-		$stack[] = substr($c,$b,$a);		
+		$stack[] = substr($c,intval($b),intval($a));		
 	}
 }
 
