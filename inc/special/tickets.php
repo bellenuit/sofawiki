@@ -46,14 +46,12 @@ if (isset($_POST['submitopen']))
 
 	//find next id
 	$q = 'filter _namespace "ticket", id
-project id max
-print raw';
-	$lh = new swRelationLineHandler;
-	$s = $lh->run($q);
-	$s = explode(PHP_EOL,$s); // tab format
-	array_shift($s); // header;
+project id max';
+	$test = swRelationToTable($q);
 	
-	$id = (int)@$s[0]+1;
+	$id = @$test[0]['id_max'];
+	
+	$id = (int)@$id+1;
 	
 	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
 

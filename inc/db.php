@@ -194,7 +194,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
 		// 95% full 
-		if ($this->indexedbitmap->countbits() / $lastwrite < 0.95 ) $bitmaperror = 'index less 95';
+		if ($lastwrite > 0 && $this->indexedbitmap->countbits() / $lastwrite < 0.95 ) $bitmaperror = 'index less 95';
 		if ($this->currentbitmap->countbits()==0 ) $bitmaperror = 'current 0';
 		if ($this->lastrevision == 0) $bitmaperror = 'lastrevision 0';
 		

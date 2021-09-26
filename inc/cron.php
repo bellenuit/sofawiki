@@ -44,7 +44,19 @@ function swRelationFilterOvertimeRetake()
 			echotime( 'cron overtime filter '.$filter );
 			
 			if (!defined("CRON")) $swMaxSearchTime = 1000;
+			
+			try
+			{
 			swRelationfilter($filter);
+			}
+			catch (swExpressionError $err)
+			{
+				// do nothing;
+			}
+			catch (swRelationError $err)
+			{
+				// do nothing;
+			}
 			echotime('max searchtime '.$swMaxSearchTime);
 			
 			break;
