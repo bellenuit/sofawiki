@@ -1253,6 +1253,25 @@ class swRelationLineHandler
 									}
 			}
 			
+			
+			if (count($this->stack) > 0)
+			{
+				$top = $this->stack[count($this->stack)-1];
+				if (! is_object($top))
+				{
+					$this->result .= $ptag.$ptagerror.$ti.' Error : top stack not object '.$line.$ptagerrorend.$ptag2;
+					$this->errors[]=$il;
+					//print_r($top);
+					break;
+				}
+				elseif (! is_a($top,'swRelation'))
+				{
+					$this->result .= $ptag.$ptagerror.$ti.' Error : top stack not relation '.$line.$ptagerrorend.$ptag2;
+					$this->errors[]=$il;
+					//print_r($top);
+					break;
+				}
+			}		
 		}
 		
 		global $swOvertime; 
@@ -3786,6 +3805,8 @@ function array_clone($arr)
 
 function swNumberformat($d,$f)
 {	
+	if ($d == '∞' || $d == '-∞' || $d == '⦵') { return $d; }
+	
 	if (substr($f,-1,1)=='n')
 	{
 		$f = substr($f,0,-1)."f";

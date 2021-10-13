@@ -51,8 +51,13 @@ function swRelationImport($url)
 	if (!$searcheverywhere && stristr($url,':'))
 		{
 			$dnf =explode(':',$url);
-			$dns = array_shift($dnf);
-			if (! in_array($dns, $ns) && !$user->hasright('view',$url)) return array();
+			
+			$dns = swNameURL(array_shift($dnf));
+			
+			$nss = join(PHP_EOL,$ns);
+
+			if (!stristr($nss,$dns) && !$user->hasright('view',$url)) 			
+				return new swRelation('');
 	}
 
 
@@ -152,8 +157,13 @@ function swRelationVirtual($url)
 	if (!$searcheverywhere && stristr($url,':'))
 		{
 			$dnf =explode(':',$url);
-			$dns = array_shift($dnf);
-			if (! in_array($dns, $ns) && !$user->hasright('view',$url)) return array();
+			
+			$dns = swNameURL(array_shift($dnf));
+			
+			$nss = join(PHP_EOL,$ns);
+
+			if (!stristr($nss,$dns) && !$user->hasright('view',$url)) 			
+				return new swRelation('');
 	}
 	
 	
@@ -929,6 +939,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (!stristr($sp,':')) $sp .= ':';
 		if ($sp != ':') $ns[$sp]= $sp;
 	}
+
 	
 	
 	$d = array();	
@@ -957,8 +968,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (!$searcheverywhere && stristr($dn,':'))
 		{
 			$dnf =explode(':',$dn);
-			$dns = array_shift($dnf);
-			if (! in_array($dns, $ns) && $user && !$user->hasright('view',$dn)) continue;
+			$dns = swNameURL(array_shift($dnf));
+			$nss = join(PHP_EOL,$ns);
+			if (!stristr($nss,$dns) && !$user->hasright('view',$url)) continue;
 		}
 				
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);

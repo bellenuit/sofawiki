@@ -55,7 +55,7 @@ function swExport($revisions)
 }
 
  
-function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup)
+function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listing = false)
 {
 	global $swRoot;
 	swSemaphoreSignal();
@@ -308,6 +308,27 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup)
 	}
 	
 	unset($zip);
+	
+	if ($listing)
+	{
+		
+		$list = glob($swRoot.'/bak/*.zip');
+		$result .= '<p>List of backups'.PHP_EOL;
+		$result .= '<ul>'.PHP_EOL;
+		foreach($list as $file)
+		{
+			$url = str_replace($swRoot,'',$file);
+			
+			$result .= '<li><a href="'.$url.'">'.$url.'</a></li>'.PHP_EOL;
+		}
+		$result .= '</ul>'.PHP_EOL;
+		
+	}
+	else
+	{
+		$result .=  '<br/><br/>Add <a href="index.php?name=special:backup&listing=1">listing option</a> to see all backup files'; 
+
+	}
 	
 	
 	

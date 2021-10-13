@@ -155,14 +155,16 @@ class swExpression
 		// ,
 
 		$this->tokens = array();
+		
+		
 
 		$state = 'start';
 
-		$c = strlen($s);
+		$c = mb_strlen($s);
 		
 		for($i=0;$i<$c;$i++)
 		{
-			$ch = substr($s,$i,1);
+			$ch = mb_substr($s,$i,1,'UTF-8');; // unicode ∞ and ⦵
 			
 			switch($state)
 			{
@@ -176,7 +178,9 @@ class swExpression
 									case '/':
 									case '*':
 									case '+':
-									case '.': $state = 'start'; $this->tokens[] = $ch; break;
+									case '.': 
+									case "∞":
+									case "⦵": $state = 'start'; $this->tokens[] = $ch; break;
 									case ',': if ($state == 'comma' || count($this->tokens) == 0) { $this->tokens[] = '$'; } 
 										      $state = 'comma'; $this->tokens[] = $ch; break;
 									case '=': $state = 'equal'; break;
@@ -365,6 +369,8 @@ class swExpression
 				
 			}
 		}
+		
+		
 
 		switch($state)
 		{
@@ -380,6 +386,7 @@ class swExpression
 			default:		throw new swExpressionError('Tokenize unknown state "'.$state.'"',11);
 		}
 
+		
 	}
 	
 	function compile($s)
@@ -396,18 +403,17 @@ class swExpression
 		$fn;
 		
 		$this->source = $s;
-		$this->rpn = array();
-		$this->tokenize($s);
+		$this->rpn = array(); 
+		$this->tokenize($s); 
 		$negationpossible = true;
 				
 		if (count($this->tokens) == 0) return;
 		
 		// print_r($this->tokens);
-
-		
+				
 		foreach($this->tokens as $t)
 		{
-			$ch = substr($t,0,1);
+			$ch = mb_substr($t,0,1);
 			if ($ch =='-' && $negationpossible) $t = '-u';
 			
 			
@@ -425,7 +431,9 @@ class swExpression
 				case '6':
 				case '7':
 				case '8':
-				case '9': 	$this->rpn[] = $t; $negationpossible = false; break;
+				case '9': 
+				case '∞':
+				case '⦵':	$this->rpn[] = $t; $negationpossible = false; break;
 				case '$': 	$this->rpn[] = $t; $negationpossible = false; break;
 				case '@': 	$operatorstack[] = $t; $negationpossible = true; break;
 				case '(': 	$operatorstack[] = '('; $negationpossible = true; break;
@@ -553,6 +561,8 @@ class swExpression
 		print_r($this->rpn);
 		*/
 		
+		
+		
 	}
 
 	function evaluate($values=array(),$globals=array(),$locals=array())
@@ -601,7 +611,9 @@ class swExpression
 							{
 								case ':andleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
-													if (floatval($cond) == 0)
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
+													if ($cond = floatval($cond) == 0)
 													{
 														$this->stack[] = '0';
 														$j = array_search($jump,$this->rpn);
@@ -613,6 +625,8 @@ class swExpression
 													$found = true;
 													break;
 								case ':andright': 	$cond = array_pop($this->stack);
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
 													if (floatval($cond) == 0)
 														$this->stack[] = '0';
 													else
@@ -632,6 +646,8 @@ class swExpression
 													break;	
 								case ':gotoifn':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
 													if (floatval($cond) == 0)
 													{
 														$j = array_search($jump,$this->rpn);
@@ -644,6 +660,8 @@ class swExpression
 													break;	
 								case ':gotoif':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
 													if (floatval($cond) != 0)
 													{
 														$j = array_search($jump,$this->rpn);
@@ -669,6 +687,8 @@ class swExpression
 													break;	
 								case ':orleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
 													if (floatval($cond) != 0)
 													{
 														$this->stack[] = '1';
@@ -681,6 +701,8 @@ class swExpression
 													$found = true;
 													break;
 								case ':orright': 	$cond = array_pop($this->stack);
+													if ($cond == '⦵') $cond = '0';
+													if ($cond == '∞' || $cond == '-∞') $cond = '1';
 													if (floatval($cond) == 0)
 														$this->stack[] = '0';
 													else
@@ -742,7 +764,9 @@ class swExpression
 								$this->stack[] = $globals[$e];
 							else
 							{
-								if (floatval($e) > 0) 
+								if ($e == '∞' || $e == '-∞' || $e == '⦵') 
+									$this->stack[] = $e;
+								elseif (floatval($e) > 0) 
 									$this->stack[] = $e;
 								elseif ($e == '0')
 									$this->stack[] = '0';
@@ -763,6 +787,10 @@ class swExpression
 			
 		$result = $this->stack[0];
 		
+		
+		
+		if ($result == '∞' || $result == '-∞' || $result == '⦵') return $result;
+		
 		if (is_numeric($result))
 			$result = $this->cText12(floatval($result));
 			
@@ -776,7 +804,7 @@ class swExpression
 		$t;
 		$s;
 	
-
+		if ($d == '∞' || $d == '-∞' || $d == '⦵') return $d;
 
 		$a = abs($d);
 		
@@ -1079,6 +1107,8 @@ class swExpressionFunction
         $a;
 		$t;
 		$s;
+		
+		if ($d == '∞' || $d == '-∞' || $d == '⦵') return $d;
 
 		$a = abs($d);
 		
@@ -1407,7 +1437,10 @@ class XPabs extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '⦵') { $stack[] = $a; return; }
+		if ($a == '-∞') { $stack[] = '∞'; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(abs($a));		
 	}
 }
@@ -1418,20 +1451,32 @@ class XPAdd extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞' || $b == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞' || $b == '-∞') { $stack[] = '-∞'; return; }
+		$a = floatval($a);
+		$b = floatval($b);			
 		$stack[] = $this->ctext($b+$a);	
 	}
 }
 
-class XpAnd extends swExpressionFunction
+class XPAnd extends swExpressionFunction
 {
 	function __construct() { $this->arity = 2; $this->label = ':and' ;}
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞') $a = '1';
+		if ($b == '∞') $b = '1';
+		$a = floatval($a);
+		$b = floatval($b);		
 		if ($a && $b) $stack[] = '1';
 		else $stack[] = '0';			
 	}
@@ -1442,9 +1487,14 @@ class XpAndRight extends swExpressionFunction //?
 	function __construct() { $this->arity = 2; $this->label = ':and' ;}
 	function run(&$stack)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		echo "ans"; if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' || $a == '-∞') $a = '1';
+		if ($b == '∞' || $b == '-∞') $b = '1';
+		$a = floatval($a);
+		$b = floatval($b);		
 		if ($a && $b) $stack[] = '1';
 		else $stack[] = '0';			
 	}
@@ -1456,7 +1506,9 @@ class XPceil extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '⦵') { $stack[] = $a; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(ceil($a));		
 	}
 }
@@ -1489,7 +1541,9 @@ class XPcos extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $stack[] = '⦵'; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(cos($a));		
 	}
 }
@@ -1502,9 +1556,23 @@ class XpDiv extends swExpressionFunction
 	{
 		// print_r($stack);
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
-		if ($a == 0) throw new swExpressionError('Div/0',110);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
+		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
+		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
+		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
+		$a = floatval($a);
+		$b = floatval($b);	
+		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
+		if ($a == 0 && $b > 0) { $stack[] = '∞'; return; }
+		if ($a == 0 && $b < 0) { $stack[] = '-∞'; return; }
 		$stack[] = $this->ctext($b/$a);		
 	}
 }
@@ -1515,8 +1583,15 @@ class XPeqN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '1'; return; }
+		if ($a == '∞' || $b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞' || $b == '-∞') { $stack[] = '0'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b == $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1541,7 +1616,10 @@ class XPexp extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '⦵') { $stack[] = $a; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(exp($a));		
 	}
 }
@@ -1561,7 +1639,9 @@ class Xpfloor extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '⦵') { $stack[] = $a; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(floor($a));		
 	}
 }
@@ -1573,8 +1653,17 @@ class XPgeN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '1'; return; }
+		if ($a == '∞') { $stack[] = '0'; return; }
+		if ($b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞') { $stack[] = '1'; return; }
+		if ($b == '-∞') { $stack[] = '0'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b >= $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1599,8 +1688,17 @@ class XPgtN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '0'; return; }
+		if ($a == '∞') { $stack[] = '0'; return; }
+		if ($b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞') { $stack[] = '1'; return; }
+		if ($b == '-∞') { $stack[] = '0'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b > $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1626,9 +1724,23 @@ class XPidiv extends swExpressionFunction
 	{	
 		
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = intval(array_pop($stack));
-		$b = intval(array_pop($stack));	
-		if ($a == 0) throw new swExpressionError('Div/0',110);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
+		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
+		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
+		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
+		$a = intval($a);
+		$b = intval($b);
+		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
+		if ($a == 0 && $b > 0) { $stack[] = '∞'; return; }
+		if ($a == 0 && $b < 0) { $stack[] = '-∞'; return; }	
 		$v = ($b - ($b % $a)) / $a ; 
 		$stack[] = $this->ctext($v);
 	}
@@ -1640,8 +1752,17 @@ class XPleN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack); 
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '1'; return; }
+		if ($a == '∞') { $stack[] = '1'; return; }
+		if ($b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if ($b == '-∞') { $stack[] = '1'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b <= $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1678,7 +1799,12 @@ class XPln extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞') { $stack[] = '⦵'; return; } 
+		$a = floatval($a);
+		if ($a <= 0) { $stack[] = '⦵'; return; }
 		$stack[] = $this->ctext(log($a));		
 	}
 }
@@ -1689,7 +1815,12 @@ class XPlog extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞') { $stack[] = '⦵'; return; } 
+		$a = floatval($a);
+		if ($a <= 0) { $stack[] = '⦵'; return; }
 		$stack[] = $this->ctext(log10($a));		
 	}
 }
@@ -1711,8 +1842,17 @@ class XPltN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack); 
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '0'; return; }
+		if ($a == '∞') { $stack[] = '1'; return; }
+		if ($b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if ($b == '-∞') { $stack[] = '1'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b < $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1737,8 +1877,13 @@ class XPmax extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack); 
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞') { $stack[] = $b; return; }
+		$a = floatval($a);
+		$b = floatval($b);		
 		$stack[] = $this->ctext(max($b,$a));		
 	}
 }
@@ -1749,8 +1894,13 @@ class XPmin extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack); 
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '-∞') { $stack[] = '-∞'; return; }
+		if ($a == '∞') { $stack[] = $b; return; }
+		$a = floatval($a);
+		$b = floatval($b);		
 		$stack[] = $this->ctext(min($b,$a));		
 	}
 }
@@ -1761,9 +1911,23 @@ class XPmod extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
-		if ($a == 0) throw new swExpressionError('Div/0',110);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
+		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
+		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
+		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
+		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
+		$a = intval($a);
+		$b = intval($b);
+		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
+		if ($a == 0 && $b > 0) { $stack[] = $b; return; }
+		if ($a == 0 && $b < 0) { $b = -$b; $stack[] = $b; return; }	
 		$stack[] = $this->ctext($b%$a);		
 	}
 }
@@ -1775,8 +1939,15 @@ class XPmul extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞' || $b == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞' || $b == '-∞') { $stack[] = '-∞'; return; }
+		$a = floatval($a);
+		$b = floatval($b);			
 		$stack[] = $this->ctext($b*$a);		
 	}
 }
@@ -1788,8 +1959,15 @@ class XPneN extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '1'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '0'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '0'; return; }
+		if ($a == '∞' || $b == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞' || $b == '-∞') { $stack[] = '1'; return; }
+		$a = floatval($a);
+		$b = floatval($b);
 		if ($b != $a) $stack[] = '1';
 		else $stack[] = '0';		
 	}
@@ -1801,7 +1979,12 @@ class XPneg extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '-∞'; return; }
+		if ($a == '-∞') { $stack[] = '∞'; return; }
+		$a = floatval($a);
+
 		$stack[] = $this->ctext(-$a);		
 	}
 }
@@ -1825,7 +2008,10 @@ class XPnot extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞') { $stack[] = '1'; return; }
 		if ($a != 0) $stack[] = '0';
 		else $stack[] = '1';	
 	}
@@ -1837,8 +2023,15 @@ class XpOr extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵') $a = '0';
+		if ($b == '⦵') $b = '0';
+		if ($a == '∞') $a = '1';
+		if ($b == '∞') $b = '1';
+		
+		$a = floatval($a);
+		$b = floatval($b);		
 		if ($a || $b) $stack[] = '1';
 		else $stack[] = '0';			
 	}
@@ -1851,7 +2044,13 @@ class XPpad extends swExpressionFunction
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
-		$b = array_pop($stack);	
+		$b = array_pop($stack);
+		if ($a == '⦵') { $stack[] = $b; return; }
+		if ($a == '∞') { $stack[] = $b; return; }
+		if ($a == '-∞') { $stack[] = $b; return; }
+		
+		$a = floatval($a);
+		
 		$stack[] = str_pad($b, $a,' ');
 	}
 }
@@ -1862,8 +2061,15 @@ class XPpow extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '-∞'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if ($a == '0' && $b == '0') { $stack[] = '1'; return; }
+		$a = floatval($a);
+		$b = floatval($b);			
 		$stack[] = $this->ctext(pow($b,$a));		
 	}
 }
@@ -1962,7 +2168,9 @@ class XPround extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $stack[] = $a; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(round($a));		
 	}
 }
@@ -1973,7 +2181,9 @@ class XPsecondstosql extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $a = 0; }
+		$a = floatval($a);
 		$stack[] = date('Y-m-d H:i:s',$a);		
 	}
 }
@@ -1984,7 +2194,11 @@ class XPsign extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '1'; return; }
+		if ($a == '-∞') { $stack[] = '-1'; return; }
+		$a = floatval($a);
 		if ($a > 0) $stack[] = '1';
 		elseif 	($a < 0) $stack[] = '-1';
 		else $stack[] = '0';
@@ -1997,7 +2211,9 @@ class XPsin extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $stack[] = '⦵'; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(sin($a));		
 	}
 }
@@ -2019,7 +2235,12 @@ class XPsqrt extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞') { $stack[] = '⦵'; return; }
+		$a = floatval($a);
+		if ($a < 0) { $stack[] = '⦵'; return; }
 		$stack[] = $this->ctext(sqrt($a));		
 	}
 }
@@ -2030,8 +2251,19 @@ class XPSub extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));		
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '-∞'; return; }
+		if ($a == '-∞' && $b == '∞') { $stack[] = '∞'; return; }
+		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '-∞'; return; }
+		if ($a == '-∞') { $stack[] = '∞'; return; }
+		if ($b == '∞') { $stack[] = '∞'; return; }
+		if ($b == '-∞') { $stack[] = '-∞'; return; }
+		$a = floatval($a);
+		$b = floatval($b);			
 		$stack[] = $this->ctext($b-$a);		
 	}
 }
@@ -2057,7 +2289,9 @@ class XPtan extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = floatval(array_pop($stack));
+		$a = array_pop($stack);
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $stack[] = '⦵'; return; }
+		$a = floatval($a);
 		$stack[] = $this->ctext(tan($a));		
 	}
 }
@@ -2110,10 +2344,17 @@ class XpxOr extends swExpressionFunction
 	function run(&$stack)
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = floatval(array_pop($stack));
-		$b = floatval(array_pop($stack));	
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		if ($a == '⦵') $a = '0';
+		if ($b == '⦵') $b = '0';
+		if ($a == '∞') $a = '1';
+		if ($b == '∞') $b = '1';
+		
+		$a = floatval($a);
+		$b = floatval($b);		
 		if (!$b && $a) $stack[] = '1';
-		elseif ($b && !$b) $stack[] = '1';
+		elseif ($b && !$a) $stack[] = '1';
 		else $stack[] = '0';			
 	}
 }
