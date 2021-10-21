@@ -970,7 +970,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$dnf =explode(':',$dn);
 			$dns = swNameURL(array_shift($dnf));
 			$nss = join(PHP_EOL,$ns);
-			if (!stristr($nss,$dns) && !$user->hasright('view',$url)) continue;
+			if (!stristr($nss,$dns) && !$user->hasright('view',$dn)) continue;
 		}
 				
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);

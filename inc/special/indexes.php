@@ -1,424 +1,673 @@
- <?php
+<?php
 
-if (!defined('SOFAWIKI')) die('invalid acces');
-
-$swParsedName = 'Special:Tickets';
+if (!defined("SOFAWIKI")) die("invalid acces");
 
 
-$title = (array_key_exists('title', $_REQUEST) ? $_REQUEST['title'] : '' );
 
-$id = (array_key_exists('id', $_REQUEST) ? $_REQUEST['id'] : '' );
-$assigned = (array_key_exists('assigned', $_REQUEST) ? $_REQUEST['assigned'] : '' );
-$priority = (array_key_exists('priority', $_REQUEST) ? $_REQUEST['priority'] : '' );
-$status = (array_key_exists('status', $_REQUEST) ? $_REQUEST['status'] : '' );
-$text = (array_key_exists('text', $_REQUEST) ? $_REQUEST['text'] : '' );
-$ticketaction = (array_key_exists('ticketaction', $_REQUEST) ? $_REQUEST['ticketaction'] : '' );
- 
+$swParsedName = "Special:Indexes";
 
-$swParsedContent = '<nowiki><a href="index.php?name=special:tickets&ticketaction=new">New Ticket</a> <a href="index.php?name=special:tickets&status=open">Open Tickets</a> <a href="index.php?name=special:tickets&assigned='.$username.'">My Tickets</a> <a href="index.php?name=special:tickets&status=resolved">Resolved tickets</a> <a href="index.php?name=special:tickets&status=closed">Closed tickets</a>	<a href="index.php?name=special:tickets&ticketaction=activity">Activity</a> <a href="index.php?name=special:tickets&ticketaction=help">Help</a></nowiki>';
-
-$priorities = array('1 high', '2 normal', '3 low');
-
-$table = swRelationToTable('filter _namespace "user", _name, _special "special"
-project _name'); 
-
-// print_r($table);
-
-foreach($table as $t) { $ticketusers[]=substr($t['_name'],strlen('user:')); }
-foreach($powerusers as $p) $ticketusers[]=$p->username;
-
-$mytickets = true;
-
-function swhtmlselect($name, $list, $v, $default)
-{
-	if (!$v) $v = $default;
-	$s = '<select name="'.$name.'" style="width:95%">';
-	foreach ($list as $p)
-		$s .= ( $v == $p ? ' <option value="'.$p.'" selected>'.$p.'</option> ' : 
-' <option value="'.$p.'">'.$p.'</option> ' );
-	$s .= '</select>';
-	return $s;	
-}
+if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
+$l0 = '';
 
 
-if (isset($_POST['submitopen']))
-{
+if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(1000); $_REQUEST['index'] = 'bloom';}
+if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
-	//find next id
-	$q = 'filter _namespace "ticket", id
-project id max';
-	$test = swRelationToTable($q);
-	
-	$id = @$test[0]['id_max'];
-	
-	$id = (int)@$id+1;
-	
-	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
 
-	$w = new swWiki;
-	$w->name = 'Ticket:'.$id;
-	$w->content = $username.': '.$text.PHP_EOL.
-	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.$title.']]'.PHP_EOL.
-	'[[assigned::'.$assigned.']]'.PHP_EOL.
-	'[[priority::'.$priority.']]'.PHP_EOL.
-	'[[creator::'.$username.']]'.PHP_EOL.
-	'[[user::'.$username.']]'.PHP_EOL.
-	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.date('Y-m-d H:i',time()).' '.$activity.']]';
-	$w->insert();
 
-	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
-	$swParsedContent .= PHP_EOL.PHP_EOL.str_replace('ticket #'.$id,$link,$activity);
-	$assigned = '';
-	$mytickets = false;
-	$status = '';
-	$id = '';
-}
 
-if (isset($_POST['submitcomment']))
-{
-	
-	$w = new swWiki;
-	$w->name = 'Ticket:'.$id;
-	$w->lookup();
-	$fields = $w->internalfields;
-	$oldtext = $w->content;
-	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
-	
-	$activity = '';
-	if ($text != '')
+
+$swParsedContent = '
+<p><a href="index.php?name=special:indexes&index=indexedbitmap">indexedbitmap</a>
+<a href="index.php?name=special:indexes&index=currentbitmap">currentbitmap</a>
+<a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
+<a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
+<a href="index.php?name=special:indexes&index=urls">urls</a>
+<a href="index.php?name=special:indexes&index=bloom">bloom</a>
+<a href="index.php?name=special:indexes&index=queries">queries</a>';
+if (isset($swRamdiskPath) && $swRamdiskPath=='db')
+$swParsedContent .= ' <a href="index.php?name=special:indexes&index=berkeley">berkeley</a>';
+$swParsedContent .=  '<br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
+<br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
+<br>current = '. $db->currentbitmap->countbits().'
+<br>bloom = '. $db->bloombitmap->countbits().'
+<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>
+<a href="index.php?name=special:indexes&index=indexnames">Index Names</a>
+<a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a>';
+if (isset($swRamdiskPath) && $swRamdiskPath=='db')
+$swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexberkeley">Index Berkeley</a>';
+$swParsedContent .= ' <a href="index.php?name=special:indexes&index=docron">Do Cron</a>
+
+';
+
+$swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
+$swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
+$swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
+
+$swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
+
+$swParsedContent .= "\n</p></form>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Bloom, Reset Bitmaps</i>";
+
+
+$done = '';
+	if (isset($_REQUEST['submitreset']) && $swRamdiskPath != '')
 	{
-		$activity = $username.' commented ticket #'.$id;
-		$oldtext = trim($oldtext)."\n\n----\n\n".$username.': '.$text;
-	}
-	
-	if ($assigned != @$fields['assigned'][0])
-	{
-		if (!$activity)
-			$activity = $username.' assigned ticket #'.$id.' to '.$assigned;
-		else
-			$activity .= ' and assigned it to '.$assigned;
-	}
-	
-	if ($priority != @$fields['priority'][0])
-	{
-		if (!$activity)
-			$activity = $username.' changed priority of ticket #'.$id.' to '.$priority;
-		else
-			$activity .= ' with priority '.$priority;
-	}
-	
-	if (!$activity)
-		$activity = $username.' added an empty comment';
-	
-	$activity .= '.';
+		// delete all in ramdisk
+		$files = glob($swRamdiskPath.'*.txt');
+		if (is_array($files))
+			foreach($files as $file) { unlink($file); }
+		$done .= '<p>Deleted ramdisk';
 		
-	$w->content = trim($oldtext).PHP_EOL.
-	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
-	'[[assigned::'.$assigned.']]'.PHP_EOL.
-	'[[priority::'.$priority.']]'.PHP_EOL.
-	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
-	'[[user::'.$username.']]'.PHP_EOL.
-	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
-	$w->insert();
+	}
+
+
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetcurrent']))
+	{
+		// delete all current
+		$path =$swRoot.'/site/current';
+		$dir = opendir($path);
+		$i=0;
+		while($file = readdir($dir))
+    	{
+			if($file != '..' && $file != '.')
+			{
+				swUnlink($swRoot.'/site/current/'.$file);
+				$i++;
+			}
+		}
+		swUnlink($swRoot.'/site/indexes/shortbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/short.txt');
+		$done .= '<p>Deleted current '.$i; 
+		
+	}
+		
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetqueries']))
+	{
+		// delete all queries
+		$path =$swRoot.'/site/queries/';
+		$dir = opendir($path);
+		while($file = readdir($dir))
+    	{
+			if($file != '..' && $file != '.')
+			{
+				swUnlink($swRoot.'/site/queries/'.$file);
+			}
+		}
+		$done .= '<p>Deleted queries';
+				
+	}
+	
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
+	{
+
+		
+		swClearBloom();	
+	
+		$done .= '<p>Deleted bloom';
+	}
 	
 	
-	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
-	$swParsedContent .= PHP_EOL.PHP_EOL.str_replace('ticket #'.$id,$link,$activity);
-	$mytickets = false;
-	$assigned = '';
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbitmaps']))
+	{
+
+		// delete index folder
+		swUnlink($swRoot.'/site/indexes/indexedbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/currentbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/deletedbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/protectedbitmap.txt');
+
+		$db->indexedbitmap = new swBitmap;
+		$db->currentbitmap = new swBitmap;
+		$db->deletedbitmap = new swBitmap;
+		$db->protectedbitmap = new swBitmap;
+
+	
+		$done .= '<p>Deleted bitmaps';
+
+
+	}
+
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitreseturls']))
+	{
+
+		// delete index folder
+		swUnlink($swRoot.'/site/indexes/indexedbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/currentbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/deletedbitmap.txt');
+		swUnlink($swRoot.'/site/indexes/protectedbitmap.txt');
+
+		$db->indexedbitmap = new swBitmap;
+		$db->currentbitmap = new swBitmap;
+		$db->deletedbitmap = new swBitmap;
+		$db->protectedbitmap = new swBitmap;
+		swUnlink($swRoot.'/site/indexes/urls.txt');
+		swUnlink($swRoot.'/site/indexes/short.txt');
+		swUnlink($swRoot.'/site/indexes/shortbitmap.txt');
+	
+		$done .= '<p>Deleted urls, short and bitmaps';
+	}
+
+
+if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) || isset($_REQUEST['submitresetqueries']) 
+|| isset($_REQUEST['submitresetbitmaps']) || isset($_REQUEST['submitreseturls']) || isset($_REQUEST['submitresetbloom']) )
+	{	
+		$swIndexError = true;
+		$swParsedContent = $done;
+		$swParsedContent .= "\n<form method='get' action='index.php?'><p><pre>";
+		$swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
+		$swParsedContent .= "\n</pre><input type='hidden' name='action' value='rebuildindex'>";
+		$swParsedContent .= "\n<input type='submit' name='submit' value='Reopen' style='color:red'/>";
+		$swParsedContent .= "\n</p></form>";
+		echo $swParsedContent;
+		exit;
+	}
+
+
+
+switch($_REQUEST['index'])
+{
+	case 'fillgaps'		: $bm = $db->indexedbitmap;
+						  $path = $db->pathbase.'indexes/urls.txt';
+						  $fpt = fopen($path,'c');
+						  
+						  for ($i=0;$i<$bm->length-32;$i++)
+						  {
+						  	if (! $bm->getbit($i))
+						  	{
+						  		$bm->setbit($i);
+						  		$line = str_pad($i,9,' ')."\t";
+								$line .= "-\t";
+								$line .= str_repeat(' ',32); // 32
+								$line .= substr('    '.PHP_EOL,-4);
+		
+								@fseek($fpt, 48*($i-1));
+								@fwrite($fpt, $line);
+							}
+	
+						  }
+						  @fclose($fpt);
+	
+	case 'indexedbitmap': $swParsedContent .= '<h3>indexedbitmap</h3>';
+						  $bm = $db->indexedbitmap;
+						  $swParsedContent .= '<p>length: '.$bm->length;
+						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p><a href="index.php?name=special:indexes&index=fillgaps">Fill Gaps</a> (use with caution)';
+						  break;
+	case 'currentbitmap': $swParsedContent .= '<h3>currrentbitmap</h3>';
+						  $bm = $db->currentbitmap;
+						  $swParsedContent .= '<p>length: '.$bm->length;
+						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  break;
+	case 'deletedbitmap': $swParsedContent .= '<h3>deletedbitmap</h3>';
+						  $bm = $db->deletedbitmap;
+						  $swParsedContent .= '<p>length: '.$bm->length;
+						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  break;
+	case 'protectedbitmap': $swParsedContent .= '<h3>protectedbitmap</h3>';
+						  $bm = $db->protectedbitmap;
+						  $swParsedContent .= '<p>length: '.$bm->length;
+						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  break;
+
+	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
+	
+						$urldbpath = $db->pathbase.'indexes/urls.db';
+						if (file_exists($urldbpath))
+							$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+						if (!$urldb)
+						{
+							echotime('urldb failed');
+						}
+						else
+						{
+							$k = dba_firstkey($urldb);
+							
+							$result = array();
+							
+							$revisions = 0;
+							$urls = 0;
+							
+							if (substr($k,0,1)==' ') $revisions++; else $urls++;
+							
+							while($k = dba_nextkey($urldb))
+							{
+								
+								if (substr($k,0,1)==' ') $revisions++;
+ 								else $urls++;
+							}
+							$swParsedContent .= '<p>'.$revisions.' revisions';
+							$swParsedContent .= '<p>'.$urls.' urls';
+						}
+						
+
+	
+						  break;
+
+	case 'short': 		$swParsedContent .= '<h3>short</h3>';
+	
+						  $bm = $db->shortbitmap;
+						  $swParsedContent .= '<p>length: '.$bm->length;
+						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  break;
+
+							break;
+	case 'indexberkeley' :  
+							swIndexRamDiskDB();		
+							$swParsedContent .= '<h3>Berkeley indexed</h3>';	
+							break;				
+
+	case 'berkeley': 		$swParsedContent .= '<h3>Berkeley</h3>';
+							
+						  swInitRamdisk();
+						  if (isset($swRamDiskDB) && $swRamDiskDB)
+						  {
+							  $counter = 0;
+							  $bm = new swBitmap($db->lastrevision);
+							  $k = dba_firstkey($swRamDiskDB);
+							  if ($k)
+							  	$counter = 1;
+							  while ($k = dba_nextkey($swRamDiskDB))
+							  { 
+								  
+								  
+								// $swParsedContent .=  PHP_EOL.'key '.$k;
+									  $k2 = substr($k,0,-4);
+									 
+
+									  $bm->setbit(intval($k2));
+									  $counter++;
+								  
+								  
+								 
+							  }
+							  //$swParsedContent .= '<p>is slow';
+							  $swParsedContent .= '<p>length: '.$counter;
+							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							  
+						  }
+						  else
+						  	$swParsedContent .= '<p>not available';
+						  break;
+	
+
+
+	case 'bloom':			 
+
+								
+								
+								
+								$swParsedContent .= '<h3>bloombitmap</h3>';
+								
+								swOpenBloom();
+
+						  		$bm = $db->bloombitmap;
+						  		$swParsedContent .= '<p>length: '.$bm->length;
+						 		$swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						 		$swParsedContent .= '<p>';
+						 		
+						 		if ($l0)
+						 		$swParsedContent .= '<p>indexed: '.$l0;
+						 		
+						 		$swParsedContent .= "<form method='get' action='index.php'><p>";
+								$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
+								$swParsedContent .= "</pre><input type='hidden' name='index' value='bloom'>";
+								$swParsedContent .= "</pre><input type='text' name='term' value='".@$_REQUEST['term']."'>";
+								$swParsedContent .= "<input type='submit' name='submitterm' value='Test Term' />";
+								$swParsedContent .= "</form>";
+						 		
+						 		if (isset($_REQUEST['term']))
+						 		{
+						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
+						 			
+						 			$bm2 = swGetBloomBitmapFromTerm($_REQUEST['term']);
+						 			$c0 = $bm2->countbits();
+						 			$n = $db->currentbitmap->countbits();
+						 			
+						 			
+						 			$bm2 = $bm2->andop($db->currentbitmap);
+						 			//$bm2 = $bm2->andop($test);
+						 			
+						 			
+						 			$c = $bm2->countbits();
+						 		
+									$swParsedContent .= '<p>'.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,2);
+									
+									$swParsedContent .= '<p>Term : '.join(' ',swGetHashesFromTerm($_REQUEST['term']));
+									
+									
+									// if ($c0 < 2000)
+									$arr = $bm->toarray();
+									rsort($arr);
+									$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
+									
+									// show raw bloom
+									
+									/*
+									$bitmap = new swBitmap;
+									$path = $swRoot.'/site/indexes/bloom.raw';
+									$raw = file_get_contents($path);
+									$bitmap->init(strlen($raw)*8);
+									$bitmap->map = $raw;
+									
+									$c = $bitmap->countbits();
+									$n = $bitmap->length;
+									
+									$swParsedContent .= '<p>Bloom countbits '.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%';*/
+
+																		 
+									
+									
+									
+						 		}
+						 		//$swParsedContent .= '<p>'.swGetBloomDensity();
+							break;
+
+
+	case "docron": 		   $swParsedContent .= '<h3>Cron</h3><p>'.swCron() ; break;
+	
+							
+	
+	case 'queries':			$swParsedContent .= '<h3>queries</h3><p>';
+	
+							$querypath = $swRoot.'/site/queries/';
+						
+							if (isset($_REQUEST['q']) && isset($_REQUEST['reset']) )
+							{
+								$path = $_REQUEST['q'];
+								if (!stristr($path,'.db'))
+									$path = $path.'.txt';
+								swUnlink($querypath.$path);
+								$swParsedContent .= 'reset '.$path;
+								
+								break;
+								
+							}
+							
+							if (isset($_REQUEST['q']))
+							{
+								if (stristr($_REQUEST['q'],'.db'))
+								{
+									$path = $querypath.$_REQUEST['q'];
+									$results = array();
+									if ($bdb = dba_open($path, 'wdt', 'db4'))
+									{
+										$results['filter'] = dba_fetch('_filter',$bdb);
+										$results['bitmapcount'] = dba_fetch('_bitmapcount',$bdb);
+										$results['checkedbitmapcount'] = dba_fetch('_checkedbitmapcount',$bdb);
+										$results['overtime'] = unserialize(dba_fetch('_overtime',$bdb));
+										$results['mode'] = 'relation';
+										$results['namespace'] = '-';
+										$results['bitmap'] = unserialize(dba_fetch('_bitmap',$bdb));
+										$results['checkedbitmap'] = unserialize(dba_fetch('_checkedbitmap',$bdb));
+										
+									}
+								}
+								
+								else
+								{
+								
+								$path = $querypath.$_REQUEST['q'].'.txt';
+								if ($handle = fopen($path, 'r'))
+								{
+									$results['goodrevisions'] = array();
+									while ($arr = swReadField($handle))
+									{
+										if (count($arr) == 0) break;
+										if (@$arr['_primary'] == '_header')
+										{
+											$results['filter'] = @$arr['filter'];
+											$results['mode'] = @$arr['mode'];
+											$results['chunks'] = unserialize(@$arr['chunks']);
+											$results['namespace'] = @$arr['namespace'];
+											$results['overtime'] = @$arr['overtime'];
+											$results['bitmap'] = unserialize(@$arr['bitmap']);
+											$results['checkedbitmap'] = unserialize(@$arr['checkedbitmap']);
+										}
+										else
+										{
+											$primary = @$arr['_primary'];
+											unset($arr['_primary']);
+											$kr = substr($primary,0,strpos($primary,'-'));
+											$results['goodrevisions'][$kr][$primary] = $arr;
+										}
+									}
+								}
+								
+								
+								}
+								
+								$swParsedContent .= '<p>filter: '.@$results['filter'];
+								$swParsedContent .= '<br>mode: '.@$results['mode'];
+								$swParsedContent .= '<br>namespace: '.@$results['namespace'];
+								$bm = @$results['bitmap'];
+								$bm2 = @$results['checkedbitmap'];
+						        $swParsedContent .= '<br>overtime: '.@$results['overtime'];
+						        $t = filemtime($path);
+							 	$d = date('Y-m-d',$t);
+						        $swParsedContent .= '<br>modification: '.$d;
+						        if ($bm)
+								$swParsedContent .= '<p>Good: '.$bm->countbits().'/'.$bm->length.' <br>'.bitmap2canvas($bm, false);
+								if ($bm2)
+								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, false,2);
+								
+								if (substr($_REQUEST['q'],-3) !== '.db')
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'.txt</a> ';
+								else
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
+
+								
+								if (stristr($_REQUEST['q'],'.db'))
+								{
+									if ($bm && $bm->countbits())
+									{
+									
+										$key = dba_firstkey($bdb);
+										$fields = array_keys(unserialize(dba_fetch($key,$bdb)));
+										
+										$swParsedContent .= '<p>relation '.join(', ',$fields).'<br>data';
+		
+										
+										while($key)
+										{
+											if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
+											
+											$fields = array_values(unserialize(dba_fetch($key,$bdb)));
+											
+											
+											$swParsedContent .= '<br>"'.join('", "',$fields).'"';
+											
+													
+											$key = dba_nextkey($bdb);
+										}
+										$swParsedContent .= '<br>end data';
+									}
+
+									
+								}
+								else
+								{
+								
+								$swParsedContent .='<p><pre>'.file_get_contents($path);
+								
+								
+								foreach($results['chunks'] as $chunk)
+								{
+									$chunkpath = substr($path,0,-4).'-'.$chunk.'.txt';
+									$swParsedContent .= PHP_EOL.PHP_EOL.'chunk '.$chunk.PHP_EOL.print_r(unserialize(file_get_contents($chunkpath)),true);
+								}
+								$swParsedContent .='</pre>';
+								
+								if (isset($_REQUEST['debug']))	
+								{
+									$swParsedContent .= print_r($results['goodrevisions'],true);
+								}
+								
+								}
+							}
+							else
+							{
+								$list = querylist();
+								$swParsedContent .= 'count = '.count($list);
+								
+								$i = 0;
+								$lines = array();
+								foreach($list as $k=>$v)
+								{
+							 		//biggest 25 and last 
+							 		$t = filemtime($querypath.$v);
+							 		$filesize = floor(filesize($querypath.$v)/1024);
+							 		$d = date('Y-m-d H:i',$t);
+							 		if ($i<25 || time() - $t < 60*60)
+							 		{
+							 				
+											$results = array();
+											if (substr($v,-4)=='.txt' && $handle = fopen($querypath.$v, 'r'))
+											{
+												
+												while ($arr = swReadField($handle))
+												{
+													if (count($arr) == 0) break;
+													if (@$arr['_primary'] == '_header')
+													{
+														$results['filter'] = @$arr['filter'];
+														$results['chunks'] = unserialize(@$arr['chunks']);
+														$results['mode'] = @$arr['mode'];
+														$results['namespace'] = @$arr['namespace'];
+													}
+													
+												}
+												
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.@count(@$results['chunks']).' chunks '.@$results['mode'].' '.@$results['namespace']. '<br>'.@$results['filter'];
+											}
+											else
+											{
+												$bdb = dba_open($querypath.$v,'r','db4');
+												$results['filter'] = dba_fetch('_filter',$bdb);
+												
+												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.$filesize.' kB <br>filter '.@$results['filter'];
+												
+											}
+											
+											
+											
+											
+							 		}
+							 		$i++;
+							 		
+								}
+								
+								krsort($lines);
+								$swParsedContent .= join('',$lines);
+								
+								
+							}
+							
+							
+							break;
+						
+
+	case "indexnames": $result = swRelationToTable('filter _name, _revision'); 
+						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
+	
+	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;
+	
+	
 }
 
-if (isset($_POST['submitresolve']))
+function querylist()
 {
+	 global $swRoot;
+	 
+	 $querypath = $swRoot.'/site/queries/';
+	 
+	 $files = glob($querypath.'*.txt');
+	  
+	 $list = array();
+	 foreach($files as $file)
+	 {
+	  	$key = sprintf('%05d',filesize($file));
+	   	$fn = str_replace($querypath,'',$file);
+		if (stristr($fn,'-')) continue;
+	   	// $fn = substr($fn,0,-4);
+	   	$list[$key.' '.$fn] = $fn;
+	 }
+	 
+	 $files = glob($querypath.'*.db');
+	  
+	 foreach($files as $file)
+	 {
+	  	$key = sprintf('%05d',filesize($file));
+	   	$fn = str_replace($querypath,'',$file);
+		if (stristr($fn,'-')) continue;
+	   	// $fn = substr($fn,0,-4);
+	   	$list[$key.' '.$fn] = $fn;
+	 }
+	 krsort($list);
+	 return $list;
+}
+function bitmap2canvas($bm,$listrevisions=1,$id='1')
+{
+	$h = ceil($bm->length /512);
+	$result = '<canvas id="myCanvas'.$id.'" width="512" height="'.$h.'"></canvas>
+	<script type="text/javascript">
+	var canvas=document.getElementById("myCanvas'.$id.'");
+	var ctx=canvas.getContext("2d");
+	ctx.fillStyle="#dddddd";
+	ctx.fillRect(0,0,512,'.$h.');
+	ctx.fillStyle="#000000";';
 	
-	$w = new swWiki;
-	$w->name = 'Ticket:'.$id;
-	$w->lookup();
-	$fields = $w->internalfields;
-	$oldtext = $w->content;
-	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
-	
-	$activity = '';
-	if ($text != '')
+	$l = $bm->length;
+	$list = '';
+	$listnot = '';
+	$listsimple = '';
+	for($i=0;$i<$l;$i++)
 	{
-		$activity = $username.' commented ticket #'.$id;
-		$oldtext = trim($oldtext)."\n\n----\n\n".$username.': '.$text;
-	}
-	
-	if ($assigned != @$fields['assigned'][0])
-	{
-		if (!$activity)
-			$activity = $username.' assigned ticket #'.$id.' to '.$assigned;
+		if ($bm->getbit($i))
+		{
+			$r = floor($i / 512);
+			$c = $i % 512;
+			$result .= 'ctx.fillRect('.$c.','.$r.',1,1);';
+			$list .= '<a href="index.php?action=edit&revision='.$i.'" target="_blank">'.$i.'</a> ';
+			$listsimple .= $i.' ';
+		}
 		else
-			$activity .= ' and assigned it to '.$assigned;
+		{
+			$listnot .= '<a href="index.php?action=edit&revision='.$i.'" target="_blank">'.$i.'</a> ';
+		}
 	}
 	
-	if ($priority != @$fields['priority'][0])
-	{
-		if (!$activity)
-			$activity = $username.' changed priority of ticket #'.$id.' to '.$priority;
-		else
-			$activity .= ' with priority '.$priority;
-	}
+	$result .= '</script>';
+	$listnot = '<i>'.$listnot.'</i>';
 	
-	if ($activity)
-	{
-		$activity .= ' and set status of ticket #'.$id.' to resolved';
-	}
+	if ($listrevisions==2)
+		return $result.'<p>'.$listnot;
+	elseif ($listrevisions==3)
+		return $result.'<p>'.$listsimple;
+	elseif ($listrevisions)
+		return $result.'<p>'.$list;
 	else
-	{
-		$activity = $username.' set status of ticket #'.$id.' to resolved';
-	}
+		return $result;
 	
-	$activity .= '.';
-		
-	$w->content = trim($oldtext).PHP_EOL.
-	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
-	'[[assigned::'.$assigned.']]'.PHP_EOL.
-	'[[priority::'.$priority.']]'.PHP_EOL.
-	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
-	'[[user::'.$username.']]'.PHP_EOL.
-	'[[status::resolved]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
-	$w->insert();
-	
-	
-	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
-	$swParsedContent .= PHP_EOL.PHP_EOL.str_replace('ticket #'.$id,$link,$activity);
-	$assigned = '';
-	$id = '';
-	$status = '';
-	$mytickets = false;
-}
-
-if (isset($_POST['submitreopen']))
-{
-	
-	$w = new swWiki;
-	$w->name = 'Ticket:'.$id;
-	$w->lookup();
-	$fields = $w->internalfields;
-	$oldtext = $w->content;
-	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
-	
-	$activity = $username.' reopened ticket #'.$id;
-	
-	$activity .= '.';
-		
-	$w->content = trim($oldtext).PHP_EOL.
-	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
-	'[[assigned::'.@$fields['assigned'][0].']]'.PHP_EOL.
-	'[[priority::'.@$fields['priority'][0].']]'.PHP_EOL.
-	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
-	'[[user::'.$username.']]'.PHP_EOL.
-	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
-	$w->insert();
-	
-	
-	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
-	$swParsedContent .= PHP_EOL.PHP_EOL.str_replace('ticket #'.$id,$link,$activity);
-	$mytickets = false;
-	$assigned = '';
-}
-
-if (isset($_POST['submitclose']))
-{
-	
-	$w = new swWiki;
-	$w->name = 'Ticket:'.$id;
-	$w->lookup();
-	$fields = $w->internalfields;
-	$oldtext = $w->content;
-	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
-	
-	$activity = $username.' closed ticket #'.$id;
-	
-	$activity .= '.';
-		
-	$w->content = trim($oldtext).PHP_EOL.
-	'[[id::'.$id.']]'.PHP_EOL.
-	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
-	'[[assigned::'.@$fields['assigned'][0].']]'.PHP_EOL.
-	'[[priority::'.@$fields['priority'][0].']]'.PHP_EOL.
-	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
-	'[[user::'.$username.']]'.PHP_EOL.
-	'[[status::closed]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
-	$w->insert();
-	
-	
-	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
-	$swParsedContent .= PHP_EOL.PHP_EOL.str_replace('ticket #'.$id,$link,$activity);
-	$mytickets = false;
-	$assigned = '';
-	$id = '';
 }
 
 
 
-if ($ticketaction == 'new')
-{
+$swParseSpecial = false;
 
-	$swParsedContent .= "\n".'===New Ticket===';
-	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table class="blanktable"><tr><td >Title</td><td ><input type="text" name="title" value="" autocomplete="off" style="width:95%" /></td></tr><tr><td>Text</td><td><textarea name="text" rows="20" cols="80" style="width:95%"></textarea></td></tr><tr><td>Assign to </td><td>'.swhtmlselect('assigned',$ticketusers,$username,$username).'</td></tr><tr><td>Priority</td><td>'.swhtmlselect('priority',$priorities,'2 normal','2 normal').'</td></tr><tr><td></td><td><input type="submit" name="submitopen" value="Open Ticket" /></td></tr></table></form></nowiki>';
-	$mytickets = false;
-	$assigned = '';
-}
-if ($ticketaction == 'activity')
-{
-
-		$lines = swRelationToTable('filter _namespace "ticket", activity, id
-order activity z');
-
-		
+if ($swIndexError) include 'inc/special/indexerror.php';
 
 
-
-		$i=0;
-		$swParsedContent .= "\n".'===Activity===';
-		foreach($lines as $line)
-		{
-			if ($i > 100) break;
-			$link = '<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki>';
-			$swParsedContent .= "\n".str_replace('ticket #'.@$line['id'],$link,@$line['activity']);
-		  $i++;
-		}
-		$mytickets = false;
-		$assigned = '';
-		
-}
-if ($ticketaction == 'help')
-{
-	$swParsedContent .= "\n".'===Tickets help===';
-	$swParsedContent .= "\n".'Any user having access to special:special can open, comment, resolve and close tickets.'
-	."\n".'Any of these users can \'\'open tickets\'\'. Tickets have a title, text (wikitext), are assigned to a user and have a priority (1 high, 2 normal, 3 low).'
-	."\n".'My Tickets are tickets \'\'assigned\'\' to the current user.'
-	."\n".'Any of these users can \'\'comment\'\' a ticket, \'\'reassign\'\' it, change the \'\'priority\'\', set it to \'\'resolved\'\' and \'\'reopen\'\' a resolved ticket.'
-	."\n".'Only the initial creator of the ticket can \'\'close\'\' a resolved ticket.'
-	."\n".'You cannot add directly files to a ticket, but you can upload files normally and refer to them with a media link.'; 
-	$mytickets = false;
-	$assigned = '';
-}
-
-
-
-if ($status)
-{
-		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, assigned, status "'.$status.'"
-order priority, id 9');
-
-
-		
-
-		$i=0;
-		switch($status)
-		{
-			case 'open': $swParsedContent .= "\n".'===Open Tickets ==='; break;
-			case 'closed': $swParsedContent .= "\n".'===Closed Tickets ==='; break;
-			case 'resolved': $swParsedContent .= "\n".'===Resolved Tickets ==='; break;
-			default: $swParsedContent .= "\n".'===Tickets with status '.$status.'==='; break;
-		}
-		
-		foreach($lines as $line)
-		{
-			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned to '.@$line['assigned'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
-		  $i++;
-		}
-		$mytickets = false;
-		$assigned = '';
-}
-
-if ($mytickets) $assigned = $username; // default
-
-
-if ($assigned && !$id)
-{
-		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, assigned "'.$assigned.'"
-select status !== "closed"
-select status !== "resolved"
-order priority, id 9');
-		$i=0;
-		$swParsedContent .= "\n".'===Tickets assigned to '.$assigned.'===';
-		foreach($lines as $line)
-		{
-			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> ('.substr(@$line['priority'],2).'): '.@$line['title'];
-		  $i++;
-		}
-}
-
-
-if ($id)
-{
-		$w = new swWiki;
-		$w->name = 'Ticket:'.$id;
-		$w->lookup();
-		$fields = $w->internalfields;
-		$swParsedContent .= "\n".'===Ticket #'.$id.': '.array_pop($fields['title']).'===';
-		
-		$text = $w->content;
-		$text = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $text);
-		$lines = $fields['activity'];
-		$swParsedContent .= "\n".trim($text);
-		$swParsedContent .="\n\n----\n\n";
-		foreach($lines as $line)
-		{
-			$swParsedContent .= "''".$line."''\n";
-			
-		}	
-		
-		$status = @$fields['status'][0];
-		
-		switch($status)
-		{
-			case 'open':  // allows to comment, reassign, change priority and set reseolved. creator can also close it.
-			
-			$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table><tr><td>Comment</td><td><textarea name="text" rows="10" cols="80" style="width:95%"></textarea></td></tr><tr><td>Reassign to </td><td>'.swhtmlselect('assigned',$ticketusers,@$fields['assigned'][0],'').'</td></tr><tr><td>Change Priority</td> <td>'.swhtmlselect('priority',$priorities,@$fields['priority'][0],'').'</td></tr><tr><td></td><td><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitcomment" value="Comment Ticket" /><input type="submit" name="submitresolve" value="Set Resolved" /></td></tr></table></form></nowiki>';
-			
-			break;
-			case 'resolved':  // only creator can close, but anybody can reopen.
-			
-			if ($username == @$fields['creator'][0])
-			{
-				$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitreopen" value="Reopen Ticket" /><input type="submit" name="submitclose" value="Close Ticket" /></form></nowiki>';
-			}
-			else
-			{
-				$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitreopen" value="Reopen Ticket" /></form></nowiki>';
-			}
-			break;
-			
-			case 'closed': // only creator can reopen it	
-			
-			if ($username == @$fields['creator'][0])
-			{
-				$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitreopen" value="Reopen Ticket" /></form></nowiki>';
-			}
-			break;
-		}
-		$swParsedContent .= "\n".'Creator: '.@$fields['creator'][0];
-		$swParsedContent .= "\n".'Assigned to: '.@$fields['assigned'][0];
-		$swParsedContent .= "\n".'Priority: '.substr(@$fields['priority'][0],2);
-		$swParsedContent .= "\n".'Status: '.@$fields['status'][0];
-		$swParsedContent .= "\n".'<nowiki><a href="index.php?name=Ticket:'.$id.'&action=edit" target="_blank">Edit Ticket</a> </nowiki>';
-		
-}
-
-
-
- 
-$swParseSpecial = true;
-
-
-
-
+// print_r($_ENV);
 
 ?>

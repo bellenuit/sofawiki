@@ -374,7 +374,7 @@ class swRecord extends swPersistance
 		// do not write invalid revisions with missing files
 		if ($this->status != '')
 		{
-			$db->updateIndexes($this->revision);
+			
 			$file = $this->currentPath();
 			$rec2 = new swRecord;
 			if (file_exists($file))
@@ -416,7 +416,11 @@ class swRecord extends swPersistance
 					$this->persistance = $cp;
 					$this->save();
 				}
-			}			
+			}
+			
+			$db->updateIndexes($this->revision);
+			$db->close(); // force save indexes	
+			swIndexBloom(2);		
 		}
 		
 	}

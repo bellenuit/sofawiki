@@ -3576,10 +3576,23 @@ class swOrderedDictionary
 				case 'Z' : $test = strcmp($atext,$btext); if ($test != 0) return -$test; break;
 				case 'a' : $test = strcasecmp($atext,$btext); if ($test != 0) return $test; break;
 				case 'z' : $test = strcasecmp($atext,$btext); if ($test != 0) return -$test; break;
-				case '1' :  if (floatval($atext) > floatval($btext)) return 1;
+				case '1' :  // order infinity, numbers, -infinity, undefined
+							if ($atext == '∞') { if ($btext != '∞') return 1 ; $test = 0; break; }
+							if ($btext == '∞') { return -1 ; }
+							if ($atext == '-∞') { if ($btext != '⦵') return 1; if ($btext != '-∞') return -1 ; $test = 0; break; }
+							if ($btext == '-∞') { if ($atext != '⦵') return -1; return 1 ; }
+							if ($atext == '⦵') { if ($btext != '⦵') return -1 ; $test = 0; break; }
+							if ($btext == '⦵') { return 1 ; }
+							if (floatval($atext) > floatval($btext)) return 1;
 							if (floatval($atext) < floatval($btext)) return -1;
 							break;
-				case '9' : if (floatval($atext) > floatval($btext)) return -1;
+				case '9' : 	if ($atext == '∞') { if ($btext != '∞') return -1 ; $test = 0; break; }
+							if ($btext == '∞') { return 1 ; }
+							if ($atext == '-∞') { if ($btext != '⦵') return -1; if ($btext != '-∞') return 1 ; $test = 0; break; }
+							if ($btext == '-∞') { if ($atext != '⦵') return 1; return -1 ; }
+							if ($atext == '⦵') { if ($btext != '⦵') return 1 ; $test = 0; break; }
+							if ($btext == '⦵') { return -1 ; }
+							if (floatval($atext) > floatval($btext)) return -1;
 							if (floatval($atext) < floatval($btext)) return 1;
 							break;
 				default: 	throw new swRelationError('Invalid order parameter '.$this->porders[$i],501);
@@ -3626,11 +3639,15 @@ class swAccumulator
 	
 	private function pAvg()
 	{
-		if (count($this->list)==0) return "";
-		$acc = 0;
+		$acc = 0; $i=0;
 		foreach($this->list as $t)
+		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
-		$v = $acc / count($this->list);
+			$i++;
+		}
+		if (!$i) return '⦵';
+		$v = $acc / $i;
 		return cText12($v);
 	}
 	
@@ -3656,10 +3673,14 @@ class swAccumulator
 	private function pMax()
 	{
 		if (count($this->list)==0) return "";
-		$acc = floatval(array_pop($this->list));
+		$acc = '⦵';
 		foreach($this->list as $t)
+		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($acc == '⦵') $acc = floatval($t);
 			if (floatval($t) > $acc)
 				$acc = floatval($t);
+		}
 		return cText12($acc);
 	}
 	
@@ -3675,10 +3696,14 @@ class swAccumulator
 	
 	private function pMedian()
 	{
-		if (count($this->list)==0) return "";
+		
 		$acc = array();
 		foreach($this->list as $t)
+		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc[] = floatval($t);
+		}
+		if (count($acc)==0) return '⦵';
 		sort($acc,SORT_NUMERIC);
 		if (count($acc) % 2 != 0)
 			$v = $acc[(count($acc)-1)/2];
@@ -3701,10 +3726,14 @@ class swAccumulator
 	private function pMin()
 	{
 		if (count($this->list)==0) return "";
-		$acc = floatval(array_pop($this->list));
+		$acc = '⦵';
 		foreach($this->list as $t)
+		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($acc == '⦵') $acc = floatval($t);
 			if (floatval($t) < $acc)
 				$acc = floatval($t);
+		}
 		return cText12($acc);
 	}
 	
@@ -3720,29 +3749,35 @@ class swAccumulator
 	
 	private function pStdev()
 	{
-		if (count($this->list)==0) return "";
 		$acc = 0;
 		$acc2 = 0;
+		$i = 0;
 		foreach($this->list as $t)
 		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 			$acc2 += floatval($t) * floatval($t);
+			$i++;
 		}
-		$v = sqrt($acc2/count($this->list) - $acc/count($this->list)*$acc/count($this->list));
+		if ($i == 0) return '⦵';
+		$v = sqrt($acc2/$i - $acc/$i*$acc/$i);
 		return cText12($v);
 	}
 
 	private function PVar()
 	{
-		if (count($this->list)==0) return "";
 		$acc = 0;
 		$acc2 = 0;
+		$i = 0;
 		foreach($this->list as $t)
 		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 			$acc2 += floatval($t) * floatval($t);
+			$i++;
 		}
-		$v = $acc2/count($this->list) - $acc/count($this->list)*$acc/count($this->list);
+		if ($i == 0) return '⦵';
+		$v = $acc2/$i - $acc/$i*$acc/$i;
 		return cText12($v);
 	}
 	
@@ -3751,7 +3786,10 @@ class swAccumulator
 		if (count($this->list)==0) return "";
 		$acc = 0;
 		foreach($this->list as $t)
+		{
+			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
+		}
 		return cText12($acc);
 	}
 	
@@ -3886,7 +3924,7 @@ function cText12($d)
 	$t;
 	$s;
 	
-	
+	if ($d == '∞' || $d == '-∞' || $d == '⦵') return $d;
 
 
 	$a = abs($d);

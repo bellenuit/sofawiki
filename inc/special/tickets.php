@@ -65,7 +65,7 @@ project id max';
 	'[[creator::'.$username.']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.date('Y-m-d h:i',time()).' '.$activity.']]';
+	'[[activity::'.date('Y-m-d H:i',time()).' '.$activity.']]';
 	$w->insert();
 
 	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
@@ -122,7 +122,7 @@ if (isset($_POST['submitcomment']))
 	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d h:i',time()).' '.$activity.']]';
+	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
 	$w->insert();
 	
 	
@@ -184,7 +184,7 @@ if (isset($_POST['submitresolve']))
 	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::resolved]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d h:i',time()).' '.$activity.']]';
+	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
 	$w->insert();
 	
 	
@@ -218,7 +218,7 @@ if (isset($_POST['submitreopen']))
 	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d h:i',time()).' '.$activity.']]';
+	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
 	$w->insert();
 	
 	
@@ -250,7 +250,7 @@ if (isset($_POST['submitclose']))
 	'[[creator::'.@$fields['creator'][0].']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::closed]]'.PHP_EOL.
-	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d h:i',time()).' '.$activity.']]';
+	'[[activity::'.join('::',@$fields['activity']).'::'.date('Y-m-d H:i',time()).' '.$activity.']]';
 	$w->insert();
 	
 	
