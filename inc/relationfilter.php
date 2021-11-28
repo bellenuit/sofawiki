@@ -624,7 +624,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			$tocheckcount = $tocheckbitmap->countbits();
 			echotime('bloom '.$tocheckcount); 			
-		}			
+		}
+		if (!$cached && array_key_exists('_paragraph',$fields))
+		{
+			$hors = $fields['_paragraph'];
+			
+		}		
 		
 		$starttime = microtime(true);
 		
@@ -1060,6 +1065,7 @@ function swRelationSearch($term, $start=1, $limit=100, $template="")
 
 {
 
+echo "rshere";
 	
 global $lang;
 $previous = ' <nowiki><a href=\'index.php?action=search&start='.($start-$limit).'&query='.$term.'\'>'.swSystemMessage('previous',$lang).'</a></nowiki>';
@@ -1171,7 +1177,7 @@ while i < c
 if substr(v,i,1) == " " or substr(v,i,1) == "|"
 if i > l
 set s = substr(v,l,i-l)
-update _paragraph = regexreplacemod(_paragraph,s,"<b>".s."</b>","i")
+update _paragraph = regexreplacemod(_paragraph,s,"\'\'\'".s."\'\'\'","i")
 end if
 set l = i + 1
 end if

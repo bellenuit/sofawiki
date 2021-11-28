@@ -50,23 +50,16 @@ function swGetAllRevisionsFromName($name)
 	$url= swNameURL($name);
 	
 	$revs = array();	
-	$urldbpath = $db->pathbase.'indexes/urls.db';
-	if (file_exists($urldbpath))
-		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-	if (!@$urldb)
+	global $db;
+	
+	if (swDBA_exists($url,$db->urldb))
 	{
-		echotime('urldb failed');
+		$s = swDBA_fetch($url,$db->urldb);
+		$revs = explode(' ',$s);
+		rsort($revs,SORT_NUMERIC);
 	}
-	else
-	{
-		if (dba_exists($url,$urldb))
-		{
-			$s = dba_fetch($url,$urldb);
-			$revs = explode(' ',$s);
-			rsort($revs,SORT_NUMERIC);
-		}
-		dba_close($urldb);
-	}
+	
+	
 	$swAllRevisionsCache[$name] = $revs;
 	return $revs;
 		
@@ -106,7 +99,9 @@ class swDB extends swPersistance //extend may be obsolete
 	var $deletedbitmap; 
 	var $protectedbitmap;
 	var $bloombitmap;
-	var $shortbitmap;
+	//var $shortbitmap;
+	var $urldb;
+	var $touched = false;
 	
 	var $salt;
 	var $hasindex = false;
@@ -119,6 +114,7 @@ class swDB extends swPersistance //extend may be obsolete
 	function init($force = false) 
 	{
 		global $swRoot; 
+		
  
 		if ($force)
 		{
@@ -184,12 +180,21 @@ class swDB extends swPersistance //extend may be obsolete
 		if (file_exists($this->bloombitmap->persistance))
 			$this->bloombitmap->open();
 
+		/*
 		$this->shortbitmap = new swBitmap;
 		$this->shortbitmap->persistance = $this->pathbase.'indexes/shortbitmap.txt';
 		if (file_exists($this->shortbitmap->persistance))
 			$this->shortbitmap->open();
+		*/
 			
-		
+		echotime('init');	
+			
+		$urldbpath = $this->pathbase.'indexes/urls.db';
+		if (file_exists($urldbpath))
+			$this->urldb = swDBA_open($urldbpath, 'wdt', 'db4');
+		else
+			$this->urldb = swDBA_open($urldbpath, 'c', 'db4');	
+
 			
 		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
@@ -226,8 +231,10 @@ class swDB extends swPersistance //extend may be obsolete
 	function close()
 	{
 		global $swRoot; 
+		
+		if (!$this->touched) return;
+		
 		echotime("db-close");
-		$today = date("Y-m-d",time());
 		
 		if ($this->indexedbitmap->touched)
 		{
@@ -248,7 +255,6 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->protectedbitmap->touched = false;
 			$this->protectedbitmap->save();
-			echotime('proteced save');
 		}
 		
 		if ($this->bloombitmap->touched)
@@ -257,14 +263,23 @@ class swDB extends swPersistance //extend may be obsolete
 			$this->bloombitmap->save();
 		}
 
-		
+		/*
 		if ($this->shortbitmap->touched)
 		{
 			$this->shortbitmap->touched = false;
 			$this->shortbitmap->save();
 		}
+		*/
+		$this->urldb->close();
+		swIndexBloom(8);
 		
+		$this->touched = false;
 		
+	}
+	
+	function __destruct()
+	{
+		$this->close();
 	}
 	
 	function UpdateIndexes($rev)
@@ -309,43 +324,21 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		$url = swNameURL($r->name);
 		
-		//swSemaphoreSignal('url.db');	
-		$urldbpath = $this->pathbase.'indexes/urls.db';
-		if (file_exists($urldbpath))
-			$urldb = @dba_open($urldbpath, 'wdt', 'db4');
-		else
-			$urldb = @dba_open($urldbpath, 'c', 'db4');	
-		if (!@$urldb)
-		{
-			// echotime('urldb failed');
-		}
-		else
-		{
-			// double index
-			// url as key
-			
-			$s = '';
-			if (dba_exists($url,$urldb))
-			{
-				$s = dba_fetch($url,$urldb);
-				$revs = explode(' ',$s);
-				$revs[] = $rev;
-				rsort($revs,SORT_NUMERIC);
-				dba_replace($url, join(' ',$revs), $urldb);
-			}
-			else
-				dba_replace($url,$rev, $urldb);
-			
-			// revision as key - preceded by the non-url-character space
-			// and value = status1 + " " + url
-			
-			dba_replace(' '.$rev,substr($r->status,0,1).' '.$url, $urldb);			
-			
-			dba_close($urldb);
-		}
-		// swSemaphoreRelese('url.db');
 		
-		// swIndexBloom(10);
+		$s = '';
+		if (swDBA_exists($url,$this->urldb))
+		{
+			$s = swDBA_fetch($url,$this->urldb);
+			$revs = explode(' ',$s);
+			$revs[] = $rev;
+			$revs = array_unique($revs);
+			rsort($revs,SORT_NUMERIC);
+			swDBA_replace($url, join(' ',$revs), $this->urldb);
+		}
+		else
+			swDBA_replace($url,$rev, $this->urldb);
+		
+		$this->touched = true;
 		
 		return true;
 
@@ -435,16 +428,8 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		global $db;
 		$current = array();
-		$urldbpath = $db->pathbase.'indexes/urls.db';
 		$k=0;
-		if (file_exists($urldbpath))
-			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-		if (!@$urldb)
-		{
-			echotime('urldb failed');
-		}
-		else
-		{
+
 			global $swMaxOverallSearchTime;
 			global $rebuildstarttime;
 			if (!$rebuildstarttime)
@@ -486,8 +471,8 @@ class swDB extends swPersistance //extend may be obsolete
 
 				$k++;
 				
-				if(dba_exists(' '.$i, $urldb))
-					$line = dba_fetch(' '.$i,$urldb);
+				if(swDBA_exists(' '.$i, $this->urldb))
+					$line = swDBA_fetch(' '.$i,$this->urldb);
 				else
 					$line = '';
 				$st = substr($line,0,1);
@@ -523,12 +508,12 @@ class swDB extends swPersistance //extend may be obsolete
 					$current[$url] = $rev;
 				}
 				
+				$this->touched = true;
+				
 				
 			}
 			
-			
-			dba_close($urldb);
-		}
+
 
 		
 		echotime('bitmaps built ' .$k.' / '.$db->lastrevision);

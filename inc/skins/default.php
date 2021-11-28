@@ -116,19 +116,10 @@ echo '<meta name="title" content="'. $t. '">
 <h1><?php echo "$swParsedName" ?></h1>
 </div><!-- title -->
 
-<div id='content'><div id='parsedcontent'><?php echo "
-
-$swParsedContent
-" ;
-
-
-
-
-?>
-
-
-
-</div><div id="info">
+<div id='content'><div id='parsedcontent'>
+<?php echo $swParsedContent; ?>
+</div>
+<div id="info">
 <?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);	
 ?>
 </div>

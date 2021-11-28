@@ -49,9 +49,25 @@ if (isset($_POST['submitopen']))
 project id max';
 	$test = swRelationToTable($q);
 	
+	
+	
 	$id = @$test[0]['id_max'];
 	
 	$id = (int)@$id+1;
+	
+	//security: do not overwrite existing ticket
+	$found = true;
+	
+	while ($found)
+	{
+		$w = new swWiki;
+		$w->name = 'Ticket:'.$id;
+		$w->lookup();
+		if (!$w->revision) $found = false;
+		$id++;
+	}
+	
+	
 	
 	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
 

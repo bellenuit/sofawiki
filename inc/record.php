@@ -190,6 +190,7 @@ class swRecord extends swPersistance
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			$this->name =  swNameURL($this->name); 
 			$swCurrentRecords[$this->revision] = $this;
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
 			return;
 		}
 		
@@ -205,7 +206,8 @@ class swRecord extends swPersistance
 			
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			$this->name =  swNameURL($this->name);
-			$swCurrentRecords[$this->revision] = $this;			
+			$swCurrentRecords[$this->revision] = $this;	
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
 			return;
 			
 		}
@@ -215,6 +217,8 @@ class swRecord extends swPersistance
 			// we have a serialized version that is faster to read
 			$s = '';
 			global $swRamdiskPath;
+			
+			/*
 			if ($swRamdiskPath == '') 
 			{
 				global $swShortIndex;
@@ -224,7 +228,8 @@ class swRecord extends swPersistance
 					$s = @fread($swShortIndex,512);
 				}
 			}
-			
+			*/
+			/*
 			$hasshort = false;
 			if (strstr($s,'[[_ ]]'))
 			{
@@ -243,10 +248,12 @@ class swRecord extends swPersistance
 						$this->open();
 						$this->error = '';
 						$swCurrentRecords[$this->revision] = $this;
+						$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
+
 						return;
 					}
 				}
-				
+				*/
 				// echotime('lookup '.$this->revision);
 				$file = swGetPath($this->revision);
 				
@@ -261,8 +268,9 @@ class swRecord extends swPersistance
 				//		echotime('read '.$this->name);
 				
 				$s = swFileGet($file);
+			/*
 			}
-			
+			*/
 			
 			
 			
@@ -279,6 +287,7 @@ class swRecord extends swPersistance
 			
 			$pos = strpos($s,"[[_ ]]");
 			$this->content = substr($s,$pos+strlen("[[_ ]]"));
+			
 			
 			
 			if ($this->encoding != "UTF8")
@@ -310,6 +319,8 @@ class swRecord extends swPersistance
 			$this->name = str_replace($t156, "oe", $this->name);
 			$this->comment = str_replace($t156, "oe", $this->comment);
 			$this->content = str_replace($t156, "oe", $this->content);
+			
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
 						
 			if (!preg_match('//u', $this->name))// check valid utf8 string
 			{
@@ -322,7 +333,7 @@ class swRecord extends swPersistance
 			
 			$swCurrentRecords[$this->revision] = $this;
 			
-			if ($hasshort) return;
+			// if ($hasshort) return;
 			
 			$db->updateIndexes($this->revision);
 			if ($db->currentbitmap->getbit($this->revision))
@@ -385,7 +396,7 @@ class swRecord extends swPersistance
 			if ($rec2->revision < $this->revision) // does not already exist
 			{
 				// must be first to unset old revision if there is.
-				echotime('writec '. $this->name.' '.$this->revision);
+				//echotime('writec '. $this->name.' '.$this->revision);
 				$this->internalfields = swGetAllFields($this->content);
 				$this->persistance = $this->currentPath();
 				$this->save();
@@ -393,6 +404,7 @@ class swRecord extends swPersistance
 			}
 			$s = $this->source();
 			global $swRamdiskPath;
+			/*
 			if (strlen($s) <= 512 && $swRamdiskPath == '')
 			{
 				echotime('writeshort '. $this->name.' '.$this->revision);
@@ -410,23 +422,25 @@ class swRecord extends swPersistance
 			}
 			else
 			{
+				
 				$cp = swGetPath($this->revision,true); // save revision as object, to be reused
 				if (!file_exists($cp)) // is always the same
 				{
 					$this->persistance = $cp;
 					$this->save();
 				}
-			}
 			
+			}
+			*/
 			$db->updateIndexes($this->revision);
-			$db->close(); // force save indexes	
-			swIndexBloom(2);		
+			//$db->close(); // force save indexes	
+			//swIndexBloom(2);		
 		}
 		
 	}
 	
 	function source()
-	{
+	{		
 		return "[[_revision::$this->revision]]"
 		. "\n[[_name::$this->name]]"
 		. "\n[[_user::$this->user]]"
@@ -446,7 +460,7 @@ class swRecord extends swPersistance
 		$db->init();
 		echotime('writefile '. $this->name);
 
-		echotime('oldrev '. $this->revision);
+		//echotime('oldrev '. $this->revision);
 		if ($this->revision>0)
 			$db->currentbitmap->unsetbit($this->revision);
 			
@@ -476,7 +490,7 @@ class swRecord extends swPersistance
 			swException('Write error wrong language'); $this->error = 'Write error wrong language';  return; }
 		*/
 		
-		echotime('write '. $this->name);
+		//echotime('write '. $this->name);
 		
 		$this->revision = $db->GetLastRevisionFolderItem()+1;
 		
@@ -499,7 +513,7 @@ class swRecord extends swPersistance
 		else { swException('Write error revision $this->revision'); $this->error = 'Write error revision $this->revision';  return; }
 				
 		
-		echotime('newrev '. $this->revision);
+		//echotime('newrev '. $this->revision);
 		
 		$this->internalfields = swGetAllFields($this->content);
 		$this->writecurrent();	
@@ -624,10 +638,11 @@ class swRecord extends swPersistance
 
 } 
 
-$path = $swRoot.'/site/indexes/short.txt';
+/*
+	$path = $swRoot.'/site/indexes/short.txt';
 if (file_exists($path))
 	$swShortIndex = fopen($path,'r');
-
+*/
 
 /* This structure encodes the difference between ISO-8859-1 and Windows-1252,
    as a map from the UTF-8 encoding of some ISO-8859-1 control characters to

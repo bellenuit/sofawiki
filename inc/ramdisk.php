@@ -59,13 +59,13 @@ function swInitRamdisk()
 		if ($swRamDiskDB) return; 
 		if (!file_exists($swRamDiskDBpath))
 		{
-			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'c', 'db4');
-			echotime('new berkeley db');
+			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'c', 'db4');
+			echotime('new db');
 		}
 		else
 		{
-			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'rdt', 'db4');
-			echotime('open berkeley db');  // if it fails, it is false
+			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'rdt', 'db4');
+			echotime('open db');  // if it fails, it is false
 		}
 		return;
 	}
@@ -98,7 +98,7 @@ function swFileGet($path)
 				$v = @$swMemcache->get($path);
 				if ($v) 
 				{  
-					echotime('berkeley sucess '.floor(strlen($s)/1024).' KB '.$path);
+					echotime('memcache sucess '.floor(strlen($s)/1024).' KB '.$path);
 					return $v; 		
 				}
 				$s = file_get_contents($path);
@@ -116,7 +116,7 @@ function swFileGet($path)
 				$path2 = substr($path,$pos);
 				
 				
-				$v = @dba_fetch($path2,$swRamDiskDB);
+				$v = swDBA_fetch($path2,$swRamDiskDB);
 				if ($v)
 				{
 					return $v;
@@ -134,7 +134,7 @@ function swFileGet($path)
 				return $s;
 			}
 			$s = file_get_contents($path);
-			echotime('berkeley not '.floor(strlen($s)/1024).' KB '.$path);
+			echotime('db not '.floor(strlen($s)/1024).' KB '.$path);
 			return $s;
 		}
 		
@@ -189,20 +189,20 @@ function swUnlink($path)
 		{
 			if (!stristr($path,$swRamDiskDBfilter)) return;
 			
-			if (isset($swRamDiskDB) and $swRamDiskDB) dba_close($swRamDiskDB);
+			if (isset($swRamDiskDB) and $swRamDiskDB) swDBA_close($swRamDiskDB);
 
-			$swRamDiskDB = @dba_open($swRamDiskDBpath, 'wdt', 'db4');
+			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'wdt', 'db4');
 			if ($swRamDiskDB)
 			{
-				dba_delete($path,$swRamDiskDB);
-				echotime('delete berkeley db ok');
+				swDBA_delete($path,$swRamDiskDB);
+				echotime('delete db ok');
 				
 			}
 			else			
 			{
-				echotime('delete berkeley db failed '.$path);
+				echotime('delete db failed '.$path);
 			}
-			@dba_close($swRamDiskDB);
+			swDBA_close($swRamDiskDB);
 			swInitRamdisk();
 			return;
 		}
@@ -244,6 +244,9 @@ function swIndexRamDiskDB()
 		$c = $c2;
 		$n = microtime(true);
 		if ($n-$s > 500) $i = 500;
+		
+		//global $swOvertime;
+		//$swOvertime = true; 
 	}
 	swUpdateRamDiskDB();
 
@@ -257,20 +260,20 @@ function swUpdateRamDiskDB()
 	
 	if (!@count($swRamDiskJobs)) return;
 	
-	if ($swRamDiskDB) @dba_close($swRamDiskDB);
-	$swRamDiskDB = @dba_open($swRamDiskDBpath, 'wdt', 'db4');
+	if ($swRamDiskDB) swDBA_close($swRamDiskDB);
+	$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'wdt', 'db4');
 	if ($swRamDiskDB)
 	{
 		foreach($swRamDiskJobs as $k=>$v)
-		{	@dba_replace($k,$v,$swRamDiskDB);
-		echotime('insert berkeley db '.$k);	}
+		{	swDBA_replace($k,$v,$swRamDiskDB);
+		echotime('insert db '.$k);	}
 		$swRamDiskJobs = array();				
 	}
 	else
 	{
-		echotime('insert berkeley db failed');
+		echotime('insert db failed');
 	}
-	@dba_close($swRamDiskDB);
+	swDBA_close($swRamDiskDB);
 	swInitRamdisk();
 
 }

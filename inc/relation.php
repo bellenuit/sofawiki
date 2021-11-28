@@ -584,7 +584,25 @@ class swRelationLineHandler
 										$fg = trim($fg);
 										$ts = explode(' ',$fg);
 										$field = array_shift($ts);
+										
+										
+										
+										if (substr($field,-9)== '_textarea')
+										{
+											$field = substr($field,0,-9);
+											$fieldtype = 'textarea';
+										}
+										elseif (substr($field,-7)== '_select')
+										{
+											$field = substr($field,0,-7);
+											$fieldtype = 'select';
+										}
+										else
+											$fieldtype = 'text';
+										
+										
 										$inputfields[] = $field;
+										
 										$df = join($ts);
 										$xp = new swExpression($this->functions);
 										$xp->compile($df);
@@ -592,9 +610,22 @@ class swRelationLineHandler
 										
 										if (isset($_POST['submitinput']))
 											$tx = @$_POST[$field];
-										
-										
-										$this->result .= '<nowiki><tr><td>'.$field.'</td><td><input type="text" name="'.$field.'" value="'.$tx.'"></td></tr></nowiki>';
+											
+										switch($fieldtype)
+										{
+											case 'textarea': $this->result .= '<nowiki><tr><td>'.$field.'</td><td><textarea name="'.$field.'" rows="12" cols="80">'.$tx.'</textarea></td></tr></nowiki>'; break;
+											
+											case 'select': $txoption = explode('|',$tx);
+															$this->result .= '<nowiki><tr><td>'.$field.'</td><td><select name="'.$field.'"></nowiki>';										
+															foreach($txoption as $o)
+															{
+																$this->result .= '<nowiki><option value="'.$o.'">'.$o.'</option></nowiki>';
+															}
+															
+															$this->result .= '<nowiki></select></td></tr></nowiki>';
+															break;
+											default: $this->result .= '<nowiki><tr><td>'.$field.'</td><td><input type="text" name="'.$field.'" value="'.$tx.'"></td></tr></nowiki>';
+											}
 										
 									}
 									$this->result .=  '<nowiki><tr><td></td><td><input type="submit" name="submitinput" value="submit"></td></tr></nowiki>';
@@ -604,12 +635,13 @@ class swRelationLineHandler
 									if (isset($_POST['submitinput']))
 									{
 										//print_r($inputfields);
-										//print_r($_POST);
+										
 										foreach($inputfields as $key)
 										{
 											$this->globals[$key] = @$_POST[$key];
+											$dict[$key] = @$_POST[$key];
 										}
-										// print_r($this->globals);
+										//print_r($this->globals);
 									}
 									else
 									{

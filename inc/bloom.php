@@ -159,11 +159,11 @@ function swGetBloomBitmapFromTerm($term)
 
 
 
-function swIndexBloom($numberofrevisions = 1000)
+function swIndexBloom($numberofrevisions = 1000, $continue = false)
 {
 	
 	
-	echotime('indexbloom'); return;
+	echotime('indexbloom'); 
 	
 	global $swRoot;
 	global $db;
@@ -303,6 +303,12 @@ function swIndexBloom($numberofrevisions = 1000)
 		
 	}
 	
+	if ($continue)
+	{
+		global $swOvertime;
+		if ($rev >= 1) ; $swOvertime = true;
+	}
+	
 		
 		
 	// echo "offsetmax $offsetmax; ";
@@ -352,13 +358,13 @@ swOpenBloom();
 
 function swClearBloom()
 {
-	 swSemaphoreSignal();
+	 
 	 global $swRoot;
 
 	 @unlink($swRoot.'/site/indexes/bloom.raw');
-	  @unlink($swRoot.'/site/indexes/bloombitmap.txt');
+	 @unlink($swRoot.'/site/indexes/bloombitmap.txt');
 	 
-	 swSemaphoreRelease();
+	 
 }
 
 

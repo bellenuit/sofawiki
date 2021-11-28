@@ -126,9 +126,18 @@ class swExpression
 		
 		$this->functions[] = new XPFormat;
 		
-		$this->functions[] = new XpNowiki;
+		//$this->functions[] = new XpNowiki;
 		$this->functions[] = new XpResume;
 		$this->functions[] = new XpTemplate;
+		
+		global $swFunctions;
+		foreach($swFunctions as $k=>$v)
+		{
+			if ($v->arity() < 0) continue;
+			$fn  = new XpNative;
+			$fn->init($k,$v);
+			$this->functions[] = $fn;
+		}
 
 		$this->expectedreturn = 1 ;
 
@@ -2426,6 +2435,40 @@ class XpTemplate extends swExpressionFunction
 		$stack[] = $a;		
 	}
 }
+
+class XpNative extends swExpressionFunction
+{
+	var $nativefunction;
+	
+	function __construct() { $this->arity = 1; $this->label = ':native' ;}
+	function init($key, $fn) // swFunction
+	{
+		$this->nativefunction = $fn;
+		$this->arity = $fn->arity();
+		$this->label = ':'.$key;
+	}
+	function run(&$stack)
+	{
+		if (count($stack) < $this->arity) throw new swExpressionError('Stack < '.$this->arity,101);
+		$args = array();
+		
+		//echo $this->label.' '.$this->arity.'; ';
+		
+		for ($i = 0; $i < $this->arity ;$i++)
+		
+		$args[] = array_pop($stack);
+		$args[] = substr($this->label,1);
+		$args = array_reverse($args);
+		
+		
+		$result = $this->nativefunction->dowork($args);
+		
+		
+			
+		$stack[] = $result;		
+	}
+}
+
 
 
 function TrimTrailingZeroes($nbr) {

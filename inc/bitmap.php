@@ -467,8 +467,8 @@ function bitmapUnitTest()
 				break;
 			}
 		}
-		echo "<p>".$b1->dump().' '.$b1->length;
-		echo "<br>".$b2->dump().' '.$b2->length;
+		//echo "<p>".$b1->dump().' '.$b1->length;
+		//echo "<br>".$b2->dump().' '.$b2->length;
 
 		
 	}
@@ -522,9 +522,9 @@ function bitmapUnitTest()
 				// sbreak;
 			}
 		}
-		echo "<p>".$b1->dump().' '.$b1->length;
-		echo "<br>".$b2->dump().' '.$b2->length;
-		echo "<br>".$b3->dump().' '.$b3->length;
+		//echo "<p>".$b1->dump().' '.$b1->length;
+		//echo "<br>".$b2->dump().' '.$b2->length;
+		//echo "<br>".$b3->dump().' '.$b3->length;
 
 	}
 	
@@ -564,13 +564,27 @@ function bitmapUnitTest()
 				//break;
 			}
 		}
-		echo "<p>".$b1->dump().' '.$b1->length;
-		echo "<br>".$b2->dump().' '.$b2->length;
-		echo "<br>".$b3->dump().' '.$b3->length;
+		//echo "<p>".$b1->dump().' '.$b1->length;
+		//echo "<br>".$b2->dump().' '.$b2->length;
+		//echo "<br>".$b3->dump().' '.$b3->length;
 
 	}
 
 
+	// 
+	for($i = 0; $i < 30; $i++)
+	{
+		$b1 = new swBitmap;
+		$r = rand(0,4000);
+		$c = rand(1,20);
+		for ($j = 0; $j < $c; $j++)
+			$b1->setbit($r+$j*10);
+		
+		if ($b1->countbits()<>$c) echo "<p>setbit failed for ".$r;
+		$list = $b1->toarray();
+		if (count($list)<>$c) "<p>toarray failed for ".$r;
+		if($list[0] <> $r) "<p>toarray failed value for ".$r;
+	}
 	
 
 

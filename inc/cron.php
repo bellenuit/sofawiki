@@ -25,19 +25,19 @@ function swRelationFilterOvertimeRetake()
 			$i++;
 			if ($i>250) return;
 			
-			$bdb = @dba_open($file, 'wdt', 'db4'); // force write. don't open if used
+			$bdb = swDBA_open($file, 'wdt', 'db4'); // force write. don't open if used
 			if (!$bdb) continue;
 			
-			$s = dba_fetch('_overtime',$bdb);
+			$s = swDBA_fetch('_overtime',$bdb);
 			$overtime = false;			
 			// unserialize does not work on a simple boolean, we hack			
 			if ($s == 'b:1;' ) $overtime  = true;
 			
-			if (!$overtime) { @dba_close($bdb); continue; }
+			if (!$overtime) { swDBA_close($bdb); continue; }
 			
-			$filter = dba_fetch('_filter',$bdb);
+			$filter = swDBA_fetch('_filter',$bdb);
 						
-			@dba_close($bdb); 
+			swDBA_close($bdb); 
 			
 			if (!$filter) continue;
 			
