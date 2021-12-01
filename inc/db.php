@@ -391,17 +391,21 @@ class swDB extends swPersistance //extend may be obsolete
 		echotime("rebuild ".$lastindex);  
 	
 		global $swMaxOverallSearchTime;
+		global $swMemoryLimit;
 		global $rebuildstarttime;
 		if (!$rebuildstarttime)
 		$rebuildstarttime = microtime(true);	
 		$overtime = false;
 		$c=0;
+		
 		for($r = $lastindex; $r>=1; $r--)
 		{
+			
+			
 			if ($this->indexedbitmap->getbit($r)) continue;
 			$nowtime = microtime(true);	
 			$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
-			if (intval($dur)>intval($swMaxOverallSearchTime))
+			if (intval($dur)>intval($swMaxOverallSearchTime) || memory_get_usage()>$swMemoryLimit)
 			{
 				echotime('overtime INDEX');
 				$swOvertime = true;

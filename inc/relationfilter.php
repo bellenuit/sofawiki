@@ -643,10 +643,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			
 			// print_r($fields);
-			
+			global $swMemoryLimit;
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
+				if (memory_get_usage()>$swMemoryLimit) continue;
+				
 				
 				if (!$tocheckbitmap->getbit($k)) continue; // we already have ecluded it from the list
 				if ($checkedbitmap->getbit($k)) continue; // it has been checked, should not happen here any more

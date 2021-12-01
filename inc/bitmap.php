@@ -10,6 +10,7 @@ class swBitmap extends swPersistance
 	var $map;
 	var $maphex;
 	var $compressionmode;
+	var $default = false;
 	
 	function init($l, $default = false)
 	{
@@ -51,6 +52,8 @@ class swBitmap extends swPersistance
 				$this->unsetbit($i);
 				
 		}
+		
+		$this->default = $default;
 		
 		
 				
@@ -99,7 +102,7 @@ class swBitmap extends swPersistance
 		$this->touched = true;
 		
 		
-		if ($n>=$this->length)
+		if ($n>=$this->length) // setbit 2 needs length 3
 			$this->redim($n+1);
 			
 		
@@ -144,7 +147,7 @@ class swBitmap extends swPersistance
 	{
 		$n = intval($n);
 		
-		if ($n>=$this->length) return false;
+		if ($n>=$this->length) return $this->default;
 		if ($n<0) return false;
 		
 		// gets the value of the nth bit
@@ -431,14 +434,41 @@ function bitmapUnitTest()
 			{
 				sort($list);
 				echo join(" ",$list);
-				echo " failed for $v";
+				echo " setbit failed for $v";
+				echo "<p>".$b1->dump()."<p>";
+				
+				break;
+			}
+		}
+		//sort($list);
+		//echo "<p>".$b1->dump().'  '.array_pop($list)."<p>";
+	}
+	
+	for ($i = 0; $i < 10; $i++)
+	{
+		$list = array();
+		for ($j = 0; $j < 8; $j++)
+		{
+			$list[] = rand(0,40);
+		}
+		$b1 = new swBitmap;
+		foreach($list as $v)
+		{
+			$b1->unsetbit($v);
+		}
+		foreach($list as $v)
+		{
+			if ($b1->getbit($v))
+			{
+				sort($list);
+				echo join(" ",$list);
+				echo " setbit failed for $v";
 				echo "<p>".$b1->dump()."<p>";
 				
 				break;
 			}
 		}
 	}
-	
 	//not op
 	
 	for ($i = 0; $i < 1; $i++)

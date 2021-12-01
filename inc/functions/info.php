@@ -205,7 +205,7 @@ class swCountRevisionsFunction extends swFunction
 		global $db;
 		global $db;
 		$currentbitmap = $db->currentbitmap;
-		return $currentbitmap->length;
+		return $currentbitmap->length-1;
 	}	
 }
 

@@ -608,6 +608,8 @@ class swRelationLineHandler
 										$xp->compile($df);
 										$tx = $xp->evaluate($this->globals, $locals);
 										
+										$txdefault = $tx;
+										
 										if (isset($_POST['submitinput']))
 											$tx = @$_POST[$field];
 											
@@ -615,11 +617,16 @@ class swRelationLineHandler
 										{
 											case 'textarea': $this->result .= '<nowiki><tr><td>'.$field.'</td><td><textarea name="'.$field.'" rows="12" cols="80">'.$tx.'</textarea></td></tr></nowiki>'; break;
 											
-											case 'select': $txoption = explode('|',$tx);
+											case 'select': $txoption = explode('|',$txdefault);
+													
 															$this->result .= '<nowiki><tr><td>'.$field.'</td><td><select name="'.$field.'"></nowiki>';										
+															
+															
 															foreach($txoption as $o)
 															{
-																$this->result .= '<nowiki><option value="'.$o.'">'.$o.'</option></nowiki>';
+																if ($o == $tx) $sel = 'SELECTED'; else $sel = '';
+																
+																$this->result .= '<nowiki><option value="'.$o.'" '.$sel.'>'.$o.'</option></nowiki>';
 															}
 															
 															$this->result .= '<nowiki></select></td></tr></nowiki>';

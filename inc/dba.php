@@ -410,7 +410,7 @@ class swDBA
 		// rewrite from index, removing the overhead of deleted values
 	}
 	
-	function list()
+	function listDatabases()
 	{
 		// list all open DB, needs a global array
 	}

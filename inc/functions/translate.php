@@ -41,8 +41,9 @@ class swTranslateFunction extends swFunction
 		
 		echotime('new translation');
 		
-		$result = swTranslate($text,$source,$target);		
-		file_put_contents($cachefile, $result);
+		$result = swTranslate($text,$source,$target);	
+		if (substr($result,0,6) != 'Error:')	
+			file_put_contents($cachefile, $result);
 		return $result;
 	}
 

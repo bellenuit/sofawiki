@@ -122,16 +122,19 @@ function swGetBloomBitmapFromTerm($term)
 						 			
 	$hashes = swGetHashesFromTerm($term);
 	
-	
-	
+	global $swMemoryLimit;
+	 	
 	foreach($hashes as $h)
 	{
+		if (memory_get_usage()>$swMemoryLimit) break;
+		
+		
 		$hbm = new swBitmap;
 		$hbm->init($db->bloombitmap->length, true);
 		$hbm->map = '';
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
-		
+		 
 		for ($i = 0; $i<=$blocks; $i++)
 		{
 						

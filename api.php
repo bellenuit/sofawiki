@@ -3,7 +3,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.5.3';  
+$swVersion = '3.5.4';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -12,6 +12,7 @@ $swOldStyle = false;
 $swOldSearch = true;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
+
 
 
 /*
@@ -174,6 +175,7 @@ $swDenyCount = 5;
 $swLogCount = 500;
 $swLogNameSpace = '';
 $swMaxFileSize = 8000000;
+$swMemoryLimit = 100000000;
 
 $swNewUserFormFields = array();
 $swAllUserRights = '[[_view::Main]] ';

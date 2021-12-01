@@ -9,12 +9,19 @@ function swTranslate($text,$source,$target)
 {
 	
 	global $swDeeplKey;
+	global $swDeeplFree;
+	
+		
+	// echo "hallo";
 	
 	if (!isset($swDeeplKey)) return 'Error: DeepL key missing';
 	
 	$ch = curl_init();
 
-	curl_setopt($ch, CURLOPT_URL, 'https://api.deepl.com/v2/translate');
+	if (isset($swDeeplFree) && $swDeeplFree)
+		curl_setopt($ch, CURLOPT_URL, 'https://api-free.deepl.com/v2/translate');
+	else
+		curl_setopt($ch, CURLOPT_URL, 'https://api.deepl.com/v2/translate');
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string 
 	
@@ -27,11 +34,22 @@ function swTranslate($text,$source,$target)
 	curl_setopt($ch, CURLOPT_POSTFIELDS,  $encoded);
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	$result = curl_exec($ch);
+	
+	//print_r($ch);
+	
+	//echo "::";
+	
 	curl_close($ch);
+	
+	//print_r($result);
 	
 	
 	
 	$fields = json_decode($result, true);
+	
+	// print_r($fields);
+	
+	if (!is_array($fields)) return 'Error no JSON';
 		
 	if (array_key_exists('translations',$fields))
 	{
