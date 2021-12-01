@@ -109,6 +109,15 @@ function swDBA_exists($key,$db)
 	return dba_exists($key,$db);
 }
 
+function swDBA_count($db)
+{
+	global $testmode;
+	if ($testmode)
+		return $db->count();
+	
+	return 0;
+}
+
 
 class swDBA
 {
@@ -134,9 +143,12 @@ class swDBA
 	var $keycursor;
 	var $touched;
 	
+	
+	
 	function __construct($path, $mode)
 	{
-		echotime('dba_open '.$mode.' '.$path);
+		global $swRoot;
+		echotime('dba_open '.$mode.' '.str_replace($swRoot,'',$path));
 		switch($mode)
 		{
 			case 'w':
@@ -202,7 +214,7 @@ class swDBA
 				$found = true;
 		} while(!$found);
 		
-		$this->keys = array_keys([$this->index]);
+		$this->keys = array_keys($this->index);
 		$this->keycursor = 0;
 		
 		// print_r($this->index);
@@ -211,18 +223,26 @@ class swDBA
 	
 	function firstKey()
 	{	
+		
 		if (!count($this->keys)) return false;
 			
 		$this->keycursor = 0;
+		
 		return $this->keys[$this->keycursor];
 	}
 	
 	function nextKey()
 	{
-		if (!count($this->keys)) return false;
-		if (count($this->keys) <= $this->keycursor+1) return false; // are we one off? check
-		
 		$this->keycursor++;
+		
+		//echotime($this->keycursor);
+		
+		//echotime(count($this->keys));
+		
+		if (count($this->keys) <= $this->keycursor+1) return false; 
+		
+		//echotime('.');
+		
 		return $this->keys[$this->keycursor];
 	}
 	
@@ -298,6 +318,13 @@ class swDBA
 	 	if (strstr($key,TAB)) throw new Exception('swDBA replace invalid key with tab '.$key);
 	 	if (strstr($key,PHP_EOL)) throw new Exception('swDBA replace invalid key with newline '.$key);
 	 	
+	 	$v = $this->fetch($key);
+	 	if (!strcmp($v,$value)) return; // 0 = binary equal 
+	 	
+	 	/*echotime($key);
+	 	echotime($value);
+	 	echotime($v);*/
+	 	
 	 	$this->journal[$key] = $value;
 	 	$this->touched = true;
 	 	
@@ -310,7 +337,9 @@ class swDBA
 	{
 	 	if (!$this->touched) return;
 	 	
-	 	echotime('dba_sync '.$this->path);
+	 	global $swRoot;
+		
+	 	echotime('dba_sync '.str_replace($swRoot,'',$this->path).' '.count($this->journal));
 	 	
 	 	
 	 	
@@ -318,7 +347,23 @@ class swDBA
 	 		throw new Exception('swDBA replace sync not allowed');
 	 		
 	 		
-	 	swSemaphoreSignal($this->path); 
+	 	//swSemaphoreSignal($this->path); 
+	 	
+	 	$locktimeout = 5;
+	 	$i = 0;
+	 	$lock = false;
+	 	while ($i<$locktimeout)
+	 	{
+		 	if (flock($this->handle,LOCK_EX)) { $lock = true; break; }
+		 	else echotime('dba_sync wait '.$this->path);
+	 	}
+	 	if (!$lock)
+	 	{
+		 	echotime('dba_sync failed '.$this->path);
+		 	return;
+	 	}
+	 	
+	 	
 	 	
 	 	// before changing, we need to read the Index again, because someone else may have changed the file
 	 	$this->readIndex();
@@ -330,8 +375,14 @@ class swDBA
 	 	$stream = array();
 	 	$streamoffset = 0;
 	 	
+	 	// echotime('dba_sync start');
+	 	$f = true;
+	 	
 	 	foreach($this->journal as $k=>$v)
 	 	{
+		 	if ($f) echotime('dba_sync '.$k);
+		 	$f = false;
+		 	
 		 	if ($v === false) // delete
 		 	{
 			 	// if it is already deleted do nothing
@@ -361,6 +412,8 @@ class swDBA
 		 	$streamoffset += strlen($s);		 	
 	 	}
 	 	
+	 	//echotime('dba_sync write');
+	 	
 	 	foreach($stream as $s)
 	 		fwrite($this->handle,$s);
 	 	
@@ -377,11 +430,17 @@ class swDBA
 
 		fwrite($this->handle, 'indexoffset'.PHP_EOL.$this->indexoffset.PHP_EOL);
 		
-		swSemaphoreRelease($this->path); 
+		fflush($this->handle);
+		
+		flock($this->handle,LOCK_UN);
+		
+		//swSemaphoreRelease($this->path); 
 		
 		$this->keys = array_keys($this->index);
 		
 		$this->touched = false;
+		
+		echotime('sync end');
 	}
 
 	function close()
@@ -414,6 +473,13 @@ class swDBA
 	{
 		// list all open DB, needs a global array
 	}
+	
+	function count()
+	{
+		return count($this->keys);
+	}
+	
+
 		
 }
 

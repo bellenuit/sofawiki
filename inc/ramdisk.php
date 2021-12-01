@@ -124,7 +124,7 @@ function swFileGet($path)
 				$s = file_get_contents($path);
 				$swRamDiskJobs[$path2] = $s;
 				
-				if (count($swRamDiskJobs) % 50 == 0)
+				if (count($swRamDiskJobs) % 100 == 0)
 				{
 					
 					swUpdateRamDiskDB();
@@ -134,7 +134,7 @@ function swFileGet($path)
 				return $s;
 			}
 			$s = file_get_contents($path);
-			echotime('db not '.floor(strlen($s)/1024).' KB '.$path);
+			// echotime('db not '.floor(strlen($s)/1024).' KB '.$path);
 			return $s;
 		}
 		
@@ -266,7 +266,8 @@ function swUpdateRamDiskDB()
 	{
 		foreach($swRamDiskJobs as $k=>$v)
 		{	swDBA_replace($k,$v,$swRamDiskDB);
-		echotime('insert db '.$k);	}
+			//echotime('insert db '.$k);
+		}
 		$swRamDiskJobs = array();				
 	}
 	else
@@ -279,8 +280,6 @@ function swUpdateRamDiskDB()
 }
 
 
-if (isset($swRamdiskPath) && $swRamdiskPath != '')
-	swInitRamdisk();
 
 
 ?>

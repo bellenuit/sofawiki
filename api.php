@@ -158,6 +158,8 @@ $swSpecials['Wanted Pages'] = 'wantedpages.php';
 	initialize variables
 */
 
+
+
 $swLanguages = array();
 
 $swTranscludeNamespaces = array();
@@ -199,14 +201,19 @@ $swDefaultLang = 'en';
 $swMediaFileTypeDownload = '';
 $swRamdiskPath = '';
 
+
+
 $db = new swDB;
+
 
 if (file_exists($swRoot.'/site/configuration.php'))
 	include_once $swRoot.'/site/configuration.php';
 else
 	include_once $swRoot.'/inc/configuration-install.php';
 
+
 include_once $swRoot.'/inc/ramdisk.php';
+
 
 if (defined('SOFAWIKIINDEX'))
 {
@@ -237,6 +244,7 @@ if (defined('SOFAWIKIINDEX'))
 }
 
 $swIndexError = false;
+
 $db->init();
 
 // lang depending on configuration

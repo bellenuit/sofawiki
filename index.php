@@ -912,7 +912,7 @@ $menudomains = swGetValue($user->content,'_menu',true);
 // do cron job
 
 //if ($action != 'indexerror' && rand(0,100)<2)
-if ($action != 'indexerror')
+if ($action != 'indexerror' && !$swOvertime)
 {
 	swCron();
 }
@@ -953,7 +953,8 @@ if (function_exists('swLogHook'))
 	swLogHook($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 	
 }
-swUpdateRamDiskDB();
+if (!isset($swOvertime))
+	swUpdateRamDiskDB();
 
 swLog($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 swSemaphoreRelease();

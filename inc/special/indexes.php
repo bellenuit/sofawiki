@@ -261,36 +261,45 @@ switch($_REQUEST['index'])
 							break;*/
 	case 'indexdb' :  
 							swIndexRamDiskDB();		
-							$swParsedContent .= '<h3>DB indexed</h3>';	
-							break;				
-
-	case 'db': 		$swParsedContent .= '<h3>DB</h3>';
 							
-						  swInitRamdisk();
+								
+							// no break;	
+											
+
+	case 'db': 				$swParsedContent .= '<h3>DB</h3>';
+							
+						 // swInitRamdisk();
+						  //swDBA_close($swRamDiskDB);
+						  //$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'rdt', 'db4');
+						 // $swRamDiskDB->readIndex();
+							// echotime(print_r($swRamDiskDB,true));
 						  if (isset($swRamDiskDB) && $swRamDiskDB)
 						  {
+							  
 							  $counter = 0;
 							  $bm = new swBitmap($db->lastrevision);
 							  $k = swDBA_firstkey($swRamDiskDB);
-							  if ($k)
+							  if ($k === FALSE)
+							  	echotime($k);
+							  else
 							  	$counter = 1;
-							  while ($k = swDBA_nextkey($swRamDiskDB))
-							  { 
+							  	
+							  do
+							  {
+								  $k2 = substr($k,0,-4);
+								  $bm->setbit(intval($k2));
+								  $counter++;
 								  
+								  $k = swDBA_nextkey($swRamDiskDB);
 								  
-								// $swParsedContent .=  PHP_EOL.'key '.$k;
-									  $k2 = substr($k,0,-4);
-									 
+								 // echotime('k' .$k);
+								  
+							  } while ($k !== FALSE);
 
-									  $bm->setbit(intval($k2));
-									  $counter++;
-								  
-								  
-								 
-							  }
-							  //$swParsedContent .= '<p>is slow';
 							  $swParsedContent .= '<p>length: '.$counter;
 							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							  
+							 
 							  
 						  }
 						  else

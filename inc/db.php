@@ -113,8 +113,15 @@ class swDB extends swPersistance //extend may be obsolete
 	
 	function init($force = false) 
 	{
-		global $swRoot; 
 		
+		global $swRoot; 
+		global $swRamdiskPath;
+
+		echotime('init');
+		
+		if (isset($swRamdiskPath) && $swRamdiskPath != '')
+			swInitRamdisk();
+
  
 		if ($force)
 		{
@@ -187,7 +194,7 @@ class swDB extends swPersistance //extend may be obsolete
 			$this->shortbitmap->open();
 		*/
 			
-		echotime('init');	
+			
 			
 		$urldbpath = $this->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
@@ -271,7 +278,10 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		*/
 		$this->urldb->close();
-		swIndexBloom(8);
+		
+		global $swOvertime;
+		if (!$swOvertime)		
+			swIndexBloom(16);
 		
 		$this->touched = false;
 		
@@ -422,7 +432,7 @@ class swDB extends swPersistance //extend may be obsolete
 			 $this->rebuildBitmaps();
 			 $swIndexError = false;
 			 echotime('indexes built '.$c.' open '.$r);	
-			 swIndexBloom(10);
+			 //swIndexBloom(10);
 		}
 	}	
 	

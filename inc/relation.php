@@ -85,6 +85,9 @@ class swRelationLineHandler
 		$whilestack = array();
 		$ifstack = array();
 		$loopcounter;
+		$walkstart = 0;
+		$walkrelation1;
+		$walkrelation2;
 		$au;
 		$tp;
 		$ptag; $ptagerror; $ptag2;
@@ -416,6 +419,43 @@ class swRelationLineHandler
 										$this->transactiondict = array();
 										$this->transactionprefix = '';
 										$this->transactionerror = '';
+									}
+									elseif($line == 'end walk')
+									{
+										
+										if (count($walkrelation1->tuples))
+										{
+											$tp = array_shift($walkrelation1->tuples);
+											$d = $tp->fields();
+											foreach($dict as $k=>$v)
+											{
+												if (in_array($k, $walkrelation2->header))
+													$d[$k] = $v;
+											}
+											// print_r($d);
+											$tp2 = new swTuple($d);
+											$walkrelation2->tuples[$tp2->hash()] = $tp2;
+											$i = $walkstart;
+											
+											if (count($walkrelation1->tuples)>0)
+											{
+												$tp = array_shift($walkrelation1->tuples);
+												//print_r($tp);
+												foreach($tp->pfields as $k=>$v)
+												{
+													$dict[$k] =$v;
+												}
+												array_unshift($walkrelation1->tuples, $tp);	
+											}
+
+										}
+										else
+										{
+											array_pop($this->stack);
+											$this->stack[] = $walkrelation2;
+											$walkstart = 0;
+										}
+										
 									}
 									else
 									{
@@ -1084,7 +1124,7 @@ class swRelationLineHandler
 									if (count($this->stack)>0)
 									{
 										$r = array_pop($this->stack);
-										if (count($r->tuples)>0)
+										if (count($r->tuples)>0 && !$walkstart)
 										{
 											$tp = array_shift($r->tuples);
 											//print_r($tp);
@@ -1208,7 +1248,31 @@ class swRelationLineHandler
 									$te = $xp->evaluate($this->globals,$dict);
 									$r = swRelationVirtual($te);
 									$this->stack[] = $r;
-									break;				
+									break;
+				case 'walk' :		$walkstart = $i;
+									$walkrelation1 = array_pop($this->stack);			
+									$walkrelation2 = new swRelation($walkrelation1->header);
+									$pairs = explode(',',$body);								
+									foreach($pairs as $p)
+									{
+										if (!in_array(trim($p),$walkrelation2->header))
+											$walkrelation2->addColumn(trim($p));
+									}
+									$r = array_pop($this->stack);
+									if (count($walkrelation1->tuples)>0)
+									{
+										$tp = array_shift($walkrelation1->tuples);
+										//print_r($tp);
+										foreach($tp->pfields as $k=>$v)
+										{
+											$dict[$k] =$v;
+										}
+										array_unshift($walkrelation1->tuples, $tp);	
+									}
+									array_unshift($this->stack,$walkrelation1);
+									break;
+									
+												
 				case 'while':		$xp = new swExpression($this->functions);
 									$xp->compile($body);
 									if ($xp->evaluate($dict) != '0') // no locals
@@ -2365,6 +2429,22 @@ class swRelation
 	{
 		if (count($this->tuples)>10000) echotime('project '.count($this->tuples));
 		
+		if (substr($t,0,4)=='drop')
+		{
+			$t = substr($t,4);
+			$pairs = explode(',',$t);
+			$ps = array();
+			foreach($pairs as $p)
+			{
+				$ps[] = trim($p);
+			}
+			$newps = array_diff($this->header,$ps);
+			
+			$this->project(join(', ',$newps));
+			return;
+			
+		}
+		
 		if (substr($t,0,6)=='inline')
 		{
 			$r2 = $this->doClone();
@@ -3343,6 +3423,9 @@ class swRelation
 									}
 									break;
 					case 'end'	:	//ignore
+					
+					
+					
 									break;
 					default		:	if (substr($selt,0,6)=='group ')
 									{
