@@ -609,7 +609,7 @@ class swDBA
 		}
 		while ($key = $this->nextKey());
 		
-		$totallength = filesize($this->path);
+		$totallength = @filesize($this->path);
 		
 		
 		

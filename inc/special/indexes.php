@@ -180,33 +180,14 @@ if (isset($_REQUEST['submitreset']) || isset($_REQUEST['submitresetcurrent']) ||
 
 switch($_REQUEST['index'])
 {
-	case 'fillgaps'		: $bm = $db->indexedbitmap;
-						  $path = $db->pathbase.'indexes/urls.txt';
-						  $fpt = fopen($path,'c');
-						  
-						  for ($i=0;$i<$bm->length-32;$i++)
-						  {
-						  	if (! $bm->getbit($i))
-						  	{
-						  		$bm->setbit($i);
-						  		$line = str_pad($i,9,' ')."\t";
-								$line .= "-\t";
-								$line .= str_repeat(' ',32); // 32
-								$line .= substr('    '.PHP_EOL,-4);
-		
-								@fseek($fpt, 48*($i-1));
-								@fwrite($fpt, $line);
-							}
 	
-						  }
-						  @fclose($fpt);
 	
 	case 'indexedbitmap': $swParsedContent .= '<h3>indexedbitmap</h3>';
 						  $bm = $db->indexedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
-						  $swParsedContent .= '<p><a href="index.php?name=special:indexes&index=fillgaps">Fill Gaps</a> (use with caution)';
+
 						  break;
 	case 'currentbitmap': $swParsedContent .= '<h3>currrentbitmap</h3>';
 						  $bm = $db->currentbitmap;
@@ -404,6 +385,18 @@ switch($_REQUEST['index'])
 								break;
 								
 							}
+							if (isset($_REQUEST['q']) && isset($_REQUEST['check']) )
+							{
+								$path = $querypath.$_REQUEST['q'];
+								$results = array();
+								if ($bdb = swDBA_open($path, 'wdt', 'db4'))
+								{
+									$filter = swDBA_fetch('_filter',$bdb);
+									swRelationFilter($filter);
+								}
+								
+								
+							}
 							
 							if (isset($_REQUEST['q']))
 							{
@@ -476,6 +469,12 @@ switch($_REQUEST['index'])
 									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
 								else
 									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
+									
+								if (substr($_REQUEST['q'],-3) !== '.db')
+								{}
+								else
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&check=1">check '.$_REQUEST['q'].'</a> ';
+
 
 								
 								if (stristr($_REQUEST['q'],'.db'))
@@ -485,7 +484,7 @@ switch($_REQUEST['index'])
 									
 										$key = swDBA_firstkey($bdb);
 										$first = true;
-										
+										$lines = array();
 										while($key)
 										{
 											if (substr($key,0,1)=='_') { $key = swDBA_nextkey($bdb); continue;}
@@ -500,15 +499,26 @@ switch($_REQUEST['index'])
 											}
 											
 											
-											$fields = @array_values(@unserialize(swDBA_fetch($key,$bdb)));
+											$fields = array_values(unserialize(swDBA_fetch($key,$bdb)));
 											
+											$fields2 = array();
 											if (is_array($fields))
-											$swParsedContent .= '<br>"'.join('", "',$fields).'"';
+											{
+												foreach($fields as $f)
+													$fields2[] = swUnescape($f);
+											}
 											
+											
+											$lines[] = '<br>"'.join('", "',$fields2).'"';
 													
 											$key = swDBA_nextkey($bdb);
 										}
+										//echo (join('',$lines));
+										
+										$swParsedContent .= join('',$lines);
 										$swParsedContent .= '<br>end data';
+										
+										//echo 'end data '.$swParsedContent;
 									}
 
 									

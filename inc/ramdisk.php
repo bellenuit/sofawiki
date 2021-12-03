@@ -223,6 +223,7 @@ function swIndexRamDiskDB()
 	global $swRamDiskJobs;
 	global $swRamDiskDBfilter;
 	global $db;
+	global $swOvertime;
 	
 	$k = rand(0,$db->lastrevision/1000)*1000; //echo $k;
 	
@@ -231,11 +232,12 @@ function swIndexRamDiskDB()
 	for($i=$k;$i<$k+1000;$i++)
 	{ 
 		if (memory_get_usage()>$swMemoryLimit) break;
-		
-		if (!$db->currentbitmap->getbit($i)) continue;
 		$path = swGetPath($i);
 		if (!file_exists($path)) continue;
-		if (filesize($path)>4096) continue;
+		if (!$db->currentbitmap->getbit($i)) { $k++; continue; }
+		
+		
+		if (filesize($path)>4096) { $k++;  continue; }
 		{
 			$s = file_get_contents($path);
 			$pos = stripos($path,$swRamDiskDBfilter) + strlen($swRamDiskDBfilter);
@@ -243,7 +245,9 @@ function swIndexRamDiskDB()
 			$swRamDiskJobs[$path2] = $s;
 			
 		}
+		
 	}
+	if (count($swRamDiskJobs)) $swOvertime = true;
 	swUpdateRamDiskDB();
 	return true;
 
