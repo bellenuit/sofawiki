@@ -27,7 +27,16 @@ function swDBA_open($file, $mode, $handler)
 	global $testmode;
 	
 	if ($testmode)
-		return new swDBA($file,$mode);
+	{
+		try
+		{
+			return new swDBA($file,$mode);
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+		}
+	}
 	
 	global $swDBAhandler;
 	return dba_open($file,$mode,$swDBAhandler);
@@ -55,8 +64,17 @@ function swDBA_fetch($key,$db)
 {
 	global $testmode;
 	if ($testmode)
-		return $db->fetch($key);
-		
+	{
+		try
+		{
+			return $db->fetch($key);
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+			return "swDBA error ".$err->getMessage();
+		}
+	}	
 	
 	return dba_fetch($key,$db);
 }
@@ -66,7 +84,17 @@ function swDBA_replace($key,$value,$db)
 	
 	global $testmode;
 	if ($testmode)
-		return $db->replace($key,$value);
+	{
+		try
+		{
+			return $db->replace($key,$value);
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+			return false;
+		}
+	}
 	
 	return dba_replace($key,$value,$db);
 }
@@ -75,7 +103,20 @@ function swDBA_sync($db)
 {
 	global $testmode;
 	if ($testmode)
-		return $db->sync();
+	{
+		try
+		{
+			return $db->sync();
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+			// rename file because it is corrupt
+			rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
+			return false;
+		}
+
+	}
 
 	return dba_sync($db);
 }
@@ -85,8 +126,17 @@ function swDBA_delete($key,$db)
 	
 	global $testmode;
 	if ($testmode)
-		return $db->delete($key);
-	
+	{
+		try
+		{
+			return $db->delete($key);
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+			return false;
+		}
+	}
 
 	return dba_delete($key,$db);
 }
@@ -95,8 +145,20 @@ function swDBA_close($db)
 {
 	global $testmode;
 	if ($testmode)
-		return $db->close();
-	
+	{
+		try
+		{
+			return $db->close();
+		}
+		catch (swDBAerror $err)
+		{
+			$err->notify();
+			// rename file because it is corrupt
+			rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
+			return false;
+		}
+
+	}	
 	return dba_close($db);
 }
 
@@ -153,20 +215,20 @@ class swDBA
 		{
 			case 'w':
 			case 'wd':
-			case 'wdt': if (!file_exists($path)) throw new Exception('swDBA file does not exist '.$path);
+			case 'wdt': if (!file_exists($path)) throw new swDBAerror('swDBA file does not exist '.$path);
 						$this->handle = fopen($path,'c+');
 						break;
 			case 'c':
 			case 'cd':  
-			case 'cdt': if (file_exists($path)) throw new Exception('swDBA file does already exist '.$path);
+			case 'cdt': if (file_exists($path)) throw new swDBAerror('swDBA file does already exist '.$path);
 						$this->handle = fopen($path,'c+');
 						break;
 			case 'r':
 			case 'rd':
-			case 'rdt': if (!file_exists($path)) throw new Exception('swDBA file does not exist '.$path);
+			case 'rdt': if (!file_exists($path)) throw new swDBAerror('swDBA file does not exist '.$path);
 						$this->handle = fopen($path,'r');
 						break;
-			default:  throw new Exception('swDBA unknowm mode '.$mode);	
+			default:  throw new swDBAerror('swDBA unknowm mode '.$mode);	
 		}
 		
 		$this->mode = $mode;
@@ -196,7 +258,7 @@ class swDBA
 		
 		
 		if ($this->indexoffset < 0)
-			throw new Exception('swDBA invalid indexoffset '.$this->indexoffset.'< 0');
+			throw new swDBAerror('swDBA invalid indexoffset '.$this->indexoffset.'< 0');
 	//	if ($this->indexoffset > filesize($path))
 	//		throw new Exception('swDBA invalid indexoffset '.$this->indexoffset.' >'.filesize($path));
 		
@@ -268,7 +330,7 @@ class swDBA
 		$offset = $this->index[$key];
 
 		if ($offset < 0)
-			throw new Exception('swDBA invalid offset '.$offset);
+			throw new swDBAerror('swDBA invalid offset '.$offset);
 	//	if ($offset > filesize($path))
 	//		throw new Exception('swDBA invalid offset '.$offset);
 			
@@ -280,13 +342,13 @@ class swDBA
 			if ($fields[0] != $key)
 			{
 				print_r($this->index);
-				throw new Exception('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
+				throw new swDBAerror('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
 			}
 			$size = intval($fields[1]);
 		}
 		else
 		{
-			throw new Exception('swDBA fetch invalid line ('.$line.') '.$this->path.' '. ftell($this->handle));
+			throw new swDBAerror('swDBA fetch invalid line ('.$line.') '.$this->path.' '. ftell($this->handle));
 		}
 		
 		$value = fread($this->handle, $size);
@@ -296,14 +358,16 @@ class swDBA
 	function delete($key)
 	{
 	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new Exception('swDBA delete write not allowed');
+	 		throw new swDBAerror('swDBA delete write not allowed');
 
 	 	if (!in_array($key,$this->keys)) return false;
 	 	
 	 	$this->journal[$key] = FALSE;
 	 	$this->touched = true;
 	 	
-	 $this->keys = array_diff($this->keys, array($key));
+	 	$this->keys = array_diff($this->keys, array($key));
+	 	
+	 	return true;
 	 	
 	 	// write is delayed to sync to make it once for many deletes
 	 	
@@ -313,13 +377,13 @@ class swDBA
 	function replace($key, $value)
 	{
 	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new Exception('swDBA replace write not allowed');
+	 		throw new swDBAerror('swDBA replace write not allowed');
 	 	
-	 	if (strstr($key,TAB)) throw new Exception('swDBA replace invalid key with tab '.$key);
-	 	if (strstr($key,PHP_EOL)) throw new Exception('swDBA replace invalid key with newline '.$key);
+	 	if (strstr($key,TAB)) throw new swDBAerror('swDBA replace invalid key with tab '.$key);
+	 	if (strstr($key,PHP_EOL)) throw new swDBAerror('swDBA replace invalid key with newline '.$key);
 	 	
 	 	$v = $this->fetch($key);
-	 	if (!strcmp($v,$value)) return; // 0 = binary equal 
+	 	if (!strcmp($v,$value)) return true; // 0 = binary equal 
 	 	
 	 	/*echotime($key);
 	 	echotime($value);
@@ -330,12 +394,14 @@ class swDBA
 	 	
 	 	if (!in_array($key, $this->keys)) $this->keys[] = $key;
 	 	
+	 	return true;
+	 	
 	 	// write is delayed to sync to make it once for many deletes
 	}
 	
 	function sync()
 	{
-	 	if (!$this->touched) return;
+	 	if (!$this->touched) return true;
 	 	
 	 	global $swRoot;
 		
@@ -344,7 +410,7 @@ class swDBA
 	 	
 	 	
 	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new Exception('swDBA replace sync not allowed');
+	 		throw new swDBAerror('swDBA replace sync not allowed');
 	 		
 	 		
 	 	//swSemaphoreSignal($this->path); 
@@ -360,7 +426,7 @@ class swDBA
 	 	if (!$lock)
 	 	{
 		 	echotime('dba_sync failed '.$this->path);
-		 	return;
+		 	return false;
 	 	}
 	 	
 	 	
@@ -441,6 +507,8 @@ class swDBA
 		$this->touched = false;
 		
 		echotime('sync end');
+		
+		return true;
 	}
 
 	function close()
@@ -481,6 +549,22 @@ class swDBA
 	
 
 		
+}
+
+class swDBAerror extends Exception
+{
+	function notify()
+	{
+		global $username;
+		global $name;
+		global $action;
+		global $query;
+		global $lang;
+		$error = $this->getMessage();
+		$message = $this->getFile().' '.$this->getLine();
+		
+		swLog($username,$name,$action,$query,$lang,'','',$error,'',$message,'');
+	}
 }
 
 

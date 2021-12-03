@@ -212,6 +212,7 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 			break;
 		
 		if (!$db->indexedbitmap->getbit($rev)) continue;
+		if (!$db->currentbitmap->getbit($rev)) { $db->bloombitmap->setbit($rev); continue; }
 		if ($db->bloombitmap->getbit($rev)) continue;
 		
 		// sometimes the bloombitmap is corrupt or empty, but the bloom is actually there for the current revision

@@ -360,6 +360,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	// find already searched revisions
 	$mdfilter = $filter;
+	$mdfilter .= 'v2'; // create new hashes for swdba
 	$mdfilter = urlencode($mdfilter);
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$bdbfile = $cachefilebase.'.db';
@@ -372,13 +373,13 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$bdbrwritable = true;
 	
 	if (file_exists($bdbfile))
-		$bdb = @dba_open($bdbfile, 'wdt', 'db4');
+		$bdb = swdba_open($bdbfile, 'wdt', 'db4');
 	else
-		$bdb = @dba_open($bdbfile, 'c', 'db4');	
+		$bdb = swdba_open($bdbfile, 'c', 'db4');	
 	if (!$bdb)
 	{
 		// try read only
-		$bdb = @dba_open($bdbfile, 'rdt', 'db4');
+		$bdb = swdba_open($bdbfile, 'rdt', 'db4');
 		
 				
 		if (!$bdb)
@@ -389,7 +390,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 
 	}
 	if ($bdbrwritable)
-		dba_replace('_filter',$filter,$bdb);
+		swdba_replace('_filter',$filter,$bdb);
 	
 	
 	// echo $bdbfile;
@@ -397,8 +398,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'.db" target="_blank">'.md5($mdfilter).'.db</a> ');
 
 	
-	if ($s = dba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
-	if ($s = dba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
+	if ($s = swdba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
+	if ($s = swdba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
 	
 	$cached = $bitmap->countbits();
 	echotime('cached '. $cached);
@@ -437,7 +438,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			$urldbpath = $db->pathbase.'indexes/urls.db';
 			if (file_exists($urldbpath))
-			$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+			$urldb = swdba_open($urldbpath, 'rdt', 'db4');
 			if (!@$urldb)
 			{
 				echotime('urldb failed');
@@ -445,7 +446,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			else
 			{				
 				
-				$r0 = dba_firstkey($urldb);		
+				$r0 = swdba_firstkey($urldb);		
 				
 				do 
 				{
@@ -456,7 +457,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					
 					if (!$tocheckbitmap->getbit($r)) continue;
 					
-					$n = dba_fetch($r0,$urldb);
+					$n = swdba_fetch($r0,$urldb);
 					$n = substr($n,2); // status space
 					
 					if (!stristr($n,':')) $n= 'main:'.$n;
@@ -514,7 +515,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 					}
 				
-				} while ($r0 = dba_nextkey($urldb));
+				} while ($r0 = swdba_nextkey($urldb));
 				
 			
 			} // else db failed		
@@ -908,7 +909,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						}
 						
 						if ($linehascontent)
-							dba_replace($primary,serialize($line),$bdb);
+							swdba_replace($primary,serialize($line),$bdb);
 					}
 					$bitmap->setbit($k);
 				}
@@ -951,25 +952,25 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	$d = array();	
 	
-	dba_sync($bdb);
+	swdba_sync($bdb);
 	
-	$key = dba_firstkey($bdb);
+	$key = swdba_firstkey($bdb);
 
 	
 	while($key)
 	{
-		if (substr($key,0,1)=='_') { $key = dba_nextkey($bdb); continue;}
+		if (substr($key,0,1)=='_') { $key = swdba_nextkey($bdb); continue;}
 		
 		$keys = explode('-',$key);
 		$kr = $keys[0];
 		
 		if (!$db->currentbitmap->getbit($kr))
 		{
-			dba_delete($key,$bdb);
+			swdba_delete($key,$bdb);
 			$bitmap->unsetbit($kr);
 		}
 		
-		$d = unserialize(dba_fetch($key,$bdb));
+		$d = @unserialize(swdba_fetch($key,$bdb)); // can be wrong
 		$dn = @$d['_url'];
 		
 		if (!$searcheverywhere && stristr($dn,':'))
@@ -990,23 +991,23 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		}
 
 				
-		$key = dba_nextkey($bdb);
+		$key = swdba_nextkey($bdb);
 	}
 	
 	if ($bdbrwritable)
 	{	
 		// dba_replace('_filter',$filter,$bdb);
-		dba_replace('_overtime',serialize($overtime),$bdb);
-		dba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
-		dba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
+		swdba_replace('_overtime',serialize($overtime),$bdb);
+		swdba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
+		swdba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
 	$bitmap->hexit();
-		dba_replace('_bitmap',serialize($bitmap),$bdb);
+		swdba_replace('_bitmap',serialize($bitmap),$bdb);
 	$checkedbitmap->hexit();
-		dba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+		swdba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
 		
 	}
 	
-	dba_close($bdb);
+	swdba_close($bdb);
 	
 	
 	if ($d)
@@ -1067,7 +1068,7 @@ function swRelationSearch($term, $start=1, $limit=100, $template="")
 
 {
 
-echo "rshere";
+
 	
 global $lang;
 $previous = ' <nowiki><a href=\'index.php?action=search&start='.($start-$limit).'&query='.$term.'\'>'.swSystemMessage('previous',$lang).'</a></nowiki>';
@@ -1085,8 +1086,7 @@ update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph
 project _name
 
 label _name ""
-print grid '.$limit;
-
+print space';
 
 global $swSearchNamespaces;
 
@@ -1112,7 +1112,7 @@ write "paragraphs"
 filter _namespace "'.$namespace.'", _name "'.$term.'", _displayname, _paragraph
 union
 select trim(_paragraph) !== "" and substr(_paragraph,0,1) !== "#" and substr(_paragraph,0,2) !== "{{" and substr(_paragraph,0,6) !== "<code>"  and substr(_paragraph,0,2) !== "{|"
-extend _nameint = regexreplace(_name,"\/\w\w","")
+extend _nameint = _name // regexreplace(_name,"\/\w\w","") // remove sublanguage pages
 // print grid 20
 project _nameint, _paragraph count, _paragraph first
 rename _nameint _name, _paragraph_first _paragraph
@@ -1179,7 +1179,8 @@ while i < c
 if substr(v,i,1) == " " or substr(v,i,1) == "|"
 if i > l
 set s = substr(v,l,i-l)
-update _paragraph = regexreplacemod(_paragraph,s,"\'\'\'".s."\'\'\'","i")
+set bold = _singlequote._singlequote._singlequote
+update _paragraph = regexreplacemod(_paragraph,s,bold.s.bold,"i")
 end if
 set l = i + 1
 end if
@@ -1209,6 +1210,9 @@ $s = $lh->run($q);
 // echo $s;
 
 $s = str_replace("_name\t_paragraph",'',$s); // hack because raw includes header
+
+
+//echo $s;
 
 return $s;
 

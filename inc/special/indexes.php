@@ -23,35 +23,34 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <a href="index.php?name=special:indexes&index=urls">urls</a>
-<a href="index.php?name=special:indexes&index=bloom">bloom</a>
-<a href="index.php?name=special:indexes&index=queries">queries</a>';
+';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 $swParsedContent .= ' <a href="index.php?name=special:indexes&index=db">db</a>';
-$swParsedContent .=  '<br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
+$swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloom</a>
+<a href="index.php?name=special:indexes&index=queries">queries</a>
+<br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
 <br>current = '. $db->currentbitmap->countbits().'
 <br>bloom = '. $db->bloombitmap->countbits().'
-<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>
-<a href="index.php?name=special:indexes&index=indexnames">Index Names</a>
-<a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a>';
+<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 $swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=docron">Do Cron</a>
-
-';
+$swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
+<a href="index.php?name=special:indexes&index=indexnames">Index Names</a> 
+<a href="index.php?name=special:indexes&index=docron">Do Cron</a>';
 
 $swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
 $swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
-$swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
 
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Reset Bitmaps, Index Names, Index Bloom, Reset Bitmaps</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Index DB, Index Bloom, Index Names, Reset Bitmaps, Rebuild Index</i>";
 
 
 $done = '';
@@ -62,6 +61,8 @@ $done = '';
 		if (is_array($files))
 			foreach($files as $file) { unlink($file); }
 		$done .= '<p>Deleted ramdisk';
+		swUnlink($swRoot.'/site/indexes/records.db');
+		$swOvertime = true;
 		
 	}
 
@@ -109,6 +110,9 @@ $done = '';
 	 	swUnlink($swRoot.'/site/indexes/bloombitmap.txt');
 		
 		swClearBloom();	
+		
+		swUnlink($swRoot.'/site/indexes/bloom.raw');
+	 	swUnlink($swRoot.'/site/indexes/bloombitmap.txt');
 	
 		$done .= '<p>Deleted bloom';
 	}
@@ -241,7 +245,7 @@ switch($_REQUEST['index'])
 							if (substr($k,0,1)==' ') $revisions++;
 								else $urls++;
 						}
-						$swParsedContent .= '<p>'.$revisions.' revisions';
+						// $swParsedContent .= '<p>'.$revisions.' revisions';
 						$swParsedContent .= '<p>'.$urls.' urls';
 
 						
@@ -260,7 +264,7 @@ switch($_REQUEST['index'])
 
 							break;*/
 	case 'indexdb' :  
-							swIndexRamDiskDB();		
+							swIndexRamDiskDB();	
 							
 								
 							// no break;	
@@ -423,8 +427,8 @@ switch($_REQUEST['index'])
 								
 								else
 								{
-								
-								$path = $querypath.$_REQUEST['q'].'.txt';
+									$path = $querypath.$_REQUEST['q'];
+									if (substr($path,-4)!='.txt') $path.= '.txt';
 								if ($handle = fopen($path, 'r'))
 								{
 									$results['goodrevisions'] = array();
@@ -469,7 +473,7 @@ switch($_REQUEST['index'])
 								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, false,2);
 								
 								if (substr($_REQUEST['q'],-3) !== '.db')
-									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'.txt</a> ';
+									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
 								else
 									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
 
@@ -486,9 +490,9 @@ switch($_REQUEST['index'])
 										{
 											if (substr($key,0,1)=='_') { $key = swDBA_nextkey($bdb); continue;}
 											
-											$fields = unserialize(swDBA_fetch($key,$bdb));
+											$fields = @unserialize(swDBA_fetch($key,$bdb));
 											
-											if ($first)
+											if ($first && is_array($fields))
 											{
 												$keys = array_keys($fields);
 												$swParsedContent .= '<p>relation '.join(', ',$keys).'<br>data';
@@ -496,9 +500,9 @@ switch($_REQUEST['index'])
 											}
 											
 											
-											$fields = array_values(unserialize(swDBA_fetch($key,$bdb)));
+											$fields = @array_values(@unserialize(swDBA_fetch($key,$bdb)));
 											
-											
+											if (is_array($fields))
 											$swParsedContent .= '<br>"'.join('", "',$fields).'"';
 											
 													
@@ -532,13 +536,16 @@ switch($_REQUEST['index'])
 							else
 							{
 								$list = querylist();
+								
 								$swParsedContent .= 'count = '.count($list);
+								// $swParsedContent .= print_r($list, true);
 								
 								$i = 0;
 								$lines = array();
 								foreach($list as $k=>$v)
 								{
 							 		//biggest 25 and last 
+							 		
 							 		$t = filemtime($querypath.$v);
 							 		$filesize = floor(filesize($querypath.$v)/1024);
 							 		$d = date('Y-m-d H:i',$t);

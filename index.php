@@ -912,7 +912,7 @@ $menudomains = swGetValue($user->content,'_menu',true);
 // do cron job
 
 //if ($action != 'indexerror' && rand(0,100)<2)
-if ($action != 'indexerror' && !$swOvertime)
+if ($action != 'indexerror' && !isset($swOvertime))
 {
 	swCron();
 }

@@ -48,14 +48,20 @@ elseif (@$swCustomSearch)
 }
 else
 {
+	$wiki = new swWiki;
+	
 	$start = 1; if (isset($_REQUEST['start'])) $start = $_REQUEST['start'];
-	$swParsedContent = swRelationSearch($query,$start,500, @$swSearchTemplate, @$swRelationFilterHook); $swParseSpecial = true;
+	$swParsedContent = swRelationSearch($query,$start,500, @$swSearchTemplate, @$swRelationFilterHook); 		
 	$wiki->content = $swParsedContent;
+	
+	$swParseSpecial = true;
+	
 	
 }
 
 if (@$swParseSpecial)
 {
+	$wiki->parsers = $swParsers;
 	$swParsedContent = $wiki->parse();
 }
 

@@ -63,5 +63,68 @@ function swTranslate($text,$source,$target)
 		return 'Error';
 	
 }
+
+
+function swTranslateUsage()
+{
+	
+	global $swDeeplKey;
+	global $swDeeplFree;
+	
+	
+	
+		
+	// echo "hallo";
+	
+	if (!isset($swDeeplKey)) return '-';
+	
+	$ch = curl_init();
+
+	if (isset($swDeeplFree) && $swDeeplFree)
+		curl_setopt($ch, CURLOPT_URL, 'https://api-free.deepl.com/v2/usage');
+	else
+		curl_setopt($ch, CURLOPT_URL, 'https://api.deepl.com/v2/usage');
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string 
+	
+	$encoded = '';
+	$encoded .= 'auth_key='.urlencode($swDeeplKey).'&';
+	
+	curl_setopt($ch, CURLOPT_POSTFIELDS,  $encoded);
+	curl_setopt($ch, CURLOPT_HEADER, 0);
+	$result = curl_exec($ch);
+	
+	//print_r($ch);
+	
+	//echo "::";
+	
+	curl_close($ch);
+	
+	//print_r($result);
+	
+	
+	
+	$fields = json_decode($result, true);
+	
+	// print_r($fields);
+	
+	if (!is_array($fields)) return 'Error no JSON';
+		
+	if (array_key_exists('character_count',$fields))
+	{
+		$character_count = $fields['character_count'];
+		
+		if (array_key_exists('character_limit',$fields))
+		{
+			$character_limit = $fields['character_limit'];
+			
+			return $character_count.'/'.$character_limit;
+		}
+		
+	}
+		
+	
+	
+}
 	
 ?>

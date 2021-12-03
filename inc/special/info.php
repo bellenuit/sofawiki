@@ -64,8 +64,13 @@ $swParsedContent = "'''Version''' {{version}}
 '''Pages''' {{countpages}}
 '''Revisions''' {{countrevisions}}
 '''Base path''' ".$swRoot."
-'''RAM disk''' ".$swRamdiskPath."
+'''RAM disk''' ".$swRamdiskPath;
 
+if ($deepl = swTranslateUsage())
+$swParsedContent .=  "
+'''DeepL''' ".swTranslateUsage();
+
+$swParsedContent .= "
 ====Installed Functions====
 {{functions}}
 ====Installed Parsers====

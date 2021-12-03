@@ -21,7 +21,7 @@ class swExpression
 	function __construct($fn = array())
 	{
 		$this->operators[] =  new swExpressionOperator('-u', ':neg',1,11,'L');
-		$this->operators[] =  new swExpressionOperator('not', ':not',1,100,'L');
+		$this->operators[] =  new swExpressionOperator('not', ':not',1,10,'L');
 		
 		$this->operators[] =  new swExpressionOperator('/', ':div',2,9,'L');
 		$this->operators[] =  new swExpressionOperator('*', ':mul',2,9,'L');
@@ -593,6 +593,10 @@ class swExpression
 		$globals['_lt'] = '<';
 		$globals['_gt'] = '>';
 		$globals['_amp'] = '&';
+		$globals['_quote'] = '"';
+		$globals['_singlequote'] = "'";
+		$globals['_backslash'] = '\\';
+		$globals['_slash'] = '/';
 		
 		// unescapge
 		

@@ -122,7 +122,10 @@ function swFileGet($path)
 					return $v;
 				}
 				$s = file_get_contents($path);
-				$swRamDiskJobs[$path2] = $s;
+				
+				// only keep short files
+				if (strlen($s) <= 4096)
+					$swRamDiskJobs[$path2] = $s;
 				
 				if (count($swRamDiskJobs) % 100 == 0)
 				{
@@ -218,37 +221,31 @@ function swUnlink($path)
 function swIndexRamDiskDB()
 {
 	global $swRamDiskJobs;
+	global $swRamDiskDBfilter;
 	global $db;
 	
-	$s = microtime(true);
-	$k = rand(1,$db->lastrevision);
-	$d = 1;
-	$c = @count($swRamDiskJobs);
-	$list = array();
+	$k = rand(0,$db->lastrevision/1000)*1000; //echo $k;
 	
-	for($i=0;$i<200;$i++)
+	global $swMemoryLimit;
+	
+	for($i=$k;$i<$k+1000;$i++)
 	{ 
-		if (!$db->currentbitmap->getbit($i)) continue;
-		$list[$k] = 1;
-		$w = new swWiki;
-		$w->revision = $k;
-		$w->lookup();
-		$c2 = @count($swRamDiskJobs); // check if last was empty
-		if ($c2 > $c) { $d = 1; /*echo $k. ' ';*/} else $d *= 2; // slow step if empty, else open steps
-		$d = $d % $db->lastrevision;
-		$k = ($k + $d) % $db->lastrevision;
-		while(array_key_exists($k,$list))
-		{
-			$k = rand(1,$db->lastrevision);
-		}
-		$c = $c2;
-		$n = microtime(true);
-		if ($n-$s > 500) $i = 500;
+		if (memory_get_usage()>$swMemoryLimit) break;
 		
-		//global $swOvertime;
-		//$swOvertime = true; 
+		if (!$db->currentbitmap->getbit($i)) continue;
+		$path = swGetPath($i);
+		if (!file_exists($path)) continue;
+		if (filesize($path)>4096) continue;
+		{
+			$s = file_get_contents($path);
+			$pos = stripos($path,$swRamDiskDBfilter) + strlen($swRamDiskDBfilter);
+			$path2 = substr($path,$pos);
+			$swRamDiskJobs[$path2] = $s;
+			
+		}
 	}
 	swUpdateRamDiskDB();
+	return true;
 
 }
 
