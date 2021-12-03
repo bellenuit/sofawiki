@@ -1,6 +1,5 @@
 <?php
-	
-include_once 'inc/semaphore.php';
+
 
 // dba replacement functions as dba is not available on all PHP installations
 
@@ -185,7 +184,7 @@ class swDBA
 {
 	// file format
 	/*
-	key + tab + lengthofdata + CRLF + data + CRLF
+	key + tab + lengthofdata + tab + hash + CRLF + data + CRLF
 	...
 	key + tab + dataoffset 
 	...
@@ -316,7 +315,48 @@ class swDBA
 		 	else return true;
 	 	}
 	 	return (isset($this->index[$key]));
-	 }
+	}
+	
+	function length($key, $includejournal = true)
+	{
+		
+		if ($includejournal && isset($this->journal[$key])) return strlen($this->journal[$key]);
+		
+		if (!isset($this->index[$key])) return 0;
+		
+		$offset = $this->index[$key];
+
+		if ($offset < 0)
+			throw new swDBAerror('swDBA invalid offset '.$offset);
+
+		fseek($this->handle, $offset);
+		$line = fgets($this->handle);
+		
+		$size = 0;
+		$hash = '';
+		
+		if (strstr($line,TAB)) 
+		{
+			$fields = explode(TAB,rtrim($line));
+			if (count($fields) < 3)
+			{
+				throw new swDBAerror('swDBA fetch invalid line ('.$line.') not 3 fields at offset '.$offset. ' '.$this->path);
+			}	
+			if ($fields[0] != $key)
+			{
+				throw new swDBAerror('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
+			}
+			$size = intval($fields[1]);
+			$hash = $fields[2]; 
+						
+		}
+		else
+		{
+			throw new swDBAerror('swDBA fetch invalid line ('.$line.') '.$this->path.' '. ftell($this->handle));
+		}
+		
+		return $size;		
+	}
 
 	
 	function fetch($key, $includejournal = true)
@@ -336,15 +376,24 @@ class swDBA
 			
 		fseek($this->handle, $offset);
 		$line = fgets($this->handle);
+		
+		$size = 0;
+		$hash = '';
+		
 		if (strstr($line,TAB)) 
 		{
-			$fields = explode(TAB,$line);
+			$fields = explode(TAB,rtrim($line));
+			if (count($fields) < 3)
+			{
+				throw new swDBAerror('swDBA fetch invalid line ('.$line.') not 3 fields at offset '.$offset);
+			}	
 			if ($fields[0] != $key)
 			{
-				print_r($this->index);
 				throw new swDBAerror('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
 			}
 			$size = intval($fields[1]);
+			$hash = $fields[2]; 
+						
 		}
 		else
 		{
@@ -352,6 +401,10 @@ class swDBA
 		}
 		
 		$value = fread($this->handle, $size);
+		if (md5($value) != $hash)
+		{
+			throw new swDBAerror('swDBA fetch invalid hash ('.$hash.') for key ('.$key.') at offset '.$offset);
+		}
 		return $value;		
 	}
 
@@ -472,8 +525,8 @@ class swDBA
 			 	
 			 	$this->index[$k] = $this->indexoffset + $streamoffset; 
 		 	}
-		 	
-		 	$s = $k.TAB.$size.PHP_EOL.$content.PHP_EOL;
+		 	$hash = md5($content);
+		 	$s = $k.TAB.$size.TAB.$hash.PHP_EOL.$content.PHP_EOL;
 		 	$stream [] = $s;
 		 	$streamoffset += strlen($s);		 	
 	 	}
@@ -513,7 +566,12 @@ class swDBA
 
 	function close()
 	{
+
 		$this->sync();
+		
+		if (rand(0,100)>90)
+			$this->optimize();
+
 	}
 	
 	function __destruct()
@@ -535,6 +593,57 @@ class swDBA
 	function optimize()
 	{
 		// rewrite from index, removing the overhead of deleted values
+		
+		// check total size of all elements
+		// if less than 50% then compact
+		
+		if (substr($this->path,-4)=='.tmp') return;
+		
+		
+		$key = $this->firstKey();
+		
+		$length = 0;
+		do 
+		{
+			$length += $this->length($key,false);
+		}
+		while ($key = $this->nextKey());
+		
+		$totallength = filesize($this->path);
+		
+		
+		
+		if ($totallength > 10000 && $length / $totallength < 0.5)
+		{
+			
+			//echo 'optimize';
+			echotime('optimize '.$length.'/'.$totallength);
+			
+			$temp = $this->path.'.tmp';
+			$db = new swDBA($temp,'c');
+			
+			$k = 0;
+			$key = $this->firstKey();
+			do 
+			{
+				$value = $this->fetch($key);
+				$db->replace($key,$value);
+				$k++;
+				if ($k == 500)
+				{
+					$db->sync();
+				}
+				
+				
+			}	
+			while ($key = $this->nextKey());
+			$db->sync();
+			$db->close();
+			
+			rename($temp,$this->path);
+			
+		}
+		
 	}
 	
 	function listDatabases()

@@ -398,8 +398,21 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'.db" target="_blank">'.md5($mdfilter).'.db</a> ');
 
 	
-	if ($s = swdba_fetch('_bitmap',$bdb)) $bitmap = unserialize($s); else $bitmap = new swBitmap;
-	if ($s = swdba_fetch('_checkedbitmap',$bdb)) $checkedbitmap = unserialize($s); else $checkedbitmap = new swBitmap;
+	if ($s = swdba_fetch('_bitmap',$bdb))
+	{
+		$bitmap = @unserialize($s);
+		if ($bitmap === FALSE) $bitmap = new swBitmap;
+	}
+	else 
+		$bitmap = new swBitmap;
+		
+	if ($s = swdba_fetch('_checkedbitmap',$bdb))
+	{
+		$checkedbitmap = @unserialize($s);
+		if ($checkedbitmap === FALSE) $checkedbitmap = new swBitmap;
+	}
+	else 
+		$checkedbitmap = new swBitmap;
 	
 	$cached = $bitmap->countbits();
 	echotime('cached '. $cached);

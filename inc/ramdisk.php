@@ -124,7 +124,7 @@ function swFileGet($path)
 				$s = file_get_contents($path);
 				
 				// only keep short files
-				if (strlen($s) <= 4096)
+				if (strlen($s) <= 10000)
 					$swRamDiskJobs[$path2] = $s;
 				
 				if (count($swRamDiskJobs) % 100 == 0)
