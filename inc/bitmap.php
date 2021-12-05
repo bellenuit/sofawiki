@@ -17,14 +17,14 @@ class swBitmap extends swPersistance
 		//creates the bit string, filled with default value
 		$this->length = 0;
 		$this->redim($l,$default);
-			
+		$this->touched = true;
 		$this->compressionmode = true;
 	}
 	
 	function redim($l, $default = false)
 	{
 		if (intval($l)<$this->length) return; // can only grow
-		
+		$this->touched = true;
 		if ($this->map == '') $this->dehexit();	
 		$oldlength = $this->length;
 		$this->length = intval($l);

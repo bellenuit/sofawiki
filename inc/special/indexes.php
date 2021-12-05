@@ -187,25 +187,30 @@ switch($_REQUEST['index'])
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
-
+						  $missing = $bm->notop();
+						  $swParsedContent .= '<p>Missing<p>'.join(' ',$missing->toarray());
+						  
 						  break;
 	case 'currentbitmap': $swParsedContent .= '<h3>currrentbitmap</h3>';
 						  $bm = $db->currentbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 	case 'deletedbitmap': $swParsedContent .= '<h3>deletedbitmap</h3>';
 						  $bm = $db->deletedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 	case 'protectedbitmap': $swParsedContent .= '<h3>protectedbitmap</h3>';
 						  $bm = $db->protectedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
 						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 
 	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
@@ -213,20 +218,14 @@ switch($_REQUEST['index'])
 						
 						$k = swDBA_firstkey($db->urldb);
 						
-						$result = array();
-						
-						$revisions = 0;
 						$urls = 0;
 						
-						if (substr($k,0,1)==' ') $revisions++; else $urls++;
-						
-						while($k = swDBA_nextkey($db->urldb))
+						if ($k !== FALSE)
 						{
-							
-							if (substr($k,0,1)==' ') $revisions++;
-								else $urls++;
-						}
-						// $swParsedContent .= '<p>'.$revisions.' revisions';
+							$urls = 1;
+							while($k = swDBA_nextkey($db->urldb)) $urls++;
+						}						
+						
 						$swParsedContent .= '<p>'.$urls.' urls';
 
 						
@@ -283,6 +282,7 @@ switch($_REQUEST['index'])
 
 							  $swParsedContent .= '<p>length: '.$counter;
 							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 							  
 							 
 							  
@@ -340,25 +340,9 @@ switch($_REQUEST['index'])
 									
 									// if ($c0 < 2000)
 									$arr = $bm->toarray();
-									rsort($arr);
+									
 									$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
-									
-									// show raw bloom
-									
-									/*
-									$bitmap = new swBitmap;
-									$path = $swRoot.'/site/indexes/bloom.raw';
-									$raw = file_get_contents($path);
-									$bitmap->init(strlen($raw)*8);
-									$bitmap->map = $raw;
-									
-									$c = $bitmap->countbits();
-									$n = $bitmap->length;
-									
-									$swParsedContent .= '<p>Bloom countbits '.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%';*/
-
-																		 
-									
+																	
 									
 									
 						 		}

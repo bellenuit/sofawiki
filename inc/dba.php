@@ -71,6 +71,11 @@ function swDBA_fetch($key,$db)
 		catch (swDBAerror $err)
 		{
 			$err->notify();
+			
+			// if one hash is not ok, we should delete the file?
+			if (strstr($err->getMessage(),'swDBA fetch invalid hash'))
+				rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
+			
 			return "swDBA error ".$err->getMessage();
 		}
 	}	
@@ -209,7 +214,7 @@ class swDBA
 	function __construct($path, $mode)
 	{
 		global $swRoot;
-		echotime('dba_open '.$mode.' '.str_replace($swRoot,'',$path));
+		// echotime('dba_open '.$mode.' '.str_replace($swRoot,'',$path));
 		switch($mode)
 		{
 			case 'w':
@@ -404,6 +409,9 @@ class swDBA
 		if (md5($value) != $hash)
 		{
 			throw new swDBAerror('swDBA fetch invalid hash ('.$hash.') for key ('.$key.') at offset '.$offset);
+			
+			// we should del
+			
 		}
 		return $value;		
 	}
@@ -499,7 +507,7 @@ class swDBA
 	 	
 	 	foreach($this->journal as $k=>$v)
 	 	{
-		 	if ($f) echotime('dba_sync '.$k);
+		 	// if ($f) echotime('dba_sync '.$k);
 		 	$f = false;
 		 	
 		 	if ($v === false) // delete
@@ -559,7 +567,7 @@ class swDBA
 		
 		$this->touched = false;
 		
-		echotime('sync end');
+		// echotime('sync end');
 		
 		return true;
 	}
@@ -597,6 +605,8 @@ class swDBA
 		// check total size of all elements
 		// if less than 50% then compact
 		
+		return; // desactivé
+		
 		if (substr($this->path,-4)=='.tmp') return;
 		
 		
@@ -620,27 +630,29 @@ class swDBA
 			echotime('optimize '.$length.'/'.$totallength);
 			
 			$temp = $this->path.'.tmp';
-			$db = new swDBA($temp,'c');
+			if (file_exists($temp))	unlink($temp);
+			$dbtemp = new swDBA($temp,'c');
 			
 			$k = 0;
 			$key = $this->firstKey();
 			do 
 			{
 				$value = $this->fetch($key);
-				$db->replace($key,$value);
+				$dbtemp->replace($key,$value);
 				$k++;
 				if ($k == 500)
 				{
-					$db->sync();
+					$dbtemp->sync();
 				}
 				
 				
 			}	
 			while ($key = $this->nextKey());
-			$db->sync();
-			$db->close();
-			
-			rename($temp,$this->path);
+			$dbtemp->sync();
+			$dbtemp->close();
+		
+			if (file_exists($temp))
+				rename($temp,$this->path);
 			
 		}
 		

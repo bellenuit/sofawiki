@@ -122,6 +122,8 @@ function swGetBloomBitmapFromTerm($term)
 						 			
 	$hashes = swGetHashesFromTerm($term);
 	
+	// print_r($hashes);
+	
 	global $swMemoryLimit;
 	 	
 	foreach($hashes as $h)
@@ -179,7 +181,7 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 	
 	if (!$db->bloombitmap) return;
 	$db->bloombitmap->redim($db->lastrevision+1);
-	
+	$db->bloombitmap->save();
 	
 	swSemaphoreSignal('bloom1');	
 	$fpt = fopen($path,'c+');
@@ -335,7 +337,7 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 	swSemaphoreRelease('bloom2');
 	//echotime('done');
 	
-	
+	$db->bloombitmap->save();
 	
 	return $i;
 	 
@@ -346,12 +348,14 @@ function swOpenBloom()
 {
 	global $swBloomIndex;
 	global $swRoot;
+	global $db;
 	$path = $swRoot.'/site/indexes/bloom.raw';
 	if (file_exists($path))
 	{
 		@fclose($swBloomIndex);
 		$swBloomIndex = fopen($path,'r');
 	}
+	
 }
 
 $swBloomIndex = '';

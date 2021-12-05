@@ -127,7 +127,7 @@ function swFileGet($path)
 				if (strlen($s) <= 10000)
 					$swRamDiskJobs[$path2] = $s;
 				
-				if (count($swRamDiskJobs) % 100 == 0)
+				if (isset($swRamDiskJobs) && count($swRamDiskJobs) % 100 == 0)
 				{
 					
 					swUpdateRamDiskDB();
@@ -229,23 +229,21 @@ function swIndexRamDiskDB()
 	
 	global $swMemoryLimit;
 	
-	for($i=$k;$i<$k+1000;$i++)
+	for($i=$k;$i<$k+2000;$i++)
 	{ 
 		if (memory_get_usage()>$swMemoryLimit) break;
+		if ($db->indexedbitmap->getbit($i) && !$db->currentbitmap->getbit($i)) continue;
 		$path = swGetPath($i);
 		if (!file_exists($path)) continue;
-		if (!$db->currentbitmap->getbit($i)) { $k++; continue; }
+		if (filesize($path)>4096) continue;
 		
+		$s = file_get_contents($path);
+		$pos = stripos($path,$swRamDiskDBfilter) + strlen($swRamDiskDBfilter);
+		$path2 = substr($path,$pos);
+		$swRamDiskJobs[$path2] = $s;
 		
-		if (filesize($path)>4096) { $k++;  continue; }
-		{
-			$s = file_get_contents($path);
-			$pos = stripos($path,$swRamDiskDBfilter) + strlen($swRamDiskDBfilter);
-			$path2 = substr($path,$pos);
-			$swRamDiskJobs[$path2] = $s;
-			
-		}
-		
+		if (count($swRamDiskJobs)>500) swUpdateRamDiskDB();
+				
 	}
 	if (count($swRamDiskJobs)) $swOvertime = true;
 	swUpdateRamDiskDB();

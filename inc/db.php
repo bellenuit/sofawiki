@@ -186,14 +186,6 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->bloombitmap->persistance = $this->pathbase.'indexes/bloombitmap.txt';
 		if (file_exists($this->bloombitmap->persistance))
 			$this->bloombitmap->open();
-
-		/*
-		$this->shortbitmap = new swBitmap;
-		$this->shortbitmap->persistance = $this->pathbase.'indexes/shortbitmap.txt';
-		if (file_exists($this->shortbitmap->persistance))
-			$this->shortbitmap->open();
-		*/
-			
 			
 			
 		$urldbpath = $this->pathbase.'indexes/urls.db';
@@ -451,7 +443,7 @@ class swDB extends swPersistance //extend may be obsolete
 			if ($this->indexedbitmap->getbit($r)) continue;
 			$nowtime = microtime(true);	
 			$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
-			if (intval($dur)>intval($swMaxOverallSearchTime) || memory_get_usage()>$swMemoryLimit)
+			if (intval($dur)>intval($swMaxOverallSearchTime*5) || memory_get_usage()>$swMemoryLimit)
 			{
 				echotime('overtime INDEX');
 				$swOvertime = true;
@@ -511,11 +503,21 @@ class swDB extends swPersistance //extend may be obsolete
 				  	switch($status)
 				  	{
 					 	 case 'o' :	$this->currentbitmap->setbit($rev); break;
-					 	 case 'p' :	$this->currentbitmap->setbit($rev); $this->protectedbitmap->setbit($rev); break;
-					 	 case 'd' : 	$this->deletedbitmap->setbit($rev);
+					 	 case 'p' :	$this->currentbitmap->setbit($rev); 
+					 	 			$this->protectedbitmap->setbit($rev); break;
+					 	 case 'd' : $this->deletedbitmap->setbit($rev); break;
 					 	 default  :	$error = true;	
 				  	}
 				  	if (!$error) $this->indexedbitmap->setbit($rev);
+				  	
+				  	// unset the rest - is this needed as we start at unset?
+				  	/*
+				  	while (count($revs))
+				  	{
+					  	$rev = array_shift($revs);
+					  	$this->currentbitmap->unsetbit($rev);
+				  	}
+				  	*/
 				  
 				  }
 			  }
