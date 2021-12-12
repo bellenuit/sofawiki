@@ -425,7 +425,7 @@ function swAutoCropResize2($img0, $destw, $desth, $analyze = false)
 	}
 	
 	$back = ImageCreateTrueColor($destw,$desth);
-	swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceha);
+	swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);
 // 	echo 'proxy';
 	return $back;
 }
