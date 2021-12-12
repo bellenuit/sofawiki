@@ -920,6 +920,10 @@ if ($action != 'indexerror' && !isset($swOvertime))
 $db->close(); 
 session_write_close();
 
+if (isset($swOvertime) && $swOvertime)
+	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
+
+
 echotime("skin");
 
 // apply page skin

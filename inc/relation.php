@@ -612,8 +612,8 @@ class swRelationLineHandler
 
 									break;
 				case 'input': 		$fieldgroup = explode(',',$body);
-									$this->result .=  $ptag.'<nowiki><form method="post" action="index.php"></nowiki>';
-									$this->result .= '<nowiki><input type="hidden" name="name" value="</nowiki>{{currentname}}<nowiki>">'.$ptag2.'</nowiki>';
+									$this->result .=  $ptag.'<nowiki><form method="post" action="index.php?name=</nowiki>{{nameurl |{{currentname}} }}<nowiki>"></nowiki>';
+									//$this->result .= '<nowiki><input type="hidden" name="name" value="</nowiki>{{currentname}}<nowiki>">'.$ptag2.'</nowiki>';
 									if (isset($_REQUEST['q']))
 									$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
 
@@ -1377,6 +1377,7 @@ class swRelationLineHandler
 			}		
 		}
 		
+		/*
 		global $swOvertime; 
 		global $lang;		
 		$overtimetext = '';
@@ -1385,7 +1386,9 @@ class swRelationLineHandler
 		if (!$internal)
 			return $this->result.$overtimetext; 
 		else
-			return $this->result;
+		
+		*/
+		return $this->result;
 			
 			  
 		
@@ -3154,6 +3157,7 @@ class swRelation
 		if (count($this->tuples)>10000) echotime('toHTML '.count($this->tuples));
 		
 		$grid = false;
+		$linegrid = false;
 		$edit = '';
 		$editfile = '';
 		
@@ -3162,7 +3166,12 @@ class swRelation
 		if (substr($limit,0,4) == 'grid')
 		{
 			$limit = substr($limit,4);
-			// $limit = '';
+			$grid = true;
+		}
+		elseif (substr($limit,0,8) == 'linegrid')
+		{
+			$limit = substr($limit,8);
+			$linegrid = true; 
 			$grid = true;
 		}
 		elseif (substr($limit,0,4) == 'edit')
@@ -3205,12 +3214,14 @@ class swRelation
 		
 		if ($grid)
 		{
-			$lines[] = '<nowiki><div><input type="text" id="input'.$id.'" class="sortable" onkeyup="tablefilter('.$id.')" placeholder="Filter..." title="Type in a name"></div></nowiki>';
+			$lines[] = '<nowiki><div><input type="text" id="input'.$id.'" class="sortable" onkeyup="tablefilter('.$id.')" placeholder="Filter..." title="gridfilter"></div></nowiki>';
 
 		}
 		
-		if ($grid)
+		if ($linegrid)
 			$lines[]= '{| class="sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
+		elseif ($grid)
+			$lines[]= '{| class="print sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
 		else
 			$lines[]= '{| class="print" ';
 		

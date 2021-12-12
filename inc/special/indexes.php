@@ -215,18 +215,7 @@ switch($_REQUEST['index'])
 
 	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
 	
-						
-						$k = swDBA_firstkey($db->urldb);
-						
-						$urls = 0;
-						
-						if ($k !== FALSE)
-						{
-							$urls = 1;
-							while($k = swDBA_nextkey($db->urldb)) $urls++;
-						}						
-						
-						$swParsedContent .= '<p>'.$urls.' urls';
+						$swParsedContent .= '<p>'.swDBA_count($db->urldb).' urls';
 
 						
 
@@ -483,7 +472,9 @@ switch($_REQUEST['index'])
 											}
 											
 											
-											$fields = array_values(unserialize(swDBA_fetch($key,$bdb)));
+											$values = unserialize(swDBA_fetch($key,$bdb));
+											if (is_array($values))
+												$fields = array_values($values);
 											
 											$fields2 = array();
 											if (is_array($fields))
@@ -568,7 +559,8 @@ switch($_REQUEST['index'])
 											else
 											{
 												$bdb = swDBA_open($querypath.$v,'r','db4');
-												$results['filter'] = swDBA_fetch('_filter',$bdb);
+												if ($bdb)
+													$results['filter'] = swDBA_fetch('_filter',$bdb);
 												
 												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.$filesize.' kB <br>filter '.@$results['filter'];
 												

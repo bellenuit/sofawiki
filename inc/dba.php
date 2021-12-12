@@ -8,24 +8,21 @@ define("LF", "\n");
 define("TAB", "\t");
 
 $swDBApool = array();
-
-$swDBAhandler = 'db4';
+$swDBAhandler = 'sqlite3';
 
 if (function_exists('dba_handlers'))
 {
 	if (!in_array('db4', dba_handlers())) $swDBAhandler = 'flatfile';
 }
 else
-	$swDBAhandler = 'flatfile';
-
-$testmode = 1;
+	$swDBAhandler = 'sqlite3';
 
 
 function swDBA_open($file, $mode, $handler)
 {
-	global $testmode;
+	global $swDBAhandler;
 	
-	if ($testmode)
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -33,36 +30,45 @@ function swDBA_open($file, $mode, $handler)
 		}
 		catch (swDBAerror $err)
 		{
+			echotime('db busy');
 			$err->notify();
+			return;
 		}
 	}
 	
-	global $swDBAhandler;
-	return dba_open($file,$mode,$swDBAhandler);
-}
-
-function swDBA_nextkey($db)
-{
-	global $testmode;
-	if ($testmode)
-		return $db->nextkey();
-
-	return dba_nextkey($db);
+	return @dba_open($file,$mode,$swDBAhandler);
 }
 
 function swDBA_firstkey($db)
 {
-	global $testmode;
-	if ($testmode)
-		return $db->firstkey();
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3') return $db->firstkey();
 		
-	return dba_firstkey($db);
+	return @dba_firstkey($db);
 }
+
+function swDBA_nextkey($db)
+{
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3') return $db->nextkey();
+
+	return @dba_nextkey($db);
+}
+
+function swDBA_exists($key,$db)
+{
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
+		return $db->exists($key);
+	
+	return @dba_exists($key,$db);
+}
+
 
 function swDBA_fetch($key,$db)
 {
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -70,24 +76,18 @@ function swDBA_fetch($key,$db)
 		}
 		catch (swDBAerror $err)
 		{
-			$err->notify();
-			
-			// if one hash is not ok, we should delete the file?
-			if (strstr($err->getMessage(),'swDBA fetch invalid hash'))
-				rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
-			
-			return "swDBA error ".$err->getMessage();
+			$err->notify();			
+			return false;
 		}
 	}	
 	
-	return dba_fetch($key,$db);
+	return @dba_fetch($key,$db);
 }
 
 function swDBA_replace($key,$value,$db)
 {
-	
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -99,14 +99,14 @@ function swDBA_replace($key,$value,$db)
 			return false;
 		}
 	}
-	
-	return dba_replace($key,$value,$db);
+		
+	return @dba_replace($key,$value,$db);
 }
 
 function swDBA_sync($db)
 {
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -115,21 +115,16 @@ function swDBA_sync($db)
 		catch (swDBAerror $err)
 		{
 			$err->notify();
-			// rename file because it is corrupt
-			rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
 			return false;
 		}
-
 	}
-
-	return dba_sync($db);
+	return @dba_sync($db);
 }
 
 function swDBA_delete($key,$db)
 {
-	
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -141,14 +136,13 @@ function swDBA_delete($key,$db)
 			return false;
 		}
 	}
-
-	return dba_delete($key,$db);
+	return @dba_delete($key,$db);
 }
 
 function swDBA_close($db)
 {
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 	{
 		try
 		{
@@ -157,506 +151,213 @@ function swDBA_close($db)
 		catch (swDBAerror $err)
 		{
 			$err->notify();
-			// rename file because it is corrupt
-			rename($db->path,$db->path.date("Y-m-d H:i:s").'.crpt');
 			return false;
 		}
 
 	}	
-	return dba_close($db);
+	return @dba_close($db);
 }
 
-function swDBA_exists($key,$db)
-{
-	global $testmode;
-	if ($testmode)
-		return $db->exists($key);
-	
-	return dba_exists($key,$db);
-}
 
 function swDBA_count($db)
 {
-	global $testmode;
-	if ($testmode)
+	global $swDBAhandler;
+	if ($swDBAhandler == 'sqlite3')
 		return $db->count();
 	
-	return 0;
+	return 0; // there is no native function
 }
+
 
 
 class swDBA
 {
-	// file format
-	/*
-	key + tab + lengthofdata + tab + hash + CRLF + data + CRLF
-	...
-	key + tab + dataoffset 
-	...
-	"indexoffset" + CRLF
-	offset + CRLF
+	// using sqlite3 as container
 	
-	
-	*/
-	
-	var $mode; // rd, rdt, wd, wdt, cd, cdt
+	var $db;
+	var $rows;
+	var $journal;
 	var $path;
-	var $handle;
-	var $index = [];
-	var $keys = [];
-	var $journal = [];
-	var $indexoffset;
-	var $keycursor;
-	var $touched;
 	
-	
-	
-	function __construct($path, $mode)
+	function __construct($path)
 	{
 		global $swRoot;
-		// echotime('dba_open '.$mode.' '.str_replace($swRoot,'',$path));
-		switch($mode)
+		$this->db = new SQLite3($path);
+		$this->path = str_replace($swRoot,'',$path);
+		if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
 		{
-			case 'w':
-			case 'wd':
-			case 'wdt': if (!file_exists($path)) throw new swDBAerror('swDBA file does not exist '.$path);
-						$this->handle = fopen($path,'c+');
-						break;
-			case 'c':
-			case 'cd':  
-			case 'cdt': if (file_exists($path)) throw new swDBAerror('swDBA file does already exist '.$path);
-						$this->handle = fopen($path,'c+');
-						break;
-			case 'r':
-			case 'rd':
-			case 'rdt': if (!file_exists($path)) throw new swDBAerror('swDBA file does not exist '.$path);
-						$this->handle = fopen($path,'r');
-						break;
-			default:  throw new swDBAerror('swDBA unknowm mode '.$mode);	
+			throw new swDBAerror('swdba is busy');
 		}
-		
-		$this->mode = $mode;
-		$this->path = $path;
-
-
-		$this->keycursor = 0;
-		$this->keys = [];
-		$this->touched = false;
-		
-		if ($this->mode == 'cd' || $this->mode == 'cdt') { $this->touched = true; return; }
-		
-		$this->readIndex();
-		
-	}
-	
-	function readIndex()
-	{
-		// read index
-		fseek($this->handle,-32,SEEK_END);
-		
-		$tail = fread($this->handle,32); 
-		$key = 'indexoffset'.PHP_EOL;
-		$tail = stristr($tail,$key);
-		$tail = substr($tail,strlen($key));
-		$this->indexoffset = intval($tail);
-		
-		
-		if ($this->indexoffset < 0)
-			throw new swDBAerror('swDBA invalid indexoffset '.$this->indexoffset.'< 0');
-	//	if ($this->indexoffset > filesize($path))
-	//		throw new Exception('swDBA invalid indexoffset '.$this->indexoffset.' >'.filesize($path));
-		
-		fseek($this->handle,$this->indexoffset);
-		$found = false;
-		do 
+			
+		$this->db->exec('PRAGMA journal_mode = OFF'); // we do not use rollback
+		if (!@$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
 		{
-			$line = fgets($this->handle);
-			if (strstr($line,TAB)) 
-			{
-				$fields = explode(TAB,$line);
-				$this->index[$fields[0]] = intval($fields[1]);
-			}
-			else
-				$found = true;
-		} while(!$found);
-		
-		$this->keys = array_keys($this->index);
-		$this->keycursor = 0;
-		
-		// print_r($this->index);
-
+			throw new swDBAerror('swdba create table error '.$this->db->lastErrorMsg());
+		}
+		$this->journal = array();
 	}
 	
+		
 	function firstKey()
 	{	
 		
-		if (!count($this->keys)) return false;
-			
-		$this->keycursor = 0;
+		$this->sync();
 		
-		return $this->keys[$this->keycursor];
+		$statement = $this->db->prepare('SELECT k FROM kv ORDER BY k');
+		$this->rows = $statement->execute();
+
+		if ($this->db->lastErrorCode())
+		{
+			throw new swDBAerror('swdba firstkey error '.$this->db->lastErrorMsg());
+		}
+		
+		if ($r = $this->rows->fetchArray(SQLITE3_ASSOC))
+		{
+			//print_r($r);
+			return $r['k'];
+		}
+		else
+		{
+			//echo "no fetch";
+			return false;
+		}
+			
 	}
 	
 	function nextKey()
 	{
-		$this->keycursor++;
 		
-		//echotime($this->keycursor);
+		if (!$this->rows)
+		{
+			throw new swDBAerror('swdba nextkey without firstkey error');
+		}
 		
-		//echotime(count($this->keys));
+		if ($r = $this->rows->fetchArray(SQLITE3_ASSOC))
+		{
+			return $r['k'];
+		}
+		else
+			return false;
 		
-		if (count($this->keys) <= $this->keycursor+1) return false; 
-		
-		//echotime('.');
-		
-		return $this->keys[$this->keycursor];
 	}
 	
 	function exists($key)
 	{
-	 	if (isset($this->journal[$key]))
-	 	{
-		 	if ($this->journal[$key] === FALSE) return false;
-		 	else return true;
-	 	}
-	 	return (isset($this->index[$key]));
+		if (isset($this->journal[$key])) 
+		{
+			if ($this->journal[$key] === false) return false; else return true;
+		} 
+		
+		$statement = $this->db->prepare('SELECT count(k) as c FROM kv WHERE k = :key');
+		$statement->bindValue(':key', $key);
+		$result = $statement->execute();
+		
+		
+		if ($this->db->lastErrorCode())
+		{
+			throw new swDBAerror('swdba exists error '.$this->db->lastErrorMsg());
+		}
+		
+		$row = $result->fetchArray();
+		
+		if ($row['c']) return true;
+		else return false;
+		
 	}
 	
-	function length($key, $includejournal = true)
+	function fetch($key)
 	{
-		
-		if ($includejournal && isset($this->journal[$key])) return strlen($this->journal[$key]);
-		
-		if (!isset($this->index[$key])) return 0;
-		
-		$offset = $this->index[$key];
-
-		if ($offset < 0)
-			throw new swDBAerror('swDBA invalid offset '.$offset);
-
-		fseek($this->handle, $offset);
-		$line = fgets($this->handle);
-		
-		$size = 0;
-		$hash = '';
-		
-		if (strstr($line,TAB)) 
+		if (isset($this->journal[$key]))
 		{
-			$fields = explode(TAB,rtrim($line));
-			if (count($fields) < 3)
-			{
-				throw new swDBAerror('swDBA fetch invalid line ('.$line.') not 3 fields at offset '.$offset. ' '.$this->path);
-			}	
-			if ($fields[0] != $key)
-			{
-				throw new swDBAerror('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
-			}
-			$size = intval($fields[1]);
-			$hash = $fields[2]; 
-						
-		}
-		else
+			return $this->journal[$key];
+		} 
+		
+		$statement = $this->db->prepare('SELECT v FROM kv WHERE k = :key');
+		$statement->bindValue(':key', $key);
+		$result = $statement->execute();
+		
+		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swDBA fetch invalid line ('.$line.') '.$this->path.' '. ftell($this->handle));
+			throw new swDBAerror('swdba fetch error '.$this->db->lastErrorMsg());
 		}
 		
-		return $size;		
-	}
-
-	
-	function fetch($key, $includejournal = true)
-	{
-		// print_r($this->journal);
-		
-		if ($includejournal && isset($this->journal[$key])) return $this->journal[$key];
-		
-		if (!isset($this->index[$key])) return false;
-		
-		$offset = $this->index[$key];
-
-		if ($offset < 0)
-			throw new swDBAerror('swDBA invalid offset '.$offset);
-	//	if ($offset > filesize($path))
-	//		throw new Exception('swDBA invalid offset '.$offset);
-			
-		fseek($this->handle, $offset);
-		$line = fgets($this->handle);
-		
-		$size = 0;
-		$hash = '';
-		
-		if (strstr($line,TAB)) 
-		{
-			$fields = explode(TAB,rtrim($line));
-			if (count($fields) < 3)
-			{
-				throw new swDBAerror('swDBA fetch invalid line ('.$line.') not 3 fields at offset '.$offset);
-			}	
-			if ($fields[0] != $key)
-			{
-				throw new swDBAerror('swDBA fetch invalid line ('.$line.') for key ('.$key.') at offset '.$offset);
-			}
-			$size = intval($fields[1]);
-			$hash = $fields[2]; 
-						
-		}
-		else
-		{
-			throw new swDBAerror('swDBA fetch invalid line ('.$line.') '.$this->path.' '. ftell($this->handle));
-		}
-		
-		$value = fread($this->handle, $size);
-		if (md5($value) != $hash)
-		{
-			throw new swDBAerror('swDBA fetch invalid hash ('.$hash.') for key ('.$key.') at offset '.$offset);
-			
-			// we should del
-			
-		}
-		return $value;		
+		$row = $result->fetchArray();
+		return $row['v'];
 	}
 
 	function delete($key)
 	{
-	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new swDBAerror('swDBA delete write not allowed');
-
-	 	if (!in_array($key,$this->keys)) return false;
+		$this->journal[$key] = false;
 	 	
-	 	$this->journal[$key] = FALSE;
-	 	$this->touched = true;
-	 	
-	 	$this->keys = array_diff($this->keys, array($key));
-	 	
-	 	return true;
-	 	
-	 	// write is delayed to sync to make it once for many deletes
-	 	
-	 	// delete must be written (as content of length -1) to be able to reconstruct the index from content	 	
 	}
 	
 	function replace($key, $value)
 	{
-	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new swDBAerror('swDBA replace write not allowed');
-	 	
-	 	if (strstr($key,TAB)) throw new swDBAerror('swDBA replace invalid key with tab '.$key);
-	 	if (strstr($key,PHP_EOL)) throw new swDBAerror('swDBA replace invalid key with newline '.$key);
-	 	
-	 	$v = $this->fetch($key);
-	 	if (!strcmp($v,$value)) return true; // 0 = binary equal 
-	 	
-	 	/*echotime($key);
-	 	echotime($value);
-	 	echotime($v);*/
+	 	$test = $this->fetch($key);
+	 	if ($test == $value) return;
 	 	
 	 	$this->journal[$key] = $value;
-	 	$this->touched = true;
 	 	
-	 	if (!in_array($key, $this->keys)) $this->keys[] = $key;
-	 	
-	 	return true;
-	 	
-	 	// write is delayed to sync to make it once for many deletes
+		if (count($this->journal) >= 100) $this->sync();
+		
+		return true;
 	}
 	
 	function sync()
 	{
-	 	if (!$this->touched) return true;
-	 	
-	 	global $swRoot;
+		if (!count($this->journal)) return;
 		
-	 	echotime('dba_sync '.str_replace($swRoot,'',$this->path).' '.count($this->journal));
-	 	
-	 	
-	 	
-	 	if ($this->mode == 'r' || $this->mode == 'rt') 
-	 		throw new swDBAerror('swDBA replace sync not allowed');
-	 		
-	 		
-	 	//swSemaphoreSignal($this->path); 
-	 	
-	 	$locktimeout = 5;
-	 	$i = 0;
-	 	$lock = false;
-	 	while ($i<$locktimeout)
-	 	{
-		 	if (flock($this->handle,LOCK_EX)) { $lock = true; break; }
-		 	else echotime('dba_sync wait '.$this->path);
-	 	}
-	 	if (!$lock)
-	 	{
-		 	echotime('dba_sync failed '.$this->path);
-		 	return false;
-	 	}
-	 	
-	 	
-	 	
-	 	// before changing, we need to read the Index again, because someone else may have changed the file
-	 	$this->readIndex();
-	 	
-	 	fseek($this->handle,$this->indexoffset);
-	 	
-	 	// print_r($this->journal);
-	 	
-	 	$stream = array();
-	 	$streamoffset = 0;
-	 	
-	 	// echotime('dba_sync start');
-	 	$f = true;
-	 	
-	 	foreach($this->journal as $k=>$v)
-	 	{
-		 	// if ($f) echotime('dba_sync '.$k);
-		 	$f = false;
-		 	
-		 	if ($v === false) // delete
-		 	{
-			 	// if it is already deleted do nothing
-			 	if (!isset($this->index[$k])) continue;
-			 	
-			 	$size = -1;
-			 	$content = '';
-			 	
-			 	unset($this->index[$k]);
-			 	
-		 	}
-		 	else
-		 	{
-			 	$p = ftell($this->handle);
-			 	$current = $this->fetch($k, false);  // fetch changes position!
-			 	fseek($this->handle, $p);
-			 	if ($v == $current) continue;
-			 	
-			 	$size = strlen($v);
-			 	$content = $v;
-			 	
-			 	$this->index[$k] = $this->indexoffset + $streamoffset; 
-		 	}
-		 	$hash = md5($content);
-		 	$s = $k.TAB.$size.TAB.$hash.PHP_EOL.$content.PHP_EOL;
-		 	$stream [] = $s;
-		 	$streamoffset += strlen($s);		 	
-	 	}
-	 	
-	 	//echotime('dba_sync write');
-	 	
-	 	foreach($stream as $s)
-	 		fwrite($this->handle,$s);
-	 	
-	 	$this->journal = array();
-	 	
-	 	$this->indexoffset = ftell($this->handle);
 		
-		ksort($this->index);
 		
-		foreach($this->index as $k=>$v)
+		echotime('sync '.count($this->journal));
+		
+		$lines = array();
+		$lines[] = "PRAGMA synchronous=OFF; ";
+		
+		foreach($this->journal as $k=>$v)
 		{
-			fwrite($this->handle, $k.TAB.$v.PHP_EOL);
+			$k = $this->db->escapeString($k);
+			$v = $this->db->escapeString($v);
+			if ($v === FALSE)
+				$lines[]= "DELETE FROM kv WHERE k = '$k' ;";
+			else
+				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";			
 		}
+		$q = join(PHP_EOL,$lines);
+		$lines[] = "PRAGMA synchronous=FULL; ";
+		
+	
+		
+		$this->db->exec($q);
 
-		fwrite($this->handle, 'indexoffset'.PHP_EOL.$this->indexoffset.PHP_EOL);
 		
-		fflush($this->handle);
+		if ($this->db->lastErrorCode())
+		{
+			throw new swDBAerror('swdba sync error '.$this->db->lastErrorMsg());
+		}
 		
-		flock($this->handle,LOCK_UN);
 		
-		//swSemaphoreRelease($this->path); 
+		$this->journal = array();
 		
-		$this->keys = array_keys($this->index);
 		
-		$this->touched = false;
 		
-		// echotime('sync end');
 		
-		return true;
 	}
-
+	
 	function close()
 	{
-
 		$this->sync();
-		
-		if (rand(0,100)>90)
-			$this->optimize();
-
+		// $this->db->close(); DO NOT CLOSE
 	}
 	
 	function __destruct()
 	{
-		$this->close();
-	}
-	
-	// stub
-	function index()
-	{
-		// rebuild index from content, if 
-	}
-	
-	function valid()
-	{
-		// valid if second last line is "indexoffset" and the all lines from indexoffset on are tab separated
-	}
-	
-	function optimize()
-	{
-		// rewrite from index, removing the overhead of deleted values
+		$this->sync();
 		
-		// check total size of all elements
-		// if less than 50% then compact
+		if (rand(0, 100) > 90 || true) $this->db->exec('PRAGMA optimize');
 		
-		return; // desactivé
-		
-		if (substr($this->path,-4)=='.tmp') return;
-		
-		
-		$key = $this->firstKey();
-		
-		$length = 0;
-		do 
-		{
-			$length += $this->length($key,false);
-		}
-		while ($key = $this->nextKey());
-		
-		$totallength = @filesize($this->path);
-		
-		
-		
-		if ($totallength > 10000 && $length / $totallength < 0.5)
-		{
-			
-			//echo 'optimize';
-			echotime('optimize '.$length.'/'.$totallength);
-			
-			$temp = $this->path.'.tmp';
-			if (file_exists($temp))	unlink($temp);
-			$dbtemp = new swDBA($temp,'c');
-			
-			$k = 0;
-			$key = $this->firstKey();
-			do 
-			{
-				$value = $this->fetch($key);
-				$dbtemp->replace($key,$value);
-				$k++;
-				if ($k == 500)
-				{
-					$dbtemp->sync();
-				}
-				
-				
-			}	
-			while ($key = $this->nextKey());
-			$dbtemp->sync();
-			$dbtemp->close();
-		
-			if (file_exists($temp))
-				rename($temp,$this->path);
-			
-		}
-		
-	}
+		$this->db->close();
+	}	
 	
 	function listDatabases()
 	{
@@ -665,10 +366,20 @@ class swDBA
 	
 	function count()
 	{
-		return count($this->keys);
+		$statement = $this->db->prepare('SELECT count(k) as c FROM kv');
+		$result = $statement->execute();
+		
+		if ($this->db->lastErrorCode())
+		{
+			throw new swDBAerror('swdba fetch error '.$this->db->lastErrorMsg());
+		}
+		
+		$row = $result->fetchArray();
+		
+		return $row['c'];
 	}
 	
-
+	
 		
 }
 
@@ -689,59 +400,7 @@ class swDBAerror extends Exception
 }
 
 
-// unittest
-/*
 
-echo '<pre>';
-
-$t = microtime();
-
-function RandomString($n,$eol=false)
-{
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        if ($eol)
-        $characters = '012345 789abcdef hijklmnopq stuvwxyzABCDEFG IJKLMNOPQRSTUVWX '.PHP_EOL;
-        $randstring = '';
-        for ($i = 0; $i < $n; $i++) {
-            $randstring .= $characters[rand(0, strlen($characters)-1)];
-        }
-        return $randstring;
-}
-
-if (file_exists($swRoot.'/site/indexes/test.db'))
-$testdb = new swDBA($swRoot.'/site/indexes/test.db','wd');
-else
-$testdb = new swDBA($swRoot.'/site/indexes/test.db','cd');
-
-echo $testdb->mode.PHP_EOL;
-
-
-
-for($i=1;$i<5;$i++)
-{
-	$k = RandomString(5,false); 
-	$v = RandomString(80,true);
-	$testdb->replace($k,$v);
-}
-
-
-
-$testdb->close();
-
-echo file_get_contents($swRoot.'/site/indexes/test.db');
-echo (microtime()-$t).PHP_EOL;
-// $testdb = new swDBA($swRoot.'/site/indexes/test.db','wd');
-$key = $testdb->firstkey();
-echo $testdb->fetch($key).PHP_EOL;
-$testdb->close();
-echo '.'.PHP_EOL;
-$testdb = new swDBA($swRoot.'/site/indexes/test.db','wd');
-
-$i = $testdb->index;
-
-
-exit;
-*/
 
   
 

@@ -120,6 +120,8 @@ function() {
         var rows = table.querySelectorAll('tr');
         var csv = [];
         for (var i = 0; i < rows.length; i++) {
+	    if (i>0 && rows[i].style.display == "none") continue;    
+	        
         var row = [], cols = rows[i].querySelectorAll('td, th');
         for (var j = 0; j < cols.length; j++) {
             // Clean innertext to remove multiple spaces and jumpline (break csv)
@@ -135,8 +137,13 @@ function() {
             	
             }
             else
-            	
-            	row.push('"' + data + '"');
+            {
+            	n = Number(data)
+            	if (n>0 || data == '0' || data == '0.0' || data == '0.00')
+            		row.push(data);
+            	else
+            		row.push('"' + data + '"');
+            }
 		}
 		if(i==0)
             {
@@ -154,9 +161,9 @@ function() {
 		
 		theid = table.getAttribute('id').replace("table","");
 		form = document.getElementById("form"+theid);
-		file = form.getAttribute("file");
+		// file = form.getAttribute("file");
 		
-		csv.push("write "+'"' + file+'"' );
+		// csv.push("write "+'"' + file+'"' );
 		
 		var csv_string = csv.join('\n');
 		// console.log(csv_string);

@@ -260,7 +260,7 @@ class swWiki extends swRecord
 			if (!$result) 
 				$result = $swMainName;			
 			if ($swLangURL)
-				$result = $subpagelang.'/'.$result;
+				$result = $subpagelang.'/'.swNameURL($this->namewithoutlanguage()); // don't double language
 			if (stristr($this->name,":"))
 				$result = './'.$result; // force relative link
 				

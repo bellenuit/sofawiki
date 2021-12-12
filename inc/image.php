@@ -123,10 +123,15 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 		else
 		{
 			$back = ImageCreateTrueColor($destw,$desth);
-			ImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);  //echo 'normal';
+			swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);  //echo 'normal';
 		}
 
-		imagejpeg($back,$path1,90);
+		if ($destw > 360)
+			imagejpeg($back,$path1,90);
+		else
+			imagejpeg($back,$path1,100);
+
+
 		
 		//echotime('save '.$path1);
 		
@@ -282,7 +287,7 @@ function swAutoCropResize($img0, $destw, $desth)
 
 	
 	$proxy	 = ImageCreateTrueColor($scale,$scale); 
-    ImageCopyResampled($proxy, $img,0 ,0 , 0, 0, $scale, $scale, $sourcew, $sourceh);
+    swImageCopyResampled($proxy, $img,0 ,0 , 0, 0, $scale, $scale, $sourcew, $sourceh);
 // 	return $proxy;
 // 	echo 'after';
 	
@@ -344,7 +349,7 @@ function swAutoCropResize($img0, $destw, $desth)
 	}
 	
 	$back = ImageCreateTrueColor($destw,$desth);
-	ImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);
+	swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);
 // 	echo 'proxy';
 	return $back;
 }
@@ -363,7 +368,7 @@ function swAutoCropResize2($img0, $destw, $desth, $analyze = false)
 
 	
 	$proxy	 = ImageCreateTrueColor($scale,$scale); 
-    ImageCopyResampled($proxy, $img,0 ,0 , 0, 0, $scale, $scale, $sourcew, $sourceh);
+    swImageCopyResampled($proxy, $img,0 ,0 , 0, 0, $scale, $scale, $sourcew, $sourceh);
     
     $sumx = $sumy = $n = 0;
     
@@ -420,13 +425,29 @@ function swAutoCropResize2($img0, $destw, $desth, $analyze = false)
 	}
 	
 	$back = ImageCreateTrueColor($destw,$desth);
-	ImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);
+	swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceha);
 // 	echo 'proxy';
 	return $back;
 }
 
 
-
+function swImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh)
+{
+	// bigger -> linear
+	$scalexy = ($destw + $desth) / ($sourcew + $sourceh);
+	
+	if ($scalexy > 1 && true) // bicubic rescale not ready yet
+		ImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh);
+	else
+	{
+		// first scale down then  place
+		
+		$img2 = imagescale($img,$destw,$desth,IMG_BICUBIC);
+		ImageCopy($back,$img2,$destx, $desty,$sourcex, $sourcey, $destw, $desth);	
+		
+	}
+	
+}
 
 
 ?>

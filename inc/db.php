@@ -56,6 +56,7 @@ function swGetAllRevisionsFromName($name)
 	{
 		$s = swDBA_fetch($url,$db->urldb);
 		$revs = explode(' ',$s);
+		$status = array_shift($revs);
 		rsort($revs,SORT_NUMERIC);
 	}
 	
@@ -116,6 +117,7 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		global $swRoot; 
 		global $swRamdiskPath;
+		global $swOvertime;
 
 		echotime('init');
 		
@@ -202,11 +204,7 @@ class swDB extends swPersistance //extend may be obsolete
 		if ($this->currentbitmap->countbits()==0 ) $bitmaperror = 'current 0';
 		if ($this->lastrevision == 0) $bitmaperror = 'lastrevision 0';
 		
-		if ($bitmaperror)
-		{
-			echotime($bitmaperror);
-			$this->rebuildBitmaps();
-		}
+		
 
 		echotime("db-init ".$this->lastrevision."/" .$lastwrite);
 		
@@ -224,6 +222,13 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->hasindex = true;
 		}
+		
+		if ($bitmaperror && !$swOvertime)
+		{
+			echotime($bitmaperror);
+			$this->rebuildBitmaps();
+		}
+		
 		return;
 	}
 	
@@ -269,9 +274,10 @@ class swDB extends swPersistance //extend may be obsolete
 			$this->shortbitmap->save();
 		}
 		*/
-		$this->urldb->close();
+//		global $testmode; 
+//		if ($testmode) $this->urldb->close();
 		
-		global $swOvertime;
+		global $swOvertime; 
 		if (!$swOvertime)		
 			swIndexBloom(16);
 		
@@ -435,7 +441,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$rebuildstarttime = microtime(true);	
 		$overtime = false;
 		$c=0;
-		
+		$c1 = 0;
 		for($r = $lastindex; $r>=1; $r--)
 		{
 			
@@ -443,9 +449,9 @@ class swDB extends swPersistance //extend may be obsolete
 			if ($this->indexedbitmap->getbit($r)) continue;
 			$nowtime = microtime(true);	
 			$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
-			if (intval($dur)>intval($swMaxOverallSearchTime*5) || memory_get_usage()>$swMemoryLimit)
+			if (intval($dur)>10000 || memory_get_usage()>$swMemoryLimit)
 			{
-				echotime('overtime INDEX');
+				echotime('overtime INDEX '.$c);
 				$swOvertime = true;
 				$swError = "Index incomplete. Please reload";
 				$swIndexError = true;
@@ -453,7 +459,8 @@ class swDB extends swPersistance //extend may be obsolete
 				break;
 			}
 			$this->UpdateIndexes($r);
-			$c++;
+			$c++; $c1++;
+			if ($c1 > 5000) { swDBA_sync($this->urldb); $c1 = 0; }
 		}
 		if (!$swIndexError)
 		{
@@ -462,6 +469,7 @@ class swDB extends swPersistance //extend may be obsolete
 			 echotime('indexes built '.$c.' open '.$r);	
 			 //swIndexBloom(10);
 		}
+		swDBA_sync($this->urldb);
 	}	
 	
 	function rebuildBitmaps()

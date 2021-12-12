@@ -66,8 +66,6 @@ if (@$swParseSpecial)
 }
 
 
-if (isset($swOvertime) && $swOvertime)
-	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action=search&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
 
 
 ?>

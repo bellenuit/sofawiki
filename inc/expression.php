@@ -84,6 +84,7 @@ class swExpression
 		$this->functions[] = new XPAnd;
 		$this->functions[] = new XPOr;
 		$this->functions[] = new XPXor;
+		$this->functions[] = new XPXHint;
 		
 		$this->functions[] = new XPComma;
 		
@@ -2371,6 +2372,58 @@ class XpxOr extends swExpressionFunction
 		else $stack[] = '0';			
 	}
 }
+
+class XpxHint extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':hint' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		
+		$hors = explode('|',$a);
+		$hors2 = array();
+		foreach ($hors as $hor)
+		{
+			$hands = explode(' ',$hor);
+			$hands2 = array();
+			
+			//print_r($hands2);
+			
+			foreach($hands as $hand)
+			{
+				$hands2[] = swNameURL($hand);
+			}
+			
+			$hors2[] = $hands2;
+		}
+		
+		$orfound = false;
+									
+		
+		foreach($hors2 as $hor)
+		{
+			$andfound = true;
+			
+			foreach($hor as $hand)
+			{
+				
+				if ($hand != '' && !strstr($b,$hand)) $andfound = false;
+			}
+			
+			if ($andfound) $orfound = true;
+		}
+		
+		if ($orfound) 
+			$stack[] = 1;
+		else
+			$stack[] = 0;
+		
+		
+	}
+}
+
 
 class XpFormat extends swExpressionFunction
 {

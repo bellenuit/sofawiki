@@ -254,10 +254,29 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($swIndexError) return new swRelation('');
 	
+	
+	$isindex = false;
+	if (substr($filter,0,5)=='index')
+	{
+		$filter2 = substr($filter,5);
+		$filter2 = trim($filter2);
+		if (stristr($filter2,' ')) throw new swExpressionError('filter index invalid field',88);
+		$indexkey = $filter2;
+		$filter2 .= ' "*"';
+		$isindex = true;
+		$pairs = array($filter2);
+		$pairs[] = '_revision';
+		$pairs[] = '_offset';
+		
+	}
+	else
+		$pairs = explode(',',$filter);
+	
+	// print_r($pairs);
 	// parse query
 	// currently, inline comma is not supported on hint.
-	$pairs = explode(',',$filter);
-	$fields = array(); 
+	
+		$fields = array(); 
 	$getAllFields = false;
 	$getContent = false;
 	$newpairs = array();
@@ -334,7 +353,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	// print_r($newpairs);
 	
 	// print_r($fields);
-	$filter = join(', ',$newpairs); // needed values for cache.
+	if (!$isindex)
+		$filter = join(', ',$newpairs); // needed values for cache.
 	echotime('filter '.$filter);
 	
 	// if * there must be at least one hint, we cannot return the entire database
@@ -367,8 +387,45 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($refresh)
 		{ echotime('refresh'); if (file_exists($bdbfile)) unlink($bdbfile);}
+		
+		
+	// if we do not already have a cache, then we try to read all indexes first
+	if (! $isindex && !file_exists($bdbfile))
+	{
+		$q = array();
+		$first = true;
+		$validindex = true;
+		//print_r($pairs);
+		
+		foreach($pairs as $p)
+		{
+			$p = trim($p);
+			$elems = explode(' ',$p);
+			$key = array_shift($elems);
+			$hint = join(' ',$elems);
+			
+			$q[] = 'filter index '.$key;
+			if (trim($hint)) $q[] = 'select hint('.$key.', '.$hint.')';
+			if (!$first) $q[] = 'join natural';
+			$first = false;
+			
+			if (substr($key,0,1)=='_') $validindex = false;
+			
+		}
+
+		if ($validindex)
+		{
+			$indextable = swRelationToTable(join(PHP_EOL,$q));
+		}
+		
+		
+	}
 	
-	$chunks = array();
+	
+	
+	
+	
+	
 	
 	$bdbrwritable = true;
 	
@@ -413,9 +470,31 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	else 
 		$checkedbitmap = new swBitmap;
+		
+	if (isset($indextable))	
+	{
+		//print_r($indextable);
+		foreach($indextable as $row)
+		{
+			echotime(print_r($row,true));
+			$revision = $row['_revision'];
+			$offset = $row['_offset'];
+			unset($row['_revision']);
+			unset($row['_offset']);
+			
+			swdba_replace($revision.'-'.$offset,serialize($row),$bdb);
+			$bitmap->setbit($revision);
+			$checkedbitmap->setbit($revision);	
+		}
+		$cached = $bitmap->countbits();
+		echotime('indexed '. $cached);
+	}
 	
-	$cached = $bitmap->countbits();
-	echotime('cached '. $cached);
+	else	
+	{
+		$cached = $bitmap->countbits();
+		echotime('cached '. $cached);
+	}
 	
 	$db->init();
 	$maxlastrevision = $db->lastrevision;
@@ -722,6 +801,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					
 				}
 
+				$fieldist0 = $fieldlist; //makes a copy
 				
 				
 
@@ -779,7 +859,19 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						{
 							$maxcount = max($maxcount,count($fieldlist[$key]));
 						}
+					}
+					$maxcountall = 1;
+					foreach($fieldist0 as $key=>$v)
+					{
+						$maxcountall = max($maxcountall,count($fieldist0[$key]));
+						
+					}
+					//echo $record->revision.' '.$maxcountall.'; ';
+					if ($isindex)
+					{
+						$maxcount = $maxcountall;
 					}	
+	
 					$fieldlist2 = array();
 					foreach($fieldlist as $key=>$v)
 					{
@@ -790,6 +882,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							for($fi=0;$fi<count($v);$fi++)
 							{
 								$fieldlist2[$fi][$key] = $v[$fi];
+																
 							}
 							for ($fi=count($v);$fi<$maxcount;$fi++)
 							{	
@@ -865,7 +958,18 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if ($found)
 						{
-							$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
+							if ($isindex)
+							{
+								if ($fieldlist2[$fi][$indexkey])
+								{
+									$fieldlist2[$fi]['_offset'] = $fi;
+									$fieldlist2[$fi]['_revision'] = $revision;
+									$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
+								}
+							}
+							else
+							
+								$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
 							
 							
 						
@@ -1077,7 +1181,7 @@ function swRelationToTable($q)
 
 
 
-function swRelationSearch($term, $start=1, $limit=100, $template="")
+function swRelationSearch($term, $start=1, $limit=1000, $template="")
 
 {
 
@@ -1099,7 +1203,7 @@ update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph
 project _name
 
 label _name ""
-print space';
+print linegrid 50';
 
 global $swSearchNamespaces;
 
