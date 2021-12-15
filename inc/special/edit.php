@@ -141,7 +141,7 @@ switch ($wiki->status)
 						
 						//print_r($wiki->internalfields);
 						
-						if (isset($wiki->internalfields['editortemplate']))
+						if (isset($wiki->internalfields['editortemplate']) && $action != 'editmulti')
 						{
 							$v = $wiki->internalfields['editortemplate'];
 							if (is_array($v)) $v = array_shift($v);
@@ -176,7 +176,7 @@ switch ($wiki->status)
 							while(preg_match('/{name\|(.*?)\}/',$s, $match))
 							{
 								$v = $match[1];
-								if ($name) $v = $name;
+								if ($wiki->name) $v = $wiki->name;
 								$s1 = str_replace($match[0],'<input type="text" name="name" value="'.$v.'" style="width:100%">',$s);
 								
 								if ($s1 == $s) break;
@@ -191,7 +191,7 @@ switch ($wiki->status)
 								{
 									
 									$v = $wiki->internalfields[$match[1]];
-									if (is_array($v)) $v = array_shift($v);
+									if (is_array($v)) $v = join('::',$v);
 								}
 									
 
@@ -209,7 +209,7 @@ switch ($wiki->status)
 								{
 									
 									$v = $wiki->internalfields[$match[1]];
-									if (is_array($v)) $v = array_shift($v);
+									if (is_array($v)) $v = join('::',$v);
 								}
 								$s1 = str_replace($match[0],'<textarea name="'.$match[1].'" style="width:100%" rows=10>'.$v.'</textarea>',$s);
 								
@@ -233,7 +233,7 @@ switch ($wiki->status)
 								}
 
 								
-								$s1 = str_replace($match[0],'<textarea name="sublang_'.$match[1].'" width=100% rows=10>'.$v.'</textarea>',$s);
+								$s1 = str_replace($match[0],'<textarea name="sublang_'.$match[1].'" style="width:100%" rows=10>'.$v.'</textarea>',$s);
 								
 								if ($s1 == $s) break;
 								
@@ -298,8 +298,8 @@ switch ($wiki->status)
 							
 							
 							
-							if ($wiki->revision)
-							$swParsedContent .= ' <a href="index.php?action=editsource&name='.$name.'">Edit source</a>';
+							//if ($wiki->revision)
+							//$swParsedContent .= ' <a href="index.php?action=editsource&name='.$name.'">Edit source</a>';
 
 							
 							$swParsedContent .=	'<form method="post" action="index.php?action=modifyeditor">';

@@ -436,7 +436,7 @@ function swImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $des
 	// bigger -> linear
 	$scalexy = ($destw + $desth) / ($sourcew + $sourceh);
 	
-	if ($scalexy > 1 && true) // bicubic rescale not ready yet
+	if ($scalexy > 1 || true) // bicubic rescale not ready yet
 		ImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh);
 	else
 	{
