@@ -350,7 +350,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$namespacefilter = $hors2;
 		
 	}
-	// print_r($newpairs);
+	
+	
 	
 	// print_r($fields);
 	if (!$isindex)
@@ -543,15 +544,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				do 
 				{
 					
-					if (substr($r0,0,1)!=' ') continue; // url
+					if (substr($r0,0,1) == ' ') continue; // url
 					
-					$r = substr($r0,1); // space revision
+					$n = $r0;
 					
-					if (!$tocheckbitmap->getbit($r)) continue;
 					
-					$n = swdba_fetch($r0,$urldb);
-					$n = substr($n,2); // status space
-					
+										
 					if (!stristr($n,':')) $n= 'main:'.$n;
 										
 					if ($namespacefilter and $namespacefilter != '*')
@@ -570,7 +568,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{	
-							
+							$line = swdba_fetch($r0,$urldb);
+							$fs = explode(' ',$line);
+							$st = array_shift($fs);
+							$r = array_shift($fs);
 							
 							$tocheckbitmap->unsetbit($r);
 							$checkedbitmap->setbit($r);
@@ -578,7 +579,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						}
 						else
 						{
-							
+							// echo 'found '.$n;
 						}
 						
 					}
@@ -601,8 +602,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{
+							$line = swdba_fetch($r0,$urldb);
+							$fs = explode(' ',$line);
+							$st = array_shift($fs);
+							$r = array_shift($fs);
+							
 							$tocheckbitmap->unsetbit($r);
 							$checkedbitmap->setbit($r);
+						}
+						else
+						{
+							// echo 'found '.$n;
 						}
 						
 					}

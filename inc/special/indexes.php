@@ -215,8 +215,18 @@ switch($_REQUEST['index'])
 
 	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
 	
-						$swParsedContent .= '<p>'.swDBA_count($db->urldb).' urls';
-
+						$key = swDBA_firstKey($db->urldb);	
+						$urlcount = 0;
+						$revisioncount = 0;
+						do 
+						{
+							if (substr($key,0,1)==' ') $revisioncount++; else $urlcount++;
+								
+						} while ($key = swDBA_nextKey($db->urldb));
+						
+						
+						$swParsedContent .= '<p>'.$urlcount.' urls (includes deleted)';
+						$swParsedContent .= '<p>'.$revisioncount.' revisions';
 						
 
 	

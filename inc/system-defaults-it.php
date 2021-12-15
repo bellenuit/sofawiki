@@ -13,6 +13,7 @@ $swSystemDefaults["dk/it"] = "Dansk";
 $swSystemDefaults["home/it"] = "Home";
 $swSystemDefaults["view/it"] = "Voce";
 $swSystemDefaults["edit/it"] = "Editare";
+$swSystemDefaults["edit-source/it"] = "Editare testo";
 $swSystemDefaults["history/it"] = "Cronologia";
 $swSystemDefaults["new/it"] = "Nuova voce";
 $swSystemDefaults["special/it"] = "Speciale";

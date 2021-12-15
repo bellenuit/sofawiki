@@ -137,9 +137,220 @@ switch ($wiki->status)
 
 	default:
 						
+						// if there is an editor template, use it
 						
+						//print_r($wiki->internalfields);
+						
+						if (isset($wiki->internalfields['editortemplate']))
+						{
+							$v = $wiki->internalfields['editortemplate'];
+							if (is_array($v)) $v = array_shift($v);
+							$_REQUEST['editor'] = $v;
+						}
+						
+						
+						if (isset($_REQUEST['editor']) && $action != 'editsource')
+						{
+														
+							$editorwiki = new swWiki;
+							$editorwiki->name = "Template:".$_REQUEST['editor'];
+							$editorwiki->lookup();
+							$editorwiki->name = ''; // force parse of template
+							$editorwiki->parsers = $swParsers;
+							$editorwiki->parse();
+							
+							$s = $editorwiki->parsedContent;
+							
+							$foundfields = array_keys($wiki->internalfields);
+							
+							// handle fields
+							while(preg_match('/{template\|(.*?)\}/',$s, $match))
+							{
+								$s1 = str_replace($match[0],'<input type="hidden" name="template" value="'.$match[1].'">',$s);;
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							
+							while(preg_match('/{name\|(.*?)\}/',$s, $match))
+							{
+								$v = $match[1];
+								if ($name) $v = $name;
+								$s1 = str_replace($match[0],'<input type="text" name="name" value="'.$v.'" style="width:100%">',$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							while(preg_match('/{text\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$v = $match[2];
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									
+									$v = $wiki->internalfields[$match[1]];
+									if (is_array($v)) $v = array_shift($v);
+								}
+									
+
+								$s1 = str_replace($match[0],'<input type="text" name="'.$match[1].'" value="'.$v.'" style="width:100%">',$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							while(preg_match('/{textarea\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$v = $match[2];
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									
+									$v = $wiki->internalfields[$match[1]];
+									if (is_array($v)) $v = array_shift($v);
+								}
+								$s1 = str_replace($match[0],'<textarea name="'.$match[1].'" style="width:100%" rows=10>'.$v.'</textarea>',$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							while(preg_match('/{sublang\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								
+								
+								$v = @$match[2];
+							
+								$sublangwiki = new swWiki;
+								$sublangwiki->name = $name.'/'.$match[1];
+								$sublangwiki->lookup();
+								if ($sublangwiki->revision && $sublangwiki->visible())
+								{
+									$c = $sublangwiki->content;
+									$v = str_replace('{{}}','',$c);
+								}
+
+								
+								$s1 = str_replace($match[0],'<textarea name="sublang_'.$match[1].'" width=100% rows=10>'.$v.'</textarea>',$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							while(preg_match('/{option\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$list = array();
+								$opts = explode('|',$match[2]);
+								
+								$set = array();
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									$set = $wiki->internalfields[$match[1]];
+								}
+								// print_r($set);
+								foreach($opts as $opt)
+								{
+									if (in_array($opt,$set)) 
+										$list[] = '<input type="checkbox" name="'.$match[1].'['.$opt.']" checked><nbsp;>'.$opt;
+									else
+										$list[] = '<input type="checkbox" name="'.$match[1].'['.$opt.']" ><nbsp;>'.$opt;
+								}
+								$s1 = str_replace($match[0],join(' ',$list),$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+							while(preg_match('/{radio\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$list = array();
+								$opts = explode('|',$match[2]);
+								
+								
+								$set = array();
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									$set = $wiki->internalfields[$match[1]];
+								}
+								//print_r($set);
+								foreach($opts as $opt)
+								{
+									if (in_array($opt,$set)) 
+										$list[] = '<input type="radio" name="'.$match[1].'" value="'.$opt.'" checked><nbsp;>'.$opt;
+									else
+										$list[] = '<input type="radio" name="'.$match[1].'" value="'.$opt.'" ><nbsp;>'.$opt;
+								}
+								$s1 = str_replace($match[0],join(' ',$list),$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
 
 						
+							$editorwiki->parsedContent = $s;
+							
+							
+							
+							if ($wiki->revision)
+							$swParsedContent .= ' <a href="index.php?action=editsource&name='.$name.'">Edit source</a>';
+
+							
+							$swParsedContent .=	'<form method="post" action="index.php?action=modifyeditor">';
+							
+							$swParsedContent .= $editorwiki->parsedContent;
+							
+							$swParsedContent .=	'<input type="hidden" name="editortemplate" value="'.$_REQUEST['editor'].'">';
+							if ($wiki->revision)
+							$swParsedContent .=	'<input type="hidden" name="revision" value="'.$wiki->revision.'">';
+							
+							
+							if ($user->hasright("modify", $wiki->name))
+							$swParsedContent .= "<input type='submit' name='submiteditor' value='".swSystemMessage("save",$lang)."' />";
+							
+														
+							$swParsedContent .=	'</form>'; 
+							
+							$foundfields = array_diff($foundfields,array('template','revision','editortemplate','_template','_link'));
+							
+							
+							if (count($foundfields))
+								$swParsedContent .=	'<p><b>Warning</b>: Unused fields: '.join(' ',$foundfields) ; 
+								
+							$test = $wiki->content;
+							$test = preg_replace('/\[\[.+?::.*\]\]/','', $test);
+							$test = preg_replace('/\{\{.+?\}\}/','', $test);
+							
+							if (trim($test))
+								$swParsedContent .=	'<p><b>Warning</b>: Unused text: '.join(' ',$test) ; 
+							break;
+						}
+						
+						
+						
+						// search for editor template and display them before.
+						
+						$r = '
+filter _name, _template "iseditor"
+select _template == "iseditor"
+project _name';
+						$list = swRelationToTable($r); // print_r($list);
+						
+						$menu = array();
+						
+						foreach($list as $elem)
+						{
+							$editor = str_replace('Template:','',$elem['_name']);
+							$menu[] = '<a href=index.php?action=new&editor='.$editor.'">'.$editor.'</a>';
+						}
+						if (count($menu) && !$wiki->revision)
+							$swParsedContent .= '<p>Editors: '.join(' ',$menu);
 						
 						$swParsedContent .= "\n<table class='blanktable' style='width:100%'>\n<tr>";
 						$cw = max(count($wikis),1);

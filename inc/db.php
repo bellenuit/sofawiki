@@ -95,22 +95,24 @@ class swDB extends swPersistance //extend may be obsolete
 {
 	
 	
-	var $indexedbitmap;
-	var $currentbitmap;
-	var $deletedbitmap; 
-	var $protectedbitmap;
-	var $bloombitmap;
+	var $indexedbitmap;  // revisions that have been indexed in urldb
+	var $currentbitmap;  // revisions that are currently active (last version, ok or protected) these are the only one the database needs to access in relation filter
+	var $deletedbitmap;  // revision with status deleted
+	var $protectedbitmap; // revisions with status protected
+	var $bloombitmap; // revisions that have been indexed by bloom 
 	//var $shortbitmap;
 	var $urldb;
 	var $touched = false;
 	
 	var $salt;
-	var $hasindex = false;
+	var $hasindex = false; 
 	var $lastrevision = 0;
 	var $persistance2 = '';
 	var $inited = false;
 	var $currentupdaterev;
 	var $pathbase;
+	
+
 	
 	function init($force = false) 
 	{
@@ -119,7 +121,7 @@ class swDB extends swPersistance //extend may be obsolete
 		global $swRamdiskPath;
 		global $swOvertime;
 
-		echotime('init');
+		echotime('init '.$force);
 		
 		if (isset($swRamdiskPath) && $swRamdiskPath != '')
 			swInitRamdisk();
@@ -129,15 +131,12 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->inited = false;
 			$this->hasindex = false;
-			$this->close(); // update lastrevision.txt
+			$this->close(); // save bitmaps to update lastrevision.txt
 		}
 
-		if ($this->hasindex)
-			return;
+		if ($this->hasindex) return;
+		if ($this->inited) return;
 		
-		
-		if ($this->inited)
-			return;
 		$this->inited = true;
 		
 		//selfhealing
@@ -192,11 +191,10 @@ class swDB extends swPersistance //extend may be obsolete
 			
 		$urldbpath = $this->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
-			$this->urldb = swDBA_open($urldbpath, 'wdt', 'db4');
+			$this->urldb = swDBA_open($urldbpath, 'wdt', 'sqlite');
 		else
-			$this->urldb = swDBA_open($urldbpath, 'c', 'db4');	
+			$this->urldb = swDBA_open($urldbpath, 'c', 'sqlite');	
 
-			
 		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
 		// 95% full 
@@ -226,7 +224,7 @@ class swDB extends swPersistance //extend may be obsolete
 		if ($bitmaperror && !$swOvertime)
 		{
 			echotime($bitmaperror);
-			$this->rebuildBitmaps();
+			$this->RebuildIndexes($this->lastrevision);
 		}
 		
 		return;
@@ -278,7 +276,7 @@ class swDB extends swPersistance //extend may be obsolete
 //		if ($testmode) $this->urldb->close();
 		
 		global $swOvertime; 
-		if (!$swOvertime)		
+		if (!$swOvertime && rand(0,100)>80)		
 			swIndexBloom(16);
 		
 		$this->touched = false;
@@ -290,104 +288,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->close();
 	}
 	
-	function UpdateIndexes($rev)
-	{
-		$this->lastrevision = $this->indexedbitmap->length-1;
-		if ($this->indexedbitmap->getbit($rev)) { return true;} // do not twice in a request
-		$r = new swRecord;
-		$r->revision = $rev;
-		$this->currentupdaterev = $rev;
-		if (!$source = $r->readHeader()) return false;
-		$this->indexedbitmap->setbit($rev);
-		if ($r->status == '') return false;
-		if ($r->revision == 0) return false;
 		
-		// compare with the current version. 
-		
-		$c = $r->currentPath();
-		$r2 = new swRecord;
-		if (file_exists($c))
-		{
-			
-			$r2->persistance = $c;
-			$r2->open();
-		}
-				
-		if ($r->status == 'deleted')
-			$this->deletedbitmap->setbit($rev);
-		else
-			$this->deletedbitmap->unsetbit($rev);
-		if ($r->status == 'protected')
-			$this->protectedbitmap->setbit($rev);
-		else
-			$this->protectedbitmap->unsetbit($rev);
-		
-		$url = swNameURL($r->name);
-		
-		
-		$s = '';
-		if (swDBA_exists($url,$this->urldb))
-		{
-			$line = swDBA_fetch($url,$this->urldb);
-			if ($line)
-			{
-				$revs = explode(' ',$line);
-				
-				if (count($revs)>=2)
-				{
-				
-					// echo $line;
-					$status = array_shift($revs); 
-					$oldrev = array_shift($revs);   
-					
-					if ($rev > $oldrev)
-					{
-						$status = substr($r->status,0,1);
-					}
-					$revs[] = $oldrev;
-					$revs[] = $rev;
-					$revs = array_unique($revs);
-					rsort($revs,SORT_NUMERIC);
-					
-					// current status one letter, then all revision in reverse order
-					// o 4323 2332 1123
-					// d 4371 3322
-					// p 6781
-					$line = $status.' '.join(' ',$revs);
-					
-					swDBA_replace($url, $line, $this->urldb);
-					
-					$rev = array_shift($revs);
-					if ($status == 'o' || $status == 'p')
-					{
-						$this->currentbitmap->setbit($rev);
-					}
-					else
-					{
-						$this->currentbitmap->unsetbit($rev);
-					}
-					while ($rev = array_shift($revs))
-					{
-						$this->currentbitmap->unsetbit($rev);
-					}
-					
-					
-				}
-			}
-		}
-		else
-		{
-			$status = substr($r->status,0,1);
-			$line = $status.' '.$rev;
-			swDBA_replace($url,$line, $this->urldb);
-		}
-		
-		$this->touched = true;
-		
-		return true;
-
-	}
-	
 	function GetLastRevisionFolderItem($force=false)
 	{
 		global $swRoot;
@@ -408,11 +309,6 @@ class swDB extends swPersistance //extend may be obsolete
 			return $maxf;
 		}
 		
-		
-		
-		
-		 
-		
 		$dir = opendir($path);
 		while($file = readdir($dir))
     	{
@@ -430,113 +326,198 @@ class swDB extends swPersistance //extend may be obsolete
 	
 	function RebuildIndexes($lastindex=0)
 	{
-		global $swError, $swIndexError, $swOvertime;
-	
-		echotime("rebuild ".$lastindex);  
-	
-		global $swMaxOverallSearchTime;
-		global $swMemoryLimit;
+		// we read all file statuses to get create the url.db
+		
+		echotime("indexes start ".$lastindex); 
+		
+		global $swError, $swIndexError, $swOvertime, $swMemoryLimit;
 		global $rebuildstarttime;
-		if (!$rebuildstarttime)
-		$rebuildstarttime = microtime(true);	
-		$overtime = false;
+		
+		if (!$rebuildstarttime) $rebuildstarttime = microtime(true);
+			
 		$c=0;
-		$c1 = 0;
 		for($r = $lastindex; $r>=1; $r--)
 		{
-			
-			
 			if ($this->indexedbitmap->getbit($r)) continue;
 			$nowtime = microtime(true);	
 			$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
 			if (intval($dur)>10000 || memory_get_usage()>$swMemoryLimit)
 			{
-				echotime('overtime INDEX '.$c);
+				echotime('overtime INDEX '.$c.' '.$r);
 				$swOvertime = true;
 				$swError = "Index incomplete. Please reload";
 				$swIndexError = true;
-				$overtime = true;
 				break;
 			}
 			$this->UpdateIndexes($r);
-			$c++; $c1++;
-			if ($c1 > 5000) { swDBA_sync($this->urldb); $c1 = 0; }
+			$c++; 
 		}
 		if (!$swIndexError)
 		{
-			 $this->rebuildBitmaps();
+			 $this->rebuildBitmaps(); 
 			 $swIndexError = false;
-			 echotime('indexes built '.$c.' open '.$r);	
+			 echotime('indexes built '.$c);	
 			 //swIndexBloom(10);
 		}
 		swDBA_sync($this->urldb);
-	}	
+		
+		
+	}
+	
+	
+	function UpdateIndexes($rev)
+	{
+		
+		$this->lastrevision = max($this->indexedbitmap->length-1,$rev);
+		
+		if ($this->indexedbitmap->getbit($rev)) { return true;} // do not twice in a request, cheaper than swdba_exists
+		
+		if (swDBA_exists(' '.$rev,$this->urldb)) { $this->indexedbitmap->setbit($rev); return true;} // already done
+
+		
+		$r = new swRecord;
+		$r->revision = $rev;
+		$this->currentupdaterev = $rev;
+		if (!$source = $r->readHeader()) return false;
+		$this->indexedbitmap->setbit($rev);
+		if ($r->status == '') return false;
+		if ($r->revision == 0) return false;
+		
+		$url = swNameURL($r->name);		
+		$status = substr($r->status,0,1);
+
+		if (swDBA_exists($url,$this->urldb))
+		{
+			$line = swDBA_fetch($url,$this->urldb);
+			if ($line)
+			{
+				$revs = explode(' ',$line);
+				
+				if (count($revs)>=2) // should always be the case 
+				{
+				
+					// echo $line;
+					$oldstatus = array_shift($revs); 
+					$oldrev = array_shift($revs);   
+					
+					if ($rev < $oldrev)
+					{
+						$status = $oldstatus;
+					}
+					$revs[] = $oldrev;
+					$revs[] = $rev;
+					$revs = array_unique($revs);
+					rsort($revs,SORT_NUMERIC);
+					
+					// current status one letter, then all revision in reverse order
+					// o 4323 2332 1123
+					// d 4371 3322
+					// p 6781
+					$line = $status.' '.join(' ',$revs);
+					
+					swDBA_replace($url, $line, $this->urldb);  // url index
+					swDBA_replace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
+					
+					// set bits for last revision
+					$rlast = array_shift($revs);
+					if ($status == 'p') $this->protectedbitmap->setbit($rlast);
+					if ($status == 'd') $this->deletedbitmap->setbit($rlast);
+					
+					if ($status == 'o' || $status == 'p')
+						$this->currentbitmap->setbit($rlast);
+					else
+						$this->currentbitmap->unsetbit($rlast);
+
+					
+					// unset bits for older revisions
+					while ($rother = array_shift($revs))
+					{
+						$this->currentbitmap->unsetbit($rother);
+						$this->protectedbitmap->unsetbit($rother);
+						$this->deletedbitmap->unsetbit($rother);
+					}
+					
+					
+				}
+			}
+		}
+		else
+		{
+			$line = $status.' '.$rev;
+			swDBA_replace($url,$line, $this->urldb);
+			swDBA_replace(' '.$rev, $url, $this->urldb);
+		
+			if ($status == 'p') $this->protectedbitmap->setbit($rev);
+			if ($status == 'd') $this->deletedbitmap->setbit($rev);
+					
+			if ($status == 'o' || $status == 'p')
+				$this->currentbitmap->setbit($rev);
+			else
+				$this->currentbitmap->unsetbit($rev);
+
+			
+		}
+		
+		$this->touched = true;
+		
+		return true;
+
+	}
+
 	
 	function rebuildBitmaps()
 	{
-		echotime('rebuildbitmaps');  
+		echotime('bitmaps');  
 		
-		global $db;
-		$current = array();
-		$k=0;
-
-			global $swMaxOverallSearchTime;
-			global $rebuildstarttime;
-			if (!$rebuildstarttime)
-				$rebuildstarttime = microtime(true);	
-			$overtime = false;
+		// we read all urldb to reconstruct bitmaps. This is rather fast
 		
-			$this->indexedbitmap->init($db->lastrevision);
-			$this->currentbitmap->init($db->lastrevision);  
-			$this->deletedbitmap->init($db->lastrevision); 
-			$this->protectedbitmap->init($db->lastrevision);
+		$this->indexedbitmap->init($this->lastrevision); // index false by default
+		$this->currentbitmap->init($this->lastrevision);  
+		$this->deletedbitmap->init($this->lastrevision); 
+		$this->protectedbitmap->init($this->lastrevision);
 			
-			$key = swDBA_firstKey($this->urldb);
-			
-			do 
-			{
-			  $line = swDBA_fetch($key,$this->urldb);
+		$key = swDBA_firstKey($this->urldb);		
+		do 
+		{
+		  $line = swDBA_fetch($key,$this->urldb);
+		  
+		  if (substr($line,0,1)==' ') continue; // is revision key
+		  
+		  if ($line)
+		  {
+			  $fields = explode(' ',$line);
 			  
-			  if ($line)
+			  if (count($fields)>=2) // should always be the case
 			  {
-				  $revs = explode(' ',$line);
-				  
-				  if (count($revs)>=2)
-				  {
-				
-				  	$status = array_shift($revs);
-				  	$rev = array_shift($revs);
-				  	$error = false;
-				  
-				  	switch($status)
-				  	{
-					 	 case 'o' :	$this->currentbitmap->setbit($rev); break;
-					 	 case 'p' :	$this->currentbitmap->setbit($rev); 
-					 	 			$this->protectedbitmap->setbit($rev); break;
-					 	 case 'd' : $this->deletedbitmap->setbit($rev); break;
-					 	 default  :	$error = true;	
-				  	}
-				  	if (!$error) $this->indexedbitmap->setbit($rev);
-				  	
-				  	// unset the rest - is this needed as we start at unset?
-				  	/*
-				  	while (count($revs))
-				  	{
-					  	$rev = array_shift($revs);
-					  	$this->currentbitmap->unsetbit($rev);
-				  	}
-				  	*/
-				  
-				  }
-			  }
-		
+			
+			  	$status = array_shift($fields);
+			  	$rev = array_shift($fields);
+			  
+			  	switch($status)
+			  	{
+				 	 case 'o' :	$this->currentbitmap->setbit($rev); break;
+				 	 case 'p' :	$this->currentbitmap->setbit($rev); 
+				 	 			$this->protectedbitmap->setbit($rev); break;
+				 	 case 'd' : $this->deletedbitmap->setbit($rev); break;
+				 	 default  :	$error = true;	
+			  	}			  	
+			  	$this->indexedbitmap->setbit($rev);	
 			  	
-			} while ($key = swDBA_nextKey($this->urldb));
+			  	// older revisions
+			  	foreach($fields as $rev)
+			  	{
+				  	$this->indexedbitmap->setbit($rev);	
+			  	}
+			  			  
+			  }
+		  }
+	
+		  	
+		} while ($key = swDBA_nextKey($this->urldb));
 			
-			$this->touched = true;
+		$this->touched = true;
 			
-		
-		echotime('bitmaps built ' .$k.' / '.$db->lastrevision);
+		echotime('bitmaps '.$this->lastrevision);
 	}
 	
 	

@@ -126,11 +126,16 @@ $queries = array();
 $queriesgoodresults = array();
 $actions = array();
 $errors = array();
+
+if (!isset($swMemoryLimit)) $swMemoryLimit = 100000000;
+
 if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'submitsave',false))
 {
 	echotime('read logs');
 	foreach($files as $file)
 	{
+		if (memory_get_usage()>$swMemoryLimit) break;
+		
 		$file = str_replace($root,"",$file);
 		if (stristr($f,'deny-')) continue;
 		$file = str_replace(".txt","",$file);

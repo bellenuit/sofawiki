@@ -27,7 +27,7 @@ class swBitmap extends swPersistance
 		$this->touched = true;
 		if ($this->map == '') $this->dehexit();	
 		$oldlength = $this->length;
-		$this->length = intval($l);
+		$this->length = intval($l);  
 		
 		$bytes = ($this->length + 7) >> 3;	
 		
@@ -42,7 +42,7 @@ class swBitmap extends swPersistance
 			
 		// Note the last current byte is padding.
 		// This is ok, if we can never access them further than the length.
-		// Because str_pad is only bitewise, we need to set explicitely now set the bits between length and the next byte
+		// Because str_pad is only bytewise, we need to set explicitely now set the bits between length and the next byte
 		
 		for ($i = $oldlength; $i < min($this->length, $oldlength+8); $i++)
 		{
@@ -97,6 +97,8 @@ class swBitmap extends swPersistance
 	
 	function setbit($n)
 	{
+		// zero based, n >= length will make it grow
+			
 		$n = intval($n);
 		if ($n<0) return; 
 		$this->touched = true;
@@ -121,6 +123,8 @@ class swBitmap extends swPersistance
 	
 	function unsetbit($n)
 	{
+		// zero based, n >= length will make it grow
+		
 		$n = intval($n);
 		
 		if ($n<0) return; 
@@ -145,6 +149,8 @@ class swBitmap extends swPersistance
 	
 	function getbit($n)
 	{
+		// zero based, n >= length will return default
+		
 		$n = intval($n);
 		
 		if ($n>=$this->length) return $this->default;

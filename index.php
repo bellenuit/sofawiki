@@ -65,6 +65,8 @@ if (swGetArrayValue($_REQUEST,'submitmodify',false))
 	$action = 'modify';
 if (swGetArrayValue($_REQUEST,'submitmodifymulti',false))	
 	$action = 'modifymulti';
+if (swGetArrayValue($_REQUEST,'submiteditor',false))	
+	$action = 'modifyeditor';
 if (swGetArrayValue($_REQUEST,'submitcancel',false))	
 	$action = 'view';
 	
@@ -456,6 +458,12 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 		{
 			if ($user->hasright('modify', $wiki->namewithoutlanguage()))
 				$swEditMenus['edit'] = '<a href="'.$wiki->link('edit','--').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).'</a>';
+				
+			if (isset($wiki->internalfields['editortemplate']))
+				$swEditMenus['editsource'] = '<a href="'.$wiki->link('editsource','--').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit-source',$lang).'</a>';
+	
+				
+
 						
 			if ($action == 'rename')
 			{
@@ -642,8 +650,9 @@ switch ($action)
 				 	 break;
 	
 	case 'new':      $wiki=new swWiki; $name = '';// no break!
-	case 'edit':    
-	case 'editmulti': if ($user->hasright('modify', $wiki->name))
+	case 'edit':
+	case 'editmulti':    
+	case 'editsource': if ($user->hasright('modify', $wiki->name))
 					 	 include 'inc/special/edit.php';
 					  else
 					  	include 'inc/special/view.php';
@@ -663,6 +672,7 @@ switch ($action)
 
 	case 'modify':	
 	case 'modifymulti':	
+	case 'modifyeditor':	
 					$wiki->name = $name;
 					if (trim($name)=='') $swError = swSystemMessage('empty-name',$lang);
 					if (!swValidate($name2,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name2)';
@@ -675,7 +685,8 @@ switch ($action)
 					{
 							// validate globals
 							
-							if (!swGetArrayValue($_POST,'submitmodify',false)&&!swGetArrayValue($_POST,'submitmodifymulti',false))
+							if (!swGetArrayValue($_POST,'submitmodify',false)&&!swGetArrayValue($_POST,'submitmodifymulti',false)
+								&&!swGetArrayValue($_POST,'submiteditor',false))
 							{
 								$swError = swSystemMessage('not-modify-without-post',$lang);
 							}
@@ -688,7 +699,7 @@ switch ($action)
 								$w2->name = $name;
 								$w2->lookup();
 								$r = $w2->revision;
-								if ($r<>0 && $r > $revision)
+								if ($r<>0 && $r > $revision && $w2->status != 'deleted')
 								{
 									if ($revision > 0)
 										$swError = swSystemMessage('editing-conflict',$lang).' name: '.$name.' current: '.$r.' revision: '.$revision;
@@ -719,7 +730,54 @@ switch ($action)
 							if (!$swError)
 							{
 								$wiki->user = $user->name;
-								$wiki->content = str_replace("\\",'',$content);
+								
+								if ($action=='modifyeditor')
+								{
+
+									$comment = 'editor '.$_POST['editortemplate'];									
+									$content = '{{'.$_POST['template'].'}}'.PHP_EOL;
+									
+									
+									
+									
+									// print_r($_POST);
+									foreach($_POST as $k=>$v)
+									{
+										if ($k == 'editortemplate') continue;
+										if ($k == 'submiteditor') continue;
+										if ($k == 'name') continue;
+										
+										if (is_array($v)) 
+										{
+											// options, keep keys, not values
+											$v = join('::',array_keys($v));
+										}
+										
+										if (!$v) continue;
+										
+										if (substr($k,0,strlen('sublang'))=='sublang')
+										{
+											$sublang = substr($k,strlen('sublang')+1);
+											$sublangwiki = new swWiki;
+											$sublangwiki->name = $name.'/'.$sublang;
+											$sublangwiki->lookup();
+											if ($sublangwiki->content != '{{}}'.PHP_EOL.$v)
+											{
+												$sublangwiki->content = '{{}}'.PHP_EOL.$v;
+												$sublangwiki->comment = $comment;
+												$sublangwiki->insert();
+											}
+											continue;
+										}									
+										
+										$content .= '[['.$k.'::'.$v.']]'.PHP_EOL;
+									}
+									$content .= '[[editortemplate::'.$_POST['editortemplate'].']]'.PHP_EOL;
+									$wiki->content = $content;
+									
+								}
+								else
+									$wiki->content = str_replace("\\",'',$content);
 								$wiki->comment = str_replace("\\",'',$comment);
 								$wiki->insert();
 
@@ -746,6 +804,7 @@ switch ($action)
 						$swError = swSystemMessage('no-access-error',$lang);
 					}
 				    break;
+	
 	case 'rename':
 					if ($user->hasright('rename', $wiki->name))
 					{

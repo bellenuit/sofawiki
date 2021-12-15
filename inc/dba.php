@@ -298,7 +298,7 @@ class swDBA
 	 	
 	 	$this->journal[$key] = $value;
 	 	
-		if (count($this->journal) >= 100) $this->sync();
+		if (count($this->journal) >= 1000) $this->sync();
 		
 		return true;
 	}

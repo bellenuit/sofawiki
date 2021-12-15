@@ -12,6 +12,7 @@ $swSystemDefaults["dk/fr"] = "Dansk";
 $swSystemDefaults["home/fr"] = "Accueil";
 $swSystemDefaults["view/fr"] = "Article";
 $swSystemDefaults["edit/fr"] = "Editer";
+$swSystemDefaults["edit-source/fr"] = "Editer Source";
 $swSystemDefaults["history/fr"] = "Historique";
 $swSystemDefaults["new/fr"] = "Nouvel article";
 $swSystemDefaults["special/fr"] = "Sp&eacute;cial";

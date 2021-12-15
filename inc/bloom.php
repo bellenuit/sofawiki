@@ -201,7 +201,7 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 	// echotime('done');
 	
 	$i = 0; $rev = 0;
-	$rev = $db->lastrevision;
+	$rev = $db->lastrevision+1; // start +1, because we rev-- at beginning
 	
 	$revisionpath = $swRoot.'/site/revisions/';
 	
