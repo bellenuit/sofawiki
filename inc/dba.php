@@ -189,7 +189,7 @@ class swDBA
 			throw new swDBAerror('swdba is busy');
 		}
 			
-		$this->db->exec('PRAGMA journal_mode = OFF'); // we do not use rollback
+		$this->db->exec('PRAGMA journal_mode = DELETE'); // we do not use rollback
 		if (!@$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
 		{
 			throw new swDBAerror('swdba create table error '.$this->db->lastErrorMsg());
