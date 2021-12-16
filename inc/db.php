@@ -190,10 +190,11 @@ class swDB extends swPersistance //extend may be obsolete
 			
 			
 		$urldbpath = $this->pathbase.'indexes/urls.db';
+		global $swDBAhandler;
 		if (file_exists($urldbpath))
-			$this->urldb = swDBA_open($urldbpath, 'wdt', 'sqlite');
+			$this->urldb = swDBA_open($urldbpath, 'wdt', $swDBAhandler);
 		else
-			$this->urldb = swDBA_open($urldbpath, 'c', 'sqlite');	
+			$this->urldb = swDBA_open($urldbpath, 'c', $swDBAhandler);	
 
 		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
