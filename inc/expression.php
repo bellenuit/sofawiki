@@ -2,6 +2,119 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+// do this only once
+
+$swExpressionOperators = array();
+
+$swExpressionOperators['-u'] =  new swExpressionOperator('-u', ':neg',1,11,'L');
+$swExpressionOperators['not'] =  new swExpressionOperator('not', ':not',1,10,'L');
+		
+$swExpressionOperators['/'] =  new swExpressionOperator('/', ':div',2,9,'L');
+$swExpressionOperators['*'] =  new swExpressionOperator('*', ':mul',2,9,'L');
+$swExpressionOperators['div'] =  new swExpressionOperator('div', ':idiv',2,9,'L');
+$swExpressionOperators['mod'] =  new swExpressionOperator('mod', ':mod',2,9,'L');
+$swExpressionOperators['+'] =  new swExpressionOperator('+', ':add',2,8,'L');
+$swExpressionOperators['-'] =  new swExpressionOperator('-', ':sub',2,8,'L');
+
+$swExpressionOperators['.'] =  new swExpressionOperator('.', ':concat',2,7,'L');
+
+$swExpressionOperators['='] =  new swExpressionOperator('=', ':eqn',2,6,'L');
+$swExpressionOperators['!='] =  new swExpressionOperator('!=', ':nen',2,6,'L');
+$swExpressionOperators['>'] =  new swExpressionOperator('>', ':gtn',2,6,'L');
+$swExpressionOperators['>='] =  new swExpressionOperator('>=', ':gen',2,6,'L');
+$swExpressionOperators['<'] =  new swExpressionOperator('<', ':ltn',2,6,'L');
+$swExpressionOperators['<='] =  new swExpressionOperator('<=', ':len',2,6,'L');
+
+$swExpressionOperators['regex'] =  new swExpressionOperator('regex', ':regex',2,5,'L');
+$swExpressionOperators['regexi'] =  new swExpressionOperator('regexi', ':regexi',2,5,'L');
+$swExpressionOperators['=='] =  new swExpressionOperator('==', ':eqs',2,5,'L');
+$swExpressionOperators['!=='] =  new swExpressionOperator('!==', ':nes',2,5,'L');
+$swExpressionOperators['>>'] =  new swExpressionOperator('>>', ':gts',2,5,'L');
+$swExpressionOperators['>=='] =  new swExpressionOperator('>==', ':ges',2,5,'L');
+$swExpressionOperators['<<'] =  new swExpressionOperator('<<', ':lts',2,5,'L');
+$swExpressionOperators['<=='] =  new swExpressionOperator('<==', ':les',2,5,'L');
+
+$swExpressionOperators['and'] =  new swExpressionOperator('and', ':and',2,4,'L');
+$swExpressionOperators['or'] =  new swExpressionOperator('or', ':or',2,3,'L');
+$swExpressionOperators['xor'] =  new swExpressionOperator('xor', ':xor',2,2,'L');
+
+$swExpressionOperators[','] =  new swExpressionOperator(',',':comma',2,1,'L');
+
+
+$swExpressionFunctions[':neg'] = new XPNeg;
+$swExpressionFunctions[':not'] = new XPNot;
+
+$swExpressionFunctions[':div'] = new XPDiv;
+$swExpressionFunctions[':mul'] = new XPMul;
+$swExpressionFunctions[':idiv'] = new XPIdiv;
+$swExpressionFunctions[':mod'] = new XPMod;
+$swExpressionFunctions[':add'] = new XPAdd;
+$swExpressionFunctions[':sub'] = new XPSub;
+
+$swExpressionFunctions[':concat'] = new XPConcat;
+
+$swExpressionFunctions[':eqn'] = new XPEqN;
+$swExpressionFunctions[':nen'] = new XPNeN;
+$swExpressionFunctions[':gtn'] = new XPGtN;
+$swExpressionFunctions[':gen'] = new XPGeN;
+$swExpressionFunctions[':ltn'] = new XPLtN;
+$swExpressionFunctions[':len'] = new XPleN;
+
+$swExpressionFunctions[':eqs'] = new XPEqS;
+$swExpressionFunctions[':nes'] = new XPNeS;
+$swExpressionFunctions[':gts'] = new XPGtS;
+$swExpressionFunctions[':ges'] = new XPGeS;
+$swExpressionFunctions[':lts'] = new XPLtS;
+$swExpressionFunctions[':les'] = new XPLeS;
+
+$swExpressionFunctions[':and'] = new XPAnd;
+$swExpressionFunctions[':or'] = new XPOr;
+$swExpressionFunctions[':xor'] = new XPXor;
+$swExpressionFunctions[':hint'] = new XPXHint;
+
+$swExpressionFunctions[':comma'] = new XPComma;
+
+// real functions
+
+$swExpressionFunctions[':abs'] = new XPAbs;
+$swExpressionFunctions[':ceil'] = new XPCeil;
+$swExpressionFunctions[':cos'] = new XPCos;
+$swExpressionFunctions[':exp'] = new XpExp;
+$swExpressionFunctions[':floor'] = new XPFloor;
+$swExpressionFunctions[':ln'] = new XpLn;
+$swExpressionFunctions[':log'] = new XpLog;
+$swExpressionFunctions[':pow'] = new XPPow;
+$swExpressionFunctions[':rnd'] = new XPRnd;
+$swExpressionFunctions[':round'] = new XPRound;
+$swExpressionFunctions[':sin'] = new XPSin;
+$swExpressionFunctions[':sign'] = new XPSign;
+$swExpressionFunctions[':sqrt'] = new XPSqrt;
+$swExpressionFunctions[':xptan'] = new XPTan;
+
+$swExpressionFunctions[':length'] = new XPLength;
+$swExpressionFunctions[':lower'] = new XPLower;
+$swExpressionFunctions[':regex'] = new XPRegex;
+$swExpressionFunctions[':regexi'] = new XPRegexi;
+$swExpressionFunctions[':regexreplace'] = new XPRegexReplace;
+$swExpressionFunctions[':regexreplacemod'] = new XPRegexReplaceMod;
+$swExpressionFunctions[':replace'] = new XPReplace;
+$swExpressionFunctions[':substr'] = new XPSubstr;
+$swExpressionFunctions[':upper'] = new XPUpper;
+$swExpressionFunctions[':urltext'] = new XPurltext;
+$swExpressionFunctions[':pad'] = new XPpad;
+$swExpressionFunctions[':trim'] = new XPtrim;
+
+$swExpressionFunctions[':max'] = new XPMax;
+$swExpressionFunctions[':min'] = new XPMin;
+
+$swExpressionFunctions[':secondstosql'] = new XPSecondsToSQL;
+$swExpressionFunctions[':sqltoseconds'] = new XPSQLtoSeconds;
+
+$swExpressionFunctions[':format'] = new XPFormat;
+
+$swExpressionFunctions[':resume'] = new XpResume;
+$swExpressionFunctions[':template'] = new XpTemplate;
+$swFunctionsset = false;
 
 
 class swExpression
@@ -11,152 +124,44 @@ class swExpression
 	var $rpn = array();
 	var $stack = array();
 	
-	var $operators = array();
-	var $functions = array();
-	
 	// unittest
 	var $expectedreturn;
+	//var $constantsonly;
 	
 	
-	function __construct($fn = array())
-	{
-		$this->operators[] =  new swExpressionOperator('-u', ':neg',1,11,'L');
-		$this->operators[] =  new swExpressionOperator('not', ':not',1,10,'L');
-		
-		$this->operators[] =  new swExpressionOperator('/', ':div',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('*', ':mul',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('div', ':idiv',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('mod', ':mod',2,9,'L');
-		$this->operators[] =  new swExpressionOperator('+', ':add',2,8,'L');
-		$this->operators[] =  new swExpressionOperator('-', ':sub',2,8,'L');
-		
-		$this->operators[] =  new swExpressionOperator('.', ':concat',2,7,'L');
-		
-		$this->operators[] =  new swExpressionOperator('=', ':eqn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('!=', ':nen',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('>', ':gtn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('>=', ':gen',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('<', ':ltn',2,6,'L');
-		$this->operators[] =  new swExpressionOperator('<=', ':len',2,6,'L');
-		
-		$this->operators[] =  new swExpressionOperator('regex', ':regex',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('regexi', ':regexi',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('==', ':eqs',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('!==', ':nes',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('>>', ':gts',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('>==', ':ges',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('<<', ':lts',2,5,'L');
-		$this->operators[] =  new swExpressionOperator('<==', ':les',2,5,'L');
-		
-		$this->operators[] =  new swExpressionOperator('and', ':and',2,4,'L');
-		$this->operators[] =  new swExpressionOperator('or', ':or',2,3,'L');
-		$this->operators[] =  new swExpressionOperator('xor', ':xor',2,2,'L');
-		
-		$this->operators[] =  new swExpressionOperator(',',':comma',2,1,'L');
-		
-		
-		$this->functions[] = new XPNeg;
-		$this->functions[] = new XPNot;
-		
-		$this->functions[] = new XPDiv;
-		$this->functions[] = new XPMul;
-		$this->functions[] = new XPIdiv;
-		$this->functions[] = new XPMod;
-		$this->functions[] = new XPAdd;
-		$this->functions[] = new XPSub;
-		
-		$this->functions[] = new XPConcat;
-		
-		$this->functions[] = new XPEqN;
-		$this->functions[] = new XPNeN;
-		$this->functions[] = new XPGtN;
-		$this->functions[] = new XPGeN;
-		$this->functions[] = new XPLtN;
-		$this->functions[] = new XPleN;
-		
-		$this->functions[] = new XPEqS;
-		$this->functions[] = new XPNeS;
-		$this->functions[] = new XPGtS;
-		$this->functions[] = new XPGeS;
-		$this->functions[] = new XPLtS;
-		$this->functions[] = new XPLeS;
-		
-		$this->functions[] = new XPAnd;
-		$this->functions[] = new XPOr;
-		$this->functions[] = new XPXor;
-		$this->functions[] = new XPXHint;
-		
-		$this->functions[] = new XPComma;
-		
-		// real functions
-		
-		$this->functions[] = new XPAbs;
-		$this->functions[] = new XPCeil;
-		$this->functions[] = new XPCos;
-		$this->functions[] = new XpExp;
-		$this->functions[] = new XPFloor;
-		$this->functions[] = new XpLn;
-		$this->functions[] = new XpLog;
-		$this->functions[] = new XPPow;
-		$this->functions[] = new XPRnd;
-		$this->functions[] = new XPRound;
-		$this->functions[] = new XPSin;
-		$this->functions[] = new XPSign;
-		$this->functions[] = new XPSqrt;
-		$this->functions[] = new XPTan;
-		
-		$this->functions[] = new XPLength;
-		$this->functions[] = new XPLower;
-		$this->functions[] = new XPRegex;
-		$this->functions[] = new XPRegexi;
-		$this->functions[] = new XPRegexReplace;
-		$this->functions[] = new XPRegexReplaceMod;
-		$this->functions[] = new XPReplace;
-		$this->functions[] = new XPSubstr;
-		$this->functions[] = new XPUpper;
-		$this->functions[] = new XPurltext;
-		$this->functions[] = new XPpad;
-		$this->functions[] = new XPtrim;
-		
-		$this->functions[] = new XPMax;
-		$this->functions[] = new XPMin;
-		
-		
-		$this->functions[] = new XPSecondsToSQL;
-		$this->functions[] = new XPSQLtoSeconds;
-		
-		$this->functions[] = new XPFormat;
-		
-		//$this->functions[] = new XpNowiki;
-		$this->functions[] = new XpResume;
-		$this->functions[] = new XpTemplate;
-		
-		global $swFunctions;
-		foreach($swFunctions as $k=>$v)
+	function __construct()
+	{		
+		// we should this do only once after configuration is read
+		global $swFunctionsset;
+		if (!$swFunctionsset)
 		{
-			if ($v->arity() < 0) continue;
-			$fn  = new XpNative;
-			$fn->init($k,$v);
-			$this->functions[] = $fn;
+			global $swExpressionFunctions;
+			global $swFunctions;
+			if (isset($swFunctions))
+			foreach($swFunctions as $k=>$v)
+			{
+				if ($v->arity() < 0) continue;
+				$fn  = new XpNative;
+				$fn->init($k,$v);
+				$swExpressionFunctions[':'.$k] = $fn;
+			}
+			$swFunctionsset = true;
 		}
 
 		$this->expectedreturn = 1 ;
-
-		foreach($fn as $f)
-		{
-			$this->functions[] = $f;
-		}
-
+	
 	}
 	
 		
 	function tokenize($s)
 	{
+		//p_open('tokenize');
+		
 		$i; $c; 
 		$ch; $state; $acc;
 		
-
-		// strings # hex
+		// numbers 0..9
+		// strings $ hex
 		// functions @ (
 		// operators 
 		// names
@@ -165,8 +170,6 @@ class swExpression
 		// ,
 
 		$this->tokens = array();
-		
-		
 
 		$state = 'start';
 
@@ -194,9 +197,9 @@ class swExpression
 									case ',': if ($state == 'comma' || count($this->tokens) == 0) { $this->tokens[] = '$'; } 
 										      $state = 'comma'; $this->tokens[] = $ch; break;
 									case '=': $state = 'equal'; break;
-									case '<': $state = 'lower'; break;
-									case '>': $state = 'greater'; break;
-									case '!': $state = 'not'; break;
+									case '<':  $state = 'lower'; break;
+									case '>':  $state = 'greater'; break;
+									case '!':  $state = 'not'; break;
 									case ' ': $state = 'start'; break;
 									case '0':
 									case '1':
@@ -212,6 +215,7 @@ class swExpression
 									default: 	if (($ch >= 'A' && $ch <= 'Z') ||
 											 	($ch >= 'a' && $ch <= 'z') || $ch == '_' )
 											 	{
+											 		
 											 		$state = "name"; $acc = $ch;
 											 	}
 											 	else
@@ -386,7 +390,7 @@ class swExpression
 		{
 			case 'start':	break;
 			case 'comma':	$this->tokens[] = '$'; break;
-			case 'string':	throw new swExpressionError('Tokenize open string '.$acc,13);
+			case 'string':	throw new swExpressionError('Tokenize open string "'.$acc.'"',13);
 			case 'string1':	$this->tokens[] = '$'.$acc; break;
 			case 'number':
 			case 'numberfraction':
@@ -395,14 +399,27 @@ class swExpression
 			case 'name':	$this->tokens[] = $acc; break;
 			default:		throw new swExpressionError('Tokenize unknown state "'.$state.'"',11);
 		}
+		
+		/*
+		$this->constantsonly = true;
+		foreach($this->tokens as $t)
+		{
+			$ch = mb_substr($t,0,1);
+			if (strstr($ch,'0123456789$,')) continue;
+			// echotime('not constant '.$ch);
+			$this->constantsonly = false;
+			break;
+		}
+		*/
+		//p_close('tokenize');
 
 		
 	}
 	
 	function compile($s)
 	{
-		
-				
+		// p_open('compile');
+		global $swExpressionOperators;		
 		$operatorstack = array();
 		$t; $e; $fl; $ch; 
 		$negationpossible;
@@ -418,16 +435,11 @@ class swExpression
 		$negationpossible = true;
 				
 		if (count($this->tokens) == 0) return;
-		
-		// print_r($this->tokens);
 				
 		foreach($this->tokens as $t)
 		{
 			$ch = mb_substr($t,0,1);
 			if ($ch =='-' && $negationpossible) $t = '-u';
-			
-			
-			// echo "<p>".$t."</p>";
 			
 			
 			switch($ch)
@@ -471,72 +483,63 @@ class swExpression
 							} while ( substr($e,0,2) != '@(' && $e != '(' );
 							$negationpossible = false; break;
 				default: 	$opfound = false;
-							foreach($this->operators as $op)
+							if(isset($swExpressionOperators[$t]))
 							{
-								if ($opfound) continue;
-								$opfound = false;
-								if ($t == $op->label)
+								$op = $swExpressionOperators[$t];
+								$foundhigher = true;
+								while (count($operatorstack)>0 && $foundhigher )
 								{
-									$foundhigher = true;
-									while (count($operatorstack)>0 && $foundhigher )
+									$e = array_pop($operatorstack);
+									if ($op->associativity == 'L' && $op->precedence <= floatval($e))
 									{
-										$e = array_pop($operatorstack);
-										if ($op->associativity == 'L' && $op->precedence <= floatval($e))
-										{
-											
-											$optop = array_pop($operatorstack);
-											// if ($optop != ':comma')
-												$this->rpn[] = $optop;
-										}
-										elseif ($op->associativity == 'R' && $op->precedence < floatval($e))
-										{
-											$optop = array_pop($operatorstack);
-											// if ($optop != ':comma')
-												$this->rpn[] = $optop;
-										}
-										else
-										{
-											$foundhigher = false;
-											$operatorstack[] = $e;
-										}
-									}
-									if ($op->functionlabel == ':and')
-									{
-										$rvi = rand(50000,80000);
-										$this->rpn[] = $rvi;
-										$this->rpn[] = ':andleft';
-										$operatorstack[] = ':andright#'.$rvi;
-										//print_r($op);
 										
+										$optop = array_pop($operatorstack);
+										// if ($optop != ':comma')
+											$this->rpn[] = $optop;
 									}
-									elseif ($op->functionlabel == ':or')
+									elseif ($op->associativity == 'R' && $op->precedence < floatval($e))
 									{
-										$rvi = rand(50000,80000);
-										$this->rpn[] = $rvi;
-										$this->rpn[] = ':orleft';
-										$operatorstack[] = ":orright#".$rvi;
+										$optop = array_pop($operatorstack);
+										// if ($optop != ':comma')
+											$this->rpn[] = $optop;
 									}
 									else
 									{
-										$operatorstack[] = $op->functionlabel;
+										$foundhigher = false;
+										$operatorstack[] = $e;
 									}
-									$operatorstack[] = $op->precedence;
-									$negationpossible = true;
-									$opfound = true;
-									//print_r($operatorstack);
 								}
+								if ($op->functionlabel == ':and')
+								{
+									$rvi = rand(50000,80000);
+									$this->rpn[] = $rvi;
+									$this->rpn[] = ':andleft';
+									$operatorstack[] = ':andright#'.$rvi;
+									//print_r($op);
+									
+								}
+								elseif ($op->functionlabel == ':or')
+								{
+									$rvi = rand(50000,80000);
+									$this->rpn[] = $rvi;
+									$this->rpn[] = ':orleft';
+									$operatorstack[] = ":orright#".$rvi;
+								}
+								else
+								{
+									$operatorstack[] = $op->functionlabel;
+								}
+								$operatorstack[] = $op->precedence;
+								$negationpossible = true;
+								$opfound = true;
+									//print_r($operatorstack);
 							}
-							if (!$opfound)
+							else
 							{
 								$this->rpn[] = $t;
 								$negationpossible = false;
 							}
 			}
-			/*
-			print_r($operatorstack);
-			echo "<p></p>";
-			print_r($this->rpn);
-			*/
 
 		}
 		
@@ -564,19 +567,17 @@ class swExpression
 				$this->rpn[$i] = ':orright';
 				array_splice($this->rpn,$i+1,0,$l);
 			}
-		}
-		/*
-		print_r($operatorstack);
-		echo "<p></p>";
-		print_r($this->rpn);
-		*/
-		
-		
+		}		
 		
 	}
 
-	function evaluate($values=array(),$globals=array(),$locals=array())
+	function evaluate($values=array(),$globals=array())
 	{
+		//p_open('evaluate');
+		
+		if (count($this->rpn) == 0) return '';
+		global $swExpressionFunctions;
+		
 		$e; $e2; $ch; $dummy; $currentlabel; $jump; $cond; $currentindex; $result; 
 		$f;
 		$found;
@@ -600,15 +601,15 @@ class swExpression
 		$globals['_slash'] = '/';
 		
 		// unescapge
+		//p_open('unescape');
 		
 		foreach($values as $k=>$v)
 		{
 			$values[$k] = swUnescape($v);
 		}
+		//p_close('unescape');
 		
 		$this->stack = array();
-		
-		if (count($this->rpn) == 0) return '';
 		
 		$c = count($this->rpn);
 		
@@ -620,7 +621,7 @@ class swExpression
 			$ch = substr($e,0,1);
 			switch ($ch)
 			{
-				case ':': 	$found = false;
+				case ':': 	
 							switch($e)
 							{
 								case ':andleft': 	$jump = '#'.array_pop($this->stack);
@@ -636,7 +637,6 @@ class swExpression
 														else
 															throw new swExpressionError('Goto not defined '.$currentindex,31);
 													}
-													$found = true;
 													break;
 								case ':andright': 	$cond = array_pop($this->stack);
 													if ($cond == '⦵') $cond = '0';
@@ -645,10 +645,8 @@ class swExpression
 														$this->stack[] = '0';
 													else
 														$this->stack[] = '1';
-													$found = true;
 													break;
 								case ':comma': 		//nop
-													$found = true;
 													break;	
 								case ':goto':		$jump = '#'.array_pop($this->stack);
 													$j = array_search($jump,$this->rpn);
@@ -656,7 +654,6 @@ class swExpression
 														$i = $j;
 													else
 														throw new swExpressionError('Goto not defined '.$currentindex,31);
-													$found = true; //echo " *GOTO* "; print_r($this->stack);
 													break;	
 								case ':gotoifn':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
@@ -670,7 +667,6 @@ class swExpression
 														else
 															throw new swExpressionError('Goto not defined '.$currentindex,31);
 													}
-													$found = true;
 													break;	
 								case ':gotoif':	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
@@ -684,7 +680,6 @@ class swExpression
 														else
 															throw new swExpressionError('Goto not defined '.$currentindex,31);
 													}
-													$found = true;
 													break;	
 																
 								case ':init':		if (array_key_exists($aggregatorfirstrun,$localdict))
@@ -697,7 +692,6 @@ class swExpression
 													else
 														throw new swExpressionError('Illegal instruction init '
 															.$currentindex,31);
-													$found = true;
 													break;	
 								case ':orleft': 	$jump = '#'.array_pop($this->stack);
 													$cond = array_pop($this->stack);
@@ -712,7 +706,6 @@ class swExpression
 														else
 															throw new swExpressionError('Goto not defined '.$currentindex,31);
 													}
-													$found = true;
 													break;
 								case ':orright': 	$cond = array_pop($this->stack);
 													if ($cond == '⦵') $cond = '0';
@@ -721,30 +714,23 @@ class swExpression
 														$this->stack[] = '0';
 													else
 														$this->stack[] = '1';
-													$found = true;
 													break;
 								case ':pop':		$dummy = array_pop($this->stack);
-													$found = true;
 													break;
 								case ':set':		$localdict[$currentlabel] = array_pop($this->stack);
-													$found = true;
 													break;
 								case ':stackcount':	$this->stack[] = count($this->stack);
-													$found = true;
 													break;
-								default:			foreach($this->functions as $f)
+								default:			if(isset($swExpressionFunctions[$e]))
 													{	
-														if ($found) continue;
-														if ($e == $f->label)
-														{
-															$found = true;
-															$f->functions = $this->functions;
-															$f->run($this->stack);
-														}
+														$f = $swExpressionFunctions[$e];
+														$f->run($this->stack);
 													}
+													else
+														throw new swExpressionError('Function not defined '.$e.' '.
+														print_r(array_keys($swExpressionFunctions),true),31);
 													
 							}
-							if (!$found) throw new swExpressionError('Function not defined '.$e,31);
 							break;
 				case '$':	$this->stack[] = substr($e,1);
 							break;
@@ -760,8 +746,6 @@ class swExpression
 									$this->stack[] = $localdict[$e2];
 								elseif (array_key_exists($e2,$values))
 									$this->stack[] = $values[$e2];
-								elseif (array_key_exists($e2,$locals))
-									$this->stack[] = $locals[$e2];
 								elseif (array_key_exists($e2,$globals))
 									$this->stack[] = $globals[$e2];
 							}
@@ -772,8 +756,6 @@ class swExpression
 								$this->stack[] = $localdict[$e];
 							elseif (array_key_exists($e,$values))
 								$this->stack[] = $values[$e];
-							elseif (array_key_exists($e,$locals))
-								$this->stack[] = $locals[$e];
 							elseif (array_key_exists($e,$globals))
 								$this->stack[] = $globals[$e];
 							else
@@ -792,7 +774,6 @@ class swExpression
 
 		if (count($this->stack) > $this->expectedreturn)
 		{
-			//print_r($this->stack);
 			throw new swExpressionError('Evaluate stack not consumed '.join(' ',$this->rpn)." ".$currentindex,31);
 		}
 		
@@ -801,7 +782,7 @@ class swExpression
 			
 		$result = $this->stack[0];
 		
-		
+		//p_close('evaluate');
 		
 		if ($result == '∞' || $result == '-∞' || $result == '⦵') return $result;
 		
@@ -817,29 +798,76 @@ class swExpression
         $a;
 		$t;
 		$s;
-	
+		
 		if ($d == '∞' || $d == '-∞' || $d == '⦵') return $d;
 
 		$a = abs($d);
 		
 		if ($a > 10.0e12)
-			// return format(d,"-0.000000000000e").ToText
-			return sprintf('%1.12e',$d);
+			// return format(d,"-0.00000000000000e").ToText
+			return sprintf('%1.14e',$d);
 		elseif ($a < 10.0e-300)
 			return "0";
 		elseif ($a < 10.0e-12)
-			// return format(d,"-0.000000000000e").ToText
+			// return format(d,"-0.00000000000000e").ToText
 			return sprintf('%1.12e',$d);
 		
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.12f',$d);
 		
-		if (strlen($s)>12)
-			// s = format(round(d*10000000000000000)/10000000000000000,"-0.##############")
-			$s = sprintf('%1.12f',round($d*10000000000000)/10000000000000);
-			
+		if (substr($s,0,1)=='-') $neg = 1; else $neg = 0;
+		$p = strpos($s,'.');
+		if ($p === FALSE)
+		{
+			$comma = 0;
+			$ip = strlen($s)-$neg;
+			$fp = 0;
+		}
+		else
+		{
+			$comma = 1;
+			$ip = $p;
+			$fp = strlen($s)-$neg-$comma-$ip;
+		}
+		
+		$limit = 12;
+		
+		if ($ip+$comma+$fp>$limit)
+		{
+			$over = substr($s,$limit+$neg,1);
+			if ($over >= 5)
+			{
+				$schars = str_split(substr($s,0,$limit+$neg));
+				for($i = count($schars)-1;$i>=0;$i--)
+				{
+					$carry = false;
+					switch($schars[$i])
+					{
+						case '0':  $schars[$i] = '1'; break;
+						case '1':  $schars[$i] = '2'; break;
+						case '2':  $schars[$i] = '3'; break;
+						case '3':  $schars[$i] = '4'; break;
+						case '4':  $schars[$i] = '5'; break;
+						case '5':  $schars[$i] = '6'; break;
+						case '6':  $schars[$i] = '7'; break;
+						case '7':  $schars[$i] = '8'; break;
+						case '8':  $schars[$i] = '9'; break;
+						case '9':  $schars[$i] = '0'; $carry = true; break;
+						case '.':  break;
+						default: // shpuld not happen
+					}
+					if (! $carry) break;
+				}
+				$s = join('',$schars);
+				
+			}
+			else
+				$s = substr($s,0,$limit+$neg);
+		}
+		
 		$s = TrimTrailingZeroes($s);
-			
+		
+		
 		if (substr($s,-1)==".")
 			$s = substr(s,0,-1);
 		
@@ -879,127 +907,127 @@ class swExpression
 		$results = array();
 		
 		$tests[] = 'a+b';
-		$comps[] = 'a b _add';
+		$comps[] = 'a b :add';
 		$results[] = '76';
 		
 		$tests[] = '5+10';
-		$comps[] = '5 10 _add';
+		$comps[] = '5 10 :add';
 		$results[] = '15';
 
 		$tests[] = '5*10';
-		$comps[] = '5 10 _mul';
+		$comps[] = '5 10 :mul';
 		$results[] = '50';
 		
 		$tests[] = '5/10';
-		$comps[] = '5 10 _div';
+		$comps[] = '5 10 :div';
 		$results[] = '0.5';
 		
 		$tests[] = '2 + 4 +10';
-		$comps[] = '2 4 _add 10 _add';
+		$comps[] = '2 4 :add 10 :add';
 		$results[] = '16';
 		
 		$tests[] = '2 - 4 +10';
-		$comps[] = '2 4 _sub 10 _add';
+		$comps[] = '2 4 :sub 10 :add';
 		$results[] = '8';
 		
 		$tests[] = '2 + 4 -10';
-		$comps[] = '2 4 _add 10 _sub';
+		$comps[] = '2 4 :add 10 :sub';
 		$results[] = '-4';
 		
 		$tests[] = '2 + 4 * 10';
-		$comps[] = '2 4 10 _mul _add';
+		$comps[] = '2 4 10 :mul :add';
 		$results[] = '42';		
 		
 		$tests[] = '-5 +10';
-		$comps[] = '5 _neg 10 _add';
+		$comps[] = '5 :neg 10 :add';
 		$results[] = '5';
 
 		$tests[] = '5 * -10';
-		$comps[] = '5 10 _neg _mul';
+		$comps[] = '5 10 :neg :mul';
 		$results[] = '-50';
 
 		$tests[] = '5 +-10';
-		$comps[] = '5 10 _neg _add';
+		$comps[] = '5 10 :neg :add';
 		$results[] = '-5';
 
 		$tests[] = '2 * 4 +10';
-		$comps[] = '2 4 _mul 10 _add';
+		$comps[] = '2 4 :mul 10 :add';
 		$results[] = '18';
 		
 		$tests[] = '2 * (4 +10)';
-		$comps[] = '2 4 10 _add _mul';
+		$comps[] = '2 4 10 :add :mul';
 		$results[] = '28';
 
 		$tests[] = 'a/c';
-		$comps[] = 'a c _div';
+		$comps[] = 'a c :div';
 		$results[] = '0.55';
 		
 		$tests[] = 'd+e';
-		$comps[] = 'd e _add';
+		$comps[] = 'd e :add';
 		$results[] = '0';
 		
 		$tests[] = 'd.e';
-		$comps[] = 'd e _concat';
+		$comps[] = 'd e :concat';
 		$results[] = 'asdfjklö';
 
 		$tests[] = 'sqrt(16)';
-		$comps[] = '16 _sqrt';
+		$comps[] = '16 :sqrt';
 		$results[] = '4';
 
 		$tests[] = 'pow(2,3)';
-		$comps[] = '2 3 _pow';
+		$comps[] = '2 3 :comma :pow';
 		$results[] = '8';
 		
 		$tests[] = 'pow(3+1,3)';
-		$comps[] = '3 1 _add 3 _pow';
+		$comps[] = '3 1 :add 3 :comma :pow';
 		$results[] = '64';
 
 		$tests[] = 'replace(d.e,"sd","sbb")';
-		$comps[] = 'd e _concat $sd $sbb _replace';
+		$comps[] = 'd e :concat $sd :comma $sbb :comma :replace';
 		$results[] = 'asbbfjklö';
 		
 		$tests[] = '100 * (5+pow(3+1,3)) / 10000';
-		$comps[] = '100 5 3 1 _add 3 _pow _add _mul 10000 _div';
+		$comps[] = '100 5 3 1 :add 3 :comma :pow :add :mul 10000 :div';
 		$results[] = '0.69';
 
 		$tests[] = '"lorem ipsum" . "RRR"';
-		$comps[] = '$lorem ipsum $RRR _concat';
+		$comps[] = '$lorem ipsum $RRR :concat';
 		$results[] = 'lorem ipsumRRR';
 		
 		$tests[] = 'sqrt(5+4)';
-		$comps[] = '5 4 _add _sqrt';
+		$comps[] = '5 4 :add :sqrt';
 		$results[] = '3';
 
 		$tests[] = 'sqrt(5 + 4)';
-		$comps[] = '5 4 _add _sqrt';
+		$comps[] = '5 4 :add :sqrt';
 		$results[] = '3';
 
 		$tests[] = '2 * (3 + 4)';
-		$comps[] = '2 3 4 _add _mul';
+		$comps[] = '2 3 4 :add :mul';
 		$results[] = '14';
 
 		$tests[] = '2 * 3 +';
-		$comps[] = '2 3 _mul _add';
+		$comps[] = '2 3 :mul :add';
 		$results[] = 'ERROR: Stack < 2';
 		
 		$tests[] = '"lorem ipsum';
-		$comps[] = 'ERROR: Tokenize open string';
+		$comps[] = 'ERROR: Tokenize open string "lorem ipsum"';
 		$results[] = '';
 		
 		$tests[] = 'pow(3+1,3)';
-		$comps[] = '3 1 _add 3 _pow';
+		$comps[] = '3 1 :add 3 :comma :pow';
 		$results[] = '64';
 		
 		$tests[] = '(67 + 45 - 66 + 2)';
-		$comps[] = '67 45 _add 66 _sub 2 _add';
+		$comps[] = '67 45 :add 66 :sub 2 :add';
 		$results[] = '48';
 		
 		$tests[] = '(67 + 2 * 3 - 67 + 2/1 - 7)';
-		$comps[] = '67 2 3 _mul 67 _sub 2 1 _div 7 _sub _add _add';
+		$comps[] = '67 2 3 :mul :add 67 :sub 2 1 :div :add 7 :sub';
 		$results[] = '1';
 		
 		$tests[] = '(2) + (17*2-30) * (5)+2 - (8/2)*4';
-		$comps[] = '2 17 2 _mul 30 _sub 5 _mul 2 _add 8 2 _div 4 _mul _sub _add';
+		$comps[] = '2 17 2 :mul 30 :sub 5 :mul :add 2 :add 8 2 :div 4 :mul :sub';
 		$results[] = '8';
 		
 		$tests[] = '(((((5)))))';
@@ -1007,43 +1035,43 @@ class swExpression
 		$results[] = '5';
 				
 		$tests[] = '((((2)) + 4))*((5))';
-		$comps[] = '2 4 _add 5 _mul';
+		$comps[] = '2 4 :add 5 :mul';
 		$results[] = '30';
 		
 		$tests[] = '550 > 100';
-		$comps[] = '550 100 _gtn';
+		$comps[] = '550 100 :gtn';
 		$results[] = '1';
 		
 		$tests[] = 'a*b > c';
-		$comps[] = 'a b _mul c _gtn';
+		$comps[] = 'a b :mul c :gtn';
 		$results[] = '1';
 		
 		$tests[] = 'd < e';
-		$comps[] = 'd e _ltn';
+		$comps[] = 'd e :ltn';
 		$results[] = '0';
 		
 		$tests[] = 'd << e';
-		$comps[] = 'd e _lts';
+		$comps[] = 'd e :lts';
 		$results[] = '1';
 		
 		$tests[] = '-(5)';
-		$comps[] = '5 _neg';
+		$comps[] = '5 :neg';
 		$results[] = '-5';
 		
 		$tests[] = 'd regex "s.f"';
-		$comps[] = 'd $s.f _regex';
+		$comps[] = 'd $s.f :regex';
 		$results[] = '1';
 
 		$tests[] = 'd regex "s..f"';
-		$comps[] = 'd $s..f _regex';
+		$comps[] = 'd $s..f :regex';
 		$results[] = '0';
 
 		$tests[] = '-(5)';
-		$comps[] = '5 _neg';
+		$comps[] = '5 :neg';
 		$results[] = '-5';
 		
 		$tests[] = '-(5)';
-		$comps[] = '5 _neg';
+		$comps[] = '5 :neg';
 		$results[] = '-5';
 		
 		$c = count($tests);
@@ -1062,13 +1090,16 @@ class swExpression
 			}
 			catch (swExpressionError $err)
 			{
-				$tc = 'ERROR: '+$err->getMessage();
+				$tc = 'ERROR: '. $err->getMessage();
 				$this->rpn = array();
 			}
 			
 			if ($tc != $comps[$i])
+			{
+				//echo $tc.'<br>'.PHP_EOL;
+				//echo $comps[$i].'<br>'.PHP_EOL;
 				throw new swExpressionError('Unit Test compilation failed: '.$t.' : '.$tc,41);
-				
+			}
 			try
 			{
 				$te = $this->evaluate($v);
@@ -1109,7 +1140,7 @@ class swExpressionOperator
 class swExpressionFunction
 {
 	var $arity;
-	var $functions = array();
+	// var $functions = array();
 	var $label;
 	
 	function cText($d)
@@ -1138,11 +1169,58 @@ class swExpressionFunction
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.14f',$d);
 		
-		if (strlen($s)>15)
-			// s = format(round(d*10000000000000000)/10000000000000000,"-0.##############")
-			$s = sprintf('%1.14f',round($d*10000000000000000)/10000000000000000);
-			
+		if (substr($s,0,1)=='-') $neg = 1; else $neg = 0;
+		$p = strpos($s,'.');
+		if ($p === FALSE)
+		{
+			$comma = 0;
+			$ip = strlen($s)-$neg;
+			$fp = 0;
+		}
+		else
+		{
+			$comma = 1;
+			$ip = $p;
+			$fp = strlen($s)-$neg-$comma-$ip;
+		}
+		
+		$limit = 16;
+		
+		if ($ip+$comma+$fp>$limit)
+		{
+			$over = substr($s,$limit+$neg,1);
+			if ($over >= 5)
+			{
+				$schars = str_split(substr($s,0,$limit+$neg));
+				for($i = count($schars)-1;$i>=0;$i--)
+				{
+					$carry = false;
+					switch($schars[$i])
+					{
+						case '0':  $schars[$i] = '1'; break;
+						case '1':  $schars[$i] = '2'; break;
+						case '2':  $schars[$i] = '3'; break;
+						case '3':  $schars[$i] = '4'; break;
+						case '4':  $schars[$i] = '5'; break;
+						case '5':  $schars[$i] = '6'; break;
+						case '6':  $schars[$i] = '7'; break;
+						case '7':  $schars[$i] = '8'; break;
+						case '8':  $schars[$i] = '9'; break;
+						case '9':  $schars[$i] = '0'; $carry = true; break;
+						case '.':  break;
+						default: // shpuld not happen
+					}
+					if (! $carry) break;
+				}
+				$s = join('',$schars);
+				
+			}
+			else
+				$s = substr($s,0,$limit+$neg);
+		}
+		
 		$s = TrimTrailingZeroes($s);
+		
 		
 		if (substr($s,-1)==".")
 			$s = substr(s,0,-1);
@@ -1487,8 +1565,8 @@ class XPAnd extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '0'; return; }
-		if ($a == '∞') $a = '1';
-		if ($b == '∞') $b = '1';
+		if ($a == '∞' || $a == '-∞') $a = '1';
+		if ($b == '∞' || $b == '-∞') $b = '1';
 		$a = floatval($a);
 		$b = floatval($b);		
 		if ($a && $b) $stack[] = '1';
@@ -1521,7 +1599,7 @@ class XPceil extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '⦵') { $stack[] = $a; return; }
+		if ($a == '∞' || $a == '-∞' || $a == '⦵') { $stack[] = $a; return; }
 		$a = floatval($a);
 		$stack[] = $this->ctext(ceil($a));		
 	}
@@ -1573,15 +1651,18 @@ class XpDiv extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		
 		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
 		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '0'; return; }
 		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
-		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
-		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
-		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
-		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if (floatval($a)>0 && $b == '∞')  { $stack[] = '∞'; return; }
+		if (floatval($a)>0 && $b == '-∞')  { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '∞')  { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '-∞')  { $stack[] = '∞'; return; }
+		
 		$a = floatval($a);
 		$b = floatval($b);	
 		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
@@ -1741,20 +1822,24 @@ class XPidiv extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		
 		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
 		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '0'; return; }
 		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
-		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
-		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
-		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
-		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
-		$a = intval($a);
-		$b = intval($b);
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if (floatval($a)>0 && $b == '∞')  { $stack[] = '∞'; return; }
+		if (floatval($a)>0 && $b == '-∞')  { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '∞')  { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '-∞')  { $stack[] = '∞'; return; }
+		
+		$a = floatval($a);
+		$b = floatval($b);	
 		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
 		if ($a == 0 && $b > 0) { $stack[] = '∞'; return; }
-		if ($a == 0 && $b < 0) { $stack[] = '-∞'; return; }	
+		if ($a == 0 && $b < 0) { $stack[] = '-∞'; return; }
+
 		$v = ($b - ($b % $a)) / $a ; 
 		$stack[] = $this->ctext($v);
 	}
@@ -1894,8 +1979,9 @@ class XPmax extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
-		if ($a == '∞') { $stack[] = '∞'; return; }
+		if ($a == '∞' || $b == '∞' ) { $stack[] = '∞'; return; }
 		if ($a == '-∞') { $stack[] = $b; return; }
+		if ($b == '-∞') { $stack[] = $a; return; }
 		$a = floatval($a);
 		$b = floatval($b);		
 		$stack[] = $this->ctext(max($b,$a));		
@@ -1911,8 +1997,9 @@ class XPmin extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
-		if ($a == '-∞') { $stack[] = '-∞'; return; }
+		if ($a == '-∞' || $b == '-∞') { $stack[] = '-∞'; return; }
 		if ($a == '∞') { $stack[] = $b; return; }
+		if ($b == '∞') { $stack[] = $a; return; }
 		$a = floatval($a);
 		$b = floatval($b);		
 		$stack[] = $this->ctext(min($b,$a));		
@@ -1924,24 +2011,29 @@ class XPmod extends swExpressionFunction
 	function __construct() { $this->arity = 2; $this->label = ':mod' ;}
 	function run(&$stack)
 	{
+		// print_r($stack);
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
+		
 		if ($a == '∞' && $b == '∞') { $stack[] = '⦵'; return; }
 		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '∞') { $stack[] = '0'; return; }
 		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
-		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; };
-		if ($b == '∞' && floatval($a) >= 0) { $stack[] = '∞'; return; }
-		if ($b == '∞' && floatval($a) < 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) >= 0) { $stack[] = '-∞'; return; }
-		if ($b == '-∞' && floatval($a) < 0) { $stack[] = '∞'; return; }
-		if ($a == '∞' || $a == '-∞') { $stack[] = '0'; return; }
-		$a = intval($a);
-		$b = intval($b);
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '⦵'; return; }
+		if ($a == '-∞') { $stack[] = '0'; return; }
+		if (floatval($a)>0 && $b == '∞')  { $stack[] = '∞'; return; }
+		if (floatval($a)>0 && $b == '-∞')  { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '∞') { $stack[] = '-∞'; return; }
+		if (floatval($a)<0 && $b == '-∞')  { $stack[] = '∞'; return; }
+		
+		$a = floatval($a);
+		$b = floatval($b);	
 		if ($a == 0 && $b == 0) { $stack[] = '⦵'; return; }
-		if ($a == 0 && $b > 0) { $stack[] = $b; return; }
-		if ($a == 0 && $b < 0) { $b = -$b; $stack[] = $b; return; }	
+		if ($a == 0 && $b > 0) { $stack[] = '∞'; return; }
+		if ($a == 0 && $b < 0) { $stack[] = '-∞'; return; }		
+
 		$stack[] = $this->ctext($b%$a);		
 	}
 }
@@ -1955,11 +2047,30 @@ class XPmul extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
+	
 		if ($a == '⦵' || $b == '⦵') { $stack[] = '⦵'; return; }
-		if ($a == '∞' && $b == '-∞') { $stack[] = '⦵'; return; }
-		if ($a == '-∞' && $b == '∞') { $stack[] = '⦵'; return; }
-		if ($a == '∞' || $b == '∞') { $stack[] = '∞'; return; }
-		if ($a == '-∞' || $b == '-∞') { $stack[] = '-∞'; return; }
+		
+		if ($a == '∞' && $b == '∞') { $stack[] = '∞'; return; }
+		if ($a == '∞' && $b == '-∞') { $stack[] = '-∞'; return; }
+		if ($a == '∞' && floatval($b) > 0) { $stack[] = '∞'; return; }
+		if ($a == '∞' && floatval($b) < 0) { $stack[] = '-∞'; return; }
+		if ($a == '∞' && floatval($b) == 0) { $stack[] = '⦵'; return; }
+		
+		if ($a == '-∞' && $b == '∞') { $stack[] = '-∞'; return; }
+		if ($a == '-∞' && $b == '-∞') { $stack[] = '∞'; return; }
+		if ($a == '-∞' && floatval($b) > 0) { $stack[] = '∞'; return; }
+		if ($a == '-∞' && floatval($b) < 0) { $stack[] = '-∞'; return; }
+		if ($a == '-∞' && floatval($b) == 0) { $stack[] = '⦵'; return; }
+		
+		if (floatval($a) > 0 && $b == '∞') { $stack[] = '∞'; return; }
+		if (floatval($a) > 0 && $b == '-∞') { $stack[] = '-∞'; return; }
+
+		if (floatval($a) < 0 && $b == '∞') { $stack[] = '-∞'; return; }
+		if (floatval($a) < 0 && $b == '-∞') { $stack[] = '∞'; return; }
+
+		if (floatval($a) == 0 && $b == '∞') { $stack[] = '⦵'; return; }
+		if (floatval($a) == 0 && $b == '-∞') { $stack[] = '⦵'; return; }
+		
 		$a = floatval($a);
 		$b = floatval($b);			
 		$stack[] = $this->ctext($b*$a);		
@@ -2043,6 +2154,8 @@ class XpOr extends swExpressionFunction
 		if ($b == '⦵') $b = '0';
 		if ($a == '∞') $a = '1';
 		if ($b == '∞') $b = '1';
+		if ($a == '-∞') $a = '1';
+		if ($b == '-∞') $b = '1';
 		
 		$a = floatval($a);
 		$b = floatval($b);		
@@ -2364,6 +2477,8 @@ class XpxOr extends swExpressionFunction
 		if ($b == '⦵') $b = '0';
 		if ($a == '∞') $a = '1';
 		if ($b == '∞') $b = '1';
+		if ($a == '-∞') $a = '1';
+		if ($b == '-∞') $b = '1';
 		
 		$a = floatval($a);
 		$b = floatval($b);		
@@ -2533,7 +2648,7 @@ function TrimTrailingZeroes($nbr) {
     return rtrim($nbr,'.') ?: '0';
 }
 
-/*
+
 $exp = new swExpression();
 try 
 {
@@ -2551,7 +2666,7 @@ catch (swExpressionError $err)
 	
 	// print_r($exp->operators);
 }
-*/
+
 
 
 ?>

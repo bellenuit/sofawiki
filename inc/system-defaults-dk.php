@@ -31,6 +31,7 @@ $swSystemDefaults["protect/dk"] = "Beskyt";
 $swSystemDefaults["unprotect/dk"] = "Ubeskyt";
 $swSystemDefaults["rename/dk"] = "Omd&oslash;b";
 $swSystemDefaults["delete/dk"] = "Slet";
+$swSystemDefaults["delete-with-file/en"] = "Delete with File";
 $swSystemDefaults["cancel/dk"] = "Afbestille";
 
 $swSystemDefaults["username/dk"] = "Brugernavn";

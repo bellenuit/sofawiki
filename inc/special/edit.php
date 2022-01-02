@@ -201,6 +201,48 @@ switch ($wiki->status)
 								
 								$s = $s1;
 							}
+							while(preg_match('/{textplus\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$v = $match[2];
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									
+									$v = $wiki->internalfields[$match[1]];
+								}
+								$f = '<div id="divplus'.$match[1].'">';
+								if (is_array($v))
+								{
+										$i=1;
+										foreach($v as $elem)
+										{
+											$f .= '<div id="'.$match[1].':'.$i.'"><input type="text" name="'.$match[1].':'.$i.'"  value="'.$elem.'" style="width:80%">'; 
+											if ($i>1 || true)
+											{
+												$f .= '<button type="button" onclick="textupfunction(\''.$match[1].':'.$i.'\')">↑</button>';
+											}
+											
+											$f .= '</div>';
+											$i++;
+											
+										}
+										
+										//$v = join('::',$v);
+								}
+								else
+								{
+										$f .= '<input type="text" name="'.$match[1].'" value="'.$v.'" style="width:80%">';
+								}
+								
+								$f.= '</div><button type="button" id="plus'.$match[1].'" onclick="textplusfunction(\''.$match[1].'\')">+</button>';
+	
+
+								$s1 = str_replace($match[0],$f,$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
 							while(preg_match('/{textarea\|(.*?)\|(.*?)\}/',$s, $match))
 							{
 								$foundfields = array_diff($foundfields,array($match[1]));
@@ -239,7 +281,7 @@ switch ($wiki->status)
 								
 								$s = $s1;
 							}
-							while(preg_match('/{option\|(.*?)\|(.*?)\}/',$s, $match))
+							while(preg_match('/{check\|(.*?)\|(.*?)\}/',$s, $match))
 							{
 								
 								$foundfields = array_diff($foundfields,array($match[1]));
@@ -255,9 +297,9 @@ switch ($wiki->status)
 								foreach($opts as $opt)
 								{
 									if (in_array($opt,$set)) 
-										$list[] = '<input type="checkbox" name="'.$match[1].'['.$opt.']" checked><nbsp;>'.$opt;
+										$list[] = ' <input type="checkbox" name="'.$match[1].'['.$opt.']" checked /> '.$opt;
 									else
-										$list[] = '<input type="checkbox" name="'.$match[1].'['.$opt.']" ><nbsp;>'.$opt;
+										$list[] = ' <input type="checkbox" name="'.$match[1].'['.$opt.']" /> '.$opt;
 								}
 								$s1 = str_replace($match[0],join(' ',$list),$s);
 								
@@ -282,9 +324,9 @@ switch ($wiki->status)
 								foreach($opts as $opt)
 								{
 									if (in_array($opt,$set)) 
-										$list[] = '<input type="radio" name="'.$match[1].'" value="'.$opt.'" checked><nbsp;>'.$opt;
+										$list[] = ' <input type="radio" name="'.$match[1].'" value="'.$opt.'" checked /> '.$opt;
 									else
-										$list[] = '<input type="radio" name="'.$match[1].'" value="'.$opt.'" ><nbsp;>'.$opt;
+										$list[] = ' <input type="radio" name="'.$match[1].'" value="'.$opt.'" /> '.$opt;
 								}
 								$s1 = str_replace($match[0],join(' ',$list),$s);
 								
@@ -292,9 +334,59 @@ switch ($wiki->status)
 								
 								$s = $s1;
 							}
+							while(preg_match('/{select\|(.*?)\|(.*?)\}/',$s, $match))
+							{
+								
+								$foundfields = array_diff($foundfields,array($match[1]));
+								$list = array();
+								$opts = explode('|',$match[2]);
+								
+								
+								$set = array();
+								if (isset($wiki->internalfields[$match[1]]))
+								{
+									$set = $wiki->internalfields[$match[1]];
+								}
+								//print_r($set);
+								$list[] = '<select name="'.$match[1].'">';
+								foreach($opts as $opt)
+								{
+									if (in_array($opt,$set)) 
+										$list[] = ' <option value="'.$opt.'" selected >'.$opt.'</option>';
+									else
+										$list[] = ' <option value="'.$opt.'" >'.$opt.'</option>';
+								}
+								$list[] = '</select>';
+								$s1 = str_replace($match[0],join(' ',$list),$s);
+								
+								if ($s1 == $s) break;
+								
+								$s = $s1;
+							}
+
+							
+							$script = "
+<script>
+function textplusfunction(id){
+theid = id.toString();
+div = document.getElementById('divplus'+theid);
+children = div.childNodes.length+1;
+s = div.innerHTML;
+s = s + '<div id=\"'+theid+':'+children+'\"><input type=\"text\" name=\"'+theid+':'+children+'\" value=\"\" style=\"width:80%\"><button type=\"button\" onclick=\"textupfunction(\''+theid+':'+children+'\')\">↑</button>';
+div.innerHTML = s;
+}
+
+function textupfunction(id){
+theid = id.toString();
+div = document.getElementById(theid);
+parent = div.parentNode;
+parent.insertBefore(div,div.previousElementSibling);
+}
+</script>";
+
 
 						
-							$editorwiki->parsedContent = $s;
+							$editorwiki->parsedContent = $s.$script;
 							
 							
 							
@@ -315,20 +407,39 @@ switch ($wiki->status)
 							$swParsedContent .= "<input type='submit' name='submiteditor' value='".swSystemMessage("save",$lang)."' />";
 							
 														
-							$swParsedContent .=	'</form>'; 
+							
 							
 							$foundfields = array_diff($foundfields,array('template','revision','editortemplate','_template','_link'));
 							
 							
 							if (count($foundfields))
-								$swParsedContent .=	'<p><b>Warning</b>: Unused fields: '.join(' ',$foundfields) ; 
+								$swParsedContent .=	'<p><b>Warning unused fields:</b> '.join(', ',$foundfields) ; 
 								
-							$test = $wiki->content;
-							$test = preg_replace('/\[\[.+?::.*\]\]/','', $test);
-							$test = preg_replace('/\{\{.+?\}\}/','', $test);
+							$foundtext = $wiki->content;
+							$foundtext = preg_replace('/\[\[.+?::.*?\]\]/','', $foundtext);
+							$foundtext = preg_replace('/\{\{.+?\}\}/','', $foundtext);
 							
-							if (trim($test))
-								$swParsedContent .=	'<p><b>Warning</b>: Unused text: '.join(' ',$test) ; 
+							if (trim($foundtext))
+								$swParsedContent .=	'<p><b>Warning unused text:</b> '.$foundtext ; 
+							
+							$foundcontent = '';	
+							foreach($foundfields as $k)
+							{
+								$vs = $wiki->internalfields[$k];
+								if (is_array($vs))
+									$foundcontent.= '[['.$k.'::'.join('::',$vs).']]'.PHP_EOL;
+								else
+									$foundcontent.= '[['.$k.'::'.$vs.']]'.PHP_EOL;
+							}
+							$foundcontent .= trim($foundtext);
+							
+							if (trim($foundcontent))
+								$swParsedContent .= '<textarea name="unusedtext" style="display:none">'.$foundcontent.'</textarea>';
+								
+							
+							
+							$swParsedContent .=	'</form>'; 
+							
 							break;
 						}
 						
@@ -458,6 +569,15 @@ project _name';
  <input type='submit' name='submitdelete' value='".swSystemMessage("delete",$lang)."' />
  </p></form>
 ";
+								
+								if ($wiki->wikinamespace() == "Image")
+								$swParsedContent .= "
+ <form method='post' action='".$wiki->link("delete")."'><p>
+ <input type='submit' name='submitdeletewithfile' value='".swSystemMessage("delete-with-file",$lang)."' />
+ </p></form>
+";
+
+								
 								}
 								
 								

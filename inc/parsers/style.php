@@ -38,106 +38,128 @@ class swStyleParser extends swParser
 		
 		// table parser
 		
-		preg_match_all('/\n{\|(.*?)\n\|}/s', $s, $matches, PREG_SET_ORDER);
+		//echo strlen($s);
+		// preg_match_all('/\n{\|(.*?)\n\|}/s', $s, $matches, PREG_SET_ORDER);
+		$tablestart = strpos($s,"\n{|");
+		$tableend = strpos($s,"\n|}",$tablestart);
 		
-		foreach ($matches as $match)
+		while(! ($tablestart === FALSE) && $tableend > 0)
 		{
+			$tablematch = substr($s,$tablestart,$tableend-$tablestart+strlen("\n|}"));
+			$lines = explode("\n",$tablematch);
+		
+		//foreach ($matches as $match)
+		//{
+			//echo "found";
+			
 			//echo $match[0].'<br>';
-			$lines = explode("\n",$match[0]);
+			//$lines = explode("\n",$match[0]);
 			// discount first
 			unset($lines[0]);
 			
 			$rowcount = 0;
-			$tabletext= "";
-			$captiontext= "";
-			$tablestyle = "";
-			$currentrow = "";
-			$currentrowstyle = "";
-			$currentcell = "";
-			$currentcelltag = "";
-			$currentcellstyle = "";
+			$tabletext= '';
+			$captiontext= '';
+			$tablestyle = '';
+			$currentrow = '';
+			$currentrowstyle = '';
+			$currentcell = '';
+			$currentcelltag = '';
+			$currentcellstyle = '';
+			$tablelines = array();
 						
 			foreach ($lines as $line)
 			{
 				$first = substr($line,0,1);
 				$second = substr($line,0,2);
 				
+				
 				switch ($second)
 				{
-					case "{|":  $tablestyle = substr($line,2); 
+					case '{|':  $tablestyle = substr($line,2); 
 								break;
-					case "|+":  $captiontext = "<caption>".substr($line,3)."</caption>"; 
+					case '|+':  $captiontext = '<caption>'.substr($line,3).'</caption>'; 
 								break;
-					case "|-": 	if ($currentcell !="")
-									$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
-								if ($currentrow !="")
-									$tabletext .= "<tr$currentrowstyle>$currentrow</tr>";
-								$currentrow = "";
-								$currentcell = "";
+					case '|-': 	if ($currentcell !='')
+									$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
+								if ($currentrow !='')
+									$tablelines[]= '<tr'.$currentrowstyle.'>'.$currentrow.'</tr>';
+								$currentrow = '';
+								$currentcell = '';
 								$currentrowstyle = substr($line,2);
 								break;
 					
 					default:
 							switch	($first)
 							{
-								case "|":	
-											$cells = explode(" || ", substr($line,2));
+								case '|':	
+											$cells = explode(' || ', substr($line,2));
 											foreach ($cells as $cell)
 											{
-												if ($currentcell !="")
-													$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
+												if ($currentcell !='')
+													$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
 												
-												$currentcelltag = "td";
-												$t = strpos($cell," | ");
+												$currentcelltag = 'td';
+												$t = strpos($cell,' | ');
 												if ($t>0)
 												{
-													$currentcellstyle = " ".substr($cell,0,$t);
+													$currentcellstyle = ' '.substr($cell,0,$t);
 													$currentcell = substr($cell,$t+3);
 												}
 												else
 												{
 													$currentcell = $cell;
-													$currentcellstyle = "";
+													$currentcellstyle = '';
 												}	
 											
 											}
 											
 											break;
-								case "!":									
-											$cells = explode(" !! ", substr($line,2));
+								case '!':									
+											$cells = explode(' !! ', substr($line,2));
 											foreach ($cells as $cell)
 											{
-												if ($currentcell !="")
-													$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
+												if ($currentcell !='')
+													$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
 												
-												$currentcelltag = "th";
-												$t = strpos($cell," | ");
+												$currentcelltag = 'th';
+												$t = strpos($cell,' | ');
 												if ($t>0)
 												{
-													$currentcellstyle = " ".substr($cell,0,$t);
+													$currentcellstyle = ' '.substr($cell,0,$t);
 													$currentcell = substr($cell,$t+3);
 												}
 												else
 												{
 													$currentcell = $cell;
-													$currentcellstyle = "";
+													$currentcellstyle = '';
 												}	
 											
 											}
 											
 											break;							 
-								default :  $currentcell .= "<br>$line";
+								default :  $currentcell .= '<br>'.$line;
 							
 							}
 				}
+				
+				
 			}
-			if ($currentcell !="")
-				$currentrow .= "<$currentcelltag$currentcellstyle>$currentcell</$currentcelltag>";
-			if ($currentrow != "")
-				$tabletext .= "<tr$currentrowstyle>$currentrow</tr>";
-			$tabletext = "<table$tablestyle>$captiontext$tabletext</table>";			
 			
-			$s = str_replace($match[0],$tabletext,$s);
+			
+			if ($currentcell != '')
+				$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
+			if ($currentrow != '')
+				$tablelines[]= '<tr'.$currentrowstyle.'>'.$currentrow.'</tr>';
+			
+			$tabletext = '<table'.$tablestyle.'>'.$captiontext.join('',$tablelines).'</table>';			
+			
+			
+			//$s = str_replace($match[0],$tabletext,$s);
+			$s = str_replace($tablematch,$tabletext,$s);
+			$tablestart = strpos($s,"\n{|");
+			$tableend = strpos($s,"\n|}",$tablestart);
+			
 		}
 			
 	

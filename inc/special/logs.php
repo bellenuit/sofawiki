@@ -259,8 +259,16 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			if ($h == 1) $b++;
 			$maxaction=max($maxaction,$h);
 		}
-		$bouncingrate = floor(100*$b/count($uniquevisitors));
-		$averageaction = floor(10* count($uniquepageviews) / count($uniquevisitors))/10;
+		if (count($uniquevisitors))
+		{
+			$bouncingrate = floor(100*$b/count($uniquevisitors));
+			$averageaction = floor(10* count($uniquepageviews) / count($uniquevisitors))/10;
+		}
+		else
+		{
+			$bouncingrate = 0;
+			$averageaction = 0;
+		}
 		$statlines = array();
 		$statlines[]= "[[datestart::$datestart]][[dateend::$dateend]][[query::$query]][[regex::$regex]]";
 		$statlines[]= "[[hits::$hits]]";
@@ -341,7 +349,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Entry pages]]";
 		
 		$entrypages = array();
-		foreach($uniquevisitorentrypage as $u=>$v)
+		foreach(@$uniquevisitorentrypage as $u=>$v)
 		{
 			if (isset($entrypages[$v])) $entrypages[$v]++; else $entrypages[$v]=1;
 		}
@@ -355,7 +363,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Exit pages]]";
 		
 		$exitpages = array();
-		foreach($uniquevisitorexitpage as $u=>$v)
+		foreach(@$uniquevisitorexitpage as $u=>$v)
 		{
 			if (isset($exitpages[$v])) $exitpages[$v]++; else $exitpages[$v]=1;
 		}
@@ -369,7 +377,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Referer]]";
 		
 		$referers = array();
-		foreach($uniquevisitorreferer as $u=>$v)
+		foreach(@$uniquevisitorreferer as $u=>$v)
 		{
 			if (isset($referers[$v])) $referers[$v]++; else $referers[$v]=1;
 		}

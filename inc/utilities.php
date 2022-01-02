@@ -53,8 +53,10 @@ function swEscape($s)
 
 function swUnescape($s)
 {
-	  	// used in expressions and on final rendering
 	  	
+	  	if ($s && strpos($s, '<')===false) return $s;
+	  	
+	  	// used in expressions and on final renderings
 	  	// escape characters
   		$s = str_replace('<colon>',':',$s);
   		$s = str_replace('<leftsquare>','[',$s);
@@ -191,7 +193,7 @@ function swGetAllFields($s,$allowinternalvariables=false)
 		$values = explode('::',$value);
 		
 		foreach($values as $v)
-			$result[$key][]=$v;
+			$result[$key][]=swUnescape($v); 
 	}	
 	
 	// categories
@@ -284,9 +286,17 @@ function swReplaceFields($s,$fields,$options)
 		$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
 		// add new field
 		if (is_array($value))
-			$s .= PHP_EOL.'[['.$key.'::'.join('::',$value).']]';
+		{
+			$s .= PHP_EOL.'[['.$key;
+			if (!count($value)) $s .= '::';
+			foreach($value as $v)
+			{
+				$s.= '::'.swEscape($v);
+			}
+			$s .= ']]';
+		}
 		else
-			$s .= PHP_EOL.'[['.$key.'::'.$value.']]';
+			$s .= PHP_EOL.'[['.$key.'::'.swEscape($value).']]';
 	}
 	
 	

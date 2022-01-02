@@ -31,6 +31,7 @@ $swSystemDefaults["protect/en"] = "Protect";
 $swSystemDefaults["unprotect/en"] = "Uprotect";
 $swSystemDefaults["rename/en"] = "Rename";
 $swSystemDefaults["delete/en"] = "Delete";
+$swSystemDefaults["delete-with-file/en"] = "Delete with file";
 $swSystemDefaults["cancel/en"] = "Cancel";
 
 $swSystemDefaults["username/en"] = "Username";

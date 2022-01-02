@@ -79,6 +79,7 @@ function tablefilter(id) {
   console.log(maxgrid);
   
   visiblerows = 0;
+  allvisible = true;
   
   for (i = 0; i < tr.length; i++) {
     // Hide the row initially.
@@ -89,14 +90,38 @@ function tablefilter(id) {
       cell = tr[i].getElementsByTagName("td")[j];
       if (cell) {
         // if (cell.innerHTML.toUpperCase().indexOf(filter) > -1) {
-	    if (cell.innerHTML.match(regexfiler) && (maxgrid == '' || visiblerows <= maxgrid) ) {
-          tr[i].style.display = "";
-          visiblerows++;
-          break;
+	    if (cell.innerHTML.match(regexfiler)) {
+		     if (maxgrid == '' || visiblerows <= maxgrid) {
+	          tr[i].style.display = "";
+	          visiblerows++;
+	          break;
+	        }
+	        else
+	        {
+		        allvisible = false;
+	        }
         } 
       }
     }
   }
+  plus = document.getElementById('plus'+theid);
+  if (plus)
+  {
+  	// alert(allvisible);
+  	if (allvisible) plus.style.display = "none"; else plus.style.display = "";
+  }
+}
+
+function tableplus(id,rowplus)
+{
+	theid = id.toString();
+	input = document.getElementById('input'+theid);
+	table = document.getElementById('table'+theid);
+	maxgrid = table.getAttribute('maxgrid');
+	maxgrid = maxgrid*1.0 + rowplus*1.0;
+	// alert(maxgrid);
+	table.setAttribute('maxgrid',maxgrid);
+	if (tablefilter(id));
 }
 
 

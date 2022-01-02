@@ -24,17 +24,20 @@ class swRelationLineHandler
 	var $transactiondict;
 	var $transactionerror;
 	var $transactionprefix;
+	var $compiledexpressions = array();
 	
 	function __construct($m = 'HTML')
 	{
 		$this->mode = $m;
 		$this->context = array();
+		
 	}
 	
 	function run($t, $internal = '', $internalbody = '', $usedivider = true)
 	{
 		
-		
+		$this->functions = array();
+		$this->compiledexpressions = array();
 		echotime('relation '.strlen($t));
 		try 
 		{
@@ -48,7 +51,16 @@ class swRelationLineHandler
 		{
 			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
 		}
-		echotime('relation end '.strlen($t));
+		
+		$list = p_dump();
+		$profiles = array();
+		foreach($list as $k=>$v)
+		{
+			$profiles[] = $k.' '.floor($v['percent']*100).'%';
+		}
+
+		
+		echotime('relation end '.PHP_EOL.'<br>'.join(PHP_EOL.'<br>',$profiles));
 		
 		if ($usedivider)
 		
@@ -163,7 +175,8 @@ class swRelationLineHandler
 			$fields = explode(' ',$line);
 			$command = array_shift($fields);
 			$body = join(' ',$fields);
-			//echo $command;
+			if (isset($lastcommand)) p_close($lastcommand); 
+			p_open($command);$lastcommand = $command;
 			switch($command)
 			{
 				case 'analyze' : 	if (count($this->stack)<1)
@@ -175,7 +188,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										$r->analyze($body);
 										$this->stack[]=$r;
 
@@ -190,7 +202,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										//$r->locals = $locals;
 										if (! $r->assert($body))
 										{
@@ -206,7 +217,7 @@ class swRelationLineHandler
 									}
 									break; // TO DO 
 				
-				case 'compile':		$xp = new swExpression($this->functions);
+				case 'compile':		$xp = new swExpression();
 									$xp->compile($body);
 									$this->result .= join(' ',$xp->rpn).$ptag2;
 									$xp = null;
@@ -246,7 +257,6 @@ class swRelationLineHandler
 											$found = false;
 											
 											$r->globals = $dict;
-											$r->functions = $this->functions;
 											
 											while($i<$c && !$found)
 											{
@@ -270,7 +280,7 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 									}
 									
-									$xp = new swExpression($this->functions);
+									$xp = new swExpression();
 									$xp->compile($body);
 									$tx = $xp->evaluate($dict);
 									$txs = explode(' ',$tx);
@@ -334,8 +344,7 @@ class swRelationLineHandler
 										}
 									}
 									
-									$xp = new swExpression($this->functions);
-									$xp->compile($body);
+									$xp = $this->GetCompiledExpression($body);
 									$tx = $xp->evaluate($dict,$this->globals);
 									$this->result .= $tx.PHP_EOL; // . $ptag2; // ???
 									switch (substr($tx,1))
@@ -439,13 +448,11 @@ class swRelationLineHandler
 											
 											if (count($walkrelation1->tuples)>0)
 											{
-												$tp = array_shift($walkrelation1->tuples);
-												//print_r($tp);
+												$tp = current($walkrelation1->tuples);
 												foreach($tp->pfields as $k=>$v)
 												{
 													$dict[$k] =$v;
 												}
-												array_unshift($walkrelation1->tuples, $tp);	
 											}
 
 										}
@@ -474,7 +481,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										//$r->locals = $locals;
 										$r->extend($body);
 										$this->stack[] = $r;
@@ -542,9 +548,8 @@ class swRelationLineHandler
 									if ($found)
 									{
 										$fn = new swExpressionCompiledFunction(trim($fields[0]),join(PHP_EOL,$plines),false);
-										$this->functions[trim($fields[0])] = $fn;
-										
-										//print_r($this->functions);
+										$this->functions[':'.trim($fields[0])] = $fn;
+
 									}
 									else
 									{
@@ -552,7 +557,7 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 									}
 									break; 
-				case 'if':			$xp = new swExpression($this->functions);
+				case 'if':			$xp = new swExpression();
 									$xp->compile($body);
 									$ifstack[] = $i;
 									if ($xp->evaluate($dict) != '0')
@@ -586,7 +591,7 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 									}
 									break;	*/
-				case 'import':		$xp = new swExpression($this->functions);
+				case 'import':		$xp = new swExpression();
 									$xp->compile($body);
 									$te = $xp->evaluate($this->globals,$dict);
 									
@@ -594,7 +599,7 @@ class swRelationLineHandler
 									$this->stack[] = $r;
 									break;
 
-				case 'include':		$xp = new swExpression($this->functions);
+				case 'include':		$xp = new swExpression();
 									$xp->compile($body);
 									$tn = $xp->evaluate($dict);
 									if (!$this>validFileName($tn))
@@ -644,7 +649,7 @@ class swRelationLineHandler
 										$inputfields[] = $field;
 										
 										$df = join($ts);
-										$xp = new swExpression($this->functions);
+										$xp = new swExpression();
 										$xp->compile($df);
 										$tx = $xp->evaluate($this->globals, $locals);
 										
@@ -705,8 +710,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
-										//$r->locals = $locals;
 										$r->insert($body);
 										$this->stack[] = $r;
 									}
@@ -733,7 +736,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										//$r->locals = $locals;
 										$r2 = array_pop($this->stack);
 										$r2->join($r,$body);
@@ -761,7 +763,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										
 										
 										
@@ -791,8 +792,7 @@ class swRelationLineHandler
 									else
 									{
 										$tx = trim(array_shift($internals));
-										$xp = new swExpression($this->functions);
-										$xp->compile($tx);
+										$xp = $this->GetCompiledExpression($tx);
 										$dict[trim($body)] = $xp->evaluate($dict);
 										$parameteroffset++;
 									}
@@ -918,7 +918,6 @@ class swRelationLineHandler
 										$r = array_pop($this->stack); //print_r($r);
 										$r->aggregators = $this->aggregators;
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										//$r->locals = $locals;
 										
 										
@@ -945,7 +944,7 @@ class swRelationLineHandler
 										else
 											$body = join(' ',$fields);
 									}
-									$xp = new swExpression($this->functions);
+									$xp = new swExpression();
 									$xp->compile($body);
 									$tn = $xp->evaluate($dict);
 									
@@ -1102,7 +1101,6 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										// $r->locals = $locals;
 										$r->select1($body);
 										$this->stack[] = $r;
@@ -1120,31 +1118,15 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'set':			$locals= array();
-									if (count($this->stack)>0)
+				case 'set':			if (count($fields)<3)
 									{
-										$r = array_pop($this->stack);
-										if (count($r->tuples)>0 && !$walkstart)
-										{
-											$tp = array_shift($r->tuples);
-											//print_r($tp);
-											foreach($tp->pfields as $k=>$v)
-											{
-												$dict[$k] =$v;
-											}
-											array_unshift($r->tuples, $tp);
-											
-										}
-										$this->stack[] = $r;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Set too short'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
 									}
-										//print_r($dict);
-										
-										$fields = explode(' ',$body);
+									else
+									{
 										$key = array_shift($fields);
-										$body = join(' ',$fields);
-										
-										$fields = explode(' ',$body);
-										$eq = array_shift($fields);
+									    $eq = array_shift($fields);
 										$body = join(' ',$fields);
 										if ($eq != '=')
 										{
@@ -1153,11 +1135,25 @@ class swRelationLineHandler
 										}
 										else
 										{
-											$xp = new swExpression($this->functions);
-											$xp->compile($body);
+											if (count($this->stack)>0)
+											{
+												$r = current($this->stack);
+												if (count($r->tuples)>0 && !$walkstart)
+												{
+													$tp = current($r->tuples);
+
+													foreach($tp->pfields as $k=>$v)
+													{
+														$dict[$k] =$v;
+													}
+												}
+											}
+											
+											$xp = $this->GetCompiledExpression($body);
 											$dict[$key] = $xp->evaluate($dict);
 											
 										}	
+									}
 
 									break; 
 				case 'stack':		$r = new swRelation('stack, cardinality, column', $dict);
@@ -1194,8 +1190,7 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$xp = new swExpression($this->functions);
-										$xp->compile($body);
+										$xp = $this->GetCompiledExpression($body);
 										$tn = $xp->evaluate($dict);
 										if (!$this->validFileName($tn))
 										{
@@ -1237,44 +1232,48 @@ class swRelationLineHandler
 									{
 										$r = array_pop($this->stack);
 										$r->globals = $dict;
-										$r->functions = $this->functions;
 										// $r->locals = $locals;
 										$r->update($body);
 										$this->stack[] = $r;
 									}
 									break;	
-				case 'virtual':		$xp = new swExpression($this->functions);
-									$xp->compile($body);
+				case 'virtual':		$xp = $this->GetCompiledExpression($body);
 									$te = $xp->evaluate($this->globals,$dict);
 									$r = swRelationVirtual($te);
 									$this->stack[] = $r;
 									break;
-				case 'walk' :		$walkstart = $i;
-									$walkrelation1 = array_pop($this->stack);			
-									$walkrelation2 = new swRelation($walkrelation1->header);
-									$pairs = explode(',',$body);								
-									foreach($pairs as $p)
+				case 'walk' :		
+									if (count($this->stack)<1)
 									{
-										if (!in_array(trim($p),$walkrelation2->header))
-											$walkrelation2->addColumn(trim($p));
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Walk Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
 									}
-									$r = array_pop($this->stack);
-									if (count($walkrelation1->tuples)>0)
-									{
-										$tp = array_shift($walkrelation1->tuples);
-										//print_r($tp);
-										foreach($tp->pfields as $k=>$v)
+									else
+									{	
+										$walkstart = $i;
+										$walkrelation1 = array_pop($this->stack);			
+										$walkrelation2 = new swRelation($walkrelation1->header);
+										$pairs = explode(',',$body);								
+										foreach($pairs as $p)
 										{
-											$dict[$k] =$v;
+											if (!in_array(trim($p),$walkrelation2->header))
+												$walkrelation2->addColumn(trim($p));
 										}
-										array_unshift($walkrelation1->tuples, $tp);	
+										// $r = array_pop($this->stack); //??
+										if (count($walkrelation1->tuples)>0)
+										{
+											$tp = current($walkrelation1->tuples);
+											foreach($tp->pfields as $k=>$v)
+											{
+												$dict[$k] =$v;
+											}
+										}
+										$this->stack[] = $walkrelation1;
 									}
-									array_unshift($this->stack,$walkrelation1);
 									break;
 									
 												
-				case 'while':		$xp = new swExpression($this->functions);
-									$xp->compile($body);
+				case 'while':		$xp = $this->GetCompiledExpression($body);
 									if ($xp->evaluate($dict) != '0') // no locals
 									{
 										$whilestack[] = $i;
@@ -1305,8 +1304,7 @@ class swRelationLineHandler
 									else
 									{
 										$r = array_pop($this->stack);
-										$xp = new swExpression($this->functions);
-										$xp->compile($body);
+										$xp = $this->GetCompiledExpression($body);
 										$tn = $xp->evaluate($dict);
 										if ($this->transactionprefix != '')
 										{
@@ -1376,7 +1374,8 @@ class swRelationLineHandler
 				}
 			}		
 		}
-		
+		if (isset($lastcommand)) p_close($lastcommand); 
+				
 		/*
 		global $swOvertime; 
 		global $lang;		
@@ -1412,6 +1411,28 @@ class swRelationLineHandler
 		if (stristr($s,':')) return false;
 		if (stristr($s,'/')) return false;
 		return true;
+	}
+	
+	function GetCompiledExpression($s)
+	{
+		// do not recompile expressions in loops
+		if (isset($this->compiledexpressions[$s]))
+		{
+			$xp = $this->compiledexpressions[$s];
+		}
+		else
+		{ 
+			$xp = new swExpression();
+			$xp->compile($s);
+			$this->compiledexpressions[$s] = $xp;
+		}
+		
+		// we need to update context on currently defined functions
+		// expressions could be the same source before or after a function definition
+		global $swExpressionFunctions;
+		foreach($this->functions as $k=>$v)
+			$swExpressionFunctions[$k] = $v;
+		return $xp;
 	}
 		
 	
@@ -1695,14 +1716,13 @@ class swRelation
 		$result->tuples = array_clone($this->tuples);
 		$result->formats = array_clone($this->formats); 
 		$result->labels = array_clone($this->labels);
-		$result->functions = $this->functions;
 		return $result;
 		
 	}
 	
 	function delete($condition)
 	{
-		$xp = new swExpression($this->functions);
+		$xp = new swExpression();
 		$xp->compile($condition);
 		foreach($this->tuples as $k=>$t)
 		{
@@ -1865,7 +1885,7 @@ class swRelation
 		
 		$this->addColumn($label);
 		
-		$xp = new swExpression($this->functions);
+		$xp = new swExpression();
 		$xp->compile($expression);
 		
 		$c = count($this->tuples);
@@ -1936,16 +1956,17 @@ class swRelation
 	
 	function insert($t)
 	{
-		$xp = new swExpression($this->functions);
+		//p_open('insertcompile');
+		$xp = new swExpression();
 		$xp->expectedreturn =  count($this->header);
 		$xp->compile($t);
-		$test = $xp->evaluate($this->globals);
-		$pairs = array();
-		while (count($xp->stack) >0)
-		{
-			$pairs[] = array_shift($xp->stack);
-		}
-		$this->insert2($pairs);
+		//p_close('insertcompile');
+		//p_open('insertevaluate');
+		$test = $xp->evaluate($this->globals); // we don't use the result directly
+		//p_close('insertevaluate');
+		//p_open('insertinsert');
+		$this->insert2($xp->stack); // but use the stack
+		//p_close('insertinsert');
 	}
 	
 	function insert2($fields)
@@ -1970,17 +1991,21 @@ class swRelation
 		$e = $this->emptyTuple();
 		$c = count($r->tuples);
 		foreach($r->tuples as $tp)
-		//for($i = $c-1; $i>=0; $i--)
 		{
 			if ($tp->sameFamily($e))
 			{
 				if (array_key_exists($tp->hash(), $this->tuples))
+				{
 					$newtuples[$tp->hash()] = $tp;
-		
+					echo "samesame ";
+				}
+				else
+					echo "notsame ";
 			}
 			else
 				throw new swRelationError('Intersection different columns',301);
 		}
+		$this->tuples = $newtuples;
 	}
 	
 	function join($r,$expression)
@@ -2252,7 +2277,7 @@ class swRelation
 	
 	function limit($t)
 	{
-		$xp = new swExpression($this->functions);
+		$xp = new swExpression();
 		$xp->expectedreturn = 2;
 		$xp->compile($t);
 		$pairs = array();
@@ -2442,10 +2467,9 @@ class swRelation
 				$ps[] = trim($p);
 			}
 			$newps = array_diff($this->header,$ps);
-			
+						
 			$this->project(join(', ',$newps));
 			return;
-			
 		}
 		
 		if (substr($t,0,6)=='inline')
@@ -2572,6 +2596,10 @@ class swRelation
 		$stats = array();
 		$hasstats = false;
 		$newcolumns = array();
+		
+		if (!count($pairs)) 
+			throw new swRelationError('Project zero columns',11);
+
 		foreach($pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
@@ -2635,7 +2663,6 @@ class swRelation
 						{
 							$a = $this->aggregators[$stats[$i]];
 							$a = $a->doClone();
-							$a->functions = $this->functions;
 							$d[$newcolumns[$i]] = $a;
 						}
 						else
@@ -2754,7 +2781,7 @@ class swRelation
 	{
 		if (count($this->tuples)>10000) echotime('select '.count($this->tuples));
 		
-		$xp = new swExpression($this->functions);
+		$xp = new swExpression();
 		$xp->compile($condition);
 		
 		$i = 0;
@@ -3154,7 +3181,8 @@ class swRelation
 	function toHTML($limit = 0)
 	{
 				
-		if (count($this->tuples)>10000) echotime('toHTML '.count($this->tuples));
+		//echotime('tohtml');
+		if (count($this->tuples)>10000) echotime('tohtml '.count($this->tuples));
 		
 		$grid = false;
 		$linegrid = false;
@@ -3181,7 +3209,7 @@ class swRelation
 			$grid = true;
 			$editfile = substr($limit,4);
 			
-			$xp = new swExpression($this->functions);
+			$xp = new swExpression();
 			$xp->compile($editfile);
 			$dict = array();
 			$editfile = $xp->evaluate($dict);	
@@ -3312,7 +3340,15 @@ class swRelation
 		$lines[] = '|-';
 		$lines[] = '|}';
 		if ($grid)
-			$lines[] = '<nowiki><script src="inc/skins/table.js"></script></nowiki>';
+		{
+			if ($i>$c)
+				$lines[] = '<nowiki><button type="button" id="plus'.$id.'" onclick="tableplus('.$id.','.$limit.')" class="sortable" href="#">+</button></nowiki>';
+			else
+				$lines[] = '<nowiki><button type="button" id="plus'.$id.'" onclick="tableplus('.$id.','.$limit.')" class="sortable" style="display: none" href="#">+</button></nowiki>';
+
+		}
+		if ($grid)
+			$lines[] = '<nowiki><div><script src="inc/skins/table.js"></script></div></nowiki>';
 		$result = PHP_EOL.join(PHP_EOL,$lines).PHP_EOL;
 		return $result;
 		
@@ -3492,17 +3528,6 @@ class swRelation
 			throw new swRelationError('Union different columns ('.join(',',$this->header).') ('.join(',',$r->header).')' ,302);
 		
 		$this->tuples = array_merge($this->tuples, $r->tuples);
-		
-		/*
-		
-		
-		foreach($r->tuples as $tp)
-		{
-		    $this->tuples[$tp->hash()] = $tp;
-		}
-		*/
-		
-		//echotime('union end ='.count($this->tuples));
 	}
 	
 	function update($t)
@@ -3535,9 +3560,9 @@ class swRelation
 	
 	function update2($condition, $label, $expression)
 	{
-		$xp = new swExpression($this->functions);
+		$xp = new swExpression();
 		$xp->compile($condition);
-		$xp2 = new swExpression($this->functions);
+		$xp2 = new swExpression();
 		$xp2->compile($expression);
 		
 		$newtuples = array();
@@ -3622,7 +3647,7 @@ class swTuple
 	{
 		foreach ($this->pfields as $k=>$v)
 		{
-			if ($v) return true;
+			if ($v != "") return true;
 		}
 	}
 
@@ -3799,7 +3824,6 @@ class swAccumulator
 		$xp = new swExpressionCompiledFunction($label, $source, $offset, true);
 		$result = 'result';
 		$elem = 'elem';
-		$xp->fndict = $this->functions;
 		return $xp->DoRunAggregator($this->list);
 	}
 	
@@ -3831,17 +3855,22 @@ class swAccumulator
 	{
 		
 		$acc = array();
+		//print_r($this->list);
 		foreach($this->list as $t)
 		{
 			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc[] = floatval($t);
 		}
 		if (count($acc)==0) return '⦵';
+		//print_r($acc);
 		sort($acc,SORT_NUMERIC);
+		//print_r($acc);
+		
 		if (count($acc) % 2 != 0)
 			$v = $acc[(count($acc)-1)/2];
 		else
-			$v = $acc[count($acc)/2] + $acc[count($acc)/2-1];
+			$v = ($acc[count($acc)/2] + $acc[count($acc)/2-1])/2;
+		
 		return cText12($v);
 	}
 	
@@ -4087,6 +4116,40 @@ function cText12($d)
 	
 }
 
+
+function p_open($flag) {
+    global $p_times;
+    if (null === $p_times)
+        $p_times = [];
+    if (! array_key_exists($flag, $p_times))
+        $p_times[$flag] = [ 'total' => 0, 'open' => 0 ];
+    $p_times[$flag]['open'] = microtime(true);
+}
+
+function p_close($flag)
+{
+    global $p_times;
+    if (isset($p_times[$flag]['open'])) {
+        $p_times[$flag]['total'] += (microtime(true) - $p_times[$flag]['open']);
+        unset($p_times[$flag]['open']);
+    }
+}
+
+function p_dump()
+{
+    global $p_times;
+    $dump = [];
+    $sum  = 0;
+    if(!isset($p_times)) return $dump;
+    foreach ($p_times as $flag => $info) {
+        $dump[$flag]['elapsed'] = $info['total'];
+        $sum += $info['total'];
+    }
+    foreach ($dump as $flag => $info) {
+        $dump[$flag]['percent'] = $dump[$flag]['elapsed']/$sum;
+    }
+    return $dump;
+}
 
 
 ?>

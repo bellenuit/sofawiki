@@ -434,10 +434,15 @@ function swAutoCropResize2($img0, $destw, $desth, $analyze = false)
 function swImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh)
 {
 	// bigger -> linear
-	$scalexy = ($destw + $desth) / ($sourcew + $sourceh);
+
+		$scalexy = ($destw + $desth) / ($sourcew + $sourceh);
+
 	
 	if ($scalexy > 1 || true) // bicubic rescale not ready yet
+	{
+
 		ImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh);
+	}
 	else
 	{
 		// first scale down then  place

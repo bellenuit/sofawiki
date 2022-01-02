@@ -2,6 +2,20 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+/**
+ *	This file contains the swBitmap class.
+ *  
+ *  swBitmap provides a memory-effective way to store an array of booleans using only one bit per array. 
+ *  The bit-array is n-based. You cannot set the bit 0.
+ *  Note that 8 bit are in a byte.
+ *  If the length is not a multiple of 8, there are 1-7 bits at the end that are undefined. (To be taken care of)
+ */
+
+
+/**
+ * Provides a memory-effective way to store an array of booleans using only one bit per array. 
+ */
+
 class swBitmap extends swPersistance 
 {
 	var $length;
@@ -205,6 +219,10 @@ class swBitmap extends swPersistance
 		return $result;
 
 	}
+	
+	/**
+	 * Returns a bitmap as result of OR between this and bitmap	
+	 */
 	
 	function orop($bitmap)
 	{

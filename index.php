@@ -1,13 +1,13 @@
 <?php
 
-/*
-	SofaWiki
-	Matthias Buercher 2010 
-	matti@belle-nuit.com
-	
-	index.php 
-	main entry point
-*/
+/**
+ *	Main entry point 
+ *	
+ *  @author Matthias Bürcher 2010 matti@belle-nuit.com
+ *  @link https://www.sofawiki.com
+ *	@version 3.6.0
+ *  
+ */
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 ini_set("display_errors",1); 
@@ -588,6 +588,43 @@ switch ($action)
 								{
 									if (swNameURL($k) == $specialname)
 									{
+										
+										/* SOFADOC_INCLUDE inc/special/allpages.php */
+										/* SOFADOC_INCLUDE inc/special/backup.php */
+										/* SOFADOC_INCLUDE inc/special/categories.php */
+										/* SOFADOC_INCLUDE inc/special/dead-end-pages.php */
+										/* SOFADOC_INCLUDE inc/special/deleted-pages.php */
+										/* SOFADOC_INCLUDE inc/special/deny.php */
+										/* SOFADOC_INCLUDE inc/special/images.php */
+										/* SOFADOC_INCLUDE inc/special/import.php */
+										/* SOFADOC_INCLUDE inc/special/indexes.php */
+										/* SOFADOC_INCLUDE inc/special/info.php */
+										/* SOFADOC_INCLUDE inc/special/logs.php */
+										/* SOFADOC_INCLUDE inc/special/long-pages.php */
+										/* SOFADOC_INCLUDE inc/special/metrics.php */
+										/* SOFADOC_INCLUDE inc/special/most-linked-categories.php */
+										/* SOFADOC_INCLUDE inc/special/most-linked-pages.php */
+										/* SOFADOC_INCLUDE inc/special/orphaned-pages.php */
+										/* SOFADOC_INCLUDE inc/special/passwords.php */
+										/* SOFADOC_INCLUDE inc/special/protected-pages.php */
+										/* SOFADOC_INCLUDE inc/special/query.php */
+										/* SOFADOC_INCLUDE inc/special/recent-changes.php */
+										/* SOFADOC_INCLUDE inc/special/regex.php */
+										/* SOFADOC_INCLUDE inc/special/relation.php */
+										/* SOFADOC_INCLUDE inc/special/snapshot.php */
+										/* SOFADOC_INCLUDE inc/special/special-pages.php */
+										/* SOFADOC_INCLUDE inc/special/system-messages.php */
+										/* SOFADOC_INCLUDE inc/special/templates.php */
+										/* SOFADOC_INCLUDE inc/special/tickets.php */
+										/* SOFADOC_INCLUDE inc/special/uncategorized-pages.php */
+										/* SOFADOC_INCLUDE inc/special/unused-categories.php */
+										/* SOFADOC_INCLUDE inc/special/unused-files.php */
+										/* SOFADOC_INCLUDE inc/special/update.php */
+										/* SOFADOC_INCLUDE inc/special/upload.php */
+										/* SOFADOC_INCLUDE inc/special/upload-multiple.php */
+										/* SOFADOC_INCLUDE inc/special/users.php */
+										/* SOFADOC_INCLUDE inc/special/wanted-pages.php */
+										
 										include 'inc/special/'.$swSpecials[$k];
 										$specialfound = true;
 									}
@@ -747,10 +784,24 @@ switch ($action)
 										if ($k == 'submiteditor') continue;
 										if ($k == 'name') continue;
 										
+										$v0 = $v;
+										
 										if (is_array($v)) 
 										{
 											// options, keep keys, not values
-											$v = join('::',array_keys($v));
+											$va = array();
+											foreach($v as $velem)
+												$va[] = swEscape($velem);
+											$v = join('::',array_keys($va));
+										}
+										else
+										{
+											$v = swEscape($v);
+										}
+										
+										if (strstr($k,':')) // textplus
+										{
+											$k = substr($k,0,strpos($k,':'));
 										}
 										
 										if (!$v) continue;
@@ -768,7 +819,13 @@ switch ($action)
 												$sublangwiki->insert();
 											}
 											continue;
-										}									
+										}
+										
+										if ($k == 'unusedtext')	
+										{
+											$content .= $v0.PHP_EOL;
+											continue;
+										}								
 										
 										$content .= '[['.$k.'::'.$v.']]'.PHP_EOL;
 									}
@@ -867,15 +924,25 @@ switch ($action)
 	case 'delete': 	
 					if ($user->hasright('delete', $wiki->name))
 					{
-						if (!swGetArrayValue($_POST,'submitdelete',false) )
+						if (!swGetArrayValue($_POST,'submitdelete',false) && !swGetArrayValue($_POST,'submitdeletewithfile',false))
 						{
 								$swError = swSystemMessage('not-delete-without-post',$lang);
+								
 						}
 						else
 						{
 							$wiki->user = $user->name;
 							$wiki->delete();
-							$swParsedName = 'Deleted: '.$name;
+							
+							
+							if (swGetArrayValue($_POST,'submitdeletewithfile',false))
+							{
+								$path = $swRoot.'/site/files/'.str_replace('Image:','',$wiki->name);
+								unlink($path);
+								
+								$swParsedName = 'Deleted with file: '.$name;
+							}
+							
 							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
 						}
 					}
@@ -987,6 +1054,15 @@ else
 
 
 echotime("skin");
+
+/* SOFADOC_INCLUDE inc/skins/default.php */
+/* SOFADOC_INCLUDE inc/skins/diary.php */
+/* SOFADOC_INCLUDE inc/skins/iphone.php */
+/* SOFADOC_INCLUDE inc/skins/law.php */
+/* SOFADOC_INCLUDE inc/skins/tele.php */
+/* SOFADOC_INCLUDE inc/skins/tribune.php */
+/* SOFADOC_INCLUDE inc/skins/wiki.php */
+/* SOFADOC_INCLUDE inc/skins/zeitung.php */
 
 // apply page skin
 if (!array_key_exists(@$skin,$swSkins)) $skin = 'default';

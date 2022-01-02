@@ -1,9 +1,32 @@
 <?php
+	
+/**
+ *	This file has all the includes. 
+ *
+ *  It includes all code from the inc and the site folder and the site/configuration.php file. 
+ *  It initializes all global variables.
+ *  It checks the cookies, if it is called from index.php (if (defined('SOFAWIKIINDEX')).
+ *  It initializes the database.
+ *
+ *  Other PHP code can include api.php to get full access to the database. 
+ *  It can either access a wiki by the functions swMessage($msg,$lang) or swSystemMessage($msg,$lang,$styled=false) or create a new wiki, lookup it or insert changes.
+ *
+ * $w = new swWiki;
+ * $w->name = 'myname';
+ * $w->lookup();
+ * $s = $w->content;
+ * ...
+ * $w->content = $s;
+ * $w->insert();
+ * 
+ * Note that you work with wikitext. If you want to have HTML, you should parse it.
+ * You can also use the swFilter function to search in the wiki.
+ */
 
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.6.0';  
+$swVersion = '3.6.1';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -21,6 +44,7 @@ $swEditZoneColor = true;
 */
 
 // core
+/* SOFADOC_IGNORE $swRoot/ */
 $swRoot = dirname(__FILE__); // must be first
 
 // inis
@@ -207,9 +231,15 @@ $db = new swDB;
 
 
 if (file_exists($swRoot.'/site/configuration.php'))
-	include_once $swRoot.'/site/configuration.php';
+{
+	// SOFADOC_IGNORE
+	$configuration = $swRoot.'/site/configuration.php';
+	include_once $configuration;
+} 
 else
+{
 	include_once $swRoot.'/inc/configuration-install.php';
+}
 
 
 include_once $swRoot.'/inc/ramdisk.php';
@@ -261,7 +291,9 @@ else
 $db->salt = $swEncryptionSalt;
 
 
-// public functions
+/** 
+ * Returns a page based by name and language. The page is loosly parsed (template, links and style)
+ */
 
 function swMessage($msg,$lang, $styled=false)
 {
@@ -292,6 +324,9 @@ function swMessage($msg,$lang, $styled=false)
 	
 }
 
+/** 
+ * Returns a page in the system namespace based by name and language. The page is loosly parsed (template, links and style)
+ */
 
 function swSystemMessage($msg,$lang,$styled=false)
 {

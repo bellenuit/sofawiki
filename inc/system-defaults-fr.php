@@ -31,6 +31,7 @@ $swSystemDefaults["protect/fr"] = "Prot&eacute;ger";
 $swSystemDefaults["unprotect/fr"] = "D&eacute;prot&eacute;ger";
 $swSystemDefaults["rename/fr"] = "Renommer";
 $swSystemDefaults["delete/fr"] = "Effacer";
+$swSystemDefaults["delete-with-file/fr"] = "Effacer avec fichier";
 $swSystemDefaults["cancel/fr"] = "Annuler";
 
 

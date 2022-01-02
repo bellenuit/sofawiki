@@ -16,6 +16,7 @@ class swImagesParser extends swParser
 	function dowork(&$wiki)
 	{
 	
+		global $swRoot;
 		$s = $wiki->parsedContent;
 		
 		// Image page
@@ -32,7 +33,7 @@ class swImagesParser extends swParser
 			if (isset($_GET['imagecacherefresh']))
 			{
 				
-				global $swRoot;
+				
 				
 				$files = glob($swRoot.'/site/cache/*'.$file);
 				
@@ -45,8 +46,43 @@ class swImagesParser extends swParser
 				global $swEditMenus;
 				global $lang;
 				global $swRoot;
-				$swEditMenus['imagecacherefresh'] = '<a href="'.$wiki->link('editview','--').'&imagecacherefresh=1" rel="nofollow">'.swSystemMessage('Image Cache Refresh',$lang).'</a>';
+				global $user;
 				
+				$s = '';
+								
+				if (isset($_POST['submitcrop']) && $_POST['file'] )
+				{
+					$path = $_POST['name'];
+					$path = str_replace('Image:',$swRoot.'/site/files/',$path);
+					
+					
+					
+					$img = @ImageCreateFromJpeg($path); 
+					
+					//echo $path;
+					//echo " swImageCopyResampled($back, $img,0,0,$_POST[cropleft],$_POST[croptop], $_POST[cropwidth], $_POST[cropheight])";
+					
+					
+					$back = imagecrop($img,array('x' => $_POST['cropleft'],'y' => $_POST['croptop'], 'width' => $_POST['cropwidth'], 'height' => $_POST['cropheight']));
+					
+					//swImageCopyResampled($back, $img,0,0,0,0,100,100,100,100);
+					
+					$path1 = $swRoot.'/site/files/'.$_POST['file'];
+					imagejpeg($back,$path1,100);
+					
+					$wiki2 = new swWiki;
+					$wiki2->name ='Image:'.$_POST['file'];
+					$wiki2->user = $user->name;
+					$wiki2->content = '[[:'.$_POST['name'].']]'.PHP_EOL.'[[imagechecksum::'.md5_file($path1).']]';
+					$wiki2->insert();
+
+					$s .=  '<br/><a href="'.$wiki2->link('').'">Image:'.$_POST['file'].'</a>';
+					$s .=  '<p><img src="site/files/'.$_POST['file'].'" width=320>';
+
+					
+					
+				}
+								
 				if (file_exists($swRoot.'/site/files/'.$file))
 				{
 					$checkis = md5_file($swRoot.'/site/files/'.$file);
@@ -68,7 +104,380 @@ class swImagesParser extends swParser
 			
 			if (substr($file,-4) == '.jpg' || substr($file,-5) == '.jpeg' || substr($file,-4) == '.png' || substr($file,-4) == '.gif')
 			{
-				$s ='<img class="embeddimage" alt="" src="site/files/'.$file.'"><p>'.$s;
+				
+				
+				$path = $swRoot.'/site/files/'.$file;
+				$img = @ImageCreateFromJpeg($path); 
+				$originalwidth = ImagesX($img);
+				$originalheight = ImagesY($img);
+				$scaledheight = $originalheight * 640 / $originalwidth;
+				
+				
+				
+				$s .='<p><div style="position:relative"><img class="embeddimage" id="image" alt="" src="site/files/'.$file.'" style="width:640px; height:'.$scaledheight.'px; position:absolute; top:0px; left:0px;"><canvas id="imagecanvas" style="position:absolute; top:0px; left:0px;" onmouseleave="drawCrop()" /></div>';
+				$s .= $wiki->parsedContent;
+				
+				if (substr($file,-4) == '.jpg' || substr($file,-4) == 'jpeg')
+				{
+				
+				$s .= '<div style="position:relative"><h4>Crop</h4>';
+				$s .= '<button type="button" onclick="setRatio(\'2:1\')">2:1</button>';
+				$s .= '<button type="button" onclick="setRatio(\'16:9\')">16:9</button>';
+				$s .= '<button type="button" onclick="setRatio(\'3:2\')">3:2</button>';
+				$s .= '<button type="button" onclick="setRatio(\'4:3\')">4:3</button>';
+				$s .= '<button type="button" onclick="setRatio(\'1:1\')">1:1</button>';
+				$s .= '<button type="button" onclick="setRatio(\'2:3\')">2:3</button>';
+				$s .= '<button type="button" onclick="setRatio(\'1:2\')">1:2</button>';
+				$s .= '<button type="button" onclick="setRatio(\'free\')">Free</button> ';
+				$s .= '<form method="post" action="index.php">';
+				$s .= '<input type="hidden" name="name" value="'.$wiki->name .'">';
+				$s .= 'W <input type="text" name="cropwidth" id="cropwidth" size=5 value="">';
+				$s .= 'H <input type="text" name="cropheight" id="cropheight" size=5value="">';
+				$s .= 'L <input type="text" name="cropleft" id="cropleft" size=5 value="">';
+				$s .= 'T <input type="text" name="croptop" id="croptop" size=5 value="">';
+				$s .= '<input type="text" name="file" id="cropfile" size=32 value="">';
+				$s .= '<input type="submit" name="submitcrop" value="Save">';
+				$s .= '</form>';
+				
+				$s .= "<nowiki><script>
+				
+var canvas = document.getElementById('imagecanvas');	
+var img = document.getElementById('image');
+canvas.setAttribute('width',img.clientWidth);
+canvas.setAttribute('height',img.clientHeight);
+canvas.parentNode.style.height = img.clientHeight+'px';
+var ctx = canvas.getContext('2d');	
+ctx.width = img.clientWidth;
+ctx.height = img.clientHeight;	
+var xscale = ctx.width;
+var yscale = ctx.height;
+wfield = document.getElementById('cropwidth');
+hfield = document.getElementById('cropheight');
+tfield = document.getElementById('cropleft');
+lfield = document.getElementById('croptop');
+textfield = document.getElementById('cropfile');
+var x = 0;
+var y = 0;
+var w = xscale;
+var h = yscale;
+var forceratio = 0;
+var draghandles = [];
+draghandles['center'] = {id:'center',x:xscale/2,y:yscale/2,isDragging:false};
+draghandles['left'] = {id:'left',x:0,y:yscale/2,isDragging:false};
+draghandles['right'] = {id:'right',x:xscale,y:yscale/2,isDragging:false};
+draghandles['top'] = {id:'top',x:xscale/2,y:0,isDragging:false};
+draghandles['bottom'] = {id:'bottom',x:xscale/2,y:yscale,isDragging:false};
+var BB=canvas.getBoundingClientRect();
+var offsetX=BB.left;
+var offsetY=BB.top;
+var startX = 0;
+var startY = 0;
+var forceratio = 0;
+dragok = false;
+canvas.onmousedown = down;
+canvas.onmousemove = move;
+canvas.onmouseup = up;
+formscale = ".$originalwidth."/	xscale;	
+
+
+function setRatio(r)
+{
+	forceratio = 1;
+	switch(r)
+	{
+		case '2:1' : ratio = 2.0; break;
+		case '16:9' : ratio = 16.0/9.0; break;
+		case '3:2' : ratio = 1.5; break;
+		case '4:3' : ratio = 4.0/3.0; break;
+		case '1:1' : ratio = 1.0; break;
+		case '2:3' : ratio = 2.0/3.0; break;
+		case '1:2' : ratio = 0.5; break;
+		default: ratio = xscale / yscale; forceratio = 0;
+	}
+	if (forceratio) forceratio = ratio;
+	
+	if (xscale > ratio * yscale)
+		{ h = yscale; w = ratio * h; y = 0; x = (xscale - w) / 2; }
+	else
+		{ w = xscale; h = w / ratio; x = 0; y = (yscale - h) / 2; }
+
+	x = Math.round(x);
+	y = Math.round(y)
+	w = Math.round(w);
+	h = Math.round(h);
+	
+	s = draghandles['center']; s.x = x + w/2; s.y = y + h/2;
+	s = draghandles['left']; s.x = x; s.y = y + h/2;
+	s = draghandles['right']; s.x = x + w; s.y = y + h/2;
+	s = draghandles['top']; s.x = x + w/2; s.y = y;
+	s = draghandles['bottom']; s.x = x + w/2; s.y = y + h;
+	
+	drawCrop();
+}
+
+function move(e)
+{
+	e.preventDefault();
+	e.stopPropagation();
+	
+	ctx.globalAlpha = 1.0;
+	ctx.fillStyle = '#00FF00';
+	
+	var BB=canvas.getBoundingClientRect();
+	var offsetX=BB.left;
+	var offsetY=BB.top;
+	
+	var mx=parseInt(e.clientX-offsetX);
+	var my=parseInt(e.clientY-offsetY);
+	var dx=mx-startX;
+    var dy=my-startY;
+	
+	if (dragok)
+	{
+		for (const key in draghandles)
+		{
+			 const s = draghandles[key];
+			 
+			 if (s.isDragging)
+			 {				
+			    switch(key)
+		        {
+			        case 'center': dx = Math.max(-x,Math.min(dx,xscale-x-w));
+			        			   dy = Math.max(-y,Math.min(dy,yscale-y-h));
+			        			   x = x + dx;
+			        			   y = y + dy; break;
+			        case 'left'  : x1 = Math.max(0,Math.min(x+dx,x+w));			        
+			        			   w = w + x - x1;
+			        			   x = x1;
+			        			   if (forceratio)
+			        			   {
+			        			   		h1 = w / forceratio;
+			        			   		y = y + (h - h1)/2;
+			        			   		h = h1;	
+			        			   		
+			        			   		if (y < 0) y = 0;
+			        			   		if (h > yscale) { h = yscale; w = yscale * forceratio ; }
+			        			   		if (y + h > yscale) y = yscale -h;		        			   		
+			        			   }
+			        			   s.x = x; break;	
+					case 'right' : w = Math.max(0,Math.min(w+dx,xscale-x));
+			        			   if (forceratio)
+			        			   {
+			        			   		h1 = w / forceratio;
+			        			   		y = y + (h - h1)/2;
+			        			   		h = h1;	
+			        			   		w1 = w;
+			        			   		if (y < 0) y = 0;
+			        			   		if (h > yscale) { h = yscale; w = yscale * forceratio ; }
+			        			   		if (y + h > yscale) y = yscale -h;	
+			        			   		x = x + w1 - w;	        			   		
+			        			   }
+			        			   s.x = x+w;
+			        			   break;
+			        case 'top' :   y1 = Math.max(0,Math.min(y+dy,yscale-h));
+			       				   h = h + y - y1;
+			        			   y = y1;
+			        			   if (forceratio)
+			        			   {
+			        			   		w1 = h * forceratio;
+			        			   		x = x + (w - w1)/2;
+			        			   		w = w1;	
+			        			   		
+			        			   		if (x < 0) x = 0;
+			        			   		if (w > xscale) { w = xscale; h = xscale / forceratio ;} 
+			        			   		if (x + w > xscale) x = xscale-w;		        			   		
+			        			   }
+			        			   
+			        			   s.y = y; 
+			        			   break;	
+			        case 'bottom' : h = Math.max(0,Math.min(h+dy,yscale-y));
+			        			   s.y = y+h; 
+			        			   if (forceratio)
+			        			   {
+			        			   		w1 = h * forceratio;
+			        			   		x = x + (w - w1)/2;
+			        			   		w = w1;	
+			        			   		h1 = h;
+			        			   		if (x < 0) x = 0;
+			        			   		if (w > xscale) { w = xscale; h = xscale / forceratio ; }
+			        			   		if (x + w > xscale) x = xscale - w;	
+			        			   		y = y + h1 - h;	  		        			   		
+			        			   }			        			   
+			        			   break;
+			    }
+			    
+			    
+			    
+			    x = Math.round(x);
+				y = Math.round(y)
+				w = Math.round(w);
+				h = Math.round(h);
+			    
+			    draghandles['center'].x = x + w/2;
+			    draghandles['center'].y = y + h/2;
+				draghandles['top'].x = x + w/2;
+				draghandles['top'].y = y;
+				draghandles['bottom'].x = x + w/2;
+				draghandles['bottom'].y = y + h;
+				draghandles['left'].x = x;
+			    draghandles['left'].y = y + h/2;
+			    draghandles['right'].x = x + w;
+			    draghandles['right'].y = y + h/2;
+
+			 }
+			 
+		}
+		
+	}
+	
+	
+	drawHandles();
+	startX = mx;
+	startY = my;
+}
+
+function down(e)
+{
+	e.preventDefault();
+	e.stopPropagation();
+	
+	var BB=canvas.getBoundingClientRect();
+	var offsetX=BB.left;
+	var offsetY=BB.top;
+	
+	var mx=parseInt(e.clientX-offsetX);
+	var my=parseInt(e.clientY-offsetY);
+	
+	dragok=false;
+	for (const key in draghandles)
+	{
+		const s = draghandles[key];
+		if (mx>s.x-10 && mx<s.x+10 && my>s.y-10 && my<s.y+10)
+		{
+			dragok=true; 
+	        s.isDragging=true;
+	        
+
+		}
+		else
+		{
+			s.isDragging=false;
+		}
+	}
+	drawHandles();
+	startX = mx;
+	startY = my;
+}
+
+function up(e)
+{
+	e.preventDefault();
+	e.stopPropagation();
+	for (const key in draghandles)
+	{
+		const s = draghandles[key];
+				
+		s.isDragging=false;
+	}
+	
+	dragok=false;
+}
+
+
+function drawCrop()
+{
+	
+	wfield.setAttribute('value',Math.round(w*formscale));
+	hfield.setAttribute('value',Math.round(h*formscale));
+	tfield.setAttribute('value',Math.round(x*formscale));
+	lfield.setAttribute('value',Math.round(y*formscale));
+	textfield.setAttribute('value',w+'-'+h+'-'+x+'-'+y+'-".str_replace('Image:','',$wiki->name)."');
+	
+	
+	// fill outside
+	ctx.globalAlpha = 0.5;
+	ctx.fillStyle = '#FFFFFF';
+	ctx.clearRect(0,0,ctx.width,ctx.height);
+	ctx.fillRect(0,0,ctx.width,ctx.height);
+	
+	ctx.clearRect(x,y,w,h);
+	
+	
+}
+
+
+function drawHandles()
+{
+	drawCrop()
+	
+	ctx.globalAlpha = 1.0;
+	ctx.strokeStyle = '#FFFFFF';
+	ctx.lineWidth = 1.0;
+	// thirds
+	
+	ctx.strokeRect(x,y,w/3,h);
+	ctx.strokeRect(x+w*2/3,y,w/3,h);
+	ctx.strokeRect(x,y,w,h/3);
+	ctx.strokeRect(x,y+h*2/3,w,h/3);
+
+	ctx.globalAlpha = 1.0;
+	ctx.fillStyle = '#00FF00';	
+	
+	for (const key in draghandles)
+	{
+		 const s = draghandles[key];		 
+		 
+		 if (s.isDragging)
+		 	ctx.fillStyle = '#00FF00';
+		 else
+		 	ctx.fillStyle = '#FFFFFF';
+		 ctx.fillRect(s.x-10,s.y-10,20,20); 
+		 
+	}
+
+}
+
+</script></nowiki>";
+				$files = glob($swRoot.'/site/files/*'.$file);
+				
+				if (count($files))
+				{
+					// $s .= '<h4>Crop</h4>';
+					foreach($files as $f)
+					{
+						$p = str_replace($swRoot.'/','',$f);
+						$l = str_replace('site/files/','',$p);
+						$s .= '<p>[[:Image:'.$l.']]';
+					}
+				}
+				
+				}
+
+				
+				$files = glob($swRoot.'/site/cache/*'.$file);
+				
+				if (count($files))
+				{
+					$s .= '<h4>Cache</h4><p><a href="'.$wiki->link('editview','--').'&imagecacherefresh=1" rel="nofollow">'.swSystemMessage('Image Cache Refresh',$lang).'</a>';
+;
+					foreach($files as $f)
+					{
+						$p = str_replace($swRoot.'/','',$f);
+						$l = str_replace('site/cache/','',$p);
+						$s .= '<p><a href="'.$p.'" target="_blank">'.$l.'</a>';
+					}
+				}
+				
+				
+				
+				$s .= '</div>';
+				
+				
+				
+				
+				
+				
+				
 				
 				/*
 				if (isset($_POST['submitconvert']))

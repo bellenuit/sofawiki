@@ -31,6 +31,7 @@ $swSystemDefaults["protect/de"] = "Sch&uuml;tzen";
 $swSystemDefaults["unprotect/de"] = "Schutz aufheben";
 $swSystemDefaults["rename/de"] = "Umbenennen";
 $swSystemDefaults["delete/de"] = "L&ouml;schen";
+$swSystemDefaults["delete-with-file/de"] = "L&ouml;schen (inkl. Datei)";
 $swSystemDefaults["cancel/de"] = "Abbrechen";
 
 $swSystemDefaults["username/de"] = "Benutzername";
