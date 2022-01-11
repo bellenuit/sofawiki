@@ -465,9 +465,9 @@ class swExpression
 								if (count($operatorstack) == 0)
 								throw new swExpressionError('Compile missing open paranthesis '. join(' ',$rpn),21);
 								$e = array_pop($operatorstack);
-								if (substr($e,0,2)=='@(')
+								if (mb_substr($e,0,2,'UTF-8')=='@(')
 								{
-									$fn = ':'.substr($e,2);
+									$fn = ':'.mb_substr($e,2,null,'UTF-8');
 									// if ($fn != ':comma')
 										$this->rpn[] = $fn;
 								}
@@ -480,7 +480,7 @@ class swExpression
 								{
 									// echo $e.' ';
 								}
-							} while ( substr($e,0,2) != '@(' && $e != '(' );
+							} while ( mb_substr($e,0,2,'UTF-8') != '@(' && $e != '(' );
 							$negationpossible = false; break;
 				default: 	$opfound = false;
 							if(isset($swExpressionOperators[$t]))
@@ -552,18 +552,18 @@ class swExpression
 		}
 		for	($i = count($this->rpn)-1;$i >= 0; $i--)
 		{
-			if (substr($this->rpn[$i],0,9) == ':andright')
+			if (mb_substr($this->rpn[$i],0,9,'UTF-8') == ':andright')
 			{
-				$l = substr($this->rpn[$i],9);
+				$l = mb_substr($this->rpn[$i],9,null,'UTF-8');
 				$this->rpn[$i] = ':andright';
 				array_splice($this->rpn,$i+1,0,$l);	
 				
 											
 			}
 				
-			if (substr($this->rpn[$i],0,8) == ':orright')
+			if (mb_substr($this->rpn[$i],0,8,'UTF-8') == ':orright')
 			{
-				$l = substr($this->rpn[$i],8);
+				$l = mb_substr($this->rpn[$i],8,null,'UTF-8');
 				$this->rpn[$i] = ':orright';
 				array_splice($this->rpn,$i+1,0,$l);
 			}
@@ -618,7 +618,7 @@ class swExpression
 			$e = $this->rpn[$i];
 			if ($e == '') continue;
 			
-			$ch = substr($e,0,1);
+			$ch = mb_substr($e,0,1,'UTF-8');
 			switch ($ch)
 			{
 				case ':': 	
@@ -732,15 +732,15 @@ class swExpression
 													
 							}
 							break;
-				case '$':	$this->stack[] = substr($e,1);
+				case '$':	$this->stack[] = mb_substr($e,1,null,'UTF-8');
 							break;
-				case '/':	$currentlabel = substr($e,1);
+				case '/':	$currentlabel =  mb_substr($e,1,null,'UTF-8');
 							break;
 				case '#':	$currentlabel = $e;
 							break;
-				default:	if (substr($e,-1)=='^')
+				default:	if (mb_substr($e,-1,null,'UTF-8')=='^')
 							{
-								$e2 = substr($e,0,-1);
+								$e2 = mb_substr($e,0,-1,'UTF-8');
 								
 								if (array_key_exists($e2,$localdict))
 									$this->stack[] = $localdict[$e2];
@@ -815,29 +815,29 @@ class swExpression
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.12f',$d);
 		
-		if (substr($s,0,1)=='-') $neg = 1; else $neg = 0;
-		$p = strpos($s,'.');
+		if (mb_substr($s,0,1,'UTF-8')=='-') $neg = 1; else $neg = 0;
+		$p = mb_strpos($s,'.',0,'UTF-8');
 		if ($p === FALSE)
 		{
 			$comma = 0;
-			$ip = strlen($s)-$neg;
+			$ip = mb_strlen($s,'UTF-8')-$neg;
 			$fp = 0;
 		}
 		else
 		{
 			$comma = 1;
 			$ip = $p;
-			$fp = strlen($s)-$neg-$comma-$ip;
+			$fp = mb_strlen($s,'UTF-8')-$neg-$comma-$ip;
 		}
 		
 		$limit = 12;
 		
 		if ($ip+$comma+$fp>$limit)
 		{
-			$over = substr($s,$limit+$neg,1);
+			$over = mb_substr($s,$limit+$neg,1,'UTF-8');
 			if ($over >= 5)
 			{
-				$schars = str_split(substr($s,0,$limit+$neg));
+				$schars = swmb_str_split(mb_substr($s,0,$limit+$neg,'UTF-8'),1,'UTF-8');
 				for($i = count($schars)-1;$i>=0;$i--)
 				{
 					$carry = false;
@@ -862,14 +862,14 @@ class swExpression
 				
 			}
 			else
-				$s = substr($s,0,$limit+$neg);
+				$s = mb_substr($s,0,$limit+$neg,'UTF-8');
 		}
 		
 		$s = TrimTrailingZeroes($s);
 		
 		
-		if (substr($s,-1)==".")
-			$s = substr(s,0,-1);
+		if (mb_substr($s,-1,null,'UTF-8')==".")
+			$s = mb_substr(s,0,-1,'UTF-8');
 		
 		return $s;
 		
@@ -1169,29 +1169,29 @@ class swExpressionFunction
 		// s = format(d,"-0.##############")
 		$s = sprintf('%1.14f',$d);
 		
-		if (substr($s,0,1)=='-') $neg = 1; else $neg = 0;
-		$p = strpos($s,'.');
+		if (mb_substr($s,0,1,'UTF-8')=='-') $neg = 1; else $neg = 0;
+		$p = mb_strpos($s,'.',0,'UTF-8');
 		if ($p === FALSE)
 		{
 			$comma = 0;
-			$ip = strlen($s)-$neg;
+			$ip = mb_strlen($s,'UTF-8')-$neg;
 			$fp = 0;
 		}
 		else
 		{
 			$comma = 1;
 			$ip = $p;
-			$fp = strlen($s)-$neg-$comma-$ip;
+			$fp = mb_strlen($s,'UTF-8')-$neg-$comma-$ip;
 		}
 		
 		$limit = 16;
 		
 		if ($ip+$comma+$fp>$limit)
 		{
-			$over = substr($s,$limit+$neg,1);
+			$over = mb_substr($s,$limit+$neg,1,'UTF-8');
 			if ($over >= 5)
 			{
-				$schars = str_split(substr($s,0,$limit+$neg));
+				$schars = swmb_str_split(mb_substr($s,0,$limit+$neg,'UTF-8'),1,'UTF-8');
 				for($i = count($schars)-1;$i>=0;$i--)
 				{
 					$carry = false;
@@ -1216,14 +1216,14 @@ class swExpressionFunction
 				
 			}
 			else
-				$s = substr($s,0,$limit+$neg);
+				$s = mb_substr($s,0,$limit+$neg,'UTF-8');
 		}
 		
 		$s = TrimTrailingZeroes($s);
 		
 		
-		if (substr($s,-1)==".")
-			$s = substr(s,0,-1);
+		if (mb_substr($s,-1,null,'UTF-8')==".")
+			$s = mb_substr(s,0,-1,'UTF-8');
 		
 		return $s;
 	}
@@ -1284,8 +1284,8 @@ class swExpressionCompiledFunction extends swExpressionFunction
 		 	$line = trim($this->lines[$i]);
 		 	$ti = $il;
 		 	$this->compiledlines[] = '#'.$ti;
-		 	if (strpos($line,'// ')>-1)
-		 		$line = trim(substr($line,0,strpos($line,'// ')));
+		 	if (mb_strpos($line,'// ',0,'UTF-8')>-1)
+		 		$line = trim(mb_substr($line,0,mb_strpos($line,'// ',0,'UTF-8'),'UTF-8'));
 		 	if ($line=='') continue;
 		 	$fields = explode(' ',$line);
 		 	$command = array_shift($fields);
@@ -1297,11 +1297,11 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 							throw new swExpressionError('Invalid instruction #'.$ti,66);
 			 						$dummy = array_shift($fields);
 			 						$body = trim(join(' ',$fields));
-									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
+									if (mb_substr($body,0,1,'UTF-8') != '(' || mb_substr($body,-1,1,'UTF-8') != ')')
 									{
 										throw new swExpressionError('Missing paranthesis #'.$ti,66);
 									}
-									$body = substr($body,1,-1);
+									$body = mb_substr($body,1,-1,'UTF-8');
 			 						$fields = explode(',',$body);
 			 						$this->arity = count($fields);
 			 						for ($j = $this->arity-1;$j>=0;$j--)
@@ -1364,8 +1364,8 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 						{
 				 						$j++;
 				 						$line = trim($this->lines[$j]);
-				 						if (strpos($line,'// ')>-1) 
-				 							$line = trim(substr($line,0,strpos($line,'// ')));
+				 						if (mb_strpos($line,'// ',0,'UTF-8')>-1) 
+				 							$line = trim(mb_substr($line,0,mb_strpos($line,'// ',0,'UTF-8'),'UTF-8'));
 				 						//echo $line;
 				 						$fields = explode(' ',$line);
 				 						$command2 = $fields[0];
@@ -1430,8 +1430,8 @@ class swExpressionCompiledFunction extends swExpressionFunction
 			 						{
 				 						$j++;
 				 						$line = trim($this->lines[$j]);
-				 						if (strpos($line,'// ')>-1)
-				 							$line = trim(substr($line,0,strpos($line,'// ')));
+				 						if (mb_strpos($line,'// ',0,'UTF-8')>-1)
+				 							$line = trim(mb_substr($line,0,mb_strpos($line,'// ',0,'UTF-8'),'UTF-8'));
 				 						$fields = explode(' ',$line);
 				 						$command2 = $fields[0];
 				 						switch ($command2)
@@ -1874,7 +1874,7 @@ class XPlength extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		$stack[] = $this->ctext(strlen($a));		
+		$stack[] = $this->ctext(mb_strlen($a,'UTF-8'));		
 	}
 }
 
@@ -2405,7 +2405,7 @@ class XPsubstr extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 		$c = array_pop($stack);		
-		$stack[] = substr($c,intval($b),intval($a));		
+		$stack[] = mb_substr($c,intval($b),intval($a),'UTF-8');		
 	}
 }
 
@@ -2496,6 +2496,12 @@ class XpxHint extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
+		
+		if ($a == "*") 
+		{
+			$stack[] = 1;
+			return;
+		}
 		
 		$hors = explode('|',$a);
 		$hors2 = array();
@@ -2629,7 +2635,7 @@ class XpNative extends swExpressionFunction
 		for ($i = 0; $i < $this->arity ;$i++)
 		
 		$args[] = array_pop($stack);
-		$args[] = substr($this->label,1);
+		$args[] = mb_substr($this->label,1,'UTF-8');
 		$args = array_reverse($args);
 		
 		
@@ -2644,7 +2650,7 @@ class XpNative extends swExpressionFunction
 
 
 function TrimTrailingZeroes($nbr) {
-    if(strpos($nbr,'.')!==false) $nbr = rtrim($nbr,'0');
+    if(mb_strpos($nbr,'.',0,'UTF-8')!==false) $nbr = rtrim($nbr,'0');
     return rtrim($nbr,'.') ?: '0';
 }
 
@@ -2665,6 +2671,18 @@ catch (swExpressionError $err)
 	print_r($exp->stack);
 	
 	// print_r($exp->operators);
+}
+
+// mb_str_split only in 7.4
+function swmb_str_split($string, $split_length = 1, $encoding = 'UTF-8')
+{
+     
+    $result = [];
+    $length = mb_strlen($string, $encoding);
+    for ($i = 0; $i < $length; $i += $split_length) {
+        $result[] = mb_substr($string, $i, $split_length, $encoding);
+    }
+    return $result;
 }
 
 

@@ -11,6 +11,7 @@ $l0 = '';
 
 
 if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(1000, true); $_REQUEST['index'] = 'bloom';}
+if ($_REQUEST['index'] == 'indexmonogram') {$l0 = swIndexMonogram(1000, true); $_REQUEST['index'] = 'monogram';}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
 
@@ -27,6 +28,7 @@ $swParsedContent = '
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 $swParsedContent .= ' <a href="index.php?name=special:indexes&index=db">db</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloom</a>
+<a href="index.php?name=special:indexes&index=monogram">monogram</a>
 <a href="index.php?name=special:indexes&index=queries">queries</a>
 <br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
@@ -36,6 +38,7 @@ $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloo
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 $swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
+ <a href="index.php?name=special:indexes&index=indexmonogram">Index Monogram</a> 
 <a href="index.php?name=special:indexes&index=indexnames">Index Names</a> 
 <a href="index.php?name=special:indexes&index=docron">Do Cron</a>';
 
@@ -348,9 +351,72 @@ switch($_REQUEST['index'])
 						 		//$swParsedContent .= '<p>'.swGetBloomDensity();
 							break;
 
+	case 'monogram' :	   	$swParsedContent .= '<h3>monogrambitmap</h3>';
+	
+	
+						 	if ($l0)
+						 	$swParsedContent .= '<p>Indexed: '.$l0;					
+							
+							$bms = swGetMonogramBitmapFromTerm('_checkedbitmap','');
+							$bm = $bms[0];
+							$swParsedContent .= '<p>length: '.$bm->length;
+						 	$swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						 	$swParsedContent .= '<p>';
+						 	
+						 	
+						 	
+						 	$swParsedContent .= "<form method='get' action='index.php'><p>";
+							$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
+							$swParsedContent .= "</pre><input type='hidden' name='index' value='monogram'>";
+							$swParsedContent .= "</pre><input type='text' name='field' value='".@$_REQUEST['field']."'>";
+							$swParsedContent .= "</pre><input type='text' name='term' value='".@$_REQUEST['term']."'>";
+							$swParsedContent .= "<input type='submit' name='submitterm' value='Test Field and Term' />";
+							$swParsedContent .= "</form>";
 
+						 	
+						 	
+						 	
+	
+						 	if (isset($_REQUEST['field']) && isset($_REQUEST['term']))
+						 	{
+							 	$bms = swGetMonogramBitmapFromTerm($_REQUEST['field'], $_REQUEST['term']);
+							 	$bm = $bms[0];
+							 	$arr = $bm->toarray();
+							 	$swParsedContent .= '<p>Field : '.$_REQUEST['field'];
+							 	$swParsedContent .= '<p>Term : '.$_REQUEST['term'];
+							 	$swParsedContent .= '<p>Count : '.count($arr);
+							 	$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
+						 	}
+						 	else
+						 	{
+							 	$list = array();
+							 	$key = swDBA_firstkey($swMonogramIndex);
+							 	do 
+							 	{
+									 $ks = explode(' ',$key);
+									 
+									 
+									 if (count($ks)>1)
+									 {
+										 $list[$ks[0]][] = $ks[1];
+									 }	
+							 	}
+							 	while ($key = swDBA_nextkey($swMonogramIndex));
+							 	
+								foreach($list as $k=>$vs)
+							 	{
+								 	sort($vs);
+								 	$swParsedContent .= '<p>'.$k.' '.join('',$vs);
+							 	}
+						 	}
+						 	
+						 	
+							
+							break;
 	case "docron": 		   $swParsedContent .= '<h3>Cron</h3><p>'.swCron() ; break;
 	
+							
 							
 	
 	case 'queries':			$swParsedContent .= '<h3>queries</h3><p>';

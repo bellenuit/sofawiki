@@ -938,7 +938,7 @@ switch ($action)
 							if (swGetArrayValue($_POST,'submitdeletewithfile',false))
 							{
 								$path = $swRoot.'/site/files/'.str_replace('Image:','',$wiki->name);
-								unlink($path);
+								@unlink($path);
 								
 								$swParsedName = 'Deleted with file: '.$name;
 							}

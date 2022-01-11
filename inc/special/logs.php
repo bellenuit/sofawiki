@@ -349,6 +349,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Entry pages]]";
 		
 		$entrypages = array();
+		if (@is_array($uniquevisitorentrypage))
 		foreach(@$uniquevisitorentrypage as $u=>$v)
 		{
 			if (isset($entrypages[$v])) $entrypages[$v]++; else $entrypages[$v]=1;
@@ -363,6 +364,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Exit pages]]";
 		
 		$exitpages = array();
+		if (@is_array($uniquevisitorexitpage))
 		foreach(@$uniquevisitorexitpage as $u=>$v)
 		{
 			if (isset($exitpages[$v])) $exitpages[$v]++; else $exitpages[$v]=1;
@@ -377,6 +379,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Referer]]";
 		
 		$referers = array();
+		if (@is_array($uniquevisitorreferer))
 		foreach(@$uniquevisitorreferer as $u=>$v)
 		{
 			if (isset($referers[$v])) $referers[$v]++; else $referers[$v]=1;

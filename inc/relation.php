@@ -337,7 +337,7 @@ class swRelationLineHandler
 										$r = $this->stack[count($this->stack)-1];
 										if (count($r->tuples) > 0)
 										{
-											$tp = @$r->tuples[0];
+											$tp = current($r->tuples);
 											if ($tp)
 												foreach($tp->pfields as $k=>$v)
 													$dict[$k] = $v;
@@ -1141,6 +1141,7 @@ class swRelationLineHandler
 												if (count($r->tuples)>0 && !$walkstart)
 												{
 													$tp = current($r->tuples);
+													
 
 													foreach($tp->pfields as $k=>$v)
 													{
@@ -1148,7 +1149,6 @@ class swRelationLineHandler
 													}
 												}
 											}
-											
 											$xp = $this->GetCompiledExpression($body);
 											$dict[$key] = $xp->evaluate($dict);
 											

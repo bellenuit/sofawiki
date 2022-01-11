@@ -262,6 +262,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$filter2 = trim($filter2);
 		if (stristr($filter2,' ')) throw new swExpressionError('filter index invalid field',88);
 		$indexkey = $filter2;
+		$offsetrelevant = false;
+		$cacheoffsetrelevant = false;
 		$filter2 .= ' "*"';
 		$isindex = true;
 		$pairs = array($filter2);
@@ -384,16 +386,20 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$mdfilter .= 'v2'; // create new hashes for swdba
 	$mdfilter = urlencode($mdfilter);
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
+	//echotime($mdfilter);
 	$bdbfile = $cachefilebase.'.db';
 	
 	if ($refresh)
 		{ echotime('refresh'); if (file_exists($bdbfile)) unlink($bdbfile);}
 		
-		
+	/*	
 	// if we do not already have a cache, then we try to read all indexes first
 	if (! $isindex && !file_exists($bdbfile))
 	{
+		
+		
 		$q = array();
+		$fs = array();
 		$first = true;
 		$validindex = true;
 		//print_r($pairs);
@@ -405,23 +411,70 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$key = array_shift($elems);
 			$hint = join(' ',$elems);
 			
+			$fs[] = 'index '.$key;
 			$q[] = 'filter index '.$key;
 			if (trim($hint)) $q[] = 'select hint('.$key.', '.$hint.')';
 			if (!$first) $q[] = 'join natural';
 			$first = false;
 			
-			if (substr($key,0,1)=='_') $validindex = false;
+			if (substr($key,0,1)=='_') 
+			{
+				switch ($key)
+				{
+					case "_name" : 
+					case "_word" :
+					case "_template ": break;
+					
+					default: $validindex = false;
+					
+				}
+			}
 			
 		}
 
 		if ($validindex)
 		{
+			global $swDebugRefresh;
+			$dr = $swDebugRefresh;
+			$swDebugRefresh = false;
+			
 			$indextable = swRelationToTable(join(PHP_EOL,$q));
+			
+			foreach($fs as $f)
+			{
+				$mdfilter = $f;
+				$mdfilter .= 'v2'; // create new hashes for swdba
+				$mdfilter = urlencode($mdfilter);
+				$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
+				//echotime($mdfilter);
+				$ff = $cachefilebase.'.db';
+				
+				$fdb = swdba_open($ff, 'wdt', 'db4');
+				if ($s = swdba_fetch('_checkedbitmap',$fdb))
+				{
+					$fb = @unserialize($s);
+					if (isset($indexcheckedbitmap))
+					{
+						$indexcheckedbitmap->andop($fb);
+					}
+					else
+					{
+						$indexcheckedbitmap = $fb;
+					}						
+				}
+				else echotime($ff);
+				
+			}
+			
+			$swDebugRefresh = $dr;
+			
+			echotime('useindex '.count($indextable).'/'.@count($indexcheckedbitmap));
+
 		}
 		
-		
+				
 	}
-	
+	*/
 	
 	
 	
@@ -429,11 +482,14 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	
 	$bdbrwritable = true;
+	$firstrun = ! file_exists($bdbfile);
 	
 	if (file_exists($bdbfile))
 		$bdb = swdba_open($bdbfile, 'wdt', 'db4');
 	else
-		$bdb = swdba_open($bdbfile, 'c', 'db4');	
+	{
+		$bdb = swdba_open($bdbfile, 'c', 'db4');
+	}
 	if (!$bdb)
 	{
 		// try read only
@@ -471,13 +527,33 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	else 
 		$checkedbitmap = new swBitmap;
+	
+	if ($isindex)
+	{
+		$key = swdba_firstkey($bdb);
+		while(substr($key,0,1)=='_' && $key) $key = swdba_nextkey($bdb);
+		if ($key)
+		{
+			$d = @unserialize(swdba_fetch($key,$bdb));
+			if (isset($d['_offset'])) 
+			{
+				$offsetrelevant = true;
+				$cacheoffsetrelevant = true;
+			}
+		}
+		else
+		{
+			$cacheoffsetrelevant = true; // no valid record, so we do not care
+		}
+	}
+	
 		
 	if (isset($indextable))	
 	{
 		//print_r($indextable);
 		foreach($indextable as $row)
 		{
-			echotime(print_r($row,true));
+			//echotime(print_r($row,true));
 			$revision = $row['_revision'];
 			$offset = $row['_offset'];
 			unset($row['_revision']);
@@ -486,6 +562,14 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			swdba_replace($revision.'-'.$offset,serialize($row),$bdb);
 			$bitmap->setbit($revision);
 			$checkedbitmap->setbit($revision);	
+		}
+		if (isset($indexcheckedbitmap))
+		{
+			$frs = $indexcheckedbitmap->toarray();
+			foreach($frs as $revision)
+			{
+				$checkedbitmap->setbit($revision);	
+			}
 		}
 		$cached = $bitmap->countbits();
 		echotime('indexed '. $cached);
@@ -518,6 +602,86 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$tocheckcount = $tocheckbitmap->countbits();
 	
 	echotime('tocheck '.$tocheckcount); 
+	
+	
+	global $swMonogramIndex;
+	swOpenMonogram();
+	
+	if (isset($swMonogramIndex) && $firstrun)
+	{		
+		$notinlabels = array('_paragraph', '_word');
+		$notinvalues = array('_paragraph', '_word');
+		
+		$bigbloom = new swBitmap();
+		
+		$bms = swGetMonogramBitmapFromTerm('_checkedbitmap','');
+		$bm = $bms[0];
+		
+		$bigbloom->init($bm->length,true);
+		
+		foreach($fields as $field=>$hors)
+		{
+			if ($hors || count($fields)==1) 
+			{				
+				if (! in_array($field,$notinlabels))
+				{
+					$grs = swGetMonogramBitmapFromTerm($field, '*'); 
+					$gr = $grs[0];
+					$bigbloom = $bigbloom->andop($gr);
+				}
+				
+				if ($field == '_paragraph') $field = '_content';
+				if ($field == '_word') $field = '_content';
+				
+				if (! in_array($field,$notinvalues) && is_array($hors))
+				{
+					
+					$bor = new swBitmap();
+					$bor->init($bigbloom->length,false);
+					
+					foreach($hors as $hor)
+					{
+						$band = new swBitmap();
+						$band->init($bigbloom->length,true);
+						
+						foreach($hor as $hand)
+						{
+							if ($hand != '')
+							{
+								$grs = swGetMonogramBitmapFromTerm($field,$hand); 
+								$gr = $grs[0];
+								$gr->redim($bigbloom->length, true);
+								$band = $band->andop($gr);
+							}
+						}
+	
+						
+						$bor = $bor->orop($band);
+						
+					}
+					$bigbloom = $bigbloom->andop($bor);	
+				}
+			}
+		}
+		
+		$bigbloom->redim($tocheckbitmap->length,true);
+		
+		echotime($bigbloom->countbits().' '.$bigbloom->length);
+		echotime($tocheckbitmap->countbits().' '.$tocheckbitmap->length);
+		
+		$tocheckbitmap = $tocheckbitmap->andop($bigbloom);
+		echotime($tocheckbitmap->countbits().' '.$tocheckbitmap->length);
+
+		
+			
+		$nottocheck = $bigbloom->notop();
+		
+		$checkedbitmap = $checkedbitmap->orop($nottocheck);
+		
+		echotime('monogram '.$tocheckbitmap->countbits().' of '.$tocheckbitmap->length);
+
+	}
+	
 
 	
 	$dur = 0; // check always at least 50 records
@@ -747,6 +911,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			// print_r($fields);
 			global $swMemoryLimit;
+			$allrows = array();
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
@@ -899,6 +1064,13 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 								if (count($v) > 0)
 									$fieldlist2[$fi][$key] = $v[count($v)-1];
 							}
+							
+							if ($isindex)
+							{
+								if (count(array_unique($v))>1) {$offsetrelevant = true; }
+							}
+							
+							
 						}
 					}
 					
@@ -980,10 +1152,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							else
 							
 								$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
-							
-							
-						
-							
 						}
 						
 
@@ -1017,7 +1185,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 
 				if (count($rows)>0 && $bdbrwritable)
 				{
-					// print_r($rows);
+					
 					
 					foreach($rows as $primary=>$line)
 					{
@@ -1035,8 +1203,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							}
 						}
 						
-						if ($linehascontent)
-							swdba_replace($primary,serialize($line),$bdb);
+						if ($linehascontent) 
+						{
+							if ($isindex)
+							{
+								$allrows[$primary] = $line; // delay offsetrelevant
+							}
+							else
+							{
+								swdba_replace($primary,serialize($line),$bdb); // use less memory
+							}
+						}
 					}
 					$bitmap->setbit($k);
 				}
@@ -1044,12 +1221,82 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				
 			}
 			
-			
+			// if isindex and all _offset point to the same value, we will drop the _offset column for indexes
+			if ($isindex)
+			{
+				if (!$offsetrelevant)
+				{
+					echotime('offsetnotrelevant');
+					$allrows2 = array();
+					foreach($allrows as $primary=>$line)
+					{
+						if (substr($primary,-2,2) === '-0')
+						{
+							unset($line['_offset']);
+							$allrows2[$primary] = $line;
+						}
+					}
+					$allrows = $allrows2;
+					
+					// print_r($allrows);
+					
+					
+				}
+				
+				foreach($allrows as $primary=>$line) 
+				{
+					
+					swdba_replace($primary,serialize($line),$bdb);
+				}
+				
+			}
+	
 			echotime('checked '.$checkedcount);
 			echotime('length '.floor($checkedlength/1024/1024).' MB');
 			echomem("filter");	
 		}
 	
+	}
+	
+	if ($isindex)
+	{
+		
+		if ($offsetrelevant)
+		{
+			if ($cacheoffsetrelevant)
+			{
+				// everything is ok
+			}
+			else
+			{
+				// we need to set offset for each which is really complicated as we do not have information on max, so we need to reset all old data. bad case
+				echotime('lateoffsetrelevant');
+				
+				swdba_close($bdb);
+				unset($bdbfile);
+				$bdb = swdba_open($bdbfile, 'c', 'db4');
+				foreach($allrows as $primary=>$line) swdba_replace($primary,serialize($line),$bdb);
+				$bitmap == new swBitmap;
+				$checkedbitmap == new swBitmap;
+				
+				foreach($allrows as $key=>$line)
+				{
+					$keys = explode('-',$key);
+					$kr = $keys[0];
+					
+					$bitmap->setbit($kr);
+					$checkedbitmap->setbit($kr);
+				}
+				
+			}
+		}
+		else
+		{
+			unset($fields['_offset']);
+			$header = array_keys($fields);
+			$result = new swRelation($header,null,null);
+
+		}
 	}
 	
 	
@@ -1075,17 +1322,22 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ($sp != ':') $ns[$sp]= $sp;
 	}
 
-	
+	echotime('sync');
 	
 	$d = array();	
 	
 	swdba_sync($bdb);
 	
+	
+	
 	$key = swdba_firstkey($bdb);
 
+	echotime('userrights');
 	
 	while($key)
 	{
+		//echotime('key '.$key);
+		
 		if (substr($key,0,1)=='_') { $key = swdba_nextkey($bdb); continue;}
 		
 		$keys = explode('-',$key);
@@ -1093,6 +1345,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		if (!$db->currentbitmap->getbit($kr))
 		{
+			//echotime('delete');
 			swdba_delete($key,$bdb);
 			$bitmap->unsetbit($kr);
 		}
@@ -1121,6 +1374,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$key = swdba_nextkey($bdb);
 	}
 	
+	echotime('header');
+	
 	if ($bdbrwritable)
 	{	
 		// dba_replace('_filter',$filter,$bdb);
@@ -1131,6 +1386,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		swdba_replace('_bitmap',serialize($bitmap),$bdb);
 	$checkedbitmap->hexit();
 		swdba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+		swdba_replace('_header',serialize($header),$bdb);
 		
 	}
 	
@@ -1146,6 +1402,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	// print_r($result);
 	echotime('filter end');
+	
+	//print_r($result);
 	
 	return $result;
 	
@@ -1191,97 +1449,60 @@ function swRelationToTable($q)
 
 
 
-function swRelationSearch($term, $start=1, $limit=1000, $template="")
-
+function swRelationSearch($term, $template="")
 {
-
-
 	
-global $lang;
-$previous = ' <nowiki><a href=\'index.php?action=search&start='.($start-$limit).'&query='.$term.'\'>'.swSystemMessage('previous',$lang).'</a></nowiki>';
-$next = ' <nowiki><a href=\'index.php?action=search&start='.($start+$limit).'&query='.$term.'\'>'.swSystemMessage('next',$lang).'</a></nowiki>';	
-$results = swSystemMessage('results',$lang);
-$results1 = swSystemMessage('result',$lang);
-
-if ($template && $template != 1)
-	$print = '
+	global $lang;
+	$term = swSimpleSanitize($term);
+		
+	if ($template && $template != 1)
+	{
+		$print = '
 project _name, _paragraph
 template "'.$template.'"';
-else
-	$print = '
+	}
+	else
+	{
+		$print = '
 update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph 
 project _name
 
 label _name ""
 print linegrid 50';
+	}
+	
+	$singlequote = "'";
+	$results = swSystemMessage('results',$lang);
+	$results1 = swSystemMessage('result',$lang);
 
-global $swSearchNamespaces;
 
-$spaces = array_filter($swSearchNamespaces);
-if (!in_array('main',$spaces)) $spaces[] = 'main';
-$namespace = join('|',$spaces); // filter removes empty values
-if (trim($namespace)=='main') $namespace = "main";
-if (stristr($namespace,'*')) $namespace = '*';
-$namespace = strtolower($namespace);
-
-//echo "($namespace)";
-
+	global $swSearchNamespaces;
+	
+	$spaces = array_filter($swSearchNamespaces);
+	if (!in_array('main',$spaces)) $spaces[] = 'main';
+	$namespace = join('|',$spaces); // filter removes empty values
+	if (trim($namespace)=='main') $namespace = "main";
+	if (stristr($namespace,'*')) $namespace = '*';
+	$namespace = strtolower($namespace);
 
 // note when result is empty, script fails with union, because aggregation has other arity than normal column
 
-$term = swSimpleSanitize($term);
-$singlequote = "'";
-
-$q = '
+	$q = '
 
 filter _namespace "'.$namespace.'", _name, _displayname, _paragraph "'.$term.'"
 write "paragraphs"
 filter _namespace "'.$namespace.'", _name "'.$term.'", _displayname, _paragraph
 union
+
 select trim(_paragraph) !== "" and substr(_paragraph,0,1) !== "#" and substr(_paragraph,0,2) !== "{{" and substr(_paragraph,0,6) !== "<code>"  and substr(_paragraph,0,2) !== "{|"
-extend _nameint = _name // regexreplace(_name,"\/\w\w","") // remove sublanguage pages
-// print grid 20
+
+extend _nameint = _name
+
 project _nameint, _paragraph count, _paragraph first
 rename _nameint _name, _paragraph_first _paragraph
 order _paragraph_count 9
 
 project _name, _paragraph
-// add counter
-dup
-project _name count
-set nc = _name_count
-set start = '.$start.'
-set limit = '.$limit.'
-set ende = min(start+limit-1,nc)
-
-
-
-if nc = 1
-	set ncs = nc . " '.$results1.'"
-else
-	set ncs = nc . " '.$results.'"
-end if
-	
-if nc > limit
-	set ncs =  start. " - " . ende . " / ". ncs
-end if 
-	
-set other = 0
-if '.$start.' > 1 
-set ncs = ncs . "'.$previous.'"
-set other = 1
-end if
-if '.($start+$limit-1).' < nc 
-set ncs = ncs . "'.$next.'"
-set other = 1
-end if
-
-echo ncs
-
-pop
-
-// show results with interesting paragraph
-limit '.$start.' '.$limit.'
 
 // filter _namespace "main", _name, _paragraph "'.$term.'"
 read "paragraphs"
@@ -1293,7 +1514,7 @@ project _name, _paragraph
 join left
 
 // remove wiki styles
-update _paragraph = (resume(_paragraph,160,1)
+update _paragraph = resume(_paragraph,160,1)
 
 // create a query to be split
 set v = "'.$term.'" ." "
@@ -1314,32 +1535,13 @@ end if
 set i = i + 1
 end while
 
-
-
 '.$print.'
-
-
-
 
 
 echo " "';
 
-
-
-
 $lh = new swRelationLineHandler;
-
-
-// echo $q;
-
 $s = $lh->run($q);
-
-// echo $s;
-
-$s = str_replace("_name\t_paragraph",'',$s); // hack because raw includes header
-
-
-//echo $s;
 
 return $s;
 

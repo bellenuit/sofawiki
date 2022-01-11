@@ -38,56 +38,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swAllRevisionsCache = array();
 
-function swGetAllRevisionsFromName($name)
-{	
-	echotime('getallrevisions '.$name);
-	
-	global $swAllRevisionsCache;
-	if (isset($swAllRevisionsCache[$name]))
-		return $swAllRevisionsCache[$name];
-	global $db;	
-	
-	$url= swNameURL($name);
-	
-	$revs = array();	
-	global $db;
-	
-	if (swDBA_exists($url,$db->urldb))
-	{
-		$s = swDBA_fetch($url,$db->urldb);
-		$revs = explode(' ',$s);
-		$status = array_shift($revs);
-		rsort($revs,SORT_NUMERIC);
-	}
-	
-	
-	$swAllRevisionsCache[$name] = $revs;
-	return $revs;
-		
-	
-	$r = new swRecord;
-	$r->name = $name;
-	$md = $r->md5Name();
-	
-}	
 
-function swGetPath($revision, $current = false)
-{
-	if (is_array($revision))
-		{
-			debug_print_backtrace();
-			exit;
-		}
-		
-
-	global $swRoot;
-	if ($current)
-	{
-		return $swRoot.'/site/current/'.$revision.'.txt';
-	}
-	else
-		return $swRoot.'/site/revisions/'.$revision.'.txt';
-}
 
 
 
@@ -525,8 +476,62 @@ class swDB extends swPersistance //extend may be obsolete
 }
 
 
+function swGetLastRevision()
+{
+	global $db;
+	return $db->lastrevision;
+}
 
 
+function swGetAllRevisionsFromName($name)
+{	
+	echotime('getallrevisions '.$name);
+	
+	global $swAllRevisionsCache;
+	if (isset($swAllRevisionsCache[$name]))
+		return $swAllRevisionsCache[$name];
+	global $db;	
+	
+	$url= swNameURL($name);
+	
+	$revs = array();	
+	global $db;
+	
+	if (swDBA_exists($url,$db->urldb))
+	{
+		$s = swDBA_fetch($url,$db->urldb);
+		$revs = explode(' ',$s);
+		$status = array_shift($revs);
+		rsort($revs,SORT_NUMERIC);
+	}
+	
+	
+	$swAllRevisionsCache[$name] = $revs;
+	return $revs;
+		
+	
+	$r = new swRecord;
+	$r->name = $name;
+	$md = $r->md5Name();
+	
+}	
 
+function swGetPath($revision, $current = false)
+{
+	if (is_array($revision))
+		{
+			debug_print_backtrace();
+			exit;
+		}
+		
+
+	global $swRoot;
+	if ($current)
+	{
+		return $swRoot.'/site/current/'.$revision.'.txt';
+	}
+	else
+		return $swRoot.'/site/revisions/'.$revision.'.txt';
+}
 
 ?>

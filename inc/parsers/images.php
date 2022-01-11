@@ -108,36 +108,45 @@ class swImagesParser extends swParser
 				
 				$path = $swRoot.'/site/files/'.$file;
 				$img = @ImageCreateFromJpeg($path); 
-				$originalwidth = ImagesX($img);
-				$originalheight = ImagesY($img);
-				$scaledheight = $originalheight * 640 / $originalwidth;
-				
-				
-				
-				$s .='<p><div style="position:relative"><img class="embeddimage" id="image" alt="" src="site/files/'.$file.'" style="width:640px; height:'.$scaledheight.'px; position:absolute; top:0px; left:0px;"><canvas id="imagecanvas" style="position:absolute; top:0px; left:0px;" onmouseleave="drawCrop()" /></div>';
-				$s .= $wiki->parsedContent;
-				
-				if (substr($file,-4) == '.jpg' || substr($file,-4) == 'jpeg')
+				if ($img)
 				{
+					$originalwidth = ImagesX($img);
+					$originalheight = ImagesY($img);
+					$scaledheight = $originalheight * 640 / $originalwidth;
+								
 				
-				$s .= '<div style="position:relative"><h4>Crop</h4>';
-				$s .= '<button type="button" onclick="setRatio(\'2:1\')">2:1</button>';
-				$s .= '<button type="button" onclick="setRatio(\'16:9\')">16:9</button>';
-				$s .= '<button type="button" onclick="setRatio(\'3:2\')">3:2</button>';
-				$s .= '<button type="button" onclick="setRatio(\'4:3\')">4:3</button>';
-				$s .= '<button type="button" onclick="setRatio(\'1:1\')">1:1</button>';
-				$s .= '<button type="button" onclick="setRatio(\'2:3\')">2:3</button>';
-				$s .= '<button type="button" onclick="setRatio(\'1:2\')">1:2</button>';
-				$s .= '<button type="button" onclick="setRatio(\'free\')">Free</button> ';
-				$s .= '<form method="post" action="index.php">';
-				$s .= '<input type="hidden" name="name" value="'.$wiki->name .'">';
-				$s .= 'W <input type="text" name="cropwidth" id="cropwidth" size=5 value="">';
-				$s .= 'H <input type="text" name="cropheight" id="cropheight" size=5value="">';
-				$s .= 'L <input type="text" name="cropleft" id="cropleft" size=5 value="">';
-				$s .= 'T <input type="text" name="croptop" id="croptop" size=5 value="">';
-				$s .= '<input type="text" name="file" id="cropfile" size=32 value="">';
-				$s .= '<input type="submit" name="submitcrop" value="Save">';
-				$s .= '</form>';
+				
+					$s .='<p><div style="position:relative"><img class="embeddimage" id="image" alt="" src="site/files/'.$file.'" style="width:640px; height:'.$scaledheight.'px; position:absolute; top:0px; left:0px;"><canvas id="imagecanvas" style="position:absolute; top:0px; left:0px;" onmouseleave="drawCrop()" /></div>';
+					$s .= $wiki->parsedContent;
+					
+					if (substr($file,-4) == '.jpg' || substr($file,-4) == 'jpeg')
+					{
+					
+					$s .= '<div style="position:relative"><h4>Crop</h4>';
+					$s .= '<button type="button" onclick="setRatio(\'2:1\')">2:1</button>';
+					$s .= '<button type="button" onclick="setRatio(\'16:9\')">16:9</button>';
+					$s .= '<button type="button" onclick="setRatio(\'3:2\')">3:2</button>';
+					$s .= '<button type="button" onclick="setRatio(\'4:3\')">4:3</button>';
+					$s .= '<button type="button" onclick="setRatio(\'1:1\')">1:1</button>';
+					$s .= '<button type="button" onclick="setRatio(\'2:3\')">2:3</button>';
+					$s .= '<button type="button" onclick="setRatio(\'1:2\')">1:2</button>';
+					$s .= '<button type="button" onclick="setRatio(\'free\')">Free</button> ';
+					$s .= '<form method="post" action="index.php">';
+					$s .= '<input type="hidden" name="name" value="'.$wiki->name .'">';
+					$s .= 'W <input type="text" name="cropwidth" id="cropwidth" size=5 value="">';
+					$s .= 'H <input type="text" name="cropheight" id="cropheight" size=5value="">';
+					$s .= 'L <input type="text" name="cropleft" id="cropleft" size=5 value="">';
+					$s .= 'T <input type="text" name="croptop" id="croptop" size=5 value="">';
+					$s .= '<input type="text" name="file" id="cropfile" size=32 value="">';
+					$s .= '<input type="submit" name="submitcrop" value="Save">';
+					$s .= '</form>';
+					
+				}
+				else
+				{
+					$scaledheight = $originalwidth = 0;
+				}
+
 				
 				$s .= "<nowiki><script>
 				
@@ -696,6 +705,7 @@ function drawHandles()
 		foreach ($matches as $v)
 		{
 			$val = $v[1];
+
 			$linkwiki = new swWiki;
 			$linkwiki->name = 'Image:'.$val;
 			$linkwiki->lookup();

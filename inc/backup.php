@@ -1,127 +1,94 @@
 <?php
+	
+/**
+ *	Provides functions to backup code and data.
+ *
+ *  The functions are used by Special:Backup and Special:Snapshot
+ *  There is no restore function yet. You would have to combine the extractions manually actually. 
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-function swExport($revisions)
-{	
-	global $swRoot;
-	swSemaphoreSignal();
-	if (!is_dir( "$swRoot/bak/")) mkdir ( "$swRoot/bak/",0777); 
-	global $db;
-	$today = date("Ymd",time());
-	$result = "Export of SofaWiki revisions. <br/><br/>";
-	
-	$result .=  '<br/><br/>revisions';
-	$dir = $swRoot.'/site/revisions';
-	$files = array();
-	foreach($revisions as $r)
-	{
-		$files[] = $dir.'/'.$r.'.txt';
-	}
-	natsort($files);
-	
-	foreach($files as $file)
-	{
-		$fn = str_replace($swRoot.'/site/revisions/','',$file);
-		$thousand = (int)(str_replace('.txt','',$fn)/1000);
-		$currentthousand = (int)($db->lastrevision/1000);
-		$ziptest = 'export-'.$today.'.zip'; 
-		if (!isset($zip))
-		{
-			$zip = $ziptest;
-			$zipfile = new ZipArchive; 
-			$zipfile->open($swRoot.'/bak/'.$zip, ZipArchive::CREATE);
-		
-		}
-		if ($zip == $ziptest)
-		{
-			$zip = $ziptest;
-			$result .=  '<br>'.$fn; 
-			$zipfile -> addFile($file, $fn); 
-		}
-		else
-			continue;
-	}
-	if (isset($zip))
-	{
-		$zipfile->close();
-	}
 
-	unset($zip);
-	$result .=  '<br/><br/><a href="bak/'.$ziptest.'">'.$ziptest.'</a>';
-	swSemaphoreRelease();
-	return $result;
+/**
+ * Saves files from the site folder to the bak folder. 
+ *
+ * It saves only the original files and not the index files, because the latter can be reconstructed. 
+ * As there are many files, zip files are created in batches.
+ *
+ * @param $sitebackup Saves configuration.php and function and skins folder as site.zip and siteYYYYMMDD.zip.
+ * @param $logbackup Saves monthly log files as logs-YY-MM.zip.
+ * @param $revisionbackup Saves thousand revisions as revisions-N000.zip.
+ * @param $filebackup Saves hundred files from site/files as files-N00.zip.
+ * @param $listing Shows listing of files.
+ */
 
-}
-
- 
 function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listing = false)
 {
 	global $swRoot;
 	swSemaphoreSignal();
-	if (!is_dir( "$swRoot/bak/")) mkdir ( "$swRoot/bak/",0777); 
-	global $db;
-	$today = date("Ymd",time());
-	$result = "Backup of SofaWiki site. <br/><br/>";
+	if (!is_dir($swRoot.'/bak/')) mkdir($swRoot.'/bak/',0777); 
+	$today = date('Ymd',time());
+	$result = 'Backup of SofaWiki site. <br/><br/>';
 	
 	if ($sitebackup)
 	{
 		$zipfile = new ZipArchive; 
-		$filename = "site".".zip";
+		$filename = 'site.zip';
 		$zipfile->open($swRoot.'/bak/'.$filename, ZipArchive::CREATE);
 	
 		$emptydirectories = array();
 		$includeddirectories = array();
 	
-		$emptydirectories[] = "sofawiki/site/cache"; 
-		$emptydirectories[] = "sofawiki/site/current";
-		$emptydirectories[] = "sofawiki/site/files";
-		$emptydirectories[] = "sofawiki/site/indexes";
-		$emptydirectories[] = "sofawiki/site/logs";
-		$emptydirectories[] = "sofawiki/site/queries";
-		$emptydirectories[] = "sofawiki/site/revisions";
-		$emptydirectories[] = "sofawiki/site/upload";
+		$emptydirectories[] = 'sofawiki/site/cache'; 
+		$emptydirectories[] = 'sofawiki/site/current';
+		$emptydirectories[] = 'sofawiki/site/files';
+		$emptydirectories[] = 'sofawiki/site/indexes';
+		$emptydirectories[] = 'sofawiki/site/logs';
+		$emptydirectories[] = 'sofawiki/site/queries';
+		$emptydirectories[] = 'sofawiki/site/revisions';
+		$emptydirectories[] = 'sofawiki/site/upload';
 		
-		$includeddirectories[] = "sofawiki/site";
-		$includeddirectories[] = "sofawiki/site/functions";
-		$includeddirectories[] = "sofawiki/site/skins";
+		$includeddirectories[] = 'sofawiki/site';
+		$includeddirectories[] = 'sofawiki/site/functions';
+		$includeddirectories[] = 'sofawiki/site/skins';
 		
 		$files = array();
 		
 		
 		foreach($emptydirectories as $dir)
 		{
-			$zipfile -> addEmptyDir($dir."/");
-			$result .= "$dir<br/>";
+			$zipfile -> addEmptyDir($dir.'/');
+			$result .= $dir.'<br/>';
 		}
 		
 		foreach($files as $file)
 		{
-			$zipfile -> addFile($file, "sofawiki/$file"); 
-			$result .= "&nbsp;$file<br/>";
+			$zipfile -> addFile($file, 'sofawiki/'.$file); 
+			$result .= '&nbsp;'.$file.'<br/>';
 		}
 		
 		
 		foreach ($includeddirectories as $dir)
 		{
-			$zipfile -> addEmptyDir($dir."/");
-			$result .= "$dir<br/>";
-			$dir = substr($dir,strlen("sofawiki/"));
+			$zipfile -> addEmptyDir($dir.'/');
+			$result .= $dir.'<br/>';
+			$dir = substr($dir,strlen('sofawiki/'));
 			$absolutedir = $swRoot.'/'.$dir;
 			
-			$formats = array("php","css","txt","js");
+			$formats = array('php','css','txt','js');
 			
 			foreach ($formats as $f)
 			{
-				$files = glob($absolutedir."/*.$f");
+				$files = glob($absolutedir.'/*.'.$f);
 				if (is_array($files))
 				{
 					natsort($files);
 					foreach($files as $file)
 					{
-						$zf = str_replace($swRoot,"sofawiki",$file);
+						$zf = str_replace($swRoot,'sofawiki',$file);
 						$zipfile -> addFile($file, $zf); 
-						$result .= "&nbsp;$zf<br/>";
+						$result .= '&nbsp;'.$zf.'<br/>';
 					}
 				}
 			}
@@ -162,8 +129,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 			$month = substr($fn,0,7);
 			$currentmonth = date("Y-m",time());
 			$ziptest = 'logs-'.$month.'.zip'; 
-			if (file_exists($swRoot.'/bak/'.$ziptest) && $month != $currentmonth)
-				continue;
+			if (file_exists($swRoot.'/bak/'.$ziptest) && $month != $currentmonth) continue;
 			if (!isset($zip))
 			{
 				$zip = $ziptest;
@@ -175,8 +141,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 				$result .=  '<br>'.$fn; 
 				$zipfile -> addFile($file, $fn); 
 			}
-			else
-				continue;
+			else continue;
 		}
 		if (isset($zip))
 		{
@@ -192,7 +157,6 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 	unset($zip);
 	// revisions by thousands, do not if file already exists - one at a time
 	
-	
 	if ($revisionbackup)
 	{
 	
@@ -207,10 +171,9 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 		{
 			$fn = str_replace($swRoot.'/site/revisions/','',$file);
 			$thousand = (int)(str_replace('.txt','',$fn)/1000);
-			$currentthousand = (int)($db->lastrevision/1000);
+			$currentthousand = (int)(swGetLastRevision()/1000);
 			$ziptest = 'revisions-'.$thousand.'000.zip'; 
-			if (file_exists($swRoot.'/bak/'.$ziptest) && $thousand != $currentthousand)
-				continue;
+			if (file_exists($swRoot.'/bak/'.$ziptest) && $thousand != $currentthousand) continue;
 			if (!isset($zip))
 			{
 				$zip = $ziptest;
@@ -224,8 +187,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 				$result .=  '<br>'.$fn; 
 				$zipfile -> addFile($file, $fn); 
 			}
-			else
-				continue;
+			else continue;
 		}
 		if (isset($zip))
 		{
@@ -241,22 +203,17 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 	
 	if ($filebackup)
 	{
-	
-	
 		$result .=  '<br/><br/>files';
 		
 		$dir = $swRoot.'/site/revisions';
 		$files = glob($dir.'/*.txt');
 		natsort($files);
 		
-		
-		
-		
 		foreach($files as $file)
 		{
 			$fn = str_replace($swRoot.'/site/revisions/','',$file);
 			$thousand = (int)(str_replace('.txt','',$fn)/100);
-			$currentthousand = (int)($db->lastrevision/100);
+			$currentthousand = (int)(swGetLastRevision()/100);
 			$ziptest = 'files-'.$thousand.'00.zip'; 
 			if (file_exists($swRoot.'/bak/'.$ziptest) && $thousand != $currentthousand)
 				continue;
@@ -264,8 +221,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 			{
 				$zip = $ziptest;
 				$zipfile = new ZipArchive; 
-				if (!$zipfile->open($swRoot.'/bak/'.$zip, ZipArchive::CREATE))
-					$result .= "<br>Zip File could not be created";
+				if (!$zipfile->open($swRoot.'/bak/'.$zip, ZipArchive::CREATE)) $result .= '<br>Zip File could not be created.';
 				$zipfile -> addEmptyDir('files');
 			}
 			if ($zip == $ziptest)
@@ -281,10 +237,8 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 					$file2 = $swRoot.'/site/files/'.$fn2;
 					$zip = $ziptest;
 					$result .=  '<br>'.$record->revision.' '.$fn2; 
-					if (!file_exists($file2))
-						$result .= ' ERROR file does not exist';
-					elseif (!$zipfile->addFile($file2, 'files/'.$fn2))
-						$result .= ' ERROR addFile';
+					if (!file_exists($file2)) $result .= ' ERROR file does not exist';
+					elseif (!$zipfile->addFile($file2, 'files/'.$fn2)) $result .= ' ERROR addFile';
 				}
 				else
 				{
@@ -298,7 +252,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 		{
 			//print_r($zipfile);
 			if (!$zipfile->close())
-				$result .= "<br>Zip File could not be closed ".$swRoot.'/bak/'.$zip;
+				$result .= '<br>Zip File could not be closed '.$swRoot.'/bak/'.$zip;
 			$result .=  '<br>'.$zip; 
 		}
 	}
@@ -330,27 +284,32 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 
 	}
 	
-	
-	
-	
-	
 	$result .=  '<br/><br/>';
 	swSemaphoreRelease();
 	return $result;
 	
 }
 
+/** 
+ * Saves the current source code in the inc folder and the index.php and the api.php file as zip file and creates a image page. 
+ *
+ * There is a snapshot.zip, a versioned snapshotVERSION.zip and a timed snapshotYYYYmmdd.zip. 
+ * The snapshots are saved to the site/files folder and image pages are created for them.
+ * One snapshot is also saved to the bak folder.
+ * 
+ * Snapshots use the zip.php code. Something prevents MacOS to open them directly in the finder.
+ * However, you can decompress it using the unzip command in the Terminal.
+ *
+ * @param $username The username is used to create the Image pages for the snapshots. 
+ */
+
 
 function swSnapShot($username)
 {
 	global $swRoot;
-	global $db;
 	swSemaphoreSignal();
 	
-	$result = "";
-	$result .= "Backup of SofaWiki code. Site-specific files will not be included<br/><br/>";
-	
-	
+	$result = 'Backup of SofaWiki code. Site-specific files will not be included<br/><br/>';	
 	
 	$zipfile = new ZipArchive; 
 	$filename = 'snapshot.zip';
@@ -359,43 +318,42 @@ function swSnapShot($username)
 	$emptydirectories = array();
 	$includeddirectories = array();
 	
-	$emptydirectories[] = "sofawiki";
-	$emptydirectories[] = "sofawiki/bak";
-	$emptydirectories[] = "sofawiki/site";
-	$emptydirectories[] = "sofawiki/site/cache";
-	$emptydirectories[] = "sofawiki/site/current";
-	$emptydirectories[] = "sofawiki/site/files";
-	$emptydirectories[] = "sofawiki/site/functions";
-	$emptydirectories[] = "sofawiki/site/indexes";
-	$emptydirectories[] = "sofawiki/site/logs";
-	$emptydirectories[] = "sofawiki/site/queries";
-	$emptydirectories[] = "sofawiki/site/revisions";
-	$emptydirectories[] = "sofawiki/site/skins";
-	$emptydirectories[] = "sofawiki/site/upload";
+	$emptydirectories[] = 'sofawiki';
+	$emptydirectories[] = 'sofawiki/bak';
+	$emptydirectories[] = 'sofawiki/site';
+	$emptydirectories[] = 'sofawiki/site/cache';
+	$emptydirectories[] = 'sofawiki/site/current';
+	$emptydirectories[] = 'sofawiki/site/files';
+	$emptydirectories[] = 'sofawiki/site/functions';
+	$emptydirectories[] = 'sofawiki/site/indexes';
+	$emptydirectories[] = 'sofawiki/site/logs';
+	$emptydirectories[] = 'sofawiki/site/queries';
+	$emptydirectories[] = 'sofawiki/site/revisions';
+	$emptydirectories[] = 'sofawiki/site/skins';
+	$emptydirectories[] = 'sofawiki/site/upload';
 	
-	$includeddirectories[] = "sofawiki/inc";
-	$includeddirectories[] = "sofawiki/inc/functions";
-	$includeddirectories[] = "sofawiki/inc/parsers";
-	$includeddirectories[] = "sofawiki/inc/skins";
-	$includeddirectories[] = "sofawiki/inc/special";
-	$includeddirectories[] = "sofawiki/inc/installer";
+	$includeddirectories[] = 'sofawiki/inc';
+	$includeddirectories[] = 'sofawiki/inc/functions';
+	$includeddirectories[] = 'sofawiki/inc/parsers';
+	$includeddirectories[] = 'sofawiki/inc/skins';
+	$includeddirectories[] = 'sofawiki/inc/special';
+	$includeddirectories[] = 'sofawiki/inc/installer';
 	
 	$files = array();
-	$files[] = "index.php";
-	$files[] = "api.php";
-	$files[] = "cron.php";
-	$files[] = "inc/.htaccess";
-	$files[] = "inc/skins/.htaccess";
-	$files[] = "site/.htaccess";
-	$files[] = "site/cache/.htaccess";
-	$files[] = "site/files/.htaccess";
-	$files[] = "site/skins/.htaccess";
-	
+	$files[] = 'index.php';
+	$files[] = 'api.php';
+	$files[] = 'cron.php';
+	$files[] = 'inc/.htaccess';
+	$files[] = 'inc/skins/.htaccess';
+	$files[] = 'site/.htaccess';
+	$files[] = 'site/cache/.htaccess';
+	$files[] = 'site/files/.htaccess';
+	$files[] = 'site/skins/.htaccess';
 	
 	foreach($emptydirectories as $dir)
 	{
-		$zipfile->addEmptyDir($dir."/");
-		$result .= "$dir<br/>";
+		$zipfile->addEmptyDir($dir.'/');
+		$result .= $dir.'<br/>';
 	}
 	
 	foreach($files as $file)
@@ -404,65 +362,62 @@ function swSnapShot($username)
 		$result .= '&nbsp;'.$file.'<br/>';
 	}
 	
-	
 	foreach ($includeddirectories as $dir)
 	{
-		$zipfile -> addEmptyDir($dir."/");
-		$result .= "$dir<br/>";
-		$dir = substr($dir,strlen("sofawiki/"));
-		$absolutedir = "$swRoot/".$dir;
-		$files = glob($absolutedir."/*.php");
+		$zipfile -> addEmptyDir($dir.'/');
+		$result .= $dir.'<br/>';
+		$dir = substr($dir,strlen('sofawiki/'));
+		$absolutedir = $swRoot.'/'.$dir;
+		$files = glob($absolutedir.'/*.php');
 		foreach($files as $file)
 		{
-			$zf = str_replace($swRoot,"sofawiki",$file);
+			$zf = str_replace($swRoot,'sofawiki',$file);
 			$zipfile -> addFile($file,$zf); 
-			$result .= "&nbsp;$zf<br/>";
+			$result .= '&nbsp;'.$zf.'<br/>';
 		}
-		$files = glob($absolutedir."/*.css");
+		$files = glob($absolutedir.'/*.css');
 		if (is_array($files))
 		{
 			foreach($files as $file)
 			{
-				$zf = str_replace($swRoot,"sofawiki",$file);
+				$zf = str_replace($swRoot,'sofawiki',$file);
 				$zipfile -> addFile($file,$zf); 
-				$result .= "&nbsp;$zf<br/>";
+				$result .= '&nbsp;'.$zf.'<br/>';
 			}
 		}
-		$files = glob($absolutedir."/*.js");
+		$files = glob($absolutedir.'/*.js');
 		if (is_array($files))
 		{
 			foreach($files as $file)
 			{
-				$zf = str_replace($swRoot,"sofawiki",$file);
+				$zf = str_replace($swRoot,'sofawiki',$file);
 				$zipfile -> addFile($file,$zf); 
-				$result .= "&nbsp;$zf<br/>";
+				$result .= '&nbsp;'.$zf.'<br/>';
 			}
 		}
-		$files = glob($absolutedir."/*.zip");
+		$files = glob($absolutedir.'/*.zip');
 		if (is_array($files))
 		{
 			foreach($files as $file)
 			{
-				$zf = str_replace($swRoot,"sofawiki",$file);
+				$zf = str_replace($swRoot,'sofawiki',$file);
 				$zipfile -> addFile($file,$zf); 
-				$result .= "&nbsp;$zf<br/>";
+				$result .= '&nbsp;'.$zf.'<br/>';
 			}
 		}
-	
 	}
 	
-	$today = date("Ymd",time());
+	$today = date('Ymd',time());
 	
 	$zipfile->close();
 	
 	$wiki = new swWiki;
-	$wiki->name ="Image:$filename";
+	$wiki->name ='Image:'.$filename;
 	$wiki->user = $username;
-	$wiki->content = str_replace("\\","","");
-	if ($filename != "")
-		$wiki->insert();
+	$wiki->content = '';
+	if ($filename != '') $wiki->insert();
 	
-	$result .=  "<br/><a href='".$wiki->link("")."'>Image:$filename</a>";
+	$result .=  '<br/><a href="'.$wiki->link('').'">Image:'.$filename.'</a>';
 	
 	$filename2 =  'snapshot'.$today.'.zip';
 	copy($swRoot.'/site/files/'.$filename,$swRoot.'/site/files/'.$filename2);
@@ -472,42 +427,99 @@ function swSnapShot($username)
 	copy($swRoot.'/site/files/'.$filename,$swRoot.'/bak/'.$filename2);
 	copy($swRoot.'/site/files/'.$filename,$swRoot.'/bak/'.$filename3);
 	
-	$wiki->name ="Image:$filename2";
+	$wiki->name ='Image:'.$filename2;
 	$wiki->user = $username;
-	$wiki->content = str_replace("\\","","");
-	if ($filename2 != "")
+	$wiki->content = '';
+	if ($filename2 != '') $wiki->insert();
+		
+	$result .=  '<br/><a href="'.$wiki->link('').'">Image:'.$filename2.'</a>';
+	
+	$wiki->name ='Image:'.$filename3;
+	$wiki->user = $username;
+	$wiki->content = '';
+	if ($filename2 != '')
 		$wiki->insert();
 		
-	$result .=  "<br/><a href='".$wiki->link("")."'>Image:$filename2</a>";
+	$result .=  '<br/><a href="'.$wiki->link('').'">Image:'.$filename3.'</a>';
 	
-	$wiki->name ="Image:$filename3";
-	$wiki->user = $username;
-	$wiki->content = str_replace("\\","","");
-	if ($filename2 != "")
-		$wiki->insert();
-		
-	$result .=  "<br/><a href='".$wiki->link("")."'>Image:$filename3</a>";
-	
-	$files = glob("$swRoot/site/files/snapshot.*.zip");
-	$filename = "snapshot.txt";
-	$fd = fopen("$swRoot/site/files/$filename", "wb");
+	$files = glob($swRoot.'/site/files/snapshot.*.zip');
+	$filename = 'snapshot.txt';
+	$fd = fopen($swRoot.'/site/files/'.$filename, 'wb');
 	foreach($files as $file)
 	{
-		$file = str_replace("$swRoot/site/files/","",$file);
+		$file = str_replace($swRoot.'/site/files/','',$file);
 		$out = fwrite ($fd, $file."\n");
 	}
 	fclose ($fd);
-	$wiki->name ="Image:$filename";
+	$wiki->name ='Image:'.$filename;
 	$wiki->user = $username;
 	$wiki->content = str_replace("\\","","");
-	if ($filename != "")
+	if ($filename != '')
 		$wiki->insert();
 	
-	$result .=  "<br/><a href='".$wiki->link("")."'>Image:$filename</a>";
+	$result .=  '<br/><a href="'.$wiki->link('').'">Image:'.$filename.'</a>';
 	swSemaphoreRelease();
 	return $result;
 	
 }
 
- 
-?>
+/**
+ * Saves a list of revisions to a zip file. 
+ *
+ * The Zip file is saved to the bak folder. The result returns a link to the file.
+ *
+ * @param $revisions Array of revision numbers
+ */
+
+function swExport($revisions)
+{	
+	global $swRoot;
+	swSemaphoreSignal();
+	if (!is_dir($swRoot.'/bak/')) mkdir($swRoot.'/bak/',0777); 
+	$today = date('Ymd',time());
+	$result = 'Export of SofaWiki revisions. <br/><br/>';
+	
+	$result .=  '<br/><br/>revisions';
+	$dir = $swRoot.'/site/revisions';
+	$files = array();
+	foreach($revisions as $r)
+	{
+		$files[] = $dir.'/'.$r.'.txt';
+	}
+	natsort($files);
+	
+	foreach($files as $file)
+	{
+		$fn = str_replace($swRoot.'/site/revisions/','',$file);
+		$thousand = (int)(str_replace('.txt','',$fn)/1000);
+		$currentthousand = (int)(swGetLastRevision()/1000);
+		$ziptest = 'export-'.$today.'.zip'; 
+		if (!isset($zip))
+		{
+			$zip = $ziptest;
+			$zipfile = new ZipArchive; 
+			$zipfile->open($swRoot.'/bak/'.$zip, ZipArchive::CREATE);
+		
+		}
+		if ($zip == $ziptest)
+		{
+			$zip = $ziptest;
+			$result .=  '<br>'.$fn; 
+			$zipfile -> addFile($file, $fn); 
+		}
+		else
+			continue;
+	}
+	if (isset($zip))
+	{
+		$zipfile->close();
+	}
+
+	unset($zip);
+	$result .=  '<br/><br/><a href="bak/'.$ziptest.'">'.$ziptest.'</a>';
+	swSemaphoreRelease();
+	return $result;
+
+}
+
+

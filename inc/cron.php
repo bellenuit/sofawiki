@@ -102,10 +102,14 @@ function swCron()
 						
 			case 2: echotime('cron sitemap'); swSitemap();  return 'cron sitemap';  
 
-			case 3: echotime('cron bloom'); swIndexBloom(10); return 'cron bloom';  
+			case 3: 
+			case 4: echotime('cron bloom'); swIndexBloom(50); return 'cron bloom';  
+			
+			case 5:
+			case 6: echotime('cron monogram'); swIndexMonogram(50); return 'cron bloom';  
 			
 				
-			case 4: echotime('cron logs'); 
+			case 7: echotime('cron logs'); 
 			  		  
 			  		  if (!defined("CRON")) define('CRON',true);
 			  		  global $swParsedContent;
@@ -116,7 +120,7 @@ function swCron()
 			  
 			  		  return "cron logs"; 
 			  		  break; 
-			case 5: echotime('cron IndexRamDiskDB'); 
+			case 8: echotime('cron IndexRamDiskDB'); 
 			  		  swIndexRamDiskDB();	
 			  		  break;
 			  		  

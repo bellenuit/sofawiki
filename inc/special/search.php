@@ -51,7 +51,7 @@ else
 	$wiki = new swWiki;
 	
 	$start = 1; if (isset($_REQUEST['start'])) $start = $_REQUEST['start'];
-	$swParsedContent = swRelationSearch($query,$start,500, @$swSearchTemplate, @$swRelationFilterHook); 		
+	$swParsedContent = swRelationSearch($query, @$swSearchTemplate); 		
 	$wiki->content = $swParsedContent;
 	
 	$swParseSpecial = true;

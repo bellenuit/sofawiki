@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.6.1';  
+$swVersion = '3.6.2';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -63,6 +63,7 @@ include_once $swRoot.'/inc/deepl.php';
 include_once $swRoot.'/inc/filter.php';
 include_once $swRoot.'/inc/function.php';
 include_once $swRoot.'/inc/legacy.php';
+include_once $swRoot.'/inc/monogram.php';
 include_once $swRoot.'/inc/notify.php';
 include_once $swRoot.'/inc/parser.php';
 include_once $swRoot.'/inc/record.php';

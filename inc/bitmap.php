@@ -1,40 +1,71 @@
 <?php
 
-if (!defined("SOFAWIKI")) die("invalid acces");
-
 /**
- *	This file contains the swBitmap class.
- *  
+ *	Contains the swBitmap class to manipulate and store boolean arrays.
+ * 
+ *  Bitmaps are central for indices (indexedbitmap, currentbitmap) and filter functions.
  *  swBitmap provides a memory-effective way to store an array of booleans using only one bit per array. 
- *  The bit-array is n-based. You cannot set the bit 0.
- *  Note that 8 bit are in a byte.
- *  If the length is not a multiple of 8, there are 1-7 bits at the end that are undefined. (To be taken care of)
  */
 
+if (!defined("SOFAWIKI")) die("invalid acces");
+
 
 /**
- * Provides a memory-effective way to store an array of booleans using only one bit per array. 
+ * Provides a structure to manipulate and store boolean arrays. 
+ *
+ * The bit-array is 0-based.
+ * NB: There are 8 bit are in a byte. If the length is not a multiple of 8, the bits after length are unefined.
+ * 
  */
 
 class swBitmap extends swPersistance 
 {
+	
+	/**
+	 *  Number of bits
+	 */
 	var $length;
-	var $state;
+	
+	/**
+	 *  Bitmap has been modified since open 
+	 */
 	var $touched;
+	
+	/**
+	 *  Binary bitmap data 
+	 */
 	var $map;
+	
+	/**
+	 *  Human readable bitmap data
+	 */
 	var $maphex;
+	
+	/**
+	 *  If set, consecutive values in hex data are further compressed (letters g, h, i, j for 0, p, q, r, s for 1)
+	 */
 	var $compressionmode;
+	
+	/**
+	 *  Default value if setbit makes the bitmap longer
+	 */	
 	var $default = false;
 	
+	/**
+	 * Creates the bitmap of length l, filled with default value. 
+	 */
 	function init($l, $default = false)
 	{
-		//creates the bit string, filled with default value
+		//
 		$this->length = 0;
 		$this->redim($l,$default);
 		$this->touched = true;
 		$this->compressionmode = true;
 	}
 	
+	/**
+	 * Makes the bitmap longer (can only grow), filled with default value.
+	 */
 	function redim($l, $default = false)
 	{
 		if (intval($l)<$this->length) return; // can only grow
@@ -44,9 +75,6 @@ class swBitmap extends swPersistance
 		$this->length = intval($l);  
 		
 		$bytes = ($this->length + 7) >> 3;	
-		
-		$thisbytes = strlen($this->map);
-		
 		
 		if ($default)
 			$this->map = str_pad($this->map,$bytes,chr(255));
@@ -68,11 +96,11 @@ class swBitmap extends swPersistance
 		}
 		
 		$this->default = $default;
-		
-		
-				
 	}
 	
+	/**
+	 * Converts $map to to $maphex and sets $map to empty string (both cannot coexist).
+	 */
 	function hexit()
 	{
 		$this->compressionmode = true;
@@ -80,35 +108,49 @@ class swBitmap extends swPersistance
 		if ($this->compressionmode)
 		{
 			$this->maphex = str_replace('00000000','g',$this->maphex);// simple compression
-			$this->maphex = str_replace('ffffffff','h',$this->maphex);
 			$this->maphex = str_replace('gggggggg','i',$this->maphex);
+			$this->maphex = str_replace('iiiiiiii','k',$this->maphex);// simple compression
+			$this->maphex = str_replace('kkkkkkkk','m',$this->maphex);
+			$this->maphex = str_replace('ffffffff','h',$this->maphex);
 			$this->maphex = str_replace('hhhhhhhh','j',$this->maphex);
+			$this->maphex = str_replace('jjjjjjjj','l',$this->maphex);
+			$this->maphex = str_replace('llllllll','n',$this->maphex);
 		}
 		$this->map = '';
 	}
+	
+	/**
+	 * Converts $maphex to to $map and sets $maphex to empty string (both cannot coexist).
+	 */
 	function dehexit()
 	{
+		$this->maphex = str_replace('n','llllllll',$this->maphex);
+		$this->maphex = str_replace('l','jjjjjjjj',$this->maphex);
 		$this->maphex = str_replace('j','hhhhhhhh',$this->maphex);
-		$this->maphex = str_replace('i','gggggggg',$this->maphex);
 		$this->maphex = str_replace('h','ffffffff',$this->maphex);
+		$this->maphex = str_replace('m','kkkkkkkk',$this->maphex);
+		$this->maphex = str_replace('k','iiiiiiii',$this->maphex);
+		$this->maphex = str_replace('i','gggggggg',$this->maphex);
 		$this->maphex = str_replace('g','00000000',$this->maphex);
 		$this->map = pack("H*" , $this->maphex);
 		$this->maphex = '';	
 	}
 	
-	// magic functions store string as hex
 	function save()
 	{
 		$this->hexit();
 		parent::save();
 	}
-		
+	
 	function open()
 	{
 		parent::open();
 		$this->dehexit();
 	}
 	
+	/**
+	 * Sets the nth bit to true. If n is bigger than or equal to length, the bitmap will be resized with default value. 
+	 */	
 	function setbit($n)
 	{
 		// zero based, n >= length will make it grow
@@ -135,6 +177,9 @@ class swBitmap extends swPersistance
 		$this->map[$byte] = $ch;
 	}
 	
+	/**
+	 * Sets the nth bit to false. If n is bigger than or equal to length, the bitmap will be resized with default value. 
+	 */	
 	function unsetbit($n)
 	{
 		// zero based, n >= length will make it grow
@@ -161,6 +206,9 @@ class swBitmap extends swPersistance
 		$this->map[$byte] = $ch;		
 	}
 	
+	/**
+	 * Sets the nth bit to false. If n is bigger than or equal to length, the default value will be returned.
+	 */	
 	function getbit($n)
 	{
 		// zero based, n >= length will return default
@@ -185,11 +233,9 @@ class swBitmap extends swPersistance
 			return false;
 	}
 	
-	function getnext($n)
-	{
-		// returns the offset of the next bit set to true after n, or false.
-	}
-	
+	/**
+	 * Creates a real copy.
+	 */	
 	function duplicate()
 	{
 		$result = new swBitmap;
@@ -198,20 +244,24 @@ class swBitmap extends swPersistance
 		$s = $this->map;
 		$result->map = $s; //force non mutable
 		$result->touched = true;
+		$result->default = $this->default;
 		return $result;
 	}
 	
+	/**
+	 * Returns a new bitmap with the value C = A AND B. 
+	 */		
 	function andop($bitmap)
 	{
-		// returns a bitmap as result of OR between this and bitmap
-		
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
+		$result->default = false;
 		
 		$b1 = $this->duplicate(); 
 		$b1->redim($result->length,0);
 		$b2 = $bitmap->duplicate(); 
 		$b2->redim($result->length,0);
+
 				
 		$result->map = $b1->map & $b2->map;		
 
@@ -221,13 +271,10 @@ class swBitmap extends swPersistance
 	}
 	
 	/**
-	 * Returns a bitmap as result of OR between this and bitmap	
-	 */
-	
+	 * Returns a new bitmap with the value C = A OR B. 
+	 */		
 	function orop($bitmap)
 	{
-		// returns a bitmap as result of OR between this and bitmap
-		
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
 		
@@ -242,18 +289,24 @@ class swBitmap extends swPersistance
 		return $result;
 	}
 	
+	/**
+	 * Returns a new bitmap with the value B = NOT A. 
+	 */		
 	function notop()
 	{
 		
 		$result = new swBitmap;
 		$result->redim($this->length, true);
 		if ($this->map == '') $this->dehexit();		
-		$map = $result->map ^ $this->map;
-		$result->map = $map;
+		$xormap = $result->map ^ $this->map;
+		$result->map = $xormap;
 		$result->touched = true;
 		return $result;
 	}
 	
+	/**
+	 * Returns a readable bitmap, grouped by 8 bits.
+	 */		
 	function dump()
 	{
 		// returns bit string in groups of 8
@@ -273,14 +326,14 @@ class swBitmap extends swPersistance
 		$result = trim($result);
 		
 		if ($mod < 8)
-			$result = substr($result,0,-$mod);
-		
+			$result = substr($result,0,-$mod);		
 		$result = trim($result);
-		
-				
 		return $result;
 	}
 	
+	/**
+	 * Returns the number of bits that are true.
+	 */		
 	function countbits()
 	{
 		// Counting bits set, Brian Kernighan's way
@@ -298,12 +351,14 @@ class swBitmap extends swPersistance
 			{
 				$v &= $v - 1;
 				$c++;
-			}
-			
+			}			
 		}
 		return $c;
 	}
 	
+	/**
+	 * Returns an array of all true bits.
+	 */		
 	function toarray()
 	{
 		$result = array();
@@ -314,9 +369,7 @@ class swBitmap extends swPersistance
 				
 		}
 		return $result;
-	}
-
-	
+	}	
 }
 
 function bitmapUnitTest()
