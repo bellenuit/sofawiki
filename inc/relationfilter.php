@@ -616,6 +616,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		$bms = swGetMonogramBitmapFromTerm('_checkedbitmap','');
 		$bm = $bms[0];
+		$notcheckd = $bm->notop();
 		
 		$bigbloom->init($bm->length,true);
 		
@@ -663,6 +664,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				}
 			}
 		}
+		
+		$bigbloom = $bigbloom->orop($notcheckd);	
 		
 		$bigbloom->redim($tocheckbitmap->length,true);
 		
@@ -1496,10 +1499,10 @@ union
 
 select trim(_paragraph) !== "" and substr(_paragraph,0,1) !== "#" and substr(_paragraph,0,2) !== "{{" and substr(_paragraph,0,6) !== "<code>"  and substr(_paragraph,0,2) !== "{|"
 
-extend _nameint = _name
+update _name = substr(_name,0,-3) where substr(_name,-3,1) == "/" 
 
-project _nameint, _paragraph count, _paragraph first
-rename _nameint _name, _paragraph_first _paragraph
+project _name, _paragraph count, _paragraph first
+rename _paragraph_first _paragraph
 order _paragraph_count 9
 
 project _name, _paragraph
@@ -1514,7 +1517,7 @@ project _name, _paragraph
 join left
 
 // remove wiki styles
-update _paragraph = resume(_paragraph,160,1)
+update _paragraph = resume(_paragraph,9999,1)
 
 // create a query to be split
 set v = "'.$term.'" ." "
