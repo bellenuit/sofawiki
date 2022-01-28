@@ -1,4 +1,12 @@
 <?php
+	
+/** 
+ * Shows a list of all templates that are not used directly
+ *
+ * special:unused-templates
+ * The script does not see templates in relation code
+ */
+
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
@@ -17,7 +25,7 @@ difference
 order _name a
 update _name = "[["._name."]]"
 ​label _name ""
-print 
+print grid 50
 ';
 
 $lh = new swRelationLineHandler;

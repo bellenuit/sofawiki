@@ -1,4 +1,10 @@
 <?php
+	
+/** 
+ * Shows a list of categories that are not used
+ *
+ * special:categories
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
@@ -17,7 +23,7 @@ difference
 order _name a
 update _name = "[[:"._name."]]"
 ​label _name ""
-print
+print grid 50
 ';
 
 $lh = new swRelationLineHandler;

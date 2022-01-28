@@ -1,57 +1,59 @@
 <?php
-
-/*
-SOFA DB
-- document oriented database inspired from couchdb but using semantic metawiki syntax
-- the database has no tables and no predefined fields.
-- fields are declared inline using the semantic mediawiki syntax [[fieldname::value]]
-  fieldnames cannot start with an underscore
-- multiple occurences of the same field are allowed
-- the records are self-contained
-- the records are stored as revisioned files adding a header with the reserved fields 
-  _id automatically generated integer
-  _revision automatically generated integer
-  _name the wiki name, can change over time
-  _timestamp sever time
-  _status ok, request, protected, deleted
-- the filename is the revision. the written files are never changed afterwards.
-- on insertion of a new revision, the database writes some indexes. 
-  these indexes are for performance only, they can be rebuild whenever needed from scratch
-  - index to find the most recent ok revision of an id (or discard it if there is a more recent delete)
-  - index for each field
-  - fulltext index wordbased on each field
-- queries can be done
-  - individually return a sdRecord by id, by revision or by name
-  - return a list of all revisions of an id
-  - return a list of all revisions (or only current ids) that are conform to a filter
-    filter use regex and are applied on all revisions.
-    the filter results are saved, so that the next time only new revisions have to be applied for the same filter
-    - filename as md5 of request
-    - fields _query, _maxrevision, _timestamp
-    
-REQUIREMENTS
-- php needs write access to the folders parsers, queries and revisions
- 
+	
+/**
+ *	Contains the swDB class which is responsible for the indexes
+ * 
+ *  There is one global instance $db that handles the indexes.
+ *  It does not handle writing of new records. This is done in inc/record.php.
+ *  It observes changes and updates indexes based on need.
+ *  Note that to look up a record by URL, the indexes are not used. 
+ *  The hashes of the filenames in the current folder are the index for that.
+ *
+ *  General architecture 
+ *  Document oriented database inspired from couchdb but using semantic metawiki syntax
+ *  The database has no tables and no predefined fields.
+ *  Fields are declared inline using the semantic mediawiki syntax [[fieldname::value]].
+ *  Fieldnames cannot start with an underscore.
+ *  Multiple occurences of the same field are allowed.
+ *  The records are self-contained.
+ *  The records are stored as revisioned files adding a header with the reserved fields.
+ *  _id automatically generated integer
+ *  _revision automatically generated integer
+ *  _name the wiki name, can change over time
+ *  _timestamp sever time
+ * _status ok, request, protected, deleted
+ * The filename is the revision.tx. The written files are never changed afterwards.
+ * Every change creates a new revision,.
+ * On insertion of a new revision, the database writes some indexes. 
+ * These indexes are for performance only, they can be rebuild whenever needed from scratch.
+ * Note: PHP needs write access to the site folders and subfolders.
 */
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swAllRevisionsCache = array();
 
-
-
-
+/**
+ * Holds the database indexes 
+ *
+ * $indexedbitmap revisions that have been indexed in urldb
+ * $currentbitmap revisions that are the last version and have the status ok or protected (these are the only filters should check)
+ * $deletedbitmap revisions with status deleted
+ * $protectedbitmap revisions with status protected
+ * $bloombitmap revisions with have been indexed by the bloom filter
+ * $urldb database of url names and revision
+ * All these objects are persistent in site/indexes/.
+ * The bitmaps are serialized objects.
+ * The urldb is a sqlite3 db.
+ */
 
 class swDB extends swPersistance //extend may be obsolete
 {
-	
-	
-	var $indexedbitmap;  // revisions that have been indexed in urldb
-	var $currentbitmap;  // revisions that are currently active (last version, ok or protected) these are the only one the database needs to access in relation filter
-	var $deletedbitmap;  // revision with status deleted
-	var $protectedbitmap; // revisions with status protected
-	var $bloombitmap; // revisions that have been indexed by bloom 
-	//var $shortbitmap;
+	var $indexedbitmap; 
+	var $currentbitmap;  
+	var $deletedbitmap;  
+	var $protectedbitmap; 
+	var $bloombitmap; 
 	var $urldb;
 	var $touched = false;
 	
@@ -63,21 +65,16 @@ class swDB extends swPersistance //extend may be obsolete
 	var $currentupdaterev;
 	var $pathbase;
 	
-
-	
 	function init($force = false) 
 	{
-		
 		global $swRoot; 
 		global $swRamdiskPath;
 		global $swOvertime;
 
 		echotime('init '.$force);
 		
-		if (isset($swRamdiskPath) && $swRamdiskPath != '')
-			swInitRamdisk();
+		if (isset($swRamdiskPath) && $swRamdiskPath != '') swInitRamdisk();
 
- 
 		if ($force)
 		{
 			$this->inited = false;
@@ -92,81 +89,96 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		//selfhealing
 		$this->pathbase = "$swRoot/site/";
-
 		if (!is_dir( "$swRoot/site/")) mkdir ( "$swRoot/site/",0777); // mode does not work
 		if (!is_dir( $this->pathbase.'current/')) mkdir ( $this->pathbase.'current/', 0777); 
 		if (!is_dir( $this->pathbase.'indexes/')) mkdir ( $this->pathbase.'indexes/', 0777);
 		if (!is_dir( $this->pathbase.'queries/')) mkdir ( $this->pathbase.'queries/', 0777);
 		if (!is_dir( $this->pathbase.'files/')) mkdir ( $this->pathbase.'files/', 0777);
 		if (!is_dir( "$swRoot/site/revisions/")) mkdir ( "$swRoot/site/revisions/", 0777);
-
 		
 		$bitmaperror = false;
 		
 		$this->indexedbitmap = new swBitmap;
 		$this->indexedbitmap->persistance = $this->pathbase.'indexes/indexedbitmap.txt';
 		if (file_exists($this->indexedbitmap->persistance))
+		{
 			$this->indexedbitmap->open();
+		}
 		else
+		{
 			$bitmaperror = 'indexed null';	
-			
+		}
 		$this->lastrevision=$this->indexedbitmap->length-1;
 				
 		$this->currentbitmap = new swBitmap;
 		$this->currentbitmap->persistance = $this->pathbase.'indexes/currentbitmap.txt';
 		if ($this->lastrevision>0 && file_exists($this->currentbitmap->persistance))
+		{
 			$this->currentbitmap->open();
+		}
 		else
+		{
 			$bitmaperror = 'current null';
-						
+		}
 			
 		$this->protectedbitmap = new swBitmap;
 		$this->protectedbitmap->persistance = $this->pathbase.'indexes/protectedbitmap.txt';
 		if ($this->lastrevision>0 && file_exists($this->protectedbitmap->persistance))
+		{
 			$this->protectedbitmap->open();
+		}
 		else
+		{
 			$bitmaperror = 'protected null';
+		}
 			
 		$this->deletedbitmap = new swBitmap;
 		$this->deletedbitmap->persistance = $this->pathbase.'indexes/deletedbitmap.txt';
 		if ($this->lastrevision>0 && file_exists($this->deletedbitmap->persistance))
+		{
 			$this->deletedbitmap->open();
+		}
 		else
+		{
 			$bitmaperror = 'deleted null';
+		}
 
 		$this->bloombitmap = new swBitmap;
 		$this->bloombitmap->persistance = $this->pathbase.'indexes/bloombitmap.txt';
 		if (file_exists($this->bloombitmap->persistance))
+		{
 			$this->bloombitmap->open();
-			
-			
+		}
+					
 		$urldbpath = $this->pathbase.'indexes/urls.db';
-		global $swDBAhandler;
+		global $swDbaHandler;
 		if (file_exists($urldbpath))
-			$this->urldb = swDBA_open($urldbpath, 'wdt', $swDBAhandler);
+		{
+			$this->urldb = swDbaOpen($urldbpath, 'wdt', $swDbaHandler);
+		}
 		else
-			$this->urldb = swDBA_open($urldbpath, 'c', $swDBAhandler);	
+		{
+			$this->urldb = swDbaOpen($urldbpath, 'c', $swDbaHandler);	
+		}
 
-		$lastwrite = $this->GetLastRevisionFolderItem($force || $this->lastrevision < 200);
+		$lastwrite = $this->getLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
 		// 95% full 
 		if ($lastwrite > 0 && $this->indexedbitmap->countbits() / $lastwrite < 0.95 ) $bitmaperror = 'index less 95';
 		if ($this->currentbitmap->countbits()==0 ) $bitmaperror = 'current 0';
 		if ($this->lastrevision == 0) $bitmaperror = 'lastrevision 0';
-		
-		
 
-		echotime("db-init ".$this->lastrevision."/" .$lastwrite);
+		echotime('db-init '.$this->lastrevision.'/'.$lastwrite);
 		
 		// always cleaning latest changes
 		for($i=$lastwrite-16; $i<=$lastwrite;$i++)
 		{
-			if (!$this->indexedbitmap->getbit($i)) { $this->updateindexes($i);}
+			if (!$this->indexedbitmap->getbit($i)) { $this->updateIndexes($i);}
 		}
 			
 		if ($this->lastrevision < $lastwrite || $force)
 		{
-			$this->RebuildIndexes($lastwrite);
+			$this->rebuildIndexes($lastwrite);
 		}
 		else
 		{
@@ -176,7 +188,7 @@ class swDB extends swPersistance //extend may be obsolete
 		if ($bitmaperror && !$swOvertime)
 		{
 			echotime($bitmaperror);
-			$this->RebuildIndexes($this->lastrevision);
+			$this->rebuildIndexes($this->lastrevision);
 		}
 		
 		return;
@@ -188,7 +200,7 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		if (!$this->touched) return;
 		
-		echotime("db-close");
+		echotime('db-close');
 		
 		if ($this->indexedbitmap->touched)
 		{
@@ -216,21 +228,11 @@ class swDB extends swPersistance //extend may be obsolete
 			$this->bloombitmap->touched = false;
 			$this->bloombitmap->save();
 		}
-
-		/*
-		if ($this->shortbitmap->touched)
-		{
-			$this->shortbitmap->touched = false;
-			$this->shortbitmap->save();
-		}
-		*/
-//		global $testmode; 
-//		if ($testmode) $this->urldb->close();
 		
 		global $swOvertime; 
 		if (!$swOvertime && rand(0,100)>80)		
 			swIndexBloom(16);
-		
+					
 		$this->touched = false;
 		
 	}
@@ -238,16 +240,13 @@ class swDB extends swPersistance //extend may be obsolete
 	function __destruct()
 	{
 		$this->close();
-	}
-	
+	}	
 		
-	function GetLastRevisionFolderItem($force=false)
+	function getLastRevisionFolderItem($force=false)
 	{
 		global $swRoot;
-		$path = "$swRoot/site/revisions";
+		$path = $swRoot.'/site/revisions';
 		$maxf = 0;
-		
-		
 		// performance: normally just check the next 100;
 		if (rand(0,100) > 1 && !$force)
 		{
@@ -276,11 +275,11 @@ class swDB extends swPersistance //extend may be obsolete
 		return $maxf;
 	}
 	
-	function RebuildIndexes($lastindex=0)
+	function rebuildIndexes($lastindex=0)
 	{
 		// we read all file statuses to get create the url.db
 		
-		echotime("indexes start ".$lastindex); 
+		echotime('indexes start '.$lastindex); 
 		
 		global $swError, $swIndexError, $swOvertime, $swMemoryLimit;
 		global $rebuildstarttime;
@@ -292,70 +291,67 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			if ($this->indexedbitmap->getbit($r)) continue;
 			$nowtime = microtime(true);	
-			$dur = sprintf("%04d",($nowtime-$rebuildstarttime)*1000);
+			$dur = sprintf('%04d',($nowtime-$rebuildstarttime)*1000);
 			if (intval($dur)>10000 || memory_get_usage()>$swMemoryLimit)
 			{
 				echotime('overtime INDEX '.$c.' '.$r);
 				$swOvertime = true;
-				$swError = "Index incomplete. Please reload";
+				$swError = 'Index incomplete. Please reload';
 				$swIndexError = true;
 				break;
 			}
-			$this->UpdateIndexes($r);
+			$this->updateIndexes($r);
 			$c++; 
 		}
 		if (!$swIndexError)
 		{
 			 $this->rebuildBitmaps(); 
 			 $swIndexError = false;
-			 echotime('indexes built '.$c);	
-			 //swIndexBloom(10);
+			 echotime('indexes built '.$c);
 		}
-		swDBA_sync($this->urldb);
-		
-		
+		swDbaSync($this->urldb);
 	}
 	
 	
-	function UpdateIndexes($rev)
+	function updateIndexes($rev)
 	{
 		
 		$this->lastrevision = max($this->indexedbitmap->length-1,$rev);
 		
-		if ($this->indexedbitmap->getbit($rev)) { return true;} // do not twice in a request, cheaper than swdba_exists
+		if ($this->indexedbitmap->getbit($rev)) return true;  // do not twice in a request, cheaper than swDbaExists
 		
-		if (swDBA_exists(' '.$rev,$this->urldb)) { $this->indexedbitmap->setbit($rev); return true;} // already done
-
+		if (swDbaExists(' '.$rev,$this->urldb))
+		{ 
+			$this->indexedbitmap->setbit($rev);
+			return true;
+		} // already done
 		
 		$r = new swRecord;
 		$r->revision = $rev;
 		$this->currentupdaterev = $rev;
 		if (!$source = $r->readHeader()) return false;
+		
 		$this->indexedbitmap->setbit($rev);
+		
 		if ($r->status == '') return false;
 		if ($r->revision == 0) return false;
 		
 		$url = swNameURL($r->name);		
 		$status = substr($r->status,0,1);
 
-		if (swDBA_exists($url,$this->urldb))
+		if (swDbaExists($url,$this->urldb))
 		{
-			$line = swDBA_fetch($url,$this->urldb);
+			$line = swDbaFetch($url,$this->urldb);
 			if ($line)
 			{
 				$revs = explode(' ',$line);
 				
 				if (count($revs)>=2) // should always be the case 
 				{
-				
-					// echo $line;
 					$oldstatus = array_shift($revs); 
 					$oldrev = array_shift($revs);   
 					
-					if ($rev < $oldrev)
-					{
-						$status = $oldstatus;
-					}
+					if ($rev < $oldrev) $status = $oldstatus;
 					$revs[] = $oldrev;
 					$revs[] = $rev;
 					$revs = array_unique($revs);
@@ -367,19 +363,21 @@ class swDB extends swPersistance //extend may be obsolete
 					// p 6781
 					$line = $status.' '.join(' ',$revs);
 					
-					swDBA_replace($url, $line, $this->urldb);  // url index
-					swDBA_replace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
+					swDbaReplace($url, $line, $this->urldb);  // url index
+					swDbaReplace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
 					
 					// set bits for last revision
 					$rlast = array_shift($revs);
 					if ($status == 'p') $this->protectedbitmap->setbit($rlast);
 					if ($status == 'd') $this->deletedbitmap->setbit($rlast);
-					
 					if ($status == 'o' || $status == 'p')
+					{
 						$this->currentbitmap->setbit($rlast);
+					}
 					else
+					{
 						$this->currentbitmap->unsetbit($rlast);
-
+					}
 					
 					// unset bits for older revisions
 					while ($rother = array_shift($revs))
@@ -388,16 +386,14 @@ class swDB extends swPersistance //extend may be obsolete
 						$this->protectedbitmap->unsetbit($rother);
 						$this->deletedbitmap->unsetbit($rother);
 					}
-					
-					
 				}
 			}
 		}
 		else
 		{
 			$line = $status.' '.$rev;
-			swDBA_replace($url,$line, $this->urldb);
-			swDBA_replace(' '.$rev, $url, $this->urldb);
+			swDbaReplace($url,$line, $this->urldb);
+			swDbaReplace(' '.$rev, $url, $this->urldb);
 		
 			if ($status == 'p') $this->protectedbitmap->setbit($rev);
 			if ($status == 'd') $this->deletedbitmap->setbit($rev);
@@ -406,12 +402,9 @@ class swDB extends swPersistance //extend may be obsolete
 				$this->currentbitmap->setbit($rev);
 			else
 				$this->currentbitmap->unsetbit($rev);
-
-			
 		}
 		
-		$this->touched = true;
-		
+		$this->touched = true;	
 		return true;
 
 	}
@@ -428,10 +421,10 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->deletedbitmap->init($this->lastrevision); 
 		$this->protectedbitmap->init($this->lastrevision);
 			
-		$key = swDBA_firstKey($this->urldb);		
+		$key = swDbaFirstKey($this->urldb);		
 		do 
 		{
-		  $line = swDBA_fetch($key,$this->urldb);
+		  $line = swDbaFetch($key,$this->urldb);
 		  
 		  if (substr($line,0,1)==' ') continue; // is revision key
 		  
@@ -465,7 +458,7 @@ class swDB extends swPersistance //extend may be obsolete
 		  }
 	
 		  	
-		} while ($key = swDBA_nextKey($this->urldb));
+		} while ($key = swDbaNextKey($this->urldb));
 			
 		$this->touched = true;
 			
@@ -475,12 +468,23 @@ class swDB extends swPersistance //extend may be obsolete
 	
 }
 
+/**
+ * Returns the number of the last revision. 
+ *
+ * Made a global function to replace global $db declaration in code blocks.
+ */
 
 function swGetLastRevision()
 {
 	global $db;
 	return $db->lastrevision;
 }
+
+/**
+ * Returns all revisions for a name to build a history
+ *
+ * @param name
+ */
 
 
 function swGetAllRevisionsFromName($name)
@@ -497,38 +501,42 @@ function swGetAllRevisionsFromName($name)
 	$revs = array();	
 	global $db;
 	
-	if (swDBA_exists($url,$db->urldb))
+	if (swDbaExists($url,$db->urldb))
 	{
-		$s = swDBA_fetch($url,$db->urldb);
+		$s = swDbaFetch($url,$db->urldb);
 		$revs = explode(' ',$s);
 		$status = array_shift($revs);
 		rsort($revs,SORT_NUMERIC);
 	}
 	
-	
 	$swAllRevisionsCache[$name] = $revs;
 	return $revs;
 		
-	
 	$r = new swRecord;
 	$r->name = $name;
 	$md = $r->md5Name();
 	
 }	
 
+/**
+ * Returns the file path for a revision
+ *
+ * @param revision
+ * @param current 
+ */
+
 function swGetPath($revision, $current = false)
 {
 	if (is_array($revision))
-		{
-			debug_print_backtrace();
-			exit;
-		}
-		
+	{
+		debug_print_backtrace(); //should not happen
+		exit;
+	}	
 
 	global $swRoot;
-	if ($current)
+	if ($current) 
 	{
-		return $swRoot.'/site/current/'.$revision.'.txt';
+		return $swRoot.'/site/current/'.$revision.'.txt';  // not clear if this is still useful
 	}
 	else
 		return $swRoot.'/site/revisions/'.$revision.'.txt';

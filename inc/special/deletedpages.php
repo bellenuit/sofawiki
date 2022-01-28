@@ -1,73 +1,54 @@
 <?php
+	
+/** 
+ * Shows a list of all deleted pages.
+ *
+ * Used by the $action allpages.
+ * The link will go to the history of the page
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Deleted Pages";
 
-$swParsedContent = "";
 
-// deletedbitmap && currentbitmap use url
 
 $currentbitmap = $db->currentbitmap->duplicate();
 $deleted = $db->deletedbitmap->toarray();
 
 $urldbpath = $db->pathbase.'indexes/urls.db';
 if (file_exists($urldbpath))
-		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
+		$urldb = swDbaOpen($urldbpath, 'rdt', 'db4');
 if (!@$urldb)
 {
 	echotime('urldb failed');
 }
-
-
-$listmenu = array();
-$list = array();
-
-$alpha = @$_REQUEST['alpha'];
-if (!$alpha)$alpha = 'a';
-
-$list = array();
-$i = 0;
-foreach($deleted as $rev)
+else
 {
-	if ($currentbitmap->getbit($rev))
+	$rel = new swRelation('_name');
+	$key = swDbaFirstKey($urldb);
+	do 
 	{
-		// $i++; if ($i>10) continue;
-		if ($urldb && dba_exists(' '.$rev,$urldb))
-		{
-			$s = dba_fetch(' '.$rev,$urldb);
-			$url = swNameURL(substr($s,2));
-			if (!$url) continue;
-			
-			$u = substr($url,0,1);
-			if ($u == $alpha)	
-				$list[$url] = '<li><a class="invalid" href="index.php?action=history&revision='.$rev.'">'.$url.'</a></li>' ;
-			
-			$listmenu[$u] = '<a href="index.php?name=special:deleted-pages&alpha='.$u.'">'.$u.'</a> ' ;
-			if ($u == $alpha)
-				$listmenu[$u] = '<a href="index.php?name=special:deleted-pages&alpha='.$u.'"><b>'.$u.'</b></a> ' ;
-		}
-	}
-
+	  
+	  if (substr($key,0,1) != ' ')
+	  {
+		  $value = swDbaFetch($key,$urldb);
+		  if (!$value) continue;
+		  if (substr($value,0,1) == 'd')
+		  {
+			 $rel->insert('"'.swEscape($key).'"');
+		  }
+	  }
+		
+	} while ($key = swDbaNextKey($urldb));
 }
-dba_close($urldb);
-ksort($list);
-ksort($listmenu);
 
-$swParsedContent .= '<p>'.join(' ',$listmenu);
+$rel->label('_name ""');
+$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');
 
-$swParsedContent .= '<ul>'.join('',$list).'</ul>';
+$swParsedContent = '<p>'.$rel->toHtml('grid');
 
-
-$swParseSpecial = false;
-
-
-// $swParsedContent .= join(' ',$list);
-
-// $swParsedContent .= '</ul>';
-
-
-// $swParseSpecial = false;
+$swParseSpecial = true;
 
 
 ?>

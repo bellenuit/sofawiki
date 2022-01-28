@@ -23,9 +23,9 @@ function swOpenMonogram()
 	$path = $swRoot.'/site/indexes/monogram.db';
 	
 	if (file_exists($path))
-		$swMonogramIndex = swdba_open($path, 'wdt', 'db4');
+		$swMonogramIndex = swDbaOpen($path, 'wdt', 'db4');
 	else
-		$swMonogramIndex = swdba_open($path, 'c', 'db4');	
+		$swMonogramIndex = swDbaOpen($path, 'c', 'db4');	
 	if ($swMonogramIndex)
 	{
 		$swMonogramIndexWritable = true;
@@ -33,7 +33,7 @@ function swOpenMonogram()
 	else
 	{
 		// try read only
-		$swMonogramIndex = swdba_open($path, 'rdt', 'db4');
+		$swMonogramIndex = swDbaOpen($path, 'rdt', 'db4');
 		
 		$swMonogramIndexWritable = false;
 		
@@ -81,7 +81,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		return;
 	}
 
-	if ($s = swdba_fetch('_checkedbitmap',$swMonogramIndex))
+	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
 	{	
 		//echo $s;
 		$checkedbitmap = unserialize($s);
@@ -172,7 +172,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 	
 	foreach($bitmaps as $k=>$bm)
 	{
-		if ($s = swdba_fetch($k,$swMonogramIndex))
+		if ($s = swDbaFetch($k,$swMonogramIndex))
 		{
 			$bm0 = @unserialize($s);
 		}
@@ -183,13 +183,13 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		$bm = $bm->orop($bm0);
 		
 		$bm->hexit(); // save for db
-		swdba_replace($k,serialize($bm),$swMonogramIndex);
+		swDbaReplace($k,serialize($bm),$swMonogramIndex);
 	}
 	
 	$checkedbitmap->hexit(); // save for db
-	swdba_replace('_checkedbitmap',serialize($checkedbitmap),$swMonogramIndex);
+	swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$swMonogramIndex);
 		
-	swdba_sync($swMonogramIndex);
+	swDbaSync($swMonogramIndex);
 	
 	
 	
@@ -216,7 +216,7 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	$result = array();
 	
 	
-	if ($s = swdba_fetch('_checkedbitmap',$swMonogramIndex))
+	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
 	{
 		$checkedbitmap = @unserialize($s);
 	}
@@ -244,7 +244,7 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	{
 		//echo $c;
 		
-		if ($s = swdba_fetch($field.' '.$c,$swMonogramIndex))
+		if ($s = swDbaFetch($field.' '.$c,$swMonogramIndex))
 		{
 			$bc = unserialize($s);
 			$bitmap = $bitmap->andop($bc);  // does not work ??

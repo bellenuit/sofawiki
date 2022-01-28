@@ -11,7 +11,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 
 /**
- * Provides a structure to manipulate and store boolean arrays. 
+ * Provides a class to manipulate and store boolean arrays. 
  *
  * The bit-array is 0-based.
  * NB: There are 8 bit are in a byte. If the length is not a multiple of 8, the bits after length are unefined.

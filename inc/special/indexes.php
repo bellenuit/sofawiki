@@ -218,14 +218,14 @@ switch($_REQUEST['index'])
 
 	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
 	
-						$key = swDBA_firstKey($db->urldb);	
+						$key = swDbaFirstKey($db->urldb);	
 						$urlcount = 0;
 						$revisioncount = 0;
 						do 
 						{
 							if (substr($key,0,1)==' ') $revisioncount++; else $urlcount++;
 								
-						} while ($key = swDBA_nextKey($db->urldb));
+						} while ($key = swDbaNextKey($db->urldb));
 						
 						
 						$swParsedContent .= '<p>'.$urlcount.' urls (includes deleted)';
@@ -256,7 +256,7 @@ switch($_REQUEST['index'])
 							
 						 // swInitRamdisk();
 						  //swDBA_close($swRamDiskDB);
-						  //$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'rdt', 'db4');
+						  //$swRamDiskDB =_open($swRamDiskDBpath, 'rdt', 'db4');
 						 // $swRamDiskDB->readIndex();
 							// echotime(print_r($swRamDiskDB,true));
 						  if (isset($swRamDiskDB) && $swRamDiskDB)
@@ -264,7 +264,7 @@ switch($_REQUEST['index'])
 							  
 							  $counter = 0;
 							  $bm = new swBitmap($db->lastrevision);
-							  $k = swDBA_firstkey($swRamDiskDB);
+							  $k = swDbaFirstKey($swRamDiskDB);
 							  if ($k === FALSE)
 							  	echotime($k);
 							  else
@@ -276,7 +276,7 @@ switch($_REQUEST['index'])
 								  $bm->setbit(intval($k2));
 								  $counter++;
 								  
-								  $k = swDBA_nextkey($swRamDiskDB);
+								  $k = swDbaNextKey($swRamDiskDB);
 								  
 								 // echotime('k' .$k);
 								  
@@ -391,7 +391,7 @@ switch($_REQUEST['index'])
 						 	else
 						 	{
 							 	$list = array();
-							 	$key = swDBA_firstkey($swMonogramIndex);
+							 	$key = swDbaFirstKey($swMonogramIndex);
 							 	do 
 							 	{
 									 $ks = explode(' ',$key);
@@ -402,7 +402,7 @@ switch($_REQUEST['index'])
 										 $list[$ks[0]][] = $ks[1];
 									 }	
 							 	}
-							 	while ($key = swDBA_nextkey($swMonogramIndex));
+							 	while ($key = swDbaNextKey($swMonogramIndex));
 							 	
 								foreach($list as $k=>$vs)
 							 	{
@@ -438,9 +438,9 @@ switch($_REQUEST['index'])
 							{
 								$path = $querypath.$_REQUEST['q'];
 								$results = array();
-								if ($bdb = swDBA_open($path, 'wdt', 'db4'))
+								if ($bdb = swDbaOpen($path, 'wdt', 'db4'))
 								{
-									$filter = swDBA_fetch('_filter',$bdb);
+									$filter = swDbaFetch('_filter',$bdb);
 									swRelationFilter($filter);
 								}
 								
@@ -453,16 +453,16 @@ switch($_REQUEST['index'])
 								{
 									$path = $querypath.$_REQUEST['q'];
 									$results = array();
-									if ($bdb = swDBA_open($path, 'wdt', 'db4'))
+									if ($bdb = swDbaOpen($path, 'wdt', 'db4'))
 									{
-										$results['filter'] = swDBA_fetch('_filter',$bdb);
-										$results['bitmapcount'] = swDBA_fetch('_bitmapcount',$bdb);
-										$results['checkedbitmapcount'] = swDBA_fetch('_checkedbitmapcount',$bdb);
-										$results['overtime'] = unserialize(swDBA_fetch('_overtime',$bdb));
+										$results['filter'] = swDbaFetch('_filter',$bdb);
+										$results['bitmapcount'] = swDbaFetch('_bitmapcount',$bdb);
+										$results['checkedbitmapcount'] = swDbaFetch('_checkedbitmapcount',$bdb);
+										$results['overtime'] = unserialize(swDbaFetch('_overtime',$bdb));
 										$results['mode'] = 'relation';
 										$results['namespace'] = '-';
-										$results['bitmap'] = unserialize(swDBA_fetch('_bitmap',$bdb));
-										$results['checkedbitmap'] = unserialize(swDBA_fetch('_checkedbitmap',$bdb));
+										$results['bitmap'] = unserialize(swDbaFetch('_bitmap',$bdb));
+										$results['checkedbitmap'] = unserialize(swDbaFetch('_checkedbitmap',$bdb));
 										
 									}
 								}
@@ -531,14 +531,14 @@ switch($_REQUEST['index'])
 									if ($bm && $bm->countbits())
 									{
 									
-										$key = swDBA_firstkey($bdb);
+										$key = swDbaFirstKey($bdb);
 										$first = true;
 										$lines = array();
 										while($key)
 										{
-											if (substr($key,0,1)=='_') { $key = swDBA_nextkey($bdb); continue;}
+											if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
 											
-											$fields = @unserialize(swDBA_fetch($key,$bdb));
+											$fields = @unserialize(swDbaFetch($key,$bdb));
 											
 											if ($first && is_array($fields))
 											{
@@ -548,7 +548,7 @@ switch($_REQUEST['index'])
 											}
 											
 											
-											$values = unserialize(swDBA_fetch($key,$bdb));
+											$values = unserialize(swDbaFetch($key,$bdb));
 											if (is_array($values))
 												$fields = array_values($values);
 											
@@ -562,7 +562,7 @@ switch($_REQUEST['index'])
 											
 											$lines[] = '<br>"'.join('", "',$fields2).'"';
 													
-											$key = swDBA_nextkey($bdb);
+											$key = swDbaNextKey($bdb);
 										}
 										//echo (join('',$lines));
 										
@@ -634,9 +634,9 @@ switch($_REQUEST['index'])
 											}
 											else
 											{
-												$bdb = swDBA_open($querypath.$v,'r','db4');
+												$bdb = swDbaOpen($querypath.$v,'r','db4');
 												if ($bdb)
-													$results['filter'] = swDBA_fetch('_filter',$bdb);
+													$results['filter'] = swDbaFetch('_filter',$bdb);
 												
 												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.$filesize.' kB <br>filter '.@$results['filter'];
 												

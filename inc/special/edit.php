@@ -297,9 +297,9 @@ switch ($wiki->status)
 								foreach($opts as $opt)
 								{
 									if (in_array($opt,$set)) 
-										$list[] = ' <input type="checkbox" name="'.$match[1].'['.$opt.']" checked /> '.$opt;
+										$list[] = ' <span style="white-space:nowrap;"><input type="checkbox" name="'.$match[1].'['.$opt.']" checked /> '.$opt.'</span>';
 									else
-										$list[] = ' <input type="checkbox" name="'.$match[1].'['.$opt.']" /> '.$opt;
+										$list[] = ' <span style="white-space:nowrap;"><input type="checkbox" name="'.$match[1].'['.$opt.']" /> '.$opt.'</span>';
 								}
 								$s1 = str_replace($match[0],join(' ',$list),$s);
 								
@@ -324,9 +324,9 @@ switch ($wiki->status)
 								foreach($opts as $opt)
 								{
 									if (in_array($opt,$set)) 
-										$list[] = ' <input type="radio" name="'.$match[1].'" value="'.$opt.'" checked /> '.$opt;
+										$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" value="'.$opt.'" checked /> '.$opt.'</span>';
 									else
-										$list[] = ' <input type="radio" name="'.$match[1].'" value="'.$opt.'" /> '.$opt;
+										$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" value="'.$opt.'" /> '.$opt.'</span>';
 								}
 								$s1 = str_replace($match[0],join(' ',$list),$s);
 								

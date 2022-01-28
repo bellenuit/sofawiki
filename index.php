@@ -86,7 +86,7 @@ if (!isset($powerusers))
 $knownuser = false;
 if (!isset($swUserCookieExpiration))
 	$swUserCookieExpiration = 4*60*60;
-$username = handleCookie('username','',$swUserCookieExpiration);
+$username = swHandleCookie('username','',$swUserCookieExpiration);
 if ($action == 'logout') 
 {
 	unset($_SESSION[$swMainName.'-username']);
@@ -106,7 +106,7 @@ if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Y
 if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()-24*60*60).$swEncryptionSalt))
 {	$knownuser = true; } 
 
-$altuser = handleCookie('altuser','',$swUserCookieExpiration);
+$altuser = swHandleCookie('altuser','',$swUserCookieExpiration);
 
 
 if (isset($_REQUEST['submitlogin'])) $knownuser = false;
@@ -933,7 +933,7 @@ switch ($action)
 						{
 							$wiki->user = $user->name;
 							$wiki->delete();
-							
+							$swParsedName = 'Deleted: '.$name;
 							
 							if (swGetArrayValue($_POST,'submitdeletewithfile',false))
 							{

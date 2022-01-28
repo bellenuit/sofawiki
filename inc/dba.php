@@ -1,34 +1,38 @@
 <?php
 
+/**
+ *	Provides abstraction for DBA functions and implents a swDba class using Sqlite3
+ *  
+ *  File also sets default $swDbaHandler to 'sqlite3'. You can change than in site/configuration.php.
+ * 
+ */
 
-// dba replacement functions as dba is not available on all PHP installations
 
 define("CRLF", "\r\n");
 define("LF", "\n");
 define("TAB", "\t");
 
-$swDBApool = array();
-$swDBAhandler = 'sqlite3';
+$swDbaHandler = 'sqlite3';
 
-if (function_exists('dba_handlers'))
+/**
+ *  Opens a database and returns it
+ * 
+ *  @param $file path to file
+ *  @param $mode rdt, wdt, c...
+ *  @param $handler 'db', 'db4', 'sqlite3'
+ */
+
+function swDbaOpen($file, $mode, $handler)
 {
-	if (!in_array('db4', dba_handlers())) $swDBAhandler = 'flatfile';
-}
-else
-	$swDBAhandler = 'sqlite3';
-
-
-function swDBA_open($file, $mode, $handler)
-{
-	global $swDBAhandler;
+	global $swDbaHandler;
 	
-	if ($swDBAhandler == 'sqlite3')
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
-			return new swDBA($file,$mode);
+			return new swDba($file,$mode);
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			echotime('db busy');
 			$err->notify();
@@ -36,45 +40,69 @@ function swDBA_open($file, $mode, $handler)
 		}
 	}
 	
-	return @dba_open($file,$mode,$swDBAhandler);
+	return @dba_open($file,$mode,$swDbaHandler);
 }
 
-function swDBA_firstkey($db)
+/**
+ *  Sets the cursor to the first record, returns false if not possible
+ * 
+ *  @param $db
+ */
+
+function swDbaFirstKey($db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3') return $db->firstkey();
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3') return $db->firstkey();
 		
 	return @dba_firstkey($db);
 }
 
-function swDBA_nextkey($db)
+/**
+ *  Sets the cursor to the next record, returns false if not possible
+ * 
+ *  @param $db
+ */
+
+function swDbaNextKey($db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3') return $db->nextkey();
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3') return $db->nextkey();
 
 	return @dba_nextkey($db);
 }
 
-function swDBA_exists($key,$db)
+/**
+ *  Returns true if a key exists in the database.
+ * 
+ *  @param $key
+ *  @param $db
+ */
+
+function swDbaExists($key,$db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
-		return $db->exists($key);
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3') return $db->exists($key);
 	
 	return @dba_exists($key,$db);
 }
 
+/**
+ *  Returns a value for a given key. Throws an exception if the key does not exists
+ * 
+ *  @param $key
+ *  @param $db
+ */
 
-function swDBA_fetch($key,$db)
+function swDbaFetch($key,$db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
 			return $db->fetch($key);
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			$err->notify();			
 			return false;
@@ -84,16 +112,24 @@ function swDBA_fetch($key,$db)
 	return @dba_fetch($key,$db);
 }
 
-function swDBA_replace($key,$value,$db)
+/**
+ *  Sets a value for a given key.
+ * 
+ *  @param $key
+ *  @param $value
+ *  @param $db
+ */
+
+function swDbaReplace($key,$value,$db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
 			return $db->replace($key,$value);
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			$err->notify();
 			return false;
@@ -103,16 +139,23 @@ function swDBA_replace($key,$value,$db)
 	return @dba_replace($key,$value,$db);
 }
 
-function swDBA_sync($db)
+/**
+ *  Saves the database to disks.
+ *  
+ *  Before sync, new rows live only in the journal.
+ *  @param $db
+ */
+
+function swDbaSync($db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
 			return $db->sync();
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			$err->notify();
 			return false;
@@ -121,16 +164,24 @@ function swDBA_sync($db)
 	return @dba_sync($db);
 }
 
-function swDBA_delete($key,$db)
+/**
+ *  Deletes a value for a given key. Throws an exception if the key does not exists
+ * 
+ *  @param $key
+ *  @param $db
+ */
+
+
+function swDbaDelete($key,$db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
 			return $db->delete($key);
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			$err->notify();
 			return false;
@@ -139,16 +190,22 @@ function swDBA_delete($key,$db)
 	return @dba_delete($key,$db);
 }
 
-function swDBA_close($db)
+/**
+ *  Closes the database, syncs first if neede.
+ * 
+ *  @param $db
+ */
+
+function swDbaClose($db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 	{
 		try
 		{
 			return $db->close();
 		}
-		catch (swDBAerror $err)
+		catch (swDbaError $err)
 		{
 			$err->notify();
 			return false;
@@ -158,26 +215,39 @@ function swDBA_close($db)
 	return @dba_close($db);
 }
 
+/**
+ *  Returns the number of keys
+ * 
+ *  @param $db
+ */
 
-function swDBA_count($db)
+function swDbaCount($db)
 {
-	global $swDBAhandler;
-	if ($swDBAhandler == 'sqlite3')
+	global $swDbaHandler;
+	if ($swDbaHandler == 'sqlite3')
 		return $db->count();
 	
 	return 0; // there is no native function
 }
 
 
+/**
+ * Provides a class to to use Sqlite3 as a key-value database (DBA).
+ * 
+ * Don't confuse $db var of this class with the global $db object.
+ *
+ * $path holds the file path of the Sqlite3 database.
+ * $db holds the Sqlite3 database.
+ * $rows holds the relation (allowing holding status firstkey-nextkey
+ * $journal holds modifications that are not synched
+ */
 
-class swDBA
+class swDba
 {
-	// using sqlite3 as container
-	
+	var $path;
 	var $db;
 	var $rows;
 	var $journal;
-	var $path;
 	
 	function __construct($path)
 	{
@@ -186,13 +256,13 @@ class swDBA
 		$this->path = str_replace($swRoot,'',$path);
 		if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
 		{
-			throw new swDBAerror('swdba is busy');
+			throw new swDbaError('swdba is busy');
 		}
 			
 		$this->db->exec('PRAGMA journal_mode = DELETE'); // we do not use rollback
 		if (!@$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
 		{
-			throw new swDBAerror('swdba create table error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg());
 		}
 		$this->journal = array();
 	}
@@ -208,17 +278,15 @@ class swDBA
 
 		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swdba firstkey error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba firstKey error '.$this->db->lastErrorMsg());
 		}
 		
 		if ($r = $this->rows->fetchArray(SQLITE3_ASSOC))
 		{
-			//print_r($r);
 			return $r['k'];
 		}
 		else
 		{
-			//echo "no fetch";
 			return false;
 		}
 			
@@ -229,7 +297,7 @@ class swDBA
 		
 		if (!$this->rows)
 		{
-			throw new swDBAerror('swdba nextkey without firstkey error');
+			throw new swDbaError('swDba nextKey without firstKey error');
 		}
 		
 		if ($r = $this->rows->fetchArray(SQLITE3_ASSOC))
@@ -252,10 +320,9 @@ class swDBA
 		$statement->bindValue(':key', $key);
 		$result = $statement->execute();
 		
-		
 		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swdba exists error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba exists error '.$this->db->lastErrorMsg());
 		}
 		
 		$row = $result->fetchArray();
@@ -278,7 +345,7 @@ class swDBA
 		
 		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swdba fetch error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba fetch error '.$this->db->lastErrorMsg());
 		}
 		
 		$row = $result->fetchArray();
@@ -307,8 +374,6 @@ class swDBA
 	{
 		if (!count($this->journal)) return;
 		
-		
-		
 		echotime('sync '.count($this->journal));
 		
 		$lines = array();
@@ -319,35 +384,26 @@ class swDBA
 			$k = $this->db->escapeString($k);
 			$v = $this->db->escapeString($v);
 			if ($v === FALSE)
-				$lines[]= "DELETE FROM kv WHERE k = '$k' ;";
+				$lines[]= "DELETE FROM kv WHERE k = '$k' ;"; // use double quote because in sql it is single quote
 			else
 				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";			
 		}
 		$q = join(PHP_EOL,$lines);
 		$lines[] = "PRAGMA synchronous=FULL; ";
 		
-	
-		
 		$this->db->exec($q);
 
-		
 		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swdba sync error '.$this->db->lastErrorMsg());
-		}
-		
-		
+			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
+		}		
 		$this->journal = array();
-		
-		
-		
 		
 	}
 	
 	function close()
 	{
 		$this->sync();
-		// $this->db->close(); DO NOT CLOSE
 	}
 	
 	function __destruct()
@@ -361,7 +417,7 @@ class swDBA
 	
 	function listDatabases()
 	{
-		// list all open DB, needs a global array
+		// list all open DB not implemented, needs a global array
 	}
 	
 	function count()
@@ -371,7 +427,7 @@ class swDBA
 		
 		if ($this->db->lastErrorCode())
 		{
-			throw new swDBAerror('swdba fetch error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swdba fetch error '.$this->db->lastErrorMsg());
 		}
 		
 		$row = $result->fetchArray();
@@ -383,7 +439,11 @@ class swDBA
 		
 }
 
-class swDBAerror extends Exception
+/**
+ *  Holds an error class.
+ */
+
+class swDbaError extends Exception
 {
 	function notify()
 	{

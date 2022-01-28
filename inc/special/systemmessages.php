@@ -40,7 +40,7 @@ update data = "<nowiki>_MISSING</nowiki>" where data == ""
 '."extend link = \"<nowiki><a href='index.php?action=edit&name=system:\".key.\"/\".lang.\"'>\".key.\"/\".lang.\"</a></nowiki>\"".'
 project link, data
 order link
-print grid';
+print grid 50';
 
 //echo $q;
 

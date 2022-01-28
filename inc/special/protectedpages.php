@@ -1,66 +1,38 @@
 <?php
+	
+/** 
+ * Shows a list of all protected pages.
+ *
+ * special:protected-pages
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Protected Pages";
 
-$swParsedContent = "";
+$q = '
 
-// deletedbitmap && currentbitmap use url
+filter _name, _status "protected"
+extend mainname = regexreplace(_name,"/\w\w","")
+order _name a
+update _name = "[["._name."]]"
+project mainname, _name concat
+update _name_concat = replace(_name_concat,"::",", ")
+project _name_concat
+rename _name_concat _name
+label _name "" 
 
-$currentbitmap = $db->currentbitmap->duplicate();
-$deleted = $db->protectedbitmap->toarray();
-
-$urldbpath = $db->pathbase.'indexes/urls.db';
-if (file_exists($urldbpath))
-		$urldb = @dba_open($urldbpath, 'rdt', 'db4');
-if (!@$urldb)
-{
-	echotime('urldb failed');
-}
-
-$listmenu = array();
-$list = array();
-
-$alpha = @$_REQUEST['alpha'];
-if (!$alpha)$alpha = 'a';
-
-$list = array();
-$i = 0;
-foreach($deleted as $rev)
-{
-	if ($currentbitmap->getbit($rev))
-	{
-		// $i++; if ($i>10) continue;
-		if ($urldb && dba_exists(' '.$rev,$urldb))
-		{
-			$s = dba_fetch(' '.$rev,$urldb);
-			$url = swNameURL(substr($s,2));
-			if (!$url) continue;
-			
-			$u = substr($url,0,1);
-			if ($u == $alpha)	
-				$list[$url] = '<li><a href="index.php?action=history&revision='.$rev.'">'.$url.'</a></li>' ;
-			
-			$listmenu[$u] = '<a href="index.php?name=special:protected-pages&alpha='.$u.'">'.$u.'</a> ' ;
-			if ($u == $alpha)
-				$listmenu[$u] = '<a href="index.php?name=special:protected-pages&alpha='.$u.'"><b>'.$u.'</b></a> ' ;
-		}
-	}
-
-}
-dba_close($urldb);
+print grid 50
 
 
-ksort($list);
-ksort($listmenu);
 
-$swParsedContent .= '<p>'.join(' ',$listmenu);
+';
 
-$swParsedContent .= '<ul>'.join('',$list).'</ul>';
+$lh = new swRelationLineHandler;
+$swParsedContent .= $lh->run($q);
+$swParseSpecial = true;
 
 
-$swParseSpecial = false;
 
 
 // $swParsedContent .= join(' ',$list);

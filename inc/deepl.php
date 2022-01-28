@@ -1,27 +1,36 @@
-<?php
-
-// Support for Deepl API Created 1.8.2019
-// simple, no error handling, no tag handling
+<?php 
+	
+/**
+ *	Provides functions to connect to DeepL translation service.
+ *
+ *  Define your API key in $swDeeplKey or $swDeeplFree (if you use the free API)
+ *  Supported languages: de, en, es, fr, it
+ *  Basic. Tags and errors are not handled
+ */
 
 $swTranslateLanguages = array('de','en','es','fr','it');
 
+/**
+ * Translates some text from a source to a target language
+ *
+ * @param $text
+ * @param $source language iso2 code
+ * @param $target language iso2 code
+ */
+	
+
 function swTranslate($text,$source,$target)
 {
-	
 	global $swDeeplKey;
 	global $swDeeplFree;
-	
 		
-	// echo "hallo";
-	
 	if (!isset($swDeeplKey)) return 'Error: DeepL key missing';
 	
 	$ch = curl_init();
 
-	if (isset($swDeeplFree) && $swDeeplFree)
-		curl_setopt($ch, CURLOPT_URL, 'https://api-free.deepl.com/v2/translate');
-	else
-		curl_setopt($ch, CURLOPT_URL, 'https://api.deepl.com/v2/translate');
+	$server = 'https://api.deepl.com/v2/translate';
+	if (isset($swDeeplFree) && $swDeeplFree) $server = 'https://api-free.deepl.com/v2/translate';
+	curl_setopt($ch, CURLOPT_URL, $server);
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string 
 	
@@ -34,56 +43,46 @@ function swTranslate($text,$source,$target)
 	curl_setopt($ch, CURLOPT_POSTFIELDS,  $encoded);
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	$result = curl_exec($ch);
-	
-	//print_r($ch);
-	
-	//echo "::";
-	
+		
 	curl_close($ch);
 	
-	//print_r($result);
-	
-	
-	
 	$fields = json_decode($result, true);
-	
-	// print_r($fields);
 	
 	if (!is_array($fields)) return 'Error no JSON';
 		
 	if (array_key_exists('translations',$fields))
 	{
 		$fields = array_pop($fields['translations']);
-		if (array_key_exists('text',$fields))
-			return $fields['text'];
+		if (array_key_exists('text',$fields)) return $fields['text'];
 	}
 	elseif (array_key_exists('message',$fields))
+	{
 		return 'Error: ' .$fields['message'];
+	}
 	else
+	{
 		return 'Error';
+	}
 	
 }
 
+/**
+ * Returns character count and character limit of the DeepL translation service.
+ */
 
 function swTranslateUsage()
 {
 	
 	global $swDeeplKey;
 	global $swDeeplFree;
-	
-	
-	
 		
-	// echo "hallo";
-	
 	if (!isset($swDeeplKey)) return '-';
 	
 	$ch = curl_init();
 
-	if (isset($swDeeplFree) && $swDeeplFree)
-		curl_setopt($ch, CURLOPT_URL, 'https://api-free.deepl.com/v2/usage');
-	else
-		curl_setopt($ch, CURLOPT_URL, 'https://api.deepl.com/v2/usage');
+	$server = 'https://api.deepl.com/v2/translate';
+	if (isset($swDeeplFree) && $swDeeplFree) $server = 'https://api-free.deepl.com/v2/translate';
+	curl_setopt($ch, CURLOPT_URL, $server);
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string 
 	
@@ -94,20 +93,11 @@ function swTranslateUsage()
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	$result = curl_exec($ch);
 	
-	//print_r($ch);
-	
-	//echo "::";
 	
 	curl_close($ch);
-	
-	//print_r($result);
-	
-	
-	
+		
 	$fields = json_decode($result, true);
-	
-	// print_r($fields);
-	
+		
 	if (!is_array($fields)) return 'Error no JSON';
 		
 	if (array_key_exists('character_count',$fields))

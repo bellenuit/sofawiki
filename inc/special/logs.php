@@ -112,8 +112,8 @@ $swParsedContent .= "\n<input type='checkbox' name='table' value='1' $tablecheck
 $swParsedContent .= "\n<p><input type='submit' name='submit' value='Query' />";
 $swParsedContent .= "\n<input type='submit' name='submitsave' value='Query and save to page:' />";
 $swParsedContent .= "\n<input type='text' name='savename' value='$savename' />";
-$swParsedContent .= "\n<p><input type='submit' name='submitconsolidate' value='Consolidate Logs (1 day at a click)' />";
-$swParsedContent .= "\n<input type='submit' name='submitdeleteold' style='color:red' value='Delete logs older than one year' />";
+//$swParsedContent .= "\n<p><input type='submit' name='submitconsolidate' value='Consolidate Logs (1 day at a click)' />";
+//$swParsedContent .= "\n<input type='submit' name='submitdeleteold' style='color:red' value='Delete logs older than one year' />";
 $swParsedContent .= "\n</p><form>";
 }
 
@@ -126,6 +126,13 @@ $queries = array();
 $queriesgoodresults = array();
 $actions = array();
 $errors = array();
+
+
+if ($table) 
+{
+	$tablefields = array('timestamp', 'user', 'name', 'action', 'query', 'lang', 'referer', 'time', 'memory', 'error', 'label', 'receiver');
+	$rawlines[] = join(', ',$tablefields);
+}
 
 if (!isset($swMemoryLimit)) $swMemoryLimit = 100000000;
 
@@ -218,10 +225,26 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 					{
 						$values = swGetAllFields($line);
 						$newvalues = array();
+						foreach($tablefields as $f)
+						{
+							if (isset($values[$f]))
+							{
+								$newvalues[] = '"'.str_replace('"','""',join('::',$values[$f])).'"';
+
+							}
+							else
+							{
+								$newvalues[] = '""';
+							}
+						}
+						
+						
+						/*
 						foreach($values as $v)
 						{
 							$newvalues[] = '"'.join('::',$v).'"';
 						}
+						*/
 						$line = join(', ',$newvalues);
 						
 					}
@@ -259,16 +282,8 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			if ($h == 1) $b++;
 			$maxaction=max($maxaction,$h);
 		}
-		if (count($uniquevisitors))
-		{
-			$bouncingrate = floor(100*$b/count($uniquevisitors));
-			$averageaction = floor(10* count($uniquepageviews) / count($uniquevisitors))/10;
-		}
-		else
-		{
-			$bouncingrate = 0;
-			$averageaction = 0;
-		}
+		$bouncingrate = floor(100*$b/max(1,count($uniquevisitors)));
+		$averageaction = floor(10* count($uniquepageviews) / max(1,count($uniquevisitors)))/10;
 		$statlines = array();
 		$statlines[]= "[[datestart::$datestart]][[dateend::$dateend]][[query::$query]][[regex::$regex]]";
 		$statlines[]= "[[hits::$hits]]";
@@ -349,7 +364,6 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Entry pages]]";
 		
 		$entrypages = array();
-		if (@is_array($uniquevisitorentrypage))
 		foreach(@$uniquevisitorentrypage as $u=>$v)
 		{
 			if (isset($entrypages[$v])) $entrypages[$v]++; else $entrypages[$v]=1;
@@ -364,7 +378,6 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Exit pages]]";
 		
 		$exitpages = array();
-		if (@is_array($uniquevisitorexitpage))
 		foreach(@$uniquevisitorexitpage as $u=>$v)
 		{
 			if (isset($exitpages[$v])) $exitpages[$v]++; else $exitpages[$v]=1;
@@ -379,7 +392,6 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$statlines[]= "[[title::Referer]]";
 		
 		$referers = array();
-		if (@is_array($uniquevisitorreferer))
 		foreach(@$uniquevisitorreferer as $u=>$v)
 		{
 			if (isset($referers[$v])) $referers[$v]++; else $referers[$v]=1;

@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.6.2';  
+$swVersion = '3.6.3';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -50,6 +50,7 @@ $swRoot = dirname(__FILE__); // must be first
 // inis
 ini_set('pcre.jit',0); // prevent preg_match to be limited to 2700 characters error 503
 	
+include_once $swRoot.'/inc/utilities.php'; // must be first as used by others
 include_once $swRoot.'/inc/persistance.php';
 include_once $swRoot.'/inc/bitmap.php';
 include_once $swRoot.'/inc/bloom.php';
@@ -60,6 +61,9 @@ include_once $swRoot.'/inc/cron.php';
 include_once $swRoot.'/inc/db.php';
 include_once $swRoot.'/inc/dba.php';
 include_once $swRoot.'/inc/deepl.php';
+include_once $swRoot.'/inc/expressionoperator.php';
+include_once $swRoot.'/inc/expressionfunction.php';
+include_once $swRoot.'/inc/expression.php'; // last for unit tests
 include_once $swRoot.'/inc/filter.php';
 include_once $swRoot.'/inc/function.php';
 include_once $swRoot.'/inc/legacy.php';
@@ -71,9 +75,9 @@ include_once $swRoot.'/inc/rss.php';
 include_once $swRoot.'/inc/semaphore.php';
 include_once $swRoot.'/inc/sitemap.php';
 include_once $swRoot.'/inc/user.php';
-include_once $swRoot.'/inc/utilities.php';
+
 include_once $swRoot.'/inc/wiki.php';
-include_once $swRoot.'/inc/expression.php';
+
 include_once $swRoot.'/inc/relation.php';
 include_once $swRoot.'/inc/relationfilter.php';
 
@@ -239,6 +243,7 @@ if (file_exists($swRoot.'/site/configuration.php'))
 } 
 else
 {
+	/* SOFADOC_INCLUDE inc/configuration.php */
 	include_once $swRoot.'/inc/configuration-install.php';
 }
 
@@ -263,15 +268,15 @@ if (defined('SOFAWIKIINDEX'))
 		}
 		else
 		{
-			$lang = handleCookie("lang",$swDefaultLang); 
+			$lang = swHandleCookie("lang",$swDefaultLang); 
 		}
 		
 	}
 	else
 	{
-		$lang = handleCookie("lang",$swDefaultLang); 
+		$lang = swHandleCookie("lang",$swDefaultLang); 
 	}
-	$skin = handleCookie("skin",$swDefaultSkin);
+	$skin = swHandleCookie("skin",$swDefaultSkin);
 }
 
 $swIndexError = false;

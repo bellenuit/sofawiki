@@ -59,12 +59,12 @@ function swInitRamdisk()
 		if ($swRamDiskDB) return; 
 		if (!file_exists($swRamDiskDBpath))
 		{
-			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'c', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'c', 'db4');
 			echotime('new db');
 		}
 		else
 		{
-			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'rdt', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'rdt', 'db4');
 			echotime('open db');  // if it fails, it is false
 		}
 		return;
@@ -116,7 +116,7 @@ function swFileGet($path)
 				$path2 = substr($path,$pos);
 				
 				
-				$v = swDBA_fetch($path2,$swRamDiskDB);
+				$v = swDbaFetch($path2,$swRamDiskDB);
 				if ($v)
 				{
 					return $v;
@@ -194,10 +194,10 @@ function swUnlink($path)
 			
 			if (isset($swRamDiskDB) and $swRamDiskDB) swDBA_close($swRamDiskDB);
 
-			$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'wdt', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt', 'db4');
 			if ($swRamDiskDB)
 			{
-				swDBA_delete($path,$swRamDiskDB);
+				swDbaDelete($path,$swRamDiskDB);
 				echotime('delete db ok');
 				
 			}
@@ -205,7 +205,7 @@ function swUnlink($path)
 			{
 				echotime('delete db failed '.$path);
 			}
-			swDBA_close($swRamDiskDB);
+			swDbaClose($swRamDiskDB);
 			swInitRamdisk();
 			return;
 		}
@@ -259,12 +259,12 @@ function swUpdateRamDiskDB()
 	
 	if (!@count($swRamDiskJobs)) return;
 	
-	if ($swRamDiskDB) swDBA_close($swRamDiskDB);
-	$swRamDiskDB = swDBA_open($swRamDiskDBpath, 'wdt', 'db4');
+	if ($swRamDiskDB) swDbaClose($swRamDiskDB);
+	$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt', 'db4');
 	if ($swRamDiskDB)
 	{
 		foreach($swRamDiskJobs as $k=>$v)
-		{	swDBA_replace($k,$v,$swRamDiskDB);
+		{	swDbaReplace($k,$v,$swRamDiskDB);
 			//echotime('insert db '.$k);
 		}
 		$swRamDiskJobs = array();				
@@ -273,7 +273,7 @@ function swUpdateRamDiskDB()
 	{
 		echotime('insert db failed');
 	}
-	swDBA_close($swRamDiskDB);
+	swDbaClose($swRamDiskDB);
 	swInitRamdisk();
 
 }

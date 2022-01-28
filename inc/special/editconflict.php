@@ -39,7 +39,7 @@ if ($user->hasright("modify", $wiki->name))
 	$submitbutton .= "<input type='submit' name='submitmodify' value='".swSystemMessage("modify",$lang)."' />";
 
 
-$diff = htmldiff($wiki->content,$conflictwiki->content);
+$diff = swHtmlDiff($wiki->content,$conflictwiki->content);
 
 
 

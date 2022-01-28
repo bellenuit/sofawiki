@@ -1,6 +1,18 @@
 <?php
+	
+/**
+ *	Provides wrappers for some text functions (systemMessage, diff, nowiki).
+ */
 
-if (!defined("SOFAWIKI")) die("invalid acces");
+if (!defined('SOFAWIKI')) die('invalid acces');
+
+/**
+ *	Returns system message.
+ *
+ *  @param $msg
+ *  @param $lang
+ *  @param $styled
+ */
 
 class swSystemMessageFunction extends swFunction
 {
@@ -24,6 +36,13 @@ class swSystemMessageFunction extends swFunction
 $swFunctions["systemmessage"] = new swSystemMessageFunction;
 
 
+/**
+ *	Returns HTML Diff of two texts.
+ *
+ *  @param $old
+ *  @param $nes
+ */
+
 class swDiffFunction extends swFunction
 {
 	function info()
@@ -44,7 +63,7 @@ class swDiffFunction extends swFunction
 		$new = @$args[2];
 	
 		
-		$result =  htmlDiff($old,$new);
+		$result =  swHtmlDiff($old,$new);
 		
 		//echo $result;
 		
@@ -55,6 +74,15 @@ class swDiffFunction extends swFunction
 }
 
 $swFunctions["diff"] = new swDiffFunction;
+
+/**
+ *	Returns text with nowiki tag
+ *
+ *  One some context, the function is easier than the tag.
+ *
+ *  @param $text
+ */
+
 
 class swNowikifunction extends swFunction
 {

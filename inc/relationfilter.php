@@ -30,7 +30,10 @@ function swRelationImport($url)
 	global $user;
 	global $swSearchNamespaces;
 	global $swTranscludeNamespaces;
-		
+	
+	$wiki = new swWiki;
+	$wiki->name = $url;
+	
 	$ns = array();
 	$searcheverywhere = FALSE;
 	foreach($swSearchNamespaces as $sp)
@@ -63,8 +66,7 @@ function swRelationImport($url)
 
 	
 	
-	$wiki = new swWiki;
-	$wiki->name = $url;
+	
 	$wiki->lookup();
 	if (!$wiki->revision)
 		throw new swRelationError('Import page does not exist.',87);
@@ -136,6 +138,11 @@ function swRelationVirtual($url)
 	global $user;
 	global $swSearchNamespaces;
 	global $swTranscludeNamespaces;
+	
+	
+	$wiki = new swWiki;
+	$wiki->name = $url;
+	
 
 	$ns = array();
 	$searcheverywhere = FALSE;
@@ -165,13 +172,9 @@ function swRelationVirtual($url)
 			if (!stristr($nss,$dns) && !$user->hasright('view',$url)) 			
 				return new swRelation('');
 	}
-	
-	
-	$wiki = new swWiki;
-	$wiki->name = $url;
 	$wiki->lookup();
-	if (!$wiki->revision)
-		throw new swRelationError('Virtual page does not exist.',87);
+	if (!$wiki->revision) throw new swRelationError('Virtual page does not exist.',87);
+
 	
 	$wiki->parsers[] = new swCacheparser;
 	$wiki->parsers[] = new swTidyParser;
@@ -485,15 +488,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$firstrun = ! file_exists($bdbfile);
 	
 	if (file_exists($bdbfile))
-		$bdb = swdba_open($bdbfile, 'wdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'wdt', 'db4');
 	else
 	{
-		$bdb = swdba_open($bdbfile, 'c', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'c', 'db4');
 	}
 	if (!$bdb)
 	{
 		// try read only
-		$bdb = swdba_open($bdbfile, 'rdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'rdt', 'db4');
 		
 				
 		if (!$bdb)
@@ -504,7 +507,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 
 	}
 	if ($bdbrwritable)
-		swdba_replace('_filter',$filter,$bdb);
+		swDbaReplace('_filter',$filter,$bdb);
 	
 	
 	// echo $bdbfile;
@@ -512,7 +515,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'.db" target="_blank">'.md5($mdfilter).'.db</a> ');
 
 	
-	if ($s = swdba_fetch('_bitmap',$bdb))
+	if ($s = swDbaFetch('_bitmap',$bdb))
 	{
 		$bitmap = @unserialize($s);
 		if ($bitmap === FALSE) $bitmap = new swBitmap;
@@ -520,7 +523,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	else 
 		$bitmap = new swBitmap;
 		
-	if ($s = swdba_fetch('_checkedbitmap',$bdb))
+	if ($s = swDbaFetch('_checkedbitmap',$bdb))
 	{
 		$checkedbitmap = @unserialize($s);
 		if ($checkedbitmap === FALSE) $checkedbitmap = new swBitmap;
@@ -530,11 +533,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($isindex)
 	{
-		$key = swdba_firstkey($bdb);
+		$key = swDbaFirstKey($bdb);
 		while(substr($key,0,1)=='_' && $key) $key = swdba_nextkey($bdb);
 		if ($key)
 		{
-			$d = @unserialize(swdba_fetch($key,$bdb));
+			$d = @unserialize(swDbaFetch($key,$bdb));
 			if (isset($d['_offset'])) 
 			{
 				$offsetrelevant = true;
@@ -559,7 +562,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			unset($row['_revision']);
 			unset($row['_offset']);
 			
-			swdba_replace($revision.'-'.$offset,serialize($row),$bdb);
+			swDbaReplace($revision.'-'.$offset,serialize($row),$bdb);
 			$bitmap->setbit($revision);
 			$checkedbitmap->setbit($revision);	
 		}
@@ -698,7 +701,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			$urldbpath = $db->pathbase.'indexes/urls.db';
 			if (file_exists($urldbpath))
-			$urldb = swdba_open($urldbpath, 'rdt', 'db4');
+			$urldb = swDbaOpen($urldbpath, 'rdt', 'db4');
 			if (!@$urldb)
 			{
 				echotime('urldb failed');
@@ -706,7 +709,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			else
 			{				
 				
-				$r0 = swdba_firstkey($urldb);		
+				$r0 = swDbaFirstKey($urldb);		
 				
 				do 
 				{
@@ -735,7 +738,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{	
-							$line = swdba_fetch($r0,$urldb);
+							$line = swDbaFetch($r0,$urldb);
 							$fs = explode(' ',$line);
 							$st = array_shift($fs);
 							$r = array_shift($fs);
@@ -769,7 +772,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{
-							$line = swdba_fetch($r0,$urldb);
+							$line = swDbaFetch($r0,$urldb);
 							$fs = explode(' ',$line);
 							$st = array_shift($fs);
 							$r = array_shift($fs);
@@ -784,7 +787,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 					}
 				
-				} while ($r0 = swdba_nextkey($urldb));
+				} while ($r0 = swDbaNextKey($urldb));
 				
 			
 			} // else db failed		
@@ -1214,7 +1217,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							}
 							else
 							{
-								swdba_replace($primary,serialize($line),$bdb); // use less memory
+								swDbaReplace($primary,serialize($line),$bdb); // use less memory
 							}
 						}
 					}
@@ -1249,7 +1252,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				foreach($allrows as $primary=>$line) 
 				{
 					
-					swdba_replace($primary,serialize($line),$bdb);
+					swDbaReplace($primary,serialize($line),$bdb);
 				}
 				
 			}
@@ -1275,10 +1278,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				// we need to set offset for each which is really complicated as we do not have information on max, so we need to reset all old data. bad case
 				echotime('lateoffsetrelevant');
 				
-				swdba_close($bdb);
+				swDbaClose($bdb);
 				unset($bdbfile);
-				$bdb = swdba_open($bdbfile, 'c', 'db4');
-				foreach($allrows as $primary=>$line) swdba_replace($primary,serialize($line),$bdb);
+				$bdb = swDbaOpen($bdbfile, 'c', 'db4');
+				foreach($allrows as $primary=>$line) swDbaReplace($primary,serialize($line),$bdb);
 				$bitmap == new swBitmap;
 				$checkedbitmap == new swBitmap;
 				
@@ -1329,11 +1332,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	$d = array();	
 	
-	swdba_sync($bdb);
+	swDbaSync($bdb);
 	
 	
 	
-	$key = swdba_firstkey($bdb);
+	$key = swDbaFirstKey($bdb);
 
 	echotime('userrights');
 	
@@ -1341,7 +1344,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	{
 		//echotime('key '.$key);
 		
-		if (substr($key,0,1)=='_') { $key = swdba_nextkey($bdb); continue;}
+		if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
 		
 		$keys = explode('-',$key);
 		$kr = $keys[0];
@@ -1349,11 +1352,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (!$db->currentbitmap->getbit($kr))
 		{
 			//echotime('delete');
-			swdba_delete($key,$bdb);
+			swDbaDelete($key,$bdb);
 			$bitmap->unsetbit($kr);
 		}
 		
-		$d = @unserialize(swdba_fetch($key,$bdb)); // can be wrong
+		$d = @unserialize(swDbaFetch($key,$bdb)); // can be wrong
 		$dn = @$d['_url'];
 		
 		if (!$searcheverywhere && stristr($dn,':'))
@@ -1374,7 +1377,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		}
 
 				
-		$key = swdba_nextkey($bdb);
+		$key = swDbaNextKey($bdb);
 	}
 	
 	echotime('header');
@@ -1382,18 +1385,18 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	if ($bdbrwritable)
 	{	
 		// dba_replace('_filter',$filter,$bdb);
-		swdba_replace('_overtime',serialize($overtime),$bdb);
-		swdba_replace('_bitmapcount',$bitmap->countbits(),$bdb);
-		swdba_replace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
+		swDbaReplace('_overtime',serialize($overtime),$bdb);
+		swDbaReplace('_bitmapcount',$bitmap->countbits(),$bdb);
+		swDbaReplace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
 	$bitmap->hexit();
-		swdba_replace('_bitmap',serialize($bitmap),$bdb);
+		swDbaReplace('_bitmap',serialize($bitmap),$bdb);
 	$checkedbitmap->hexit();
-		swdba_replace('_checkedbitmap',serialize($checkedbitmap),$bdb);
-		swdba_replace('_header',serialize($header),$bdb);
+		swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+		swDbaReplace('_header',serialize($header),$bdb);
 		
 	}
 	
-	swdba_close($bdb);
+	swDbaClose($bdb);
 	
 	
 	if ($d)
@@ -1410,6 +1413,246 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	return $result;
 	
+}
+
+/**
+ *   Extracts fields from logs
+ *   
+ */
+
+function swRelationLogs($filter, $globals = array(), $refresh = false)
+{
+	global $swRoot;
+	global $swMemoryLimit;
+	if (!isset($swMemoryLimit)) $swMemoryLimit = 100000000;
+	global $swMaxSearchTime;
+	global $swMaxOverallSearchTime;
+	global $swStartTime;
+	global $swOvertime;
+	
+	if (!$filter)
+		throw new swExpressionError('Logs filter empty',88);
+		
+	$fields = array();
+	$pairs = explode(',',$filter);	
+	$filters2 = array();
+	foreach($pairs as $pair)
+	{
+		$words = explode(' ',trim($pair));
+		
+		if (isset($words[1]))
+		{
+			$xp = new swExpression();
+			$xp->compile($words[1]);
+			$words[1] = $xp->evaluate($globals);
+		}
+		else
+		{
+			$words[1] = '';
+		}
+		$fields[$words[0]] = $words[1];	
+		$filters2[] = $words[0].' "'.$words[1].'"';
+	}
+	
+	// print_r($fields);
+	
+	$filter2 = join(', ',$filters2);
+	
+	$root = $swRoot.'/site/logs/';
+	
+	echotime('logs '.$filter2);
+	
+	$files = glob($root.'*.txt');
+	rsort($files);
+	
+	$mdfilter = 'logs '.$filter2;
+	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
+	$bdbfile = $cachefilebase.'.db';
+	
+	if ($refresh)
+	{
+		echotime('refresh');
+		if (file_exists($bdbfile)) unlink($bdbfile);
+	}
+
+	if (file_exists($bdbfile))
+		$bdb = swDbaOpen($bdbfile, 'wdt', 'db4');
+	else
+	{
+		$bdb = swDbaOpen($bdbfile, 'c', 'db4');
+		swDbaReplace('_filter',$filter,$bdb);
+	}
+	if (!$bdb)
+	{
+		// try read only
+		$bdb = swDbaOpen($bdbfile, 'rdt', 'db4');
+		
+				
+		if (!$bdb)
+			throw new swExpressionError('db failed '.md5($mdfilter),88);
+			
+		$bdbrwritable = false;
+		echotime("bdb readonly");
+	}
+
+	$tdodayfile = $root.date('Y-m-d',time()).'.txt';
+	
+	$startTime = microtime(true);	
+	
+	$hintfunction = new XpHint;
+	
+	$counter = 0;
+	foreach($files as $file)
+	{
+		$shortfile = str_replace($root,'',$file);
+		
+		if (memory_get_usage()>$swMemoryLimit)
+		{ 
+			$swOvertime = true;
+			break;
+		}
+		$nowtime = microtime(true);	
+		$dur = sprintf("%04d",($nowtime-$startTime)*1000);
+		if ($dur > $swMaxSearchTime)
+		{ 
+			$swOvertime = true;
+			break;
+		}
+		$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
+		if ($dur > $swMaxOverallSearchTime) 
+		{ 
+			$swOvertime = true;
+			break;
+		}
+			
+		$d = array();
+		
+		if (stristr($file,'/deny-')) continue;
+				
+		if ($file !== $tdodayfile && swDbaExists($file,$bdb)) continue;
+
+		$foundfile = false;
+		if (array_key_exists('file',$fields))
+		{
+			
+			if (!$fields['file'])
+			{
+				$foundfile = true;
+			}
+			else
+			{
+				
+				$stack = array();
+				$stack[] = $shortfile;
+				$stack[] = $fields['file'];
+				$hintfunction->run($stack);
+				$foundfile = array_pop($stack);
+			}
+		}
+		else
+		{
+			$foundfile = true;
+		}
+
+		$rows = array();
+		if ($foundfile)
+		{
+			if ($filter == 'file') // only filelist
+			{
+				$rows = array();
+				$values = array();
+				$values['file'] = $shortfile;
+				$rows[] = $values;
+				swDbaReplace($file,serialize($rows),$bdb);
+				continue;
+			}
+			
+			// echo $shortfile.' '.$fields['file'].' ';
+			$handle = @fopen($file, 'r');
+			
+			while($handle && ($line = fgets($handle, 4096)) !== false)
+			{
+				
+				$values0 = swGetAllFields($line);
+				foreach($values0 as $k=>$v)
+				{
+					$values[$k] = $v[0];
+				}
+				
+				$found = true;
+				$values1 = array(); 
+			
+				foreach($fields as $k=>$v)
+				{
+					if ($k=='file')
+					{
+						$values1[$k] = $shortfile;
+						
+					}
+					else
+					{
+						if (isset($values[$k]))
+						{
+							$values1[$k] = $values[$k];
+						}
+						else
+						{
+							$found = false;
+						}
+						if ($found && $v)
+						{
+							$stack = array();
+							$stack[] = $values[$k];
+							$stack[] = $v;
+							$hintfunction->run($stack);
+							$found = array_pop($stack) && $found;
+						}
+					}
+				}
+				
+				if ($found)	$rows[] = $values1;			
+			}
+		}
+		
+		swDbaReplace($file,serialize($rows),$bdb);
+	}
+	
+	echotime(str_replace($root,'',$file));
+	
+	swDbaSync($bdb);
+	
+	$result = new swRelation('');
+	$key = swDbaFirstKey($bdb);
+	
+	$columns = array();
+	
+	while($key)
+	{	
+		if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
+		$rows = @unserialize(swDbaFetch($key,$bdb));
+		
+		if (is_array($rows))
+		foreach($rows as $d)
+		{
+			if (!empty($d))
+			{
+				// print_r($d); break;
+				
+				$tp = new swTuple($d);
+				$result->tuples[$tp->hash()] = $tp;
+				
+				foreach($d as $k=>$v)
+				{
+					if (!in_array($k,$columns)) $columns[] = $k;
+				}
+			}
+		}
+		$result->header = $columns;
+		$key = swDbaNextKey($bdb); 
+		
+	}
+	
+	return $result;
 }
 
 

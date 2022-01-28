@@ -1,4 +1,10 @@
 <?php
+	
+/** 
+ * Sample configuration.php file.
+ *  
+ * Is not be used by api.php and serves only as a template
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 

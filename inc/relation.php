@@ -568,7 +568,7 @@ class swRelationLineHandler
 										while($i<$c && $loopcounter>0)
 										{
 											$i++;
-											$mline = trim($lines[$i]);
+											$mline = @trim($lines[$i]);
 											if (strpos($mline,'// ')>-1)
 												$mline = trim(substr($mline,0,strpos($mline,'// ')));
 											if (substr($mline,0,2) == 'if')
@@ -770,7 +770,14 @@ class swRelationLineHandler
 										$r->limit($body);
 										$this->stack[] = $r;
 									}
-									break;	
+									break;
+				case 'logs':		$gl = array_merge($dict, $this->globals,$locals);
+									
+									global $swDebugRefresh;
+									
+									$r = swRelationLogs($body,$gl,$swDebugRefresh);
+									$this->stack[] = $r;
+									break;					
 				case 'memory':	    break; 	
 				case 'order':		if (count($this->stack)<1)
 									{
@@ -947,9 +954,17 @@ class swRelationLineHandler
 									$xp = new swExpression();
 									$xp->compile($body);
 									$tn = $xp->evaluate($dict);
-									
+									$hooklink = '';
 									if ($tn == '') $tn = ' ';
-									if (!$this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',$tn)))))
+									if (function_exists('swVirtualLinkHook') 
+											&& $hooklink = swVirtualLinkHook($tn, '', '')) 
+									{
+										// ok
+										// note that the last characters of the url must be .csv or .txt or .json or .xml
+
+										$file = $hooklink;
+									}
+									if (!$hooklink && !$this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',str_replace('.xml',' ',str_replace('.html',' ',$tn)))))))
 									{	
 										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 										$this->errors[] = $il;
@@ -981,28 +996,41 @@ class swRelationLineHandler
 											if (isset($this->transactiondict[$tn]))
 												$tn = $this->transactiondict[$tn];
 											
-											$file1 = 'site/files/'.$tn;
-											$file2 = 'site/cache/'.$tn;
-											if (!file_exists($file1) and !file_exists($file2))
-											{
-												$this->result .= $ptagerror.$ti.' Error : File does not exist '.$tn.$ptagerrorend.$ptag2;
-												$this->errors[] = $il;
-												$tip = '';
+											if ($hooklink) 
+											{  			
+										  		//echo $hooklink;
+										  		if (!$s = swFileGetContents($hooklink)) 
+										  		{
+											  		throw new swRelationError('Invalid URL '.$hooklink,87);		
+											  	}	
+										        $tip = $s; //echo $tip;
 											}
 											else
 											{
-												if (file_exists($file1) and file_exists($file2))
+												$file1 = 'site/files/'.$tn;
+												$file2 = 'site/cache/'.$tn;
+												if (!file_exists($file1) and !file_exists($file2))
 												{
-													 if (filemtime($file1) >= filemtime($file2)) 
-													 	$file = $file1;
-													 else
-													 	$file = $file2;
+													$this->result .= $ptagerror.$ti.' Error : File does not exist '.$tn.$ptagerrorend.$ptag2;
+													$this->errors[] = $il;
+													$tip = '';
+													$stack[] = new swRelation('');
 												}
-												elseif (file_exists($file1)) $file = $file1;
-												else $file = $file2;
-												
-												
-												$tip = file_get_contents($file);
+												else
+												{
+													if (file_exists($file1) and file_exists($file2))
+													{
+														 if (filemtime($file1) >= filemtime($file2)) 
+														 	$file = $file1;
+														 else
+														 	$file = $file2;
+													}
+													elseif (file_exists($file1)) $file = $file1;
+													else $file = $file2;
+													
+													
+													$tip = file_get_contents($file);
+												}
 											}
 											switch($enc)
 											{
@@ -1020,7 +1048,11 @@ class swRelationLineHandler
 																	break;
 													case '.txt': 	$r->setTab(explode(PHP_EOL,$tip));
 																	break;
-													case 'json':	$r->setJSON(explode(PHP_EOL,$tip));
+													case 'json':	$r->setJSON($tip);
+																	break;
+													case '.xml':		$r->setXML($tip);
+																	break;
+													case 'html':		$r->setHtml($tip);
 																	break;
 													default:		$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 																	$this->errors[] = $il;
@@ -1311,7 +1343,7 @@ class swRelationLineHandler
 											$this->transactiondict[$tn]=$this->transactionprefix.$tn;
 											$tn = $this->transactionprefix.$tn;
 										}
-										if (!$this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',$tn)))))
+										if (!$this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',str_replace('.xml','',$tn))))))
 										{	
 										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
 										$this->errors[] = $il;
@@ -3148,9 +3180,106 @@ class swRelation
 	
 	function setJson($s)
 	{
-		throw new swRelationError('Read JSON not yet supported',77);
-		// TO DO
+		$list = json_decode($s,true);
+		
+		$list = swFlattenArray($list);
+		
+		$this->header = array('path','value');
+		
+		foreach($list as $key=>$value)
+		{
+			$d = array(); 
+			$d['path'] = $key;
+			$d['value'] = $value;
+			$tp = new swTuple($d);
+			$this->tuples[$tp->hash()] = $tp;
+		}
+		
 	}
+	
+	function setXml($s)
+	{
+		$xml = simplexml_load_string($s);
+		$json = json_encode($xml);
+		$list = json_decode($json,true);
+		
+		$list = swFlattenArray($list);
+		
+		$this->header = array('path','value');
+		
+		foreach($list as $key=>$value)
+		{
+			$d = array(); 
+			$d['path'] = $key;
+			$d['value'] = $value;
+			$tp = new swTuple($d);
+			$this->tuples[$tp->hash()] = $tp;
+		}
+		
+	}
+
+	function setHtml($s,$n=0)
+	{
+		// set error level
+		$internalErrors = libxml_use_internal_errors(true);
+		
+		$doc = new DOMDocument;
+		$doc->loadHTML($s);
+		
+		
+		
+		// Restore error level
+		libxml_use_internal_errors($internalErrors);
+
+		
+		$tables = $doc->getElementsByTagName('table');
+		
+		$list = array();
+		foreach($tables as $t)
+		{
+			if ($n>0) { $n--; continue;}
+					
+			$rows = $t->getElementsByTagName('tr');
+			$fields = array();
+			$i = 0;
+			
+			foreach($rows as $r)
+			{
+				$cells = $r->getElementsByTagName('th');
+				foreach($cells as $c)
+				{
+					$fields[] = $this->cleanColumn(trim($c->nodeValue));
+				}
+				
+				$cells = $r->getElementsByTagName('td');
+				$j = 0;
+				
+				foreach($cells as $c)
+				{
+					if (!isset($fields[$j])) $fields[$j] = $this->cleanColumn(trim($c->nodeValue)); // no th tag
+					else
+						$list[$i][$fields[$j]]=trim($c->nodeValue);
+					$j++;
+				}
+				$i++;
+				
+
+			}
+		}
+		
+		// print_r($list);
+		
+
+		foreach($list as $line)
+		{
+			$tp = new swTuple($line);
+			$this->tuples[$tp->hash()] = $tp;
+		}
+		
+		$this->header = array_keys($line);
+		
+	}
+
 	
 	function toChart($options)
 	{
@@ -3180,6 +3309,8 @@ class swRelation
 	
 	function toHTML($limit = 0)
 	{
+		
+		if (!count($this->header)) return '';
 				
 		//echotime('tohtml');
 		if (count($this->tuples)>10000) echotime('tohtml '.count($this->tuples));
@@ -3806,7 +3937,7 @@ class swAccumulator
 		}
 		if (!$i) return '⦵';
 		$v = $acc / $i;
-		return cText12($v);
+		return swConvertText12($v);
 	}
 	
 	private function pConcat()
@@ -3838,7 +3969,7 @@ class swAccumulator
 			if (floatval($t) > $acc)
 				$acc = floatval($t);
 		}
-		return cText12($acc);
+		return swConvertText12($acc);
 	}
 	
 	private function pMaxS()
@@ -3871,7 +4002,7 @@ class swAccumulator
 		else
 			$v = ($acc[count($acc)/2] + $acc[count($acc)/2-1])/2;
 		
-		return cText12($v);
+		return swConvertText12($v);
 	}
 	
 	private function pMedianS()
@@ -3896,7 +4027,7 @@ class swAccumulator
 			if (floatval($t) < $acc)
 				$acc = floatval($t);
 		}
-		return cText12($acc);
+		return swConvertText12($acc);
 	}
 	
 	private function pMinS()
@@ -3923,7 +4054,7 @@ class swAccumulator
 		}
 		if ($i == 0) return '⦵';
 		$v = sqrt($acc2/$i - $acc/$i*$acc/$i);
-		return cText12($v);
+		return swConvertText12($v);
 	}
 
 	private function PVar()
@@ -3940,7 +4071,7 @@ class swAccumulator
 		}
 		if ($i == 0) return '⦵';
 		$v = $acc2/$i - $acc/$i*$acc/$i;
-		return cText12($v);
+		return swConvertText12($v);
 	}
 	
 	private function pSum()
@@ -3952,7 +4083,7 @@ class swAccumulator
 			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 		}
-		return cText12($acc);
+		return swConvertText12($acc);
 	}
 	
 	private function pFirst()
@@ -4080,41 +4211,6 @@ function swNumberformat($d,$f)
 	return sprintf($f,$d); // waiting for excel style format
 }
 
-function cText12($d)
-{        
-    $a;
-	$t;
-	$s;
-	
-	if ($d == '∞' || $d == '-∞' || $d == '⦵') return $d;
-
-
-	$a = abs($d);
-	
-	if ($a > 10.0e12)
-		// return format(d,"-0.000000000000e").ToText
-		return sprintf('%1.12e+2',$d);
-	elseif ($a < 10.0e-300)
-		return "0";
-	elseif ($a < 10.0e-12)
-		// return format(d,"-0.000000000000e").ToText
-		return sprintf('%%1.12e+2',$d);
-	
-	// s = format(d,"-0.##############")
-	$s = sprintf('%1.12f',$d);
-	
-	if (strlen($s)>12)
-		// s = format(round(d*10000000000000000)/10000000000000000,"-0.##############")
-		$s = sprintf('%1.12f',round($d*10000000000000)/10000000000000);
-		
-	$s = TrimTrailingZeroes($s);
-		
-	if (substr($s,-1)==".")
-		$s = substr(s,0,-1);
-	
-	return $s;
-	
-}
 
 
 function p_open($flag) {
@@ -4146,10 +4242,35 @@ function p_dump()
         $sum += $info['total'];
     }
     foreach ($dump as $flag => $info) {
-        $dump[$flag]['percent'] = $dump[$flag]['elapsed']/$sum;
+        $dump[$flag]['percent'] = $dump[$flag]['elapsed']/max($sum,1);
     }
     return $dump;
 }
 
 
-?>
+function swFlattenArray($arr)
+{
+	$result = array();
+	
+	// return $result;
+	
+	foreach($arr as $k=>$v)
+	{
+		if (is_array($v))
+		{
+			$arr2 = swFlattenArray($v);
+			foreach($arr2 as $k2=>$v2)
+			{
+				$result[$k.'/'.$k2] = $v2;
+			}	
+		}
+		else
+		{
+			$result[$k] = $v;
+		}
+	}
+	
+	return $result;
+	
+}
+
