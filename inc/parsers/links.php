@@ -31,8 +31,8 @@ class swLinksParser extends swParser
 
 		 // external links with markup and alternate text
 		 $s = preg_replace('<\[(https?://[-A-Za-zÀ-ÿ0-9.?&=%/+:;,#_\(\)@]+) (.*?)\]>', '<a href="$1" target="_blank">$2</a>', $s);
-		 // mail links without markup must have border before
-		  $s = preg_replace('/\b([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', '<a href="mailto:$1" target="_blank">$1</a>', $s);
+		 // mail links without markup must have space before
+		  $s = preg_replace('/(\s)([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', '$1<a href="mailto:$1" target="_blank">$2</a>', $s);
 		 
 		 // mail links with markup
 		 $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)\]/', '<a href="mailto:$1" target="_blank">$1</a>', $s);
