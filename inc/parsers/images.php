@@ -517,7 +517,7 @@ function drawHandles()
 			}
 			
 			
-			
+			$s .= $wiki->content;
 			
 		}
 		

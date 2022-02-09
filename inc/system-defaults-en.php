@@ -10,11 +10,14 @@ $swSystemDefaults["es/en"] = "Espa&ntilde;ol";
 $swSystemDefaults["dk/en"] = "Dansk";
 
 $swSystemDefaults["home/en"] = "Home";
-$swSystemDefaults["view/en"] = "Article";
+$swSystemDefaults["view/en"] = "Page";
 $swSystemDefaults["edit/en"] = "Edit";
+$swSystemDefaults["edit-page/en"] = "Edit Page";
 $swSystemDefaults["edit-source/en"] = "Edit Source";
 $swSystemDefaults["history/en"] = "History";
-$swSystemDefaults["new/en"] = "New article";
+$swSystemDefaults["new/en"] = "New";
+$swSystemDefaults["new-page/en"] = "New Page";
+$swSystemDefaults["info/en"] = "Info";
 $swSystemDefaults["special/en"] = "Special";
 $swSystemDefaults["login/en"] = "Login";
 $swSystemDefaults["logout/en"] = "Logout";
@@ -28,7 +31,7 @@ $swSystemDefaults["create/en"] = "Create";
 $swSystemDefaults["modify/en"] = "Modify";
 $swSystemDefaults["save/en"] = "Save";
 $swSystemDefaults["protect/en"] = "Protect";
-$swSystemDefaults["unprotect/en"] = "Uprotect";
+$swSystemDefaults["unprotect/en"] = "Unprotect";
 $swSystemDefaults["rename/en"] = "Rename";
 $swSystemDefaults["delete/en"] = "Delete";
 $swSystemDefaults["delete-with-file/en"] = "Delete with file";
@@ -165,4 +168,21 @@ $swSystemDefaults["next/en"] = "next";
 
 $swSystemDefaults["cacherefresh/en"] = "Cache Refresh";
 
-?>
+$swSystemDefaults["viewmenu/en"] = "View";
+$swSystemDefaults["editmenu/en"] = "Edit";
+$swSystemDefaults["newmenu/en"] = "New";
+$swSystemDefaults["listmenu/en"] = "List";
+$swSystemDefaults["specialmenu/en"] = "Special";
+
+$swSystemDefaults['lost-password-header/en'] = 'Lost password';
+$swSystemDefaults['edit-multi/en'] = 'Edit Multi';
+$swSystemDefaults['new-name/en'] = 'New name';
+$swSystemDefaults['rename-help/en'] = 'A #REDIRECT instruction will be added to the old page';
+$swSystemDefaults['main-page/en'] = 'Main page';
+$swSystemDefaults['fields-help/en'] = 'Limits: All fields are added at the end of the page. Empty fields are removed.';
+$swSystemDefaults['delete-help/en'] = 'After deleting, you can access the old revision with the history.';
+$swSystemDefaults['upload-help/en'] = 'If you do not set a filename, the current filename will be used. File size limit is {swMaxFileSize} MB.';
+$swSystemDefaults['uploadbig-help/en'] = 'You can upload bigger files up to {swMaxBigFileSize} MB. Do not close the window while you are uploading. If you do not define a name, the filename is used. You cannot rename the file after upload. If the file does already exist, it will be replaced. The upload is resiliant. If you must interrupt an upload and continue within 24h, the already uploaded part will be reused. ';
+$swSystemDefaults['uploadbig-help-nofilename/en'] = 'You can upload bigger files up to {swMaxBigFileSize} MB. Do not close the window while you are uploading. If the file does already exist, it will be replaced. The upload is resiliant. If you must interrupt an upload and continue within 24h, the already uploaded part will be reused. ';
+
+$swSystemDefaults["upload-big/en"] = "Upload big files";

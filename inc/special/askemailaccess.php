@@ -81,20 +81,24 @@ $swParsedName = swSystemMessage('email-access',$lang);
 if ($submitted)
 {
 
-	$swParsedContent .= swSystemMessage('email',$lang) . ': '.$email.'<br/><br/>
-	<div id="help">'.swSystemMessage('email-access-submit-help',$lang).' <b>'.$swMainName.': '.swSystemMessage('your-email-access',$lang).'</b></div>';
+	$swStatus = swSystemMessage('email-access-submit-help',$lang);
+	
+	$swParsedContent .= 'Email: '.$email.'<br/>';
+	$swParsedContent .= 'Subject: '.$swMainName.': '.swSystemMessage('your-email-access',$lang).'<br/><br/>';
 
 	
 }
 else
 {
 
-	$swParsedContent = $err.'<div id="editzone">
+	$swParsedContent = $err.'<div id="editzone" class="editzone">
+		<div class="editheader">'.swSystemMessage("email-access",$lang).'</div>
 		<form method="post" action="index.php">
-		<table class="blanktable" ><tr><td>'.swSystemMessage('email',$lang).'</td><td>
+		<input type="submit" name="submitemailaccess" value="'.swSystemMessage("email-access-submit",$lang).'" />
+		<p>'.swSystemMessage('email',$lang).'</p>
 		<input type="text" name="email" value=""/>
 		<input type="hidden" name="action" value="askemailaccess" /></td></tr><tr><td></td><td>
-		<input type="submit" name="submitemailaccess" value="'.swSystemMessage("email-access-submit",$lang).'" /></td></tr></table>
+		
 	</form>.';
 	
 

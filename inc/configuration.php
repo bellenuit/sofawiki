@@ -164,6 +164,3 @@ $swMediaFileTypeDownload = ".xls.docx.doc.";
 
 $swDenyCount = 5;
 
-
-
-?>

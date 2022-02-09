@@ -4,7 +4,6 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-
 if ($user->hasright("view", $wiki->name))
 {
 			
@@ -14,8 +13,8 @@ if ($user->hasright("view", $wiki->name))
 	{
 		$swError = swSystemMessage($wiki->error,$lang);
 	}
-	else
-		$swError = '';
+	//else
+	//	$swError = '';
 	if ($wiki->status == "deleted" || $wiki->status == "delete")
 	{
 		header('HTTP/1.0 404 Not Found');
@@ -35,7 +34,7 @@ if ($user->hasright("view", $wiki->name))
 			$revisions = swGetAllRevisionsFromName($name);
 			if (count($revisions)>0)
 			{
-				$swError = '';
+				//$s = '';
 				$wiki = new swWiki;
 				$wiki->revision = array_pop($revisions);
 				$wiki->lookup();

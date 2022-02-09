@@ -23,7 +23,7 @@ class swLinksParser extends swParser
 		  $s = " ".$s;
 
 		// external links without markup must not start with [ ' " first special case first line
-		 $s = preg_replace('<\n(https?://[-A-Za-zÀ-ÿ0-90-9.?&=%/+;,:#_\(\)@]+)>', '<br><a href="$1" target="_blank">$1</a>', $s);
+		 $s = preg_replace('<(\s)(https?://[-A-Za-zÀ-ÿ0-90-9.?&=%/+;,:#_\(\)@]+)>', '$1<a href="$1" target="_blank">$2</a>', $s);
 		 $s = preg_replace('<([^[\[\'\"])(https?://[-A-Za-zÀ-ÿ0-90-9.?&=%/+;,:#_\(\)@]+)>', '$1<a href="$2" target="_blank">$2</a>', $s);
 		 
 		 // external links with markup

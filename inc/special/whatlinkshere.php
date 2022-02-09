@@ -3,9 +3,12 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $url =  swNameURL($name);
+$wiki = new swWiki;
+$wiki->name = $name;
+$wiki->lookup();
 
 $swParsedName = 'Special:What links here';
-$swParsedContent = 'Pages that link to <b>'.$url.'</b>.<br><br>';
+$swParsedContent = 'Pages that link to [['.$wiki->name.']].<br><br>';
 		
 
 $q = '

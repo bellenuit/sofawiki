@@ -166,4 +166,13 @@ $swSystemDefaults["previous/es"] = "anterior";
 $swSystemDefaults["next/es"] = "siguente";
 
 $swSystemDefaults["cacherefresh/es"] = "Cache Refresh";
+
+$swSystemDefaults["viewmenu/es"] = "View";
+$swSystemDefaults["editmenu/es"] = "Edit";
+$swSystemDefaults["newmenu/es"] = "New";
+$swSystemDefaults["listmenu/es"] = "List";
+$swSystemDefaults["specialmenu/es"] = "Special";
+$swSystemDefaults["new-page/es"] = "New page";
+$swSystemDefaults["edit-page/es"] = "Edit page";
+
 ?>

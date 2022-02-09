@@ -1,74 +1,83 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<base href="<?php echo $swBaseHrefFolder ?>">
-<title><?php echo $swParsedName ?></title>
-<base href="<?php echo $swBaseHref ?>">
-<link rel='stylesheet' href="inc/skins/wiki.css"/>
-<link rel='stylesheet' href="inc/skins/markrelationcode.css"/>
-<style><?php echo $swParsedCSS ?></style>
-</head>
-<body>
-
-<div id='header'>
-<?php
-	echo swSystemMessage("skin-header",$lang, true);
-?>
-</div>
-
-
-<div id='langmenu'>
 <?php 
-	foreach($swLangMenus as $item) {echo $item." " ; } 
-?>
-</div>
+	$skinstylesheet = '<link rel="stylesheet" href="inc/skins/wiki.css"/>';
+include 'header.php';
+
+echo PHP_EOL.'<div id="header">';
+echo PHP_EOL.swSystemMessage("skin-header",$lang, true);
+
+echo PHP_EOL.'</div>';
+
+echo PHP_EOL.'<div id="langmenu">';
+foreach($swLangMenus as $item) {echo PHP_EOL.$item.' ' ; } 
+echo PHP_EOL.'</div>';
+
+echo PHP_EOL.'<div id="menu">';
+
+if ($swStatus) echo PHP_EOL.'<p><span class="ok">'.$swStatus.'</span></p>';
+
+if ($swError) echo PHP_EOL.'<p><span class="error">'.$swError.'</span></p>';
 
 
-<div id='menu'>
-<?php 
-	echo $swHomeMenu. "<br/>"; 
-	echo swSystemMessage("skin-menu",$lang, true). "<br/>\r\n";
-	echo $swSearchMenu; 
-	
-	
-	if ($username != "")
-		echo "<div id='editmenu'>\r\n";
+echo PHP_EOL.$swHomeMenu. "<br/>"; 
+echo PHP_EOL.swSystemMessage("skin-menu",$lang, true). "<br/>\r\n";
+
+foreach($swLoginMenus as $item) 
+{
+
+	echo PHP_EOL.$item."<br/>"; ;
+}
+
+echo PHP_EOL.'<br/><br/><br/>';
+
+echo PHP_EOL.$swSearchMenu; 
+
+
+
+
+echo PHP_EOL.'</div><!-- menu -->';
+
+echo PHP_EOL.'<div id="mobilemenu"><p>';
+
+if ($swStatus) echo PHP_EOL.'<span class="ok">'.$swStatus.'</span> ';
+
+if ($swError) echo PHP_EOL.'<span class="error">'.$swError.'</span> ';
+
+
+echo PHP_EOL.$swHomeMenu. ' '; 
+echo PHP_EOL.str_replace('<p>',' ',str_replace('<br>',' ',swSystemMessage("skin-menu",$lang, true))). " ";
+
+foreach($swLoginMenus as $item) 
+{
+	if ($item == $username)
+	{
+		echo PHP_EOL.$item;
+	}
 	else
-		echo "<div id='editmenu0'>\r\n";
-		
-	foreach($swEditMenus as $item) {echo $item."<br/>\r\n"; }
-	echo "<br/>";
-	foreach($swLoginMenus as $item) {echo $item."<br/>\r\n" ; }
-	echo "<span class='error'>$swError</span>\r\n";
-	if (isset($swUserDebug) && $swUserDebug && $user->hasright('modify','*')) echo "<br><span class='debug'>$swDebug</span>\r\n";
-?>
-</div><!-- editmenu -->
-</div><!-- menu -->
+	{
+		echo PHP_EOL.$item;
+	}
+}
 
 
-<div id='main'>
-<div id='content'>
-<div id='title'>
-<h1><?php echo "$swParsedName" ?></h1>
-</div><!-- title -->
-<?php echo "
-$swParsedContent
-" ?>
-</div><!-- content -->
-<div id="info">
-<?php echo "$swFooter"; echo swSystemMessage("skin-footer",$lang, true);?>
-</div>
-
-</div><!-- main -->
+echo PHP_EOL.'<p>'.$swSearchMenu; 
+	
 
 
+echo PHP_EOL.'</div><!-- mobilemenu -->';
 
-</body>
-<script src="inc/skins/markrelationcode.js"></script>
-<script>
-	let mini = miniEditor(document.getElementById("editor"),markRelationCode);
-	markRelationCode();
-</script>
 
-</html>
+echo PHP_EOL.'<div id="main">';
+echo PHP_EOL.'<div id="content">';
+echo PHP_EOL.'<div id="titl">';
+echo PHP_EOL.'<h1>'.$swParsedName.'</h1>';
+echo PHP_EOL.'</div><!-- title -->';
+echo PHP_EOL.$swParsedContent;
+echo PHP_EOL.'</div><!-- content -->';
+echo PHP_EOL.'<div id="info">';
+echo $swFooter; 
+echo swSystemMessage("skin-footer",$lang, true);
+echo PHP_EOL.'</div>';
+echo PHP_EOL.'</div><!-- main -->';
+
+
+include 'footer.php';

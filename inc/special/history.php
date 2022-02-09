@@ -7,7 +7,7 @@ if ($user->hasright("modify", $wiki->name) || $user->hasright("propose", $wiki->
 
  {
 
-	$swParsedName = swSystemMessage("history",$lang)." ".$wiki->localname($lang); ;
+	$swParsedName = swSystemMessage("history",$lang)." ".$wiki->name ;
 		
 	$list= $wiki->history();
 	$historytexts = array();

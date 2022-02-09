@@ -31,6 +31,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
 	global $swStartTime;
+	global $swOvertime;
 	
 	$verbose = 0;
 	if (isset($_REQUEST['verbose'])) $verbose = 1;
@@ -49,7 +50,11 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	$namefilter0 = ''; 
 	$virtualmode = false;
 	
-	if ($swIndexError) return $goodrevisions;
+	if ($swIndexError)
+	{
+		$swOvertime = true;
+		return $goodrevisions;
+	}
 	
 	if ($mode != 'query')
 	{
@@ -416,7 +421,10 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	$nowtime = microtime(true);	
 	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
 	if ($dur>$swMaxOverallSearchTime) 
+	{
+		$swOvertime = true;
 		echotime('overtime overall');
+	}
 		
 		
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
@@ -549,7 +557,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			$starttime = microtime(true);
 			if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
 			if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
-			global $swOvertime;
+			
 			$overtime = false;
 			
 			
@@ -575,7 +583,13 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
 				
-				if (memory_get_usage()>$swMemoryLimit) continue;
+				if (memory_get_usage()>$swMemoryLimit) 
+				{
+					echotime('overmemory '.memory_get_usage());
+					$overtime = true;
+					$swOvertime = true;
+					break;
+				}
 				
 				if (!$tocheck->getbit($k)) continue; // we already have ecluded it from the list
 				if ($checkedbitmap->getbit($k)) continue; // it has been checked, should not happen here any more
@@ -591,8 +605,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
-					if (!stristr($flags,'internal'))
-							$swOvertime=true;
+					$swOvertime=true;
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
@@ -600,8 +613,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
-					if (!stristr($flags,'internal'))
-							$swOvertime=true;
+					$swOvertime=true;
 					break;
 				}
 				$record = new swRecord;

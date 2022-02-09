@@ -8,16 +8,22 @@
  *	@version 3.6.0
  *  
  */
+ 
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-ini_set("display_errors",1); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 $swLazy = true; // implement lazy writing, no filter update when new records are written
 $swHasWritten = false;
+$swError = '';
+$swStatus = '';
+$swParseSpecial = '';
+$swUserCookieExpiration = 4*60*60;
 
 define('SOFAWIKIINDEX',true);
 
 include 'api.php';
-
 
 if (swGetDeny($_SERVER['REMOTE_ADDR'])) 
 {
@@ -84,8 +90,6 @@ if (!isset($powerusers))
 
 // create user
 $knownuser = false;
-if (!isset($swUserCookieExpiration))
-	$swUserCookieExpiration = 4*60*60;
 $username = swHandleCookie('username','',$swUserCookieExpiration);
 if ($action == 'logout') 
 {
@@ -231,7 +235,7 @@ else
 		if ($username != '' && $action != 'lostpassword' && $action != 'lostpasswordsubmit'
 		&& (array_key_exists('username', $_GET) || array_key_exists('username', $_POST) ) )
 		{			
-			$swError = swSystemMessage('wrong-password-error',$lang);
+			$swError = swSystemMessage('wrong-password-error',$lang); 
 			$failaction = swGetArrayValue($_REQUEST,'failaction','login');
 			$action = $failaction;
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
@@ -355,13 +359,9 @@ elseif ($action != 'new')
 				// ignore if the page is here anyway
 				if ($wiki->content != '') break;
 				
-				if ($action != 'modify' && $action != 'modifymulti') 
+				if ($action != 'modify' && $action != 'modifymulti' && !substr($wiki->name,0,7 != 'system:') ) 
 				{
-					
-					
-					 
-						$swError =$action.' '.swSystemMessage('this-page-does-not-exist-error',$lang).' '.$wiki->name; 
-					
+					$swError =swSystemMessage('this-page-does-not-exist-error',$lang); 
 				}
 				break;		
 			case 'Deleted record': $swError = swSystemMessage('this-page-has-been-deleted-error',$lang); break;
@@ -373,11 +373,302 @@ elseif ($action != 'new')
 
 if ($revision && $name == $swMainName) $name = $wiki->name;
 
+$swStatus = '';
 $swParsedName = '';
 $swParsedContent = '';
 $swParsedCSS = '';
 $swFooter = '';
 
+
+
+
+
+echotime('action '.$action);
+
+
+
+
+switch ($action)
+{
+	case 'askemailaccess':   		include 'inc/special/askemailaccess.php';
+				 	 				break;
+	case 'emailaccess':    			include 'inc/special/emailaccess.php';
+				 	 				break;
+	case 'delete': 					if ($user->hasright('delete', $wiki->name)) 
+									{
+										include 'inc/special/delete.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+										include 'inc/special/view.php';										
+									}
+									
+								    break;
+	case 'diff':					if ($user->hasright('view', $wiki->name))
+									{
+										include 'inc/special/diff.php';
+									}
+									else
+									{
+									  	$swError = swSystemMessage('no-access-error',$lang);
+									  	include 'inc/special/view.php';
+									}
+								    break;
+	case 'edit':
+	case 'editmulti':    
+	case 'editsource': 				if ($user->hasright('modify', $wiki->name))
+									{
+										include 'inc/special/edit.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+										include 'inc/special/view.php';
+									}
+									break;
+	case 'fields': 					if ($user->hasright('fields', $wiki->name))
+									{
+										include 'inc/special/fields.php';
+									}
+									else
+									{
+									  	$swError = swSystemMessage('no-access-error',$lang);
+									  	include 'inc/special/view.php';
+									}
+								    break;
+	case 'history':	 				if ($user->hasright('view', $wiki->name))
+									{
+										include 'inc/special/history.php';
+									}
+									else
+									{
+									  	$swError = swSystemMessage('no-access-error',$lang);
+									  	include 'inc/special/view.php';
+									}
+								    break;
+	case 'indexerror':				include 'inc/special/indexerror.php';
+									break;
+	case 'install': 				include_once 'inc/special/install.php';
+				 	 				break;
+	case 'login':       			include 'inc/special/login.php';
+				 	 				break;
+	case 'logout':   				
+					 				$swStatus = swSystemMessage('you-have-logged-out',$lang);
+					 				$wiki->name = $swMainName;
+
+					 				include 'inc/special/view.php';
+					 				break;
+	case 'lostpassword':    
+	case 'lostpasswordsubmit':    	include 'inc/special/lostpassword.php';
+				 	 				break;
+	case 'modify':	
+	case 'modifymulti':	
+	case 'modifyeditor':			include 'inc/special/modify.php';
+									break;	
+
+	case 'new':      				$wiki=new swWiki; $name = '';
+									if ($user->hasright('create', $wiki->name))
+									{
+										include 'inc/special/edit.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+										include 'inc/special/view.php';
+									}
+	case 'newuser':    			
+	case 'newusersubmit': 			include 'inc/special/newuser.php';
+				 	 				break;
+	case 'protect': 
+	case 'unprotect':				if ($user->hasright('protect', $wiki->name))
+									{
+										include 'inc/special/protect.php';	
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+								    }
+									include 'inc/special/view.php';
+									break;						
+	case 'rename':					if ($user->hasright('rename', $wiki->name)) 
+									{
+										include 'inc/special/rename.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+										include 'inc/special/view.php';
+									}
+								    break;
+
+	case 'resetpassword':    		include 'inc/special/resetpassword.php';
+				 	 				break;
+	case 'revert':					if ($user->hasright('modify', $wiki->name))
+									{
+										
+										$wiki->user = $user->nameshort();
+										$wiki->insert();
+										
+										$swParsedName = $wiki->name;
+										$swStatus = 'Reverted: '.$wiki->name;
+										$swParsedContent = $wiki->parse();
+			
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+									break;
+	case 'snapshot':   				if ($user->hasright('upload', ''))
+									{
+										include 'inc/special/snapshot.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+									break;
+	case 'search':					include 'inc/special/search.php';
+									break;
+	case 'special':  				if ($user->hasright('special',str_replace('special:','',$name)) || $user->hasright('special','special') )
+									{
+										$specialname = substr($name,8);
+										$swParseSpecial = false;
+										$specialfound = false;
+											foreach ($swSpecials as $k=>$v)
+											{
+												if (swNameURL($k) == $specialname)
+												{
+													
+													/* SOFADOC_INCLUDE inc/special/allpages.php */
+													/* SOFADOC_INCLUDE inc/special/backup.php */
+													/* SOFADOC_INCLUDE inc/special/categories.php */
+													/* SOFADOC_INCLUDE inc/special/dead-end-pages.php */
+													/* SOFADOC_INCLUDE inc/special/deleted-pages.php */
+													/* SOFADOC_INCLUDE inc/special/deny.php */
+													/* SOFADOC_INCLUDE inc/special/fieldsearch.php */
+													/* SOFADOC_INCLUDE inc/special/images.php */
+													/* SOFADOC_INCLUDE inc/special/import.php */
+													/* SOFADOC_INCLUDE inc/special/indexes.php */
+													/* SOFADOC_INCLUDE inc/special/info.php */
+													/* SOFADOC_INCLUDE inc/special/logs.php */
+													/* SOFADOC_INCLUDE inc/special/long-pages.php */
+													/* SOFADOC_INCLUDE inc/special/metrics.php */
+													/* SOFADOC_INCLUDE inc/special/most-linked-categories.php */
+													/* SOFADOC_INCLUDE inc/special/most-linked-pages.php */
+													/* SOFADOC_INCLUDE inc/special/orphaned-pages.php */
+													/* SOFADOC_INCLUDE inc/special/passwords.php */
+													/* SOFADOC_INCLUDE inc/special/protected-pages.php */
+													/* SOFADOC_INCLUDE inc/special/query.php */
+													/* SOFADOC_INCLUDE inc/special/recent-changes.php */
+													/* SOFADOC_INCLUDE inc/special/regex.php */
+													/* SOFADOC_INCLUDE inc/special/relation.php */
+													/* SOFADOC_INCLUDE inc/special/snapshot.php */
+													/* SOFADOC_INCLUDE inc/special/special-pages.php */
+													/* SOFADOC_INCLUDE inc/special/system-messages.php */
+													/* SOFADOC_INCLUDE inc/special/templates.php */
+													/* SOFADOC_INCLUDE inc/special/tickets.php */
+													/* SOFADOC_INCLUDE inc/special/uncategorized-pages.php */
+													/* SOFADOC_INCLUDE inc/special/unused-categories.php */
+													/* SOFADOC_INCLUDE inc/special/unused-files.php */
+													/* SOFADOC_INCLUDE inc/special/update.php */
+													/* SOFADOC_INCLUDE inc/special/upload.php */
+													/* SOFADOC_INCLUDE inc/special/upload-multiple.php */
+													/* SOFADOC_INCLUDE inc/special/users.php */
+													/* SOFADOC_INCLUDE inc/special/wanted-pages.php */
+													
+													include 'inc/special/'.$swSpecials[$k];
+													$specialfound = true;
+												}
+											}
+											unset($k);
+											unset($v);
+											if (!$specialfound && !substr($wiki->name,0,7 != 'system:') )
+												$swError = swSystemMessage('this-page-does-not-exist-error',$lang); 
+										
+										
+									}
+									elseif ( $user->hasright('upload','') && $name=='special:upload' )
+									{
+										include 'inc/special/upload.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+			
+									if ($swParseSpecial)
+									{
+										$wiki->content = $swParsedContent;
+										$swParsedContent = $wiki->parse();
+									}
+			
+									break;	
+	case 'upload':   				if ($user->hasright('upload', ''))
+									{
+									 	include 'inc/special/upload.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+								 	break;
+
+	case 'uploadfile':   			if ($user->hasright('upload', ''))
+									{
+									 	include 'inc/special/uploadfile.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+								 	break;
+	
+	case 'uploadbigfile':   		if ($user->hasright('upload', '') || stristr($swBaseHrefFolder,$referer))
+									{
+									 	include 'inc/special/uploadbigfile.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+									}
+								 	break;
+
+						
+	case 'whatlinkshere' : 			include 'inc/special/whatlinkshere.php';
+									break;
+
+	
+		
+	default: 						
+									if (isset($swActionHookFile))
+									{
+										include $swActionHookFile;
+									}
+									else
+									{	
+										include 'inc/special/view.php';
+									}
+
+}
+
+if ($swRedirectedFrom)
+{
+	$swStatus = 'Redirected from '.$swRedirectedFrom;
+	$swParsedName = $wiki->namewithoutlanguage();
+}
+	
+if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99) $action = 'indexerror';
+	
+if ($action == 'logout')
+{
+	$failaction = swGetArrayValue($_REQUEST,'failaction','logout');
+	$action = $failaction;
+}
+	
+
+// build menus
 
 // create menus
 echotime("menus"); 
@@ -386,6 +677,186 @@ echotime("menus");
 	$linkwiki->name = $swMainName; 
 	$swHomeMenu = '<a href="'.$linkwiki->link('view',$lang).'" rel="nofollow">'.swSystemMessage('home',$lang).'</a>';
 }
+
+
+$swLoginMenus= array();
+ 
+if ($user->username != "" || isset($realuser))
+{
+		
+		// add menus by user rights
+		$menudomains = swGetValue($user->content,'_menu',true);
+		{
+			foreach($menudomains as $v)
+			{
+				$swLoginMenus[$v] = '<a href="index.php?name='.$v.'" rel="nofollow">'.$v.'</a>';
+			}
+		}
+
+		
+		$swLoginMenus['login-user'] = $user->nameshort();
+		if ($user->ipuser)
+		$swLoginMenus['login'] = '<a href="index.php?action=login&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
+		else
+		{
+			if (!isset($realuser))
+			$swLoginMenus['login-logout'] = '<a href="index.php?action=logout&lang='.$lang.'" rel="nofollow">'.swSystemMessage('logout',$lang).'</a>';
+		}
+		
+		$altuserlist = $user->altusers();
+		if (is_array($altuserlist) && count($altuserlist)>0)
+		{
+			foreach($altuserlist as $elem)
+			$swLoginMenus['login-altuser_'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'&lang='.$lang.'" rel="nofollow">'.$elem.'</a>';
+		}
+		if (isset($realuser))
+		{
+			$altuserlist = $realuser->altusers();
+			$swLoginMenus['login-altuser_'.$realuser->nameshort()] = '! <a href="index.php?action=view&altuser&lang='.$lang.'" rel="nofollow">'.$realuser->nameshort().'</a>';
+			foreach($altuserlist as $elem)
+			$swLoginMenus['login-altuser_'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'&lang='.$lang.'" rel="nofollow">'.$elem.'</a>';
+			
+		}
+		
+}
+elseif ($action != 'login')
+{
+	$swLoginMenus['login-login'] = '<a href="index.php?action=login&amp;name='.$name.'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
+}		
+
+$swEditMenus = array();
+
+
+
+if ($action != 'special' && $action != 'login' && $action != 'logout' && $action!='search')
+{
+	$editwiki = new swWiki;
+	$editwiki->name = $name;
+	$el = $editwiki->language();
+	if ($el == '--') $el = '';
+	
+	$wikinames = array();
+	$n = $wiki->namewithoutlanguage();
+	$editwiki->name = $n;
+	$editwiki->lookup();
+	
+	// view
+	if ($user->hasright('view', $editwiki->name) && $editwiki->revision)
+	{
+		$swEditMenus['viewmenu-article'] = '<a href="'.$editwiki->link('view','--').'" rel="nofollow" accesskey="v">'.swSystemMessage('view',$lang).' ^V</a>';
+		$swEditMenus['viewmenu-history'] = '<a href="'.$editwiki->link('history','--').'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
+		
+		foreach ($swLanguages as $l)
+		{
+			$wiki2 = new swWiki;
+			$wiki2->name = $n.'/'.$l; 
+			$wiki2->lookup();
+			if ($wiki2->revision) 
+			{
+				$swEditMenus['viewmenu-history-'.$l] = '<a href="'.$editwiki->link('history',$l).'" rel="nofollow">'.swSystemMessage('history',$lang).' '.$l.'</a>';
+			}		
+		}
+		$swEditMenus['viewmenu-whatlinkshere'] = '<a href="'.$editwiki->link('whatlinkshere','--').'" rel="nofollow">'.swSystemMessage('what-links-here',$lang).'</a>';	
+	}	
+	
+	if ($user->hasright('modify', $editwiki->name) && $editwiki->status == 'ok') 
+	{
+		$swEditMenus['editmenu-edit'] = '<a href="'.$editwiki->link('edit','--').'" rel="nofollow" accesskey="e">'.swSystemMessage('edit',$lang).' ^E</a>';
+		if (isset($editwiki->internalfields['editortemplate']))
+		{
+			$swEditMenus['editmenu-source'] = '<a href="'.$editwiki->link('editsource','--').'" rel="nofollow">'.swSystemMessage('edit-source',$lang).'</a>';
+		}
+		$swEditMenus['editmenu-multi'] = '<a href="'.$editwiki->link('editmulti','--').'" rel="nofollow">'.swSystemMessage('edit-multi',$lang).'</a>';
+
+	}
+	foreach ($swLanguages as $l)
+	{
+		$editwiki->name = $n.'/'.$l; 
+		$editwiki->lookup();
+		if ($user->hasright('modify', $editwiki->name) && $editwiki->status == 'ok') 
+		{
+			$swEditMenus['editmenu-edit-'.$l] = '<a href="'.$editwiki->link('edit',$l).'" rel="nofollow">'.swSystemMessage('edit',$lang).' '.$l.'</a>';
+		}		
+	}	
+		
+	$el = $wiki->language();
+	if ($el == '--') $el = '';
+	
+	if ($wiki->status == 'ok')
+	{
+		if ($user->hasright('fields', $wiki->name))
+		{
+			$swEditMenus['editmenu-fields'] = '<a href="'.$wiki->link('fields','--').'" rel="nofollow">'.swSystemMessage('fields',$lang).'</a>';
+		}		
+		if ($user->hasright('protect', $editwiki->name))
+		{
+			$swEditMenus['editmenu-protect'] = '<a href="'.$wiki->link('protect','--').'" rel="nofollow">'.swSystemMessage('protect',$lang).'</a>';
+		}
+		if ($user->hasright('rename', $editwiki->name))
+		{
+			$swEditMenus['editmenu-rename'] = '<a href="'.$wiki->link('rename','--').'" rel="nofollow">'.swSystemMessage('rename',$lang).' </a>';
+		}
+		if ($user->hasright('delete', $editwiki->name))
+		{
+			$swEditMenus['editmenu-delete'] = '<a href="'.$wiki->link('delete','--').'" rel="nofollow">'.swSystemMessage('delete',$lang).'</a>';
+		}
+	}
+	elseif ($editwiki->status == 'protected')
+	{
+		$swEditMenus['editmenu-unprotect'] = '<a href="'.$wiki->link('unprotect','--').'" rel="nofollow">'.swSystemMessage('unprotect',$lang).'</a>';
+	}
+	
+	
+}	
+
+
+	
+if ($user->hasright('create', '*'))
+{
+	if ($action != 'special' && $action != 'modify' && $action != 'new' && $wiki->status == '')
+		$swEditMenus['newmenu-new'] = '<a href="'.$wiki->link('edit').'&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' ^N</a>';
+	else
+		$swEditMenus['newmenu-new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' ^N</a>';
+	
+	$templatewiki = new swWiki;
+	$templatewiki->name = 'System:editortemplate';
+	$templatewiki->lookup();
+	$list = array();
+	if (isset($templatewiki->internalfields['_link'])) $list = $templatewiki->internalfields['_link'];
+	
+	$menu = array();
+	
+	foreach($list as $elem)
+	{
+		if (substr($elem,0,strlen('Template:'))!='Template:') continue;
+		$editor = str_replace('Template:','',$elem);
+		$swEditMenus['newmenu-'.$editor] = '<a href=index.php?action=new&editor='.$editor.'">'.swSystemMessage('new',$lang).' '.$editor.'</a>';
+	}
+}
+
+if ($user->hasright('upload','') && $action != 'logout')
+{
+	$linkwiki = new swWiki;
+	$linkwiki->name = 'special:upload'; 
+	$swEditMenus['newmenu-upload'] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow" accesskey="U">'.swSystemMessage('upload',$lang).' ^U</a>';
+}
+
+if ($user->hasright('special','special') && $action != 'logout')
+{	
+	ksort($swSpecials);
+	foreach ($swSpecials as $k=>$v)
+	{
+		$linkwiki->name = 'Special:'.$k; 
+		$m = 'specialmenu-';
+		if (in_array($k, array('All Pages','Categories','Dead End Pages ','Images','Long Pages','Most Linked Categories','Most Linked Pages', 'Orphaned Pages', 'Protected Pages','Recent Changes', 'Redirects', 'Short Pages', 'System Messages ','Templates', 'Uncategorized Pages', 'Unused Files', 'Unused Templates', 'Users' , 'Wanted Pages'))) $m = 'listmenu-';
+		$swEditMenus[$m.$k] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.$k.'</a>';
+
+	}
+}
+	
+
+if (!$username) $swEditMenus = array();
+
 
 $swLangMenus = array();
 if (count($swLanguages)>1)
@@ -397,643 +868,22 @@ foreach ($swLanguages as $v)
 			$swLangMenus[$v] = '<a href="'.$wiki->link('view','--').'&amp;lang='.$v.'">'.swSystemMessage($v,$lang).'</a>';
 }
 unset($v);
-$swSearchMenu = '<div id="searchmenu"><form method="get" action="index.php"><p>
- <input type="hidden" name="action" value="search" />
- <input type="text" class="searchfield" name="query" value="'.$query.'"/>
- <input type="submit" class="searchbutton" name="submit" value="'.swSystemMessage('search',$lang).'" /> 
- </p></form></div> ';
+$swSearchMenu = '<div id="searchmenu">
+<form method="get" action="index.php">
+<input type="hidden" name="action" value="search" />
+<input type="text" class="searchfield" name="query" value="'.$query.'"/>
+<input type="submit" class="searchbutton" name="submit" value="'.swSystemMessage('search',$lang).'" /> 
+</form>
+</div><!-- searchmenu -->';
 
-$swLoginMenus= array();
- 
-if ($user->username != "" || isset($realuser))
-{
-		$swLoginMenus['user'] = $user->nameshort();
-		if ($user->ipuser)
-		$swLoginMenus['login'] = '<a href="index.php?action=login&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
-		else
-		{
-			if (!isset($realuser))
-			$swLoginMenus['logout'] = '<a href="index.php?action=logout&lang='.$lang.'" rel="nofollow">'.swSystemMessage('logout',$lang).'</a>';
-		}
-		
-		$altuserlist = $user->altusers();
-		if (is_array($altuserlist) && count($altuserlist)>0)
-		{
-			foreach($altuserlist as $elem)
-			$swLoginMenus['altuser-'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'&lang='.$lang.'" rel="nofollow">'.$elem.'</a>';
-		}
-		if (isset($realuser))
-		{
-			$altuserlist = $realuser->altusers();
-			$swLoginMenus['altuser-'.$realuser->nameshort()] = '! <a href="index.php?action=view&altuser&lang='.$lang.'" rel="nofollow">'.$realuser->nameshort().'</a>';
-			foreach($altuserlist as $elem)
-			$swLoginMenus['altuser-'.$elem] = '- <a href="index.php?action=view&altuser='.$elem.'&lang='.$lang.'" rel="nofollow">'.$elem.'</a>';
-			
-		}
-		
-}
-elseif ($action != 'login')
-{
-	$swLoginMenus['login'] = '<a href="index.php?action=login&amp;name='.$name.'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
-}		
+$swSingleSearchMenu = '<div id="singlesearchmenu">
+<form method="get" action="index.php">
+<input type="hidden" name="action" value="search" />
+<input type="text" class="singlesearchfield" name="query" placeholder="'.swSystemMessage('search',$lang).'..."value="'.$query.'"/>
+</form>
+</div><!-- searchmenu -->';
 
-$swEditMenus = array();
-
-
-// page based edit menus
-if ($action != 'special' && $action != 'login' && $action != 'logout' && $action!='search')
-{
-	// view
-	if ($user->hasright('view', $wiki->name))
-	{
-		$swEditMenus['view'] = '<a href="'.$wiki->articlelink('editview').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('view',$lang).'</a>';
-    }
-		
-	// edit
-	if ($user->hasright('modify', $wiki->name) || 
-	$user->hasright('protect', $wiki->name) || $user->hasright('delete', $wiki->name) || $action == 'modifymulti')
-	{
-	
-		if (($wiki->status != '' && $wiki->status != 'deleted' && $wiki->status != 'delete') || $action == 'modifymulti' || $action == 'modify' ) // page does exist // delete is obsolete
-		{
-			if ($user->hasright('modify', $wiki->namewithoutlanguage()))
-				$swEditMenus['edit'] = '<a href="'.$wiki->link('edit','--').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).'</a>';
-				
-			if (isset($wiki->internalfields['editortemplate']))
-				$swEditMenus['editsource'] = '<a href="'.$wiki->link('editsource','--').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit-source',$lang).'</a>';
-	
-				
-
-						
-			if ($action == 'rename')
-			{
-				$w2 = new swWiki();
-				$w2->name = $name2;
-				$swEditMenus['edit2'] = '<a href="'.$w2->link('edit','').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).' '.$name2.'</a>';
-			}
-			
-			if (count($swLanguages)>1 && $wiki->status != 'protected')
-			{
-				if ($action == 'editmulti' )
-					$swEditMenus['editmulti'] = swSystemMessage('edit',$lang).' Multi';
-				else
-				{
-					if ($user->hasright('modify', $wiki->namewithoutlanguage()))
-					$swEditMenus['editmulti'] = '<a href="'.$wiki->link('editmulti','--').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).' Multi</a>';
-				}
-			}
-		}
-	
-		
-		if ($name && $wiki->status != ''  ) // || $action == 'editmulti' || $action == 'modifymulti'
-		{
-			
-			if (count($swLanguages)>1)
-			foreach ($swLanguages as $v)
-			{
-				$linkwiki = new swWiki;
-				
-				$linkwiki->name = $wiki->localname($v).'/'.$v;
-				//$linkwiki->lookupName();
-				//if ($linkwiki->revision>0)
-					$swEditMenus['edit'.$v] = '<a href="'.$wiki->link('edit',$v).'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).' '.$v.'</a>';
-			}
-			unset($v);
-		}
-		
-	}
-	else
-	{
-		foreach ($swLanguages as $v)
-		{
-			if($user->hasright('modify', $wiki->name.'/'.$v))
-				$swEditMenus['edit'.$v] = '<a href="'.$wiki->link('edit',$v).'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('edit',$lang).' '.$v.'</a>';
-		}
-	
-	}
-
-	if ($wiki->revision > 0 && $user->hasright('fields', $wiki->namewithoutlanguage()) && $wiki->status != 'deleted')
-		$swEditMenus['fields'] = '<a href="'.$wiki->link('fields').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('fields',$lang).'</a>';
-	
-	// history
-	
-	if ($user->hasright('modify', $wiki->namewithoutlanguage()) || 
-	$user->hasright('protect', $wiki->namewithoutlanguage()) || $user->hasright('delete', $wiki->namewithoutlanguage()) )
-	{
-		if ($wiki->status=='deleted' || $wiki->status=='delete') 
-		{
-			if ($user->hasright('delete', $wiki->name))
-				$swEditMenus['history'] = '<a href="'.$wiki->link('history').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
-		}
-		elseif($wiki->status != '')
-		{
-			$swEditMenus['history'] = '<a href="'.$wiki->link('history').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
-		}
-		$swEditMenus['whatlinkshere'] = '<a href="'.$wiki->link('whatlinkshere').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('what-links-here',$lang).'</a>';
-		
-		
-	}
-	
-	
-}
-
-// global edit menus
-if ($user->hasright('create', '*'))
-{
-	if ($action != 'special' && $action != 'modify' && $action != 'new' && $wiki->status == '')
-		$swEditMenus['new'] = '<a href="'.$wiki->link('edit').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('new',$lang).'</a>';
-	else
-		$swEditMenus['new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow">'.swSystemMessage('new',$lang).'</a>';
-}
-
-
-if ($user->hasright('special','special') && $action != 'logout')
-{
-	$linkwiki = new swWiki;
-	$linkwiki->name = 'special:special-pages'; 
-	$swEditMenus['special'] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('special',$lang).'</a>';
-}
-
-if ($user->hasright('upload','') && $action != 'logout')
-{
-	$linkwiki = new swWiki;
-	$linkwiki->name = 'special:upload'; 
-	$swEditMenus['upload'] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('upload',$lang).'</a>';
-}
-
-
-if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99)
-	$action = 'indexerror';
-	
-	
-if ($action == 'logout')
-{
-	$failaction = swGetArrayValue($_REQUEST,'failaction','logout');
-	$action = $failaction;
-}
-
-echotime('action '.$action);
-
-
-
-switch ($action)
-{
-	case 'special':  	if ($user->hasright('special',str_replace('special:','',$name)) || $user->hasright('special','special') ||
-							($user->hasright('upload','') && $name=='special:upload' ) )
-						{
-							$specialname = substr($name,8);
-							$swParseSpecial = false;
-							$specialfound = false;
-								foreach ($swSpecials as $k=>$v)
-								{
-									if (swNameURL($k) == $specialname)
-									{
-										
-										/* SOFADOC_INCLUDE inc/special/allpages.php */
-										/* SOFADOC_INCLUDE inc/special/backup.php */
-										/* SOFADOC_INCLUDE inc/special/categories.php */
-										/* SOFADOC_INCLUDE inc/special/dead-end-pages.php */
-										/* SOFADOC_INCLUDE inc/special/deleted-pages.php */
-										/* SOFADOC_INCLUDE inc/special/deny.php */
-										/* SOFADOC_INCLUDE inc/special/images.php */
-										/* SOFADOC_INCLUDE inc/special/import.php */
-										/* SOFADOC_INCLUDE inc/special/indexes.php */
-										/* SOFADOC_INCLUDE inc/special/info.php */
-										/* SOFADOC_INCLUDE inc/special/logs.php */
-										/* SOFADOC_INCLUDE inc/special/long-pages.php */
-										/* SOFADOC_INCLUDE inc/special/metrics.php */
-										/* SOFADOC_INCLUDE inc/special/most-linked-categories.php */
-										/* SOFADOC_INCLUDE inc/special/most-linked-pages.php */
-										/* SOFADOC_INCLUDE inc/special/orphaned-pages.php */
-										/* SOFADOC_INCLUDE inc/special/passwords.php */
-										/* SOFADOC_INCLUDE inc/special/protected-pages.php */
-										/* SOFADOC_INCLUDE inc/special/query.php */
-										/* SOFADOC_INCLUDE inc/special/recent-changes.php */
-										/* SOFADOC_INCLUDE inc/special/regex.php */
-										/* SOFADOC_INCLUDE inc/special/relation.php */
-										/* SOFADOC_INCLUDE inc/special/snapshot.php */
-										/* SOFADOC_INCLUDE inc/special/special-pages.php */
-										/* SOFADOC_INCLUDE inc/special/system-messages.php */
-										/* SOFADOC_INCLUDE inc/special/templates.php */
-										/* SOFADOC_INCLUDE inc/special/tickets.php */
-										/* SOFADOC_INCLUDE inc/special/uncategorized-pages.php */
-										/* SOFADOC_INCLUDE inc/special/unused-categories.php */
-										/* SOFADOC_INCLUDE inc/special/unused-files.php */
-										/* SOFADOC_INCLUDE inc/special/update.php */
-										/* SOFADOC_INCLUDE inc/special/upload.php */
-										/* SOFADOC_INCLUDE inc/special/upload-multiple.php */
-										/* SOFADOC_INCLUDE inc/special/users.php */
-										/* SOFADOC_INCLUDE inc/special/wanted-pages.php */
-										
-										include 'inc/special/'.$swSpecials[$k];
-										$specialfound = true;
-									}
-								}
-								unset($k);
-								unset($v);
-								if (!$specialfound)
-									$swError = swSystemMessage('this-page-does-not-exist-error',$lang); 
-							
-							if ($swParseSpecial)
-							{
-								$wiki->content = $swParsedContent;
-								$swParsedContent = $wiki->parse();
-							}
-						}
-						else
-						{
-							$swError = swSystemMessage('no-access-error',$lang);
-						}
-						
-						if ($user->hasright('create', $wiki->name))
-							$swEditMenus[] = '<a href="index.php?action=new">'.swSystemMessage('new',$lang).'</a>';
-
-
-						break;
-	case 'login':    include 'inc/special/login.php';
-				 	 break;
-	case 'newuser':    include 'inc/special/newuser.php';
-				 	 break;
-	case 'newusersubmit':    include 'inc/special/newuser.php';
-				 	 break;
-
-	case 'lostpassword':    include 'inc/special/lostpassword.php';
-				 	 break;
-	case 'lostpasswordsubmit':    include 'inc/special/lostpassword.php';
-				 	 break;
-	case 'resetpassword':    include 'inc/special/resetpassword.php';
-				 	 break;
-	case 'emailaccess':    include 'inc/special/emailaccess.php';
-				 	 break;
-	case 'askemailaccess':    include 'inc/special/askemailaccess.php';
-				 	 break;
-
-	case 'logout':   $swParsedName = 'Logout';
-					 $swParsedContent = swSystemMessage('you-have-logged-out',$lang);
-					 break;
-	
-	case 'upload':   if ($user->hasright('upload', ''))
-					 	include 'inc/special/upload.php';
-				 	 break;
-
-	case 'uploadfile':   if ($user->hasright('upload', ''))
-					 	include 'inc/special/uploadfile.php';
-				 	 break;
-	case 'snapshot':   if ($user->hasright('upload', ''))
-					 	include 'inc/special/snapshot.php';
-				 	 break;
-	
-	case 'install':  include_once 'inc/special/install.php';
-				 	 break;
-	
-	case 'new':      $wiki=new swWiki; $name = '';// no break!
-	case 'edit':
-	case 'editmulti':    
-	case 'editsource': if ($user->hasright('modify', $wiki->name))
-					 	 include 'inc/special/edit.php';
-					  else
-					  	include 'inc/special/view.php';
-				    break;
-	case 'fields': if ($user->hasright('fields', $wiki->name))
-					 	 include 'inc/special/fields.php';
-					  else
-					  	include 'inc/special/view.php';
-				    break;
-						
-	case 'history':	 include 'inc/special/history.php';
-				     break;
-	case 'whatlinkshere' : include 'inc/special/whatlinkshere.php';
-							break;
-	case 'diff':	include 'inc/special/diff.php';
-				     break;
-
-	case 'modify':	
-	case 'modifymulti':	
-	case 'modifyeditor':	
-					$wiki->name = $name;
-					if (trim($name)=='') $swError = swSystemMessage('empty-name',$lang);
-					if (!swValidate($name2,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name2)';
-					if (!swValidate($name,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name)';
-					if ($wiki->status == '' && ! $user->hasright('create', $wiki->name))
-					{
-						$swError = swSystemMessage('no-access-error',$lang);
-					}
-					elseif ($user->hasright('modify', $wiki->name))
-					{
-							// validate globals
-							
-							if (!swGetArrayValue($_POST,'submitmodify',false)&&!swGetArrayValue($_POST,'submitmodifymulti',false)
-								&&!swGetArrayValue($_POST,'submiteditor',false))
-							{
-								$swError = swSystemMessage('not-modify-without-post',$lang);
-							}
-							
-							
-							// check for editing conflict
-							if ($revision > 0 || true)
-							{
-								$w2 = new swWiki();
-								$w2->name = $name;
-								$w2->lookup();
-								$r = $w2->revision;
-								if ($r<>0 && $r > $revision && $w2->status != 'deleted')
-								{
-									if ($revision > 0)
-										$swError = swSystemMessage('editing-conflict',$lang).' name: '.$name.' current: '.$r.' revision: '.$revision;
-									else
-										$swError = swSystemMessage('editing-new-conflict',$lang).' name: '.$name.' current: '.$r.' revision: '.$revision;
-									// set the old current content to the wiki
-									$currentwiki =  new swWiki;
-									$currentwiki->revision = $r;
-									$currentwiki->lookup();
-									
-									
-									$conflictwiki = new swWiki;
-									$conflictwiki->content = $content;
-									
-									$revision0 = $revision;
-									$revision = $r;
-									
-									
-									include_once 'inc/special/editconflict.php';
-								}
-								else
-								{
-								 	$swError = ''; 
-								}
-							}
-							
-							
-							if (!$swError)
-							{
-								$wiki->user = $user->name;
-								
-								if ($action=='modifyeditor')
-								{
-
-									$comment = 'editor '.$_POST['editortemplate'];									
-									$content = '{{'.$_POST['template'].'}}'.PHP_EOL;
-									
-									
-									
-									
-									// print_r($_POST);
-									foreach($_POST as $k=>$v)
-									{
-										if ($k == 'editortemplate') continue;
-										if ($k == 'submiteditor') continue;
-										if ($k == 'name') continue;
-										
-										$v0 = $v;
-										
-										if (is_array($v)) 
-										{
-											// options, keep keys, not values
-											$va = array();
-											foreach($v as $velem)
-												$va[] = swEscape($velem);
-											$v = join('::',array_keys($va));
-										}
-										else
-										{
-											$v = swEscape($v);
-										}
-										
-										if (strstr($k,':')) // textplus
-										{
-											$k = substr($k,0,strpos($k,':'));
-										}
-										
-										if (!$v) continue;
-										
-										if (substr($k,0,strlen('sublang'))=='sublang')
-										{
-											$sublang = substr($k,strlen('sublang')+1);
-											$sublangwiki = new swWiki;
-											$sublangwiki->name = $name.'/'.$sublang;
-											$sublangwiki->lookup();
-											if ($sublangwiki->content != '{{}}'.PHP_EOL.$v)
-											{
-												$sublangwiki->content = '{{}}'.PHP_EOL.$v;
-												$sublangwiki->comment = $comment;
-												$sublangwiki->insert();
-											}
-											continue;
-										}
-										
-										if ($k == 'unusedtext')	
-										{
-											$content .= $v0.PHP_EOL;
-											continue;
-										}								
-										
-										$content .= '[['.$k.'::'.$v.']]'.PHP_EOL;
-									}
-									$content .= '[[editortemplate::'.$_POST['editortemplate'].']]'.PHP_EOL;
-									$wiki->content = $content;
-									
-								}
-								else
-									$wiki->content = str_replace("\\",'',$content);
-								$wiki->comment = str_replace("\\",'',$comment);
-								$wiki->insert();
-
-								
-								
-								echotime('reset wiki');
-								// do like view now
-								$wiki->content = '';
-								$wiki->revision = 0;
-								$wiki->persistance = '';
-								$swParsedName = 'Saved: '.$wiki->name;
-								$wiki->lookupLocalName(); // 1.7.1 reactivated, to render local, don't know why it was deactivated
-								$wiki->lookup();
-								$wiki->parsers = $swParsers;
-								$swParsedContent = $wiki->parse();
-							}
-							else
-							{
-								$swParsedContent = $swError;
-							}
-					}
-					else
-					{
-						$swError = swSystemMessage('no-access-error',$lang);
-					}
-				    break;
-	
-	case 'rename':
-					if ($user->hasright('rename', $wiki->name))
-					{
-					 		$swEditMenus[] = '<a href="'.$wiki->link('').'">'.swSystemMessage('view',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('history').'">'.swSystemMessage('history',$lang).'</a>';
-							
-							$wiki->user = $user->name;
-							$name2 = str_replace("\\",'',$name2);
-							
-							if ($name2 != $wiki->name)
-							{
-								$wiki2 = new swWiki;
-								$wiki2->name = $wiki->name;
-								$wiki2->user = $user->name;
-								$wiki2->content = '#REDIRECT [['.$name2.']]';
-								$wiki2->insert();
-								$wiki->name = $name2;
-							}
-							
-							$wiki->insert();
-							
-							$subpages = '';
-							if (isset($_REQUEST['renamesubpages']) && $_REQUEST['renamesubpages'] )  // do it again for all subpages
-							{
-								foreach($swLanguages as $ln)
-								{
-									
-									$wiki2 = new swWiki;
-									$wiki2->name = $name.'/'.$ln;
-									$wiki2->lookup();
-									if ($wiki2->revision > 0)
-									{
-										$wiki3 = new swWiki;
-										$wiki3->name = $name2.'/'.$ln;
-										$wiki3->content = $wiki2->content;
-										$wiki3->user = $user->name;
-										$wiki3->insert();
-										$wiki2->content = '#REDIRECT [['.$name2.'/'.$ln.']]';
-										$wiki2->insert();
-										$subpages.=' /'.$ln;
-									}
-								}
-							
-							
-							}
-
-							$swParsedName = 'Renamed: '.$name2.$subpages;
-							$swParsedContent = $wiki->parse();
-
-					}
-					else
-					{
-						$swError = swSystemMessage('no-access-error',$lang);
-					}
-				    break;
-
-	
-	
-	case 'delete': 	
-					if ($user->hasright('delete', $wiki->name))
-					{
-						if (!swGetArrayValue($_POST,'submitdelete',false) && !swGetArrayValue($_POST,'submitdeletewithfile',false))
-						{
-								$swError = swSystemMessage('not-delete-without-post',$lang);
-								
-						}
-						else
-						{
-							$wiki->user = $user->name;
-							$wiki->delete();
-							$swParsedName = 'Deleted: '.$name;
-							
-							if (swGetArrayValue($_POST,'submitdeletewithfile',false))
-							{
-								$path = $swRoot.'/site/files/'.str_replace('Image:','',$wiki->name);
-								@unlink($path);
-								
-								$swParsedName = 'Deleted with file: '.$name;
-							}
-							
-							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
-						}
-					}
-					else
-					{
-						$swError = swSystemMessage('no-access-error',$lang);
-					 }
-					 break;						
-
-	case 'protect': 	if ($user->hasright('protect', $wiki->name))
-						{
-							$wiki->user = $user->name;
-							$wiki->protect();
-							$swParsedName = 'Protected: '.$name;
-							$swParsedContent = $wiki->parse();
-							$swEditMenus[] = '<a href="'.$wiki->link('').'">'.swSystemMessage('view',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('history').'">'.swSystemMessage('history',$lang).'</a>';
-						}
-						else
-						{
-							$swError = swSystemMessage('no-access-error',$lang);
-					    }
-					 break;						
-
-	case 'unprotect': 	if ($user->hasright('protect', $wiki->name))
-						{
-							$wiki->user = $user->name;
-							$wiki->unprotect();
-							$swParsedName = 'Unprotected: '.$name;
-							$swParsedContent = $wiki->parse();
-							$swEditMenus[] = '<a href="'.$wiki->link('').'">'.swSystemMessage('view',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('history').'">'.swSystemMessage('history',$lang).'</a>';
-						}
-						else
-						{
-							$swError = swSystemMessage('no-access-error',$lang);
-					    }
-					 break;						
-
-	
-	case 'revert':		if ($user->hasright('modify', $wiki->name))
-						{
-							$swEditMenus[] = swSystemMessage('view',$lang);
-							$swEditMenus[] = '<a href="'.$wiki->link('edit').'">'.swSystemMessage('edit',$lang).'</a>';
-							$swEditMenus[] = '<a href="'.$wiki->link('history').'">'.swSystemMessage('history',$lang).'</a>';
-							
-							$wiki->user = $user->nameshort();
-							$wiki->insert();
-							
-							$swParsedName = 'Reverted: '.$wiki->name;
-							$swParsedContent = $wiki->parse();
-
-						}
-						else
-						{
-							$swError = swSystemMessage('no-access-error',$lang);
-						}
-						break;
-	
-	
-	case 'search':		include 'inc/special/search.php';
-						break;
-	
-	
-	case 'indexerror':	include 'inc/special/indexerror.php';
-						break;
-	default: 			
-						if (isset($swActionHookFile))
-							include $swActionHookFile;
-						else	
-							include 'inc/special/view.php';
-
-}
-
-if ($swRedirectedFrom)
-	$swParsedContent .= '<p><i>Redirected from '.$swRedirectedFrom.'</i></p>';
-	
-
-if (count($swEditMenus) == 1) $swEditMenus = array();
-// add menus by user rights
-$menudomains = swGetValue($user->content,'_menu',true);
-{
-	foreach($menudomains as $v)
-	{
-		$swEditMenus['-'.$v] = '<a href="index.php?name='.$v.'" rel="nofollow">'.$v.'</a>';
-	}
-}
-
-
+flush();
 
 // do cron job
 
@@ -1047,7 +897,7 @@ $db->close();
 session_write_close();
 
 if (isset($swOvertime) && $swOvertime)
-if (isset($_POST))
+if (isset($_POST) || @$swPreventOvertimeSearchAgain)
 	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang);
 else
 	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
@@ -1065,7 +915,8 @@ echotime("skin");
 /* SOFADOC_INCLUDE inc/skins/zeitung.php */
 
 // apply page skin
-if (!array_key_exists(@$skin,$swSkins)) $skin = 'default';
+
+if (!array_key_exists($skin,$swSkins)) $skin = 'default';
 if ($swSkins[$skin])
 	$templatefile = $swSkins[$skin];
 else
@@ -1078,6 +929,7 @@ else
 	die('missing page template '.$templatefile);
 
 
+flush();
 
 // debug
 

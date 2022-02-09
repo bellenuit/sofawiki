@@ -183,7 +183,7 @@ function swGetAllFields($s,$allowinternalvariables=false)
 		
 	foreach ($matches as $v)
 	{
-		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		// if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
 		
 		$key = $v[1];
 		$value = $v[2];
@@ -216,19 +216,18 @@ function swGetAllFields($s,$allowinternalvariables=false)
 	
 	$result['_link'] = array();
 	
-	preg_match_all("@\[\[(.*?)(?:(?:\|)(.*?))?\]\]@", $s, $matches, PREG_SET_ORDER);	
-	
+	preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
 	
 	
 	foreach ($matches as $v)
 	{
-		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
-		if (strstr($v[0], '::') || strstr($v[0], 'Category:')) continue;
-		
+		if (strstr($v[0],'::')) continue;            								     
+	
 		$value = $v[1];
 		
-		if (!in_array($value, $result['_link']))
-		$result['_link'][] = $value;
+		if (in_array($value, $result['_category'])) continue;
+		
+		if (!in_array($value, $result['_link'])) $result['_link'][] = $value;
 		
 	}	
 	

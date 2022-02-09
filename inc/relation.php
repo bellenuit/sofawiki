@@ -617,12 +617,16 @@ class swRelationLineHandler
 
 									break;
 				case 'input': 		$fieldgroup = explode(',',$body);
-									$this->result .=  $ptag.'<nowiki><form method="post" action="index.php?name=</nowiki>{{nameurl |{{currentname}} }}<nowiki>"></nowiki>';
-									//$this->result .= '<nowiki><input type="hidden" name="name" value="</nowiki>{{currentname}}<nowiki>">'.$ptag2.'</nowiki>';
+									$this->result .=  $ptag.'<nowiki><div class="editzone">';
+									$this->result .= '<div class="editheader">Input</div>';
+									
+									$this->result .='<form method="post" action="index.php?name=</nowiki>{{nameurl |{{currentname}} }}<nowiki>"></nowiki>';
+									$this->result .=  '<nowiki><input type="submit" name="submitinput" value="Submit"></nowiki>';
+
 									if (isset($_REQUEST['q']))
 									$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
 
-									$this->result .=  '<nowiki><table class="input"></nowiki>';
+									
 									$inputfields = array();
 									foreach($fieldgroup as $fg)
 									{
@@ -660,11 +664,11 @@ class swRelationLineHandler
 											
 										switch($fieldtype)
 										{
-											case 'textarea': $this->result .= '<nowiki><tr><td>'.$field.'</td><td><textarea name="'.$field.'" rows="12" cols="80">'.$tx.'</textarea></td></tr></nowiki>'; break;
+											case 'textarea': $this->result .= '<nowiki><p>'.$field.'<textarea name="'.$field.'" rows="5" >'.$tx.'</textarea></nowiki>'; break;
 											
 											case 'select': $txoption = explode('|',$txdefault);
 													
-															$this->result .= '<nowiki><tr><td>'.$field.'</td><td><select name="'.$field.'"></nowiki>';										
+															$this->result .= '<nowiki><p>'.$field.'<select name="'.$field.'"></nowiki>';										
 															
 															
 															foreach($txoption as $o)
@@ -674,15 +678,14 @@ class swRelationLineHandler
 																$this->result .= '<nowiki><option value="'.$o.'" '.$sel.'>'.$o.'</option></nowiki>';
 															}
 															
-															$this->result .= '<nowiki></select></td></tr></nowiki>';
+															$this->result .= '<nowiki></select></nowiki>';
 															break;
-											default: $this->result .= '<nowiki><tr><td>'.$field.'</td><td><input type="text" name="'.$field.'" value="'.$tx.'"></td></tr></nowiki>';
+											default: $this->result .= '<nowiki><p>'.$field.'<input type="text" name="'.$field.'" value="'.$tx.'"></nowiki>';
 											}
 										
 									}
-									$this->result .=  '<nowiki><tr><td></td><td><input type="submit" name="submitinput" value="submit"></td></tr></nowiki>';
-									$this->result .=  '<nowiki></table></nowiki>';
-									$this->result .=  '<nowiki></form></nowiki>';
+																		
+									$this->result .=  '<nowiki></form></div></nowiki>';
 									
 									if (isset($_POST['submitinput']))
 									{

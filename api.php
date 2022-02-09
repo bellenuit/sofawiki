@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.6.3';  
+$swVersion = '3.7.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -81,6 +81,8 @@ include_once $swRoot.'/inc/wiki.php';
 include_once $swRoot.'/inc/relation.php';
 include_once $swRoot.'/inc/relationfilter.php';
 
+include_once $swRoot.'/inc/editortemplate.php';
+
 // external code
 include_once $swRoot.'/inc/diff.php';
 include_once $swRoot.'/inc/zip.php';
@@ -110,6 +112,8 @@ include_once $swRoot.'/inc/functions/schedule.php';
 include_once $swRoot.'/inc/functions/relation.php';
 include_once $swRoot.'/inc/functions/charts.php';
 include_once $swRoot.'/inc/functions/translate.php';
+include_once $swRoot.'/inc/functions/preventovertimesearchagain.php';
+include_once $swRoot.'/inc/functions/upload.php';
 
 
 
@@ -121,8 +125,8 @@ include_once $swRoot.'/inc/parsers/redirection.php';
 include_once $swRoot.'/inc/parsers/displayname.php';
 include_once $swRoot.'/inc/parsers/tidy.php';
 include_once $swRoot.'/inc/parsers/category.php';
-include_once $swRoot.'/inc/parsers/templates.php';
 include_once $swRoot.'/inc/parsers/fields.php';
+include_once $swRoot.'/inc/parsers/templates.php';
 include_once $swRoot.'/inc/parsers/images.php';
 include_once $swRoot.'/inc/parsers/links.php';
 include_once $swRoot.'/inc/parsers/style.php';
@@ -182,6 +186,8 @@ $swSpecials['Uncategorized Pages'] = 'uncategorizedpages.php';
 $swSpecials['Import'] = 'import.php';
 $swSpecials['Tickets'] = 'tickets.php';
 $swSpecials['Wanted Pages'] = 'wantedpages.php';
+$swSpecials['Field Search'] = 'fieldsearch.php';
+$swSpecials['Upload Big'] = 'uploadbig.php';
 
 /*
 	initialize variables
@@ -206,6 +212,7 @@ $swDenyCount = 5;
 $swLogCount = 500;
 $swLogNameSpace = '';
 $swMaxFileSize = 8000000;
+$swMaxBigFileSize = 1024*1024*1024*10;
 $swMemoryLimit = 100000000;
 
 $swNewUserFormFields = array();
@@ -268,15 +275,15 @@ if (defined('SOFAWIKIINDEX'))
 		}
 		else
 		{
-			$lang = swHandleCookie("lang",$swDefaultLang); 
+			$lang = swHandleCookie("lang",$swDefaultLang,$swUserCookieExpiration); 
 		}
 		
 	}
 	else
 	{
-		$lang = swHandleCookie("lang",$swDefaultLang); 
+		$lang = swHandleCookie("lang",$swDefaultLang,$swUserCookieExpiration); 
 	}
-	$skin = swHandleCookie("skin",$swDefaultSkin);
+	$skin = swHandleCookie("skin",$swDefaultSkin,$swUserCookieExpiration);
 }
 
 $swIndexError = false;
@@ -354,11 +361,13 @@ function swSystemMessage($msg,$lang,$styled=false)
 	{
 		$langmsg =  $msg.'/'.$lang;
 		$langmsgurl =  swNameURL($msg).'/'.$lang;
+		$langen =  swNameURL($msg).'/en';
 	}
 	else
 	{
 		$langmsg =  $msg.'/'.$swDefaultLang;
 		$langmsgurl =  swNameURL($msg).'/'.$swDefaultLang;
+		$langen =  swNameURL($msg).'/en';
 	}
 		
 	$w->name = 'System:'.$langmsgurl;
@@ -385,6 +394,13 @@ function swSystemMessage($msg,$lang,$styled=false)
 		{
 			$swSystemSiteValues[$langmsg] = $swSystemDefaults[$langmsgurl];
 		}
+		
+		// english
+		elseif (array_key_exists($langen,$swSystemDefaults))
+		{
+			$swSystemSiteValues[$langmsg] = $swSystemDefaults[$langen];
+		}
+
 		
 		// nor found, return texto
 		else

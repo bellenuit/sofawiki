@@ -160,4 +160,13 @@ $swSystemDefaults["next/de"] = "Nächste";
 
 $swSystemDefaults["cacherefresh/de"] = "Cache zurücksetzen";
 
+$swSystemDefaults["viewmenu/de"] = "Ansicht";
+$swSystemDefaults["editmenu/de"] = "Bearbeiten";
+$swSystemDefaults["newmenu/de"] = "Neu";
+$swSystemDefaults["listmenu/de"] = "Liste";
+$swSystemDefaults["specialmenu/de"] = "Spezial";
+$swSystemDefaults["new-page/de"] = "Neuer Artikel";
+$swSystemDefaults["edit-page/de"] = "Artikel bearbeiten";
+
+
 ?>

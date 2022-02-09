@@ -66,7 +66,7 @@ class swRecord extends swPersistance
 			$this->name .= '/'.$lang;
 			//echotime($this->name);
 			$this->lookupName();
-			if (($this->persistance || $this->revision) && $this->status != 'deleted')
+			if (($this->status == 'ok' || $this->status == 'protected') && trim($this->content))  // 3.7.0 new rule: Empty subpages are ignored.
 				return $this->name;
 				
 			// didn't work
@@ -361,7 +361,8 @@ class swRecord extends swPersistance
 			else
 			{
 				$this->content = '';
-				$this->error ='No record with this name'; 
+				//ignore system
+				if (!substr($this->name,0,7 != 'system:')) $this->error ='No record with this name';
 				/*
 				$this->revision = 0;
 				$this->persistance = $this->currentPath();
@@ -373,7 +374,7 @@ class swRecord extends swPersistance
 			
 		}
 		
-		$this->error ='No name, no revision'; 
+		if (!substr($this->name,0,7 != 'system:')) $this->error ='No name, no revision'; 
 		
 	}
 	

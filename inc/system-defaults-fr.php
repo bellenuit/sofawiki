@@ -170,6 +170,13 @@ $swSystemDefaults["next/fr"] = "suivant";
 
 $swSystemDefaults["cacherefresh/fr"] = "Cache Refresh";
 
+$swSystemDefaults["viewmenu/fr"] = "Voir";
+$swSystemDefaults["editmenu/fr"] = "Editer";
+$swSystemDefaults["newmenu/fr"] = "Créer";
+$swSystemDefaults["listmenu/fr"] = "Liste";
+$swSystemDefaults["specialmenu/fr"] = "Spécial";
+$swSystemDefaults["new-page/fr"] = "Nouvelle page";
+$swSystemDefaults["edit-page/fr"] = "Editer page";
 
 
 ?>

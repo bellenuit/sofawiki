@@ -5,7 +5,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 //print_r($_POST);
 
 $wiki->lookup(); 
-$swParsedName = swSystemMessage('fields',$lang).' '.$wiki->name; 
+$swParsedName = $wiki->name; 
 
 $addrows = 0; if (isset($_POST['addrows'])) $addrows = $_POST['addrows'];
 $addcolumns = 0; if (isset($_POST['addcolumns'])) $addcolumns = $_POST['addcolumns'];
@@ -14,15 +14,7 @@ $addcolumns = 0; if (isset($_POST['addcolumns'])) $addcolumns = $_POST['addcolum
 if (isset($_POST['fieldaddrow'])) $addrows++; 
 if (isset($_POST['fieldaddcolumn'])) $addcolumns++; 
 
-if (isset($_POST['fieldmakepermanent']))
-{
-	$s = $wiki->content;
-	$s = '{{fields}}'.PHP_EOL.$s;
-	$wiki->content = $s;
-	$wiki->insert();
 
-	
-}
 
 if (isset($_POST['fieldsubmitmodify']) && $_POST['fieldsubmitmodify'])
 {
@@ -79,7 +71,7 @@ if (isset($_POST['fieldsubmitmodify']) && $_POST['fieldsubmitmodify'])
 	
 	$addrows = $addcolumns = 0;
 	
-	$swParsedName = swSystemMessage('fields-saved',$lang).' '.$wiki->name; 
+	$swStatus = swSystemMessage('fields-saved',$lang).' '.$wiki->name; 
 
 	
 }
@@ -113,7 +105,11 @@ else
 		if ($key == '_category') continue;
 		$maxcols = max($maxcols,count($valuelist));
 	}
-
+	
+	$minwidth = ($maxcols+$addcolumns) * 100;
+	
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone" style="min-width: '.$minwidth.'px">';
+	$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("fields",$lang).'</div>';
 	
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php?action=fields">';
 	$swParsedContent .= PHP_EOL.'<input type="hidden" name="revision" value="'.$wiki->revision.'">';
@@ -123,9 +119,7 @@ else
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldaddrow" value="'.swSystemMessage('add-row',$lang).'">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldeditheader" value="'.swSystemMessage('edit-header',$lang).'">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldsubmitmodify" value="'.swSystemMessage('save',$lang).'">';
-	if (!stristr($wiki->content,'{{fields}}'))
-	$swParsedContent .= PHP_EOL.'<input type="submit" name="fieldmakepermanent" value="'.swSystemMessage('make-permanent',$lang).'">';
-	$swParsedContent .= PHP_EOL.'<p><table class="fieldseditor blanktable">';
+	$swParsedContent .= PHP_EOL.'<p><table class="fieldseditor">';
 		
 		$swParsedContent .= PHP_EOL.' <tr>';
 		foreach($wiki->internalfields as $key=>$valuelist)
@@ -135,13 +129,13 @@ else
 			if ($key == '_category') continue;
 			
 			if (isset($_POST['fieldeditheader']))
-				$swParsedContent .= PHP_EOL.'   <th><input type="text" name="_newkey'.$key.'" value="'.$key.'"></th>';
+				$swParsedContent .= PHP_EOL.'   <th class="key"><input type="text" name="_newkey'.$key.'" value="'.$key.'"></th>';
 			else
-				$swParsedContent .= PHP_EOL.'  <th>'.$key.'</th>';
+				$swParsedContent .= PHP_EOL.'  <th class="key"><input type="text" name="_readonly'.$key.'" value="'.$key.'" readonly></th>';
 			$maxcols = max($maxcols,count($valuelist));
 		}
 		for ($j=1;$j<=$addcolumns;$j++)
-			$swParsedContent .= PHP_EOL.'   <th><input type="text" name="_newkey'.$j.'" value=""></th>';
+			$swParsedContent .= PHP_EOL.'   <th class="key"><input type="text" name="_newkey'.$j.'" value=""></th>';
 		$swParsedContent .= PHP_EOL.' </tr>';
 		
 		
@@ -168,7 +162,7 @@ else
 				$swParsedContent .= PHP_EOL.'  <td class="value">'.$t.'</td>';
 			}
 			for ($j=1;$j<=$addcolumns;$j++)
-				$swParsedContent .= PHP_EOL.'   <td><input type="text" name="_newvalue'.$j.':'.$i.'" value=""></td>';
+				$swParsedContent .= PHP_EOL.'   <td class="value"><input type="text" name="_newvalue'.$j.':'.$i.'" value=""></td>';
 	
 			$swParsedContent .= PHP_EOL.' </tr>';
 		}
@@ -178,8 +172,10 @@ else
 	
 	$swParsedContent .= PHP_EOL.'</table>';
 	$swParsedContent .= PHP_EOL.'</form>';
-	$swParsedContent .= PHP_EOL.'<p><i>Limits: All fields are added at the end of the page. Empty fields are removed.</i>';
-	$swParsedContent .= PHP_EOL.'<p><div class="preview">'.$wiki->parse().PHP_EOL.'</div>';
+	
+	$swParsedContent .= PHP_EOL.'<div id="help">'.swSystemMessage("fields-help",$lang).'</div><!-- help -->';	
+	$swParsedContent .= PHP_EOL.'</div><!-- editzone -->';
+
 
 }				
 

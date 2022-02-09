@@ -99,8 +99,12 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 	
 	$bitmaps = array();
 	
+	global $swMemoryLimit;
+	
 	for($i = $l;$i>0;$i--)
 	{
+		if (memory_get_usage()>$swMemoryLimit) continue;
+		
 		$nowtime = microtime(true);	
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
 		if ($dur>3*$swMaxSearchTime) 
@@ -155,11 +159,9 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 			foreach($vs as $v)
 			{
 				$vu = swNameURL($v);
-				$cs = str_split($vu);
-				
-				
-				foreach($cs as $c)
+				for($ci=0;$ci<strlen($vu);$ci++)
 				{
+					$c = substr($vu,$ci,1);
 					if (!isset($bitmaps[$k.' '.$c])) $bitmaps[$k.' '.$c] = new swBitmap;
 					$bitmaps[$k.' '.$c]->setbit($i);
 				}
@@ -262,7 +264,34 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	return $result;	
 }
 
+/**
+ *  Returns a list of fields (key) indexed with monogram as well as the letters present (value)
+ */
 
+function swMonogramFields()
+{
+	global $swMonogramIndex;
+	
+	if (!$swMonogramIndex) swOpenMonogram();
+
+	
+	$list = array();
+ 	$key = swDbaFirstKey($swMonogramIndex);
+ 	do 
+ 	{
+		 $ks = explode(' ',$key);
+		 
+		 
+		 if (count($ks)>1)
+		 {
+			 $list[$ks[0]][] = $ks[1];
+		 }	
+ 	}
+ 	while ($key = swDbaNextKey($swMonogramIndex));
+ 	
+
+ 	return $list;
+}
 
 
 

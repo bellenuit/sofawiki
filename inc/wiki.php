@@ -168,6 +168,22 @@ class swWiki extends swRecord
 		return $s;
 		
 	}
+	
+	function language()
+	{	
+		
+		$s= $this->name;
+		$i=strpos($s,"/");
+		if ($i>-1)
+		{	
+			$s= substr($this->name,$i+1);
+		}
+		else
+			$s= '--';
+				
+		return $s;
+		
+	}
 
 	function localname($lang)
 	{
@@ -260,7 +276,16 @@ class swWiki extends swRecord
 			if (!$result) 
 				$result = $swMainName;			
 			if ($swLangURL)
-				$result = $subpagelang.'/'.swNameURL($this->namewithoutlanguage()); // don't double language
+			{
+				if ($subpagelang && $subpagelang != '--')
+				{
+					$result = $subpagelang.'/'.swNameURL($this->namewithoutlanguage()); // don't double language
+				}
+				else
+				{
+					$result = swNameURL($this->namewithoutlanguage()); // don't double language
+				}
+			}
 			if (stristr($this->name,":"))
 				$result = './'.$result; // force relative link
 				

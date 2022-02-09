@@ -98,17 +98,6 @@ if ($action == 'lostpasswordsubmit')
 	
 }
 
-
-if ($swError)
-{
-	$err = '<p class="error">'.$swError;
-	$swError = '';
-}
-else
-{
-	$err = '';
-}
-
 $swParsedName = swSystemMessage('lost-password',$lang);
 
 if ($submitted)
@@ -125,21 +114,24 @@ if ($submitted)
 else
 {
 
-$swParsedContent = $err.'<div id="editzone">
+	$swParsedContent = '<div id="editzone" class="editzone">
+		<div class="editheader">'.swSystemMessage("lost-password-header",$lang).'</div>
 		<form method="post" action="index.php">
-		<table class="blanktable" ><tr><td>'.swSystemMessage('email',$lang).'</td><td>
-		<input type="text" name="email" value=""/>'.$eac.'
-		<input type="hidden" name="action" value="lostpasswordsubmit" /></td></tr><tr><td></td><td>
-		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" /></td></tr></table>
-	</form>.';
+		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" />
+		<p>'.swSystemMessage('email',$lang).'</p>
+		<input type="text" name="email" value=""/>
+		<input type="hidden" name="action" value="lostpasswordsubmit" />
+		';
+	
+	$swParsedContent .='</form>';
 	
 	if (isset($swOldPasswordReset) && $swOldPasswordReset ) //depreciated
-		$swParsedContent .=	'<div id="help">'.swSystemMessage("lost-password-help",$lang).'</div>';
+		$swParsedContent .=	'<div id="help" class="editfooter">'.swSystemMessage("lost-password-help",$lang).'</div>';
 	else
-		$swParsedContent .=	'<div id="help">'.swSystemMessage("lost-reset-password-help",$lang).'</div>';
-	$swParsedContent .='
-	</div>
-	';
+		$swParsedContent .=	'<div id="help" class="editfooter">'.swSystemMessage("lost-reset-password-help",$lang).'</div>';
+	
+	
+	$swParsedContent .='</div>';
 }
 
 

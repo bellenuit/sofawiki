@@ -13,13 +13,16 @@ if ($submitrefresh)
 	$swDebugRefresh = true;
 
 
-$swParsedContent = '<div id="editzone"><form method="post" action="index.php">
-		<p>
-		<input type="hidden" name="name" value="special:query" />
-		<textarea name="q" rows=8 cols=180 style="width:100%">'.$q.'</textarea>
-		<input type="submit" name="submit" value="Search" />
-		<input type="submit" name="submitrefresh" value="Search Refresh" />
-		<input type="submit" name="submitverbose" value="Verbose" /></form>';
+$swParsedContent = '<div id="editzone" class="editzone">
+<div class="editheader">Query</div>
+<form method="post" action="index.php">
+<input type="hidden" name="name" value="special:query" />
+<input type="submit" name="submit" value="Search" />
+<input type="submit" name="submitrefresh" value="Search Refresh" />
+<input type="submit" name="submitverbose" value="Verbose" />
+<textarea name="q" rows=8>'.$q.'</textarea>
+		</form>
+</div><!-- editzone -->';
 
 
 

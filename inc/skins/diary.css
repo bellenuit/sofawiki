@@ -1,71 +1,8 @@
-body
+#appmenu a
 {
-	background-color: lightyellow;	
-	font-family: Georgia, Serif;
-	font-size: 18px;
-	line-height: 30px;
+	color: black;
 }
 
-h1 
-{
-	font-size: 24px;
-	line-height: 42px;
-}
-
-h1, h2, h3, h4, h5 {  }
-
-del 
-{
-	color: red;
-}
-ins 
-{
-	color: green; text-decoration: none;
-}
-
-a
-{
-	color: gray;
-}
-
-a.invalid
-{
-	color: red;
-}
-
-span.error 
-{
-	color: red;
-}
-span.found 
-{
-	color: green;
-}
-
-#info
-{
-	color: gray;
-	font-size: 80%;
-	padding-top: 32px;
-} 
-
-#header
-{
-	color: gray;
-	position: absolute;
-	left: 40px;
-	top: 10px;
-}
-
-#header a
-{
-	text-decoration: none;
-}
-
-#help
-{
-	background-color: lightgreen;
-} 
 
 #editmenu
 {
@@ -87,6 +24,33 @@ span.found
 {
 	color: gray;
 } 
+
+#header
+{
+	color: gray;
+	position: absolute;
+	left: 40px;
+	top: 10px;
+}
+
+#header a
+{
+	text-decoration: none;
+}
+
+#help
+{
+	background-color: lightgreen;
+} 
+
+#info
+{
+	color: gray;
+	font-size: 80%;
+	padding-top: 32px;
+} 
+
+
 
 
 #langmenu
@@ -126,6 +90,13 @@ span.found
 	color: gray;
 } 
 
+#page
+{
+	font-size: 18px;
+	line-height: 30px;
+
+}
+
 #search
 {
 	color: gray; 
@@ -156,10 +127,37 @@ span.found
 	position: absolute;
 }
 
-#footer
+
+
+
+a
 {
+	color: gray;
+}
+
+a.invalid
+{
+	color: red;
+}
+
+body
+{
+	background-color: lightyellow;	
+	font-family: Georgia, Serif;
 	
 }
+
+del 
+{
+	color: red;
+}
+
+h1 
+{
+	font-size: 24px;
+	line-height: 42px;
+}
+
 
 iframe.youtube
 {
@@ -167,17 +165,36 @@ iframe.youtube
 	height: 385px;
 }
 
+img.yfrog
+{
+	width: 640px;
+}
+
+ins 
+{
+	color: green; text-decoration: none;
+}
+
+
+
+span.error 
+{
+	color: red;
+}
+span.found 
+{
+	color: green;
+}
+
+
 video.yfrog
 {
 	width: 640px;
 	height: 360px;
 }
 
-img.yfrog
-{
-	width: 640px;
-}
 
 
 
-td { vertical-align: top;  width: 50% }
+
+td { vertical-align: top; }

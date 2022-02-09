@@ -1,23 +1,7 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<base href="<?php echo $swBaseHrefFolder ?>">
-<title><?php echo $swParsedName ?></title>
-<link rel='stylesheet' href="inc/skins/law.css"/>
-<style><?php echo $swParsedCSS ?></style>
-</head>
-<body>
-
-<div id='header'>
-<?php
-	echo swSystemMessage("skin-header",$lang, true);
+<?php 
+$skinstylesheet = '<link rel="stylesheet" href="inc/skins/law.css"/>';
+include 'header.php';
 ?>
-</div>
-
-
-
-
 
 
 <div id='langmenu'>
@@ -38,8 +22,6 @@
 	else
 		echo "<div id='editmenu0'>\r\n";
 		
-	foreach($swEditMenus as $item) {echo $item."<br/>\r\n"; }
-	echo "<br/>";
 	foreach($swLoginMenus as $item) {echo $item."<br/>\r\n" ; }
 	echo "<span class='error'>$swError</span>\r\n";
 ?>
@@ -64,5 +46,5 @@ $swParsedContent
 
 
 
-</body>
-</html>
+<?php 
+include 'footer.php';

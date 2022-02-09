@@ -921,7 +921,13 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
-				if (memory_get_usage()>$swMemoryLimit) continue;
+				if (memory_get_usage()>$swMemoryLimit)
+				{
+					echotime('overmemory '.memory_get_usage());
+					$overtime = true;
+					$swOvertime = true;
+					break;
+				}
 				
 				
 				if (!$tocheckbitmap->getbit($k)) continue; // we already have ecluded it from the list

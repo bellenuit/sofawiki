@@ -9,7 +9,9 @@ $root = "$swRoot/site/logs/";
 $files = glob($root."*.txt");
 arsort($files);
 
-$swParsedContent .= "\n<form method='get' action='index.php'><p>";
+$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("logs",$lang).'</div>';
+$swParsedContent .= "\n<form method='get' action='index.php'>";
 // $swParsedContent .= "\n<select name='file'>";
 
 $query = swGetArrayValue($_REQUEST,'query');
@@ -101,7 +103,9 @@ if (swGetArrayValue($_REQUEST,'submitconsolidate',false) || defined("CRON") )
 if (!defined("CRON"))
 {
 // $swParsedContent .= "\n</select>";
-$swParsedContent .= "\n<input type='hidden' name='name' value='special:logs'><p>";
+$swParsedContent .= "<input type='submit' name='submit' value='Query' />";
+$swParsedContent .= "<input type='submit' name='submitsave' value='Query and save to page' />";
+$swParsedContent .= "<input type='hidden' name='name' value='special:logs'><p>";
 $swParsedContent .= "\nStart <input type='text' name='datestart' value='$datestart' /> ";
 $swParsedContent .= "\nEnd <input type='text' name='dateend' value='$dateend' />";
 $swParsedContent .= "\nFilter <input type='text' name='query' value='$query' />";
@@ -109,12 +113,12 @@ $swParsedContent .= "\n<p><input type='checkbox' name='regex' value='1' $checked
 $swParsedContent .= "\n<input type='checkbox' name='unique' value='1' $uniquechecked /> Unique";
 $swParsedContent .= "\n<input type='checkbox' name='stats' value='1' $statschecked /> Statistics";
 $swParsedContent .= "\n<input type='checkbox' name='table' value='1' $tablechecked /> Table";
-$swParsedContent .= "\n<p><input type='submit' name='submit' value='Query' />";
-$swParsedContent .= "\n<input type='submit' name='submitsave' value='Query and save to page:' />";
+$swParsedContent .= '<p>Page name</p>';
 $swParsedContent .= "\n<input type='text' name='savename' value='$savename' />";
 //$swParsedContent .= "\n<p><input type='submit' name='submitconsolidate' value='Consolidate Logs (1 day at a click)' />";
 //$swParsedContent .= "\n<input type='submit' name='submitdeleteold' style='color:red' value='Delete logs older than one year' />";
 $swParsedContent .= "\n</p><form>";
+$swParsedContent .= PHP_EOL.'</div><!-- editzone -->';
 }
 
 $rawlines = array();

@@ -55,7 +55,7 @@ class swUser extends swRecord
 			
 			
 			
-			if ($name == '?') { return true;}
+			if ($name == '?') {return true;}
 			
 			if ($right == '*') { return true;}// power users
 			

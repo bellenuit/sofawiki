@@ -17,13 +17,13 @@ if ($filename=="")
 
 if (is_uploaded_file($_FILES['uploadedfile']['tmp_name']))
 	{
-	   $swParsedContent .= "\nFile ".$filename.' uploaded.';
+	   $swStatus .= "\nFile ".$filename.' uploaded. ';
 	   
 	   $newfile = $swRoot.'/site/files/'.$filename;
 	   if (file_exists($newfile))
 	   {
 	   		if (isset($_POST['deleteexisting']))
-	   			$swParsedContent .= '<br/>Deleting existing file.';
+	   			$swStatus .= 'Deleting existing file. ';
 	   		else
 	   		{
 	   			$filename0 = $filename;
@@ -39,7 +39,7 @@ if (is_uploaded_file($_FILES['uploadedfile']['tmp_name']))
 	   				$filename = $froot.$i.'.'.$fext;
 	   				$newfile = $swRoot.'/site/files/'.$filename;
 	   			}
-	   			$swParsedContent .= '<br/>Renaming uploaded file as: '.$filename;
+	   			$swStatus .= 'Renaming uploaded file as: '.$filename.'. ';
 	   		}
 	   }
 	   
@@ -47,16 +47,16 @@ if (is_uploaded_file($_FILES['uploadedfile']['tmp_name']))
 		  {
 		  // if an error occurs the file could not
 		  // be written, read or possibly does not exist
-		  $swParsedContent =  '<br/><span class="error">Error Uploading File. '.$newfile.'</span>';
+		  $swError .=  '<br/><span class="error">Error Uploading File. '.$newfile.'</span>';
 	   }
 	   else
 	   {
-			$swParsedContent .=  '<br/>OK.';
+			$swStatus .=  'OK. ';
 	   }
 	}
 	else
 	{
-		$swParsedContent .=  '<br/><span class="error">Error: File '.$filename.' not uploaded.</span>';
+		$swError .=  'Error: File '.$filename.' not uploaded. ';
 	}
 
 
@@ -68,8 +68,8 @@ $wiki->content = str_replace("\\",'',$content)
 if ($filename != "")
 	$wiki->insert();
 
-$swParsedContent .=  '<br/><a href="'.$wiki->link('').'">Image:'.$filename.'</a>';
-$swParsedContent .=  '<br/><img src="site/files/'.$filename.'">';
+$swParsedContent .=  '<p><a href="'.$wiki->link('').'">Image:'.$filename.'</a>';
+$swParsedContent .=  '<p><img src="site/files/'.$filename.'" style="width:100%">';
 
 
 
