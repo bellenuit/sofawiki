@@ -20,7 +20,8 @@ $swError = '';
 $swStatus = '';
 $swParseSpecial = '';
 $swUserCookieExpiration = 4*60*60;
-
+$swBaseHrefFolder = '';
+$swBaseHrefFolder = @$_SERVER['SCRIPT_URI'];
 define('SOFAWIKIINDEX',true);
 
 include 'api.php';

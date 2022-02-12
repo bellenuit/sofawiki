@@ -6,6 +6,27 @@ ini_set('max_execution_time',180);
 
 if (!is_dir($swRoot.'/site/uploadbig/')) @mkdir($swRoot.'/site/uploadbig/');
 
+$deletelaterfile = $swRoot.'/site/uploadbig/deletelater.txt';
+
+if (file_exists($deletelaterfile)) 
+{
+	$s = file_get_contents($deletelaterfile);
+	$deletelater = array();
+	if ($s) $deletelater = unserialize($s);
+	for ($i = 0;$i < 100; $i++)
+	{
+		if (count($deletelater))
+		{
+			$chunk = array_pop($deletelater);
+			$file = $swRoot.'/site/uploadbig/'.$chunk;
+			if (file_exists($file)) unlink($file);
+		}
+	}
+	file_put_contents($deletelaterfile, serialize($deletelater));	
+}
+
+
+
 //  Entry point 1 - upload chunks
 //  Receive one chunk of 1 MB, save it to the temporary folder with md5 as name,
 //  Check integrity with MD5. Delete chunk if there is a checksum error.
@@ -117,7 +138,6 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 			if ($i >= $start + $limit)
 			{
 				echo 'limit '.$i;
-				fclose($newhandler);
 				exit();
 			}
 			
@@ -127,26 +147,38 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 			fwrite($newhandler,$s);
 			fclose($handler);
 			
-			
-			
 			$offset += filesize($file);
-			
-			// immediately delete chunk
-			unlink($file);
-			
 			$i++;
 			
 		}
 	}
 	
-	// not possible for 10'000 chunks
-	/*
+	$i = 0;
+
+	$deletelater = array();
+	if (file_exists($deletelaterfile)) 
+	{
+		$s = file_get_contents($deletelaterfile);
+		if ($s) $deletelater = unserialize($s);
+	}
+	
 	foreach($composechunks as $chunk)
 	{
-		$file = $swRoot.'/site/uploadbig/'.$chunk;
-		unlink($file);
+		// server cannot delete more than 1000 files at a reasonable time. we need to postpone this.
+		if ($i<1000)
+		{
+			$file = $swRoot.'/site/uploadbig/'.$chunk;
+			unlink($file);
+		}
+		else
+		{			
+			$deletelater[] = $chunk;
+		}
+		
+		$i++;
 	}
-	*/
+	file_put_contents($deletelaterfile, serialize($deletelater));
+	
 	
 	fclose($newhandler);
 	
