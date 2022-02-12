@@ -106,7 +106,10 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 	}	
 	
 	$comment == '';
-	if ($_POST['comment']) $comment = swSimpleSanitize($_POST['comment']);
+	if (isset($_POST['comment'])) $comment = swSimpleSanitize($_POST['comment']);
+
+	$uploadtime = '';
+	if (isset($_POST['uploadtime'])) $uploadtime = $_POST['uploadtime'];
 	
 	$newfile = $swRoot.'/site/uploadbig/'.$filename;
 	
@@ -142,12 +145,23 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 			}
 			
 			$handler = fopen($file,'r');
+			
+			fseek($newhandler,$offset);
+			
+			stream_copy_to_stream($handler,$newhandler);
+			
+			$offset += filesize($file);
+			
+			/*
 			fseek($newhandler,$offset);
 			$s = fread($handler,filesize($file));
 			fwrite($newhandler,$s);
+			
+			*/
+			
 			fclose($handler);
 			
-			$offset += filesize($file);
+			 
 			$i++;
 			
 		}
@@ -192,7 +206,8 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 	$filewiki->name ='Image:'.$filename;
 	$filewiki->user = $user->name;
 	$filewiki->content = '[[imagechecksum::'.md5_file($newfile2).']]
-[[filesize::'.filesize($newfile2).']]	
+[[filesize::'.filesize($newfile2).']]
+[[uploadtime::'.$uploadtime.']]	
 [[comment::'.$comment.']]';
 	$filewiki->insert();
 	

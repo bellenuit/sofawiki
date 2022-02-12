@@ -5,6 +5,7 @@ function parseFile(file, name="", prefix="", comment="") {
     var serverName = name;
     var prefix     = prefix;
     var theComment = comment;
+    var theUploadTime = 0;
     var chunkSize  = 1024 * 1024; // bytes
     var offset     = 0;
     var self       = this; // we need a reference to the current object
@@ -35,7 +36,7 @@ function parseFile(file, name="", prefix="", comment="") {
             done = Object.keys(joblist).length 
             done = done
             total = Math.ceil(theFile.size / chunkSize)
-            showStatus("Reading " + done + " MB  <p><progress value="+(done*0.1)+" max="+total+">" )
+            showStatus("Reading " + done + " MB  / " + total + " MB <p><progress value="+(done*0.1)+" max="+total+">" )
             
             offset += chunkSize
             
@@ -136,12 +137,14 @@ function parseFile(file, name="", prefix="", comment="") {
 		
 		uploadedchunks = uploadedchunks + 1
 		
+		const d = new Date();
+		let currenttime = d.getTime();
+
+		
 		if (uploadedchunks > 10) // wait some experience
 		{
 		
-			const d = new Date();
-			let currenttime = d.getTime();
-			
+						
 			mspermb = (currenttime - starttime) / done
 			mstodo = todo * mspermb
 			seconds = Math.round(mstodo / 1000.0)
@@ -166,8 +169,10 @@ function parseFile(file, name="", prefix="", comment="") {
 			
 			clock = hours + ":" + minutes + ":" + seconds
 			
-		
+			
 		}
+		
+		theUploadTime = Math.round((currenttime - starttime) / 1000.0)
 		
 		showStatus("Uploading " + done + " MB / " + total + " MB. Estimated time " + clock + unicodePixels(key)+"<p><progress value="+(done*0.8+0.1*total)+" max="+total+"> " )
 	    setTimeout(function() { uploadJob(); } ,50) });
@@ -185,6 +190,7 @@ function parseFile(file, name="", prefix="", comment="") {
 		}
 		formData.append("filename", prefix+name); 
 		formData.append("comment", theComment); 
+		formData.append("uploadtime", theUploadTime); 
 		formData.append("start", start);          
 	    response = await fetch("index.php?action=uploadbigfile", {
 	      method: "POST", 
@@ -217,7 +223,7 @@ function parseFile(file, name="", prefix="", comment="") {
 				
 				if (errorlevel < 10)
 				{
-					setTimeout(function() { chechChunks(); } ,250) 
+					setTimeout(function() { checkChunks(); } ,250) 
 				}
 		    }
 	    });
