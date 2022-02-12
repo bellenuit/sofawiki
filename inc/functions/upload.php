@@ -56,7 +56,9 @@ class swUploadZoneFunction extends swFunction
 		<input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxBigFileSize.'" />
 		<input type="hidden" name="action" value="uploadbigfile" />
 		<input type="submit" value="Upload" disabled="disabled"  />
-		<input type="file" name="uploadedfile" onchange="thefile = event.target.files[0]; this.previousElementSibling.disabled = false;" />
+		<input type="file" name="uploadedfile" onchange="thefile = event.target.files[0]; 
+if (thefile.size > '.$swMaxBigFileSize.') alert(\'file too big: \' + thefile.size); else
+this.previousElementSibling.disabled = false;" />
 		<p id="status" width=100%></p>';
 		
 		if ($filename)

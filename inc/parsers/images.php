@@ -742,6 +742,7 @@ function drawHandles()
 			$pos = strrpos($val,'.');
 			
 			$t = '';
+			$e = '';
 			if ($pos)
 			{
 				$e = substr($val,$pos).'.';
@@ -771,6 +772,7 @@ function drawHandles()
 			// extensions for download not in new window and filebased class for link
 			$pos = strrpos($val,'.');
 			$t = '';
+			$e = '';
 			if ($pos)
 			{
 				$e = substr($val,$pos).'.';
@@ -798,6 +800,7 @@ function drawHandles()
 			$pos = strrpos($val,'.');
 			
 			$t = '';
+			$e = '';
 			if ($pos)
 			{
 				$e = substr($val,$pos).'.';
@@ -827,6 +830,7 @@ function drawHandles()
 			// extensions for download not in new window and filebased class for link
 			$pos = strrpos($val,'.');
 			$t = '';
+			$e = '';
 			if ($pos)
 			{
 				$e = substr($val,$pos).'.';

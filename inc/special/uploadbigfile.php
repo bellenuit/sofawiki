@@ -65,6 +65,9 @@ if (isset($_POST['checkchunks']))
 
 if (isset($_POST['composechunks']) && isset($_POST['filename']))
 {
+	
+
+	
 	$found = false;
 	
 	$filename = swSimpleSanitize($_POST['filename']); 
@@ -114,6 +117,7 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 			if ($i >= $start + $limit)
 			{
 				echo 'limit '.$i;
+				fclose($newhandler);
 				exit();
 			}
 			
@@ -123,17 +127,26 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 			fwrite($newhandler,$s);
 			fclose($handler);
 			
+			
+			
 			$offset += filesize($file);
+			
+			// immediately delete chunk
+			unlink($file);
+			
 			$i++;
 			
 		}
 	}
 	
+	// not possible for 10'000 chunks
+	/*
 	foreach($composechunks as $chunk)
 	{
 		$file = $swRoot.'/site/uploadbig/'.$chunk;
 		unlink($file);
 	}
+	*/
 	
 	fclose($newhandler);
 	
