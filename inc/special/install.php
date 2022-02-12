@@ -88,6 +88,7 @@ $swParsedContent = 'Welcome to SofaWiki.
 Please complete your installation now.';
 
 $langlist = array('en','de','fr','it','es','dk');
+$langoptions = '';
 foreach ($langlist as $f)
 {	
 	if ($f !=  '')
@@ -97,6 +98,7 @@ foreach ($langlist as $f)
 			$langoptions .= "<option value='$f'>$f</option>";
 }
 
+$skinoptions = '';
 foreach ($swSkins as $f=>$v)
 {	
 	if ($f !=  '')
@@ -109,45 +111,74 @@ foreach ($swSkins as $f=>$v)
 
 $sitefolderrights =substr(sprintf('%o',@fileperms($swRoot.'/site/')),-3);
 $sitefolderrightslogs =substr(sprintf('%o',@fileperms($swRoot.'/site/logs/')),-3);
+
+
 if ($sitefolderrights < 0755 || $sitefolderrightslogs < 0755)
+{
+
+	$swParsedContent .= PHP_EOL.'<ul>';
+	$swParsedContent .= PHP_EOL.'<li>Folder rights</li>';
+
+	$swParsedContent .= PHP_EOL.'</ul>';
+
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent .= PHP_EOL.'<div class="editheader">Set folder rights</div>';
+	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
+	$swParsedContent .= PHP_EOL.'<p>Set the folder rights to 755 for the site folder and its subfolders</p>';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitfolderrights" value="Try to fix" />';
+	$swParsedContent .= PHP_EOL.'</form>';
+	
+	$swParsedContent .= PHP_EOL.'<div id="help"><p>The rights are now '.$sitefolderrights.' for the site folder and '.$sitefolderrightslogs.' for the site/logs folder. They should be 755 everywhere. If Try to fix does not work, do it manually with the FTP tools</p></div><!-- help -->';	
+	$swParsedContent .= PHP_EOL.'</div><!-- editzone -->';
+
+	
+	$swParsedContent .= PHP_EOL.'<ul>';
+	$swParsedContent .= PHP_EOL.'<li>Create the basic configuration</li>';
+	$swParsedContent .= PHP_EOL.'<li>Login</li>';
+	$swParsedContent .= PHP_EOL.'<li>Write main page</li>';
+	$swParsedContent .= PHP_EOL.'</ul>';
 
 
-$swParsedContent .= '
-* Set the folder rights for the site folder and its subfolders (now '.$sitefolderrights.'; should be 755)<nowiki><br><form method="post" action="index.php"><input type="submit" name="submitfolderrights" value="Try to fix" /><br>If Try to fix does not work, do it manually with the FTP tools</nowiki>
-* Create the basic configuration.
-* Login
-* Write main page';
-
+}
 else
-$swParsedContent .= '
-* Folder rights seem ok (755).
-* Create the basic configuration
-Here are the basic settings to get you running. You can change these and other settings later manually the site/configuration.php file.
-<nowiki><form method="post" action="index.php"></nowiki>
-{| class="blanktable"
-| swMainName (the name of the main page) || <nowiki><input type="text" name="swmainname" size=40 value="My first wiki"></nowiki> 
-|-
-| swBaseHrefFolder (the URL of the site) || <nowiki><input type="text" name="swbasehrefolder" size=40 value="'.urlbase().'"></nowiki>
-|-
-| poweruser name || <nowiki><input type="text" name="powerusername" size=40 value="admin"></nowiki>
-|-
-| poweruser pass (note it down!) || <nowiki><input type="text" name="poweruserpass" size=40 value="'.rand(100000,999999).'"></nowiki><nowiki><input type="hidden" name="encryptionsalt" size=40 value="'.rand(100000,999999).'"></nowiki>
-|- 
-| default lang || <nowiki><select name="swlang">'.$langoptions.'</select></nowiki>
-|- 
-| default skin || <nowiki><select name="swskin">'.$skinoptions.'</select></nowiki>
-|- 
-| Did you note down the password?
-| <nowiki><input type="submit" name="submitconfiguration" value="Install" /><br></nowiki> 
-| <nowiki><input type="submit" name="submitconfigurationanddelete" value="Install and delete install.php" /><br></nowiki> 
-|}
-<nowiki></form></nowiki>
-* Login
-* Write main page
-SofaWiki documentation https://www.sofawiki.com/';
+{
+	$swStatus = 'Folder rights seem ok (755)';
+	$swParsedContent .= PHP_EOL.'<ul>';
+	$swParsedContent .= PHP_EOL.'<li>Folder rights seem ok (755)</li>';
+	$swParsedContent .= PHP_EOL.'<li>Create the basic configuration</li>';
+	$swParsedContent .= PHP_EOL.'</ul>';
+	$swParsedContent .= PHP_EOL.'<p>Here are the basic settings to get you running. You can change these and other settings later manually the site/configuration.php file.';
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent .= PHP_EOL.'<div class="editheader">Create the basic configuration</div>';
+	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitconfiguration" value="Install" />';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitconfigurationanddelete" value="Install and delete install.php" />';
+	$swParsedContent .= PHP_EOL.'<p>$swMainName (the name of the main page)</p>';
+	$swParsedContent .= PHP_EOL.'<input type="text" name="swmainname" size=40 value="My first wiki">';
+	$swParsedContent .= PHP_EOL.'<p>$swBaseHrefFolder (the URL of the site)</p>';
+	$swParsedContent .= PHP_EOL.'<input type="text" name="swbasehrefolder" size=40 value="'.urlbase().'">';
+	$swParsedContent .= PHP_EOL.'<p>poweruser name</p>';
+	$swParsedContent .= PHP_EOL.'<input type="text" name="powerusername" size=40 value="admin">';
+	$swParsedContent .= PHP_EOL.'<p>poweruser pass <b>(write it down!)</b></p>';
+	$swParsedContent .= PHP_EOL.'<input type="text" name="poweruserpass" size=40 value="'.rand(100000,999999).'">';
+	$swParsedContent .= PHP_EOL.'<input type="hidden" name="encryptionsalt" size=40 value="'.rand(100000,999999).'">';
+	$swParsedContent .= PHP_EOL.'<p>default lang</p>';
+	$swParsedContent .= PHP_EOL.'<select name="swlang">'.$langoptions.'</select>';
+	$swParsedContent .= PHP_EOL.'<p>default skin</p>';
+	$swParsedContent .= PHP_EOL.'<nowiki><select name="swskin">'.$skinoptions.'</select>';
+	
+	$swParsedContent .= PHP_EOL.'<p><b>Did you write down the password?</b></p>';
+	
+	$swParsedContent .= PHP_EOL.'</form>';
+	
+	$swParsedContent .= PHP_EOL.'<div id="help"><p>It is recommended to choose the option delete install.php.</p></div><!-- help -->';	
+	$swParsedContent .= PHP_EOL.'</div><!-- editzone -->';
 
-
-$wiki->content = $swParsedContent;
-$swParsedContent = $wiki->parse();
+	$swParsedContent .= PHP_EOL.'<ul>';
+	$swParsedContent .= PHP_EOL.'<li>Login</li>';
+	$swParsedContent .= PHP_EOL.'<li>Write main page</li>';
+	$swParsedContent .= PHP_EOL.'</ul>';
+	$swParsedContent .= PHP_EOL.'<p>SofaWiki documentation <a href="https://www.sofawiki.com/" target="_blank">https://www.sofawiki.com</a>';
+}	
 
 ?>

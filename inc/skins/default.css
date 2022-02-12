@@ -397,6 +397,13 @@ div.editzone form input[type="text"]
 	width: 100%;
 }
 
+div.editzone form input[type="password"]
+{
+	margin-top: 4px;
+	margin-bottom: 4px;
+	width: 100%;
+}
+
 div.editzone form select
 {
 	margin-top: 4px;
@@ -456,6 +463,17 @@ img.yfrog
 }
 
 input[type="text"]
+{
+	display: block;
+	margin-bottom: 4px;
+	width: calc(100% - 2px);
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	border: 1px solid black;
+	font-weight: bold;
+	font-size: 16px;
+}
+
+input[type="password"]
 {
 	display: block;
 	margin-bottom: 4px;
@@ -705,6 +723,8 @@ video.yfrog
 	body      					{ font-size: 120%; }
 
 	input[type="text"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px);}
+	
+	input[type="password"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px);}
 
 	input[type="submit"]    	{ border: 1px solid black; background-color: white; color: black; margin: 20px; min-width: calc(50% - 20px); font-size: 120%} 
 	

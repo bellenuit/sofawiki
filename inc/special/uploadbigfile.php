@@ -4,6 +4,8 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 ini_set('max_execution_time',180);
 
+if (!is_dir($swRoot.'/site/uploadbig/')) @mkdir($swRoot.'/site/uploadbig/');
+
 //  Entry point 1 - upload chunks
 //  Receive one chunk of 1 MB, save it to the temporary folder with md5 as name,
 //  Check integrity with MD5. Delete chunk if there is a checksum error.

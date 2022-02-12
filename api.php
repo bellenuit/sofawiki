@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.7.1';  
+$swVersion = '3.7.2';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -223,9 +223,6 @@ $swNotifyMail = '';
 $swNotifyActions = array();
 
 $swSkins['default'] = $swRoot.'/inc/skins/default.php';
-$swSkins['tribune'] = $swRoot.'/inc/skins/tribune.php';
-$swSkins['iphone'] = $swRoot.'/inc/skins/iphone.php';
-$swSkins['tele'] = $swRoot.'/inc/skins/tele.php';
 $swSkins['zeitung'] = $swRoot.'/inc/skins/zeitung.php';
 $swSkins['wiki'] = $swRoot.'/inc/skins/wiki.php';
 $swSkins['diary'] = $swRoot.'/inc/skins/diary.php';
