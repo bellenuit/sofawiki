@@ -114,6 +114,41 @@ class swNowikifunction extends swFunction
 
 $swFunctions["nowiki"] = new swNowikifunction;
 
+class swEncryptPasswordFuntion extends swFunction
+{
+	function info()
+	{
+	 	return "(name,pass) encrypts password";
+	}
+	
+	function arity()
+	{
+		return 2;
+	}
+	
+	function dowork($args)
+	{
+		
+		
+		
+		$myname = @$args[1];
+		$mypass = @$args[2];
+		
+		$myuser = new swUser;
+		$myuser->pass=$mypass;
+		$myuser->username=swNameURL($myname);
+		$passencrypted = $myuser->encryptpassword();
+		
+		
+		return $passencrypted;
+	
+		
+	}	
+}
+
+$swFunctions["encryptpassword"] = new swEncryptPasswordFuntion;
+
+
 
 
 

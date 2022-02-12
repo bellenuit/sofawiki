@@ -15,9 +15,10 @@ function parseFile(file, name="", prefix="", comment="") {
     var inverselist = {}; 
     var uploadlist = {};
     var starttime  = 0;
+    var lastseconds = 999999999;
+    var uploadedchunks = 0;
     var errorlevel = 0;
-    const d = new Date();
-    starttime = d.getTime();
+    
 
     var readEventHandler = function(evt) {
         if (evt.target.error == null) {
@@ -31,9 +32,12 @@ function parseFile(file, name="", prefix="", comment="") {
             jobarray.push(key);
            
             showProgress(uploadlist)
-            showStatus("Reading " + Object.keys(joblist).length + " MB ")
+            done = Object.keys(joblist).length 
+            done = done
+            total = Math.ceil(theFile.size / chunkSize)
+            showStatus("Reading " + done + " MB  <p><progress value="+(done*0.1)+" max="+total+">" )
             
-            offset += 1024 * 1024
+            offset += chunkSize
             
         } else {
             showConsole("Read error: " + evt.target.error);
@@ -41,17 +45,18 @@ function parseFile(file, name="", prefix="", comment="") {
         }
         if (offset >= fileSize) {
             showProgress(uploadlist);
-            showConsole("Done reading file " + Object.keys(joblist).length + " " + file.name)
-            showStatus("Done reading")   
+            showConsole("Done reading file " + Object.keys(joblist).length + " " + file.name )
+            showStatus("Done reading <p><progress value="+(total*0.1)+" max="+total+">")   
            
-            // uploadJob();
+            const d = new Date();
+			starttime = d.getTime();
             checkChunks() 
             
             return;
         }
 
         // of to the next chunk
-        chunkReaderBlock(offset, 1024 * 1024, file);
+        chunkReaderBlock(offset, chunkSize, file);
     }
     
     
@@ -62,17 +67,20 @@ function parseFile(file, name="", prefix="", comment="") {
         key = _offset
         r.onload = readEventHandler;
         r.readAsBinaryString(blob);
+        
     }
     
         
-    async function uploadJob() {
+    async function uploadJob(top=false) {
 	    
     offsets = Object.keys(uploadlist)
     if (!offsets.length)
     {
+	    // if (top) return // do nothing to compose on second job
+	    
 	    done = 0;
 	    total = Object.keys(joblist).length;
-	    showStatus("Composing " + done + " MB / " + total + " MB <p><progress value="+done+" max="+total+">"); 
+	    showStatus("Composing " + done + " MB / " + total + " MB <p><progress value="+(done*0.1+0.9*total)+" max="+total+">"); 
 	    composeChunks()
 	    
 	    return
@@ -80,16 +88,20 @@ function parseFile(file, name="", prefix="", comment="") {
 	
 	// showConsole(JSON.stringify(offsets));
 	
+	
 	offset1 = offsets[0];
+	// if (top) offset1 = offsets[offsets.length-1];
+	
 	key = uploadlist[offset1];
 	
 	
 	
-	// showConsole(offset1 + ": " + key + " " + 1024 * 1024);
+	// if (!top && offsets.length > 10) uploadJob(true) // we send a second job to increase upload
+	
 	
 	offset1 = parseInt(offset1); // nasty error if string
 	
-	var blob = file.slice(offset1, 1024 * 1024 + offset1);
+	var blob = file.slice(offset1, chunkSize + offset1);
 	
 	x =   blob.size
 	y =   offset1 	
@@ -118,21 +130,46 @@ function parseFile(file, name="", prefix="", comment="") {
 		todo = Object.keys(uploadlist).length;
 		done = total - todo
 		
-		const d = new Date();
-		let currenttime = d.getTime();
 		
-		mspermb = (currenttime - starttime) / done
-		mstodo = todo * mspermb
-		seconds = Math.round(mstodo / 1000.0)
+		clock = "..."
+		rawseconds = "..."
 		
-		minutes = Math.floor(seconds / 60)
-		seconds = seconds - minutes * 60
-		seconds = "0" + seconds
-		seconds = seconds.substr(0,2)
+		uploadedchunks = uploadedchunks + 1
 		
-		clock = minutes + ":" + seconds 
+		if (uploadedchunks > 10) // wait some experience
+		{
 		
-		showStatus("Uploading " + done + " MB / " + total + " MB "+unicodePixels(key)+"<p><progress value="+done+" max="+total+"> " + clock )
+			const d = new Date();
+			let currenttime = d.getTime();
+			
+			mspermb = (currenttime - starttime) / done
+			mstodo = todo * mspermb
+			seconds = Math.round(mstodo / 1000.0)
+			rawseconds = seconds
+			if (rawseconds > lastseconds) seconds = lastseconds
+			lastseconds = seconds  // only go down
+			
+			minutes = Math.floor(seconds / 60)
+			
+			seconds = seconds - minutes * 60
+			seconds = "0" + seconds
+			seconds = seconds.substr(-2)
+			
+			hours = Math.floor(minutes / 60)
+		
+			minutes = minutes - hours * 60
+			minutes = "0" + minutes
+			minutes = minutes.substr(-2)
+			
+			hours = "0" + hours
+			hours = hours.substr(-2)
+			
+			clock = hours + ":" + minutes + ":" + seconds
+			
+		
+		}
+		
+		showStatus("Uploading " + done + " MB / " + total + " MB. Estimated time " + clock + unicodePixels(key)+"<p><progress value="+(done*0.8+0.1*total)+" max="+total+"> " )
 	    setTimeout(function() { uploadJob(); } ,50) });
 	}
    
@@ -167,9 +204,10 @@ function parseFile(file, name="", prefix="", comment="") {
 		    else if (text.substr(0,5) == 'limit')
 			{
 				done = text.substr(6)
+				
 				total = Object.keys(joblist).length;
-				showConsole("Composing " + done + " MB / " + total + " MB <p><progress value="+done+" max="+total+">" );
-				showStatus("Composing " + done + " MB / " + total + " MB <p><progress value="+done+" max="+total+">"); 
+				showConsole("Composing " + done + " MB / " + total + " MB <p><progress value="+(done*0.1+0.9*total)+" max="+total+">" );
+				showStatus("Composing " + done + " MB / " + total + " MB <p><progress value="+(done*0.1+0.9*total)+" max="+total+">"); 
 				composeChunks(text.substr(6));
 			}
 			else if (text.substr(0,19) == 'compose error chunk')
@@ -199,7 +237,7 @@ function parseFile(file, name="", prefix="", comment="") {
 	    node = document.getElementById("status")
 	    response.text().then(function(text)  { 
 	    	
-	    	showStatus("Check chunks");
+	    	showStatus("Check server <p><progress value="+(total*0.1)+" max="+total+"> ");
 	    	
 	    	if (text) {
 		    	try { 
@@ -221,7 +259,9 @@ function parseFile(file, name="", prefix="", comment="") {
 	
 	
     // now lets start the read with the first block
-    chunkReaderBlock(offset, 1024 * 1024, file);
+    chunkReaderBlock(offset, chunkSize, file);
+    
+    // setTimeout(checkChunks(), 3000); not a good idea
     
 }
 

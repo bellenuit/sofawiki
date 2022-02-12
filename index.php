@@ -5,7 +5,7 @@
  *	
  *  @author Matthias Bürcher 2010 matti@belle-nuit.com
  *  @link https://www.sofawiki.com
- *	@version 3.6.0
+ *	@version 3.7.1
  *  
  */
  
@@ -414,6 +414,17 @@ switch ($action)
 									  	$swError = swSystemMessage('no-access-error',$lang);
 									  	include 'inc/special/view.php';
 									}
+								    break;
+	case 'download': 				if (stristr($swBaseHrefFolder,$referer))
+									{
+										include 'inc/special/download.php';
+									}
+									else
+									{
+										$swError = swSystemMessage('no-access-error',$lang);
+										include 'inc/special/view.php';										
+									}
+									
 								    break;
 	case 'edit':
 	case 'editmulti':    

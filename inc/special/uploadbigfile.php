@@ -25,6 +25,8 @@ if (isset($_FILES['uploadedfile']) && is_uploaded_file($_FILES['uploadedfile']['
 		 unlink($newfile);
 	 }
 	 
+	 $_FILES = null;
+	 
 	 exit();
 }
 
@@ -47,6 +49,9 @@ if (isset($_POST['checkchunks']))
 	}
 	if (count($found))
 		echo json_encode($found);
+		
+	$_POST = null;
+	
 	exit();
 }
 
@@ -146,9 +151,11 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 	
 	
 	
-	echo 'OK <a href="site/files/'.$filename.'" target="_blank">'.$filename.'</a>';
+	echo 'OK <a href="index.php?action=download&name=Image:'.$filename.'" target="_blank">'.$filename.'</a>';
 	
 	if ($user->hasright('view','image:')) echo '<br><a href="index.php?name=Image:'.$filename.'" target="_blank">Image:'.$filename.'</a>';
+	
+	$_POST = null;
 	
 	exit();
 }

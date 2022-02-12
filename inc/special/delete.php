@@ -17,35 +17,6 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 		$wiki->name = $wiki->namewithoutlanguage();
 		$wiki->user = $user->name;
 		$wiki->lookup();
-	
-		if (count($_REQUEST['subpage'])) $swStatus = 'Deleted: ';
-		
-		if ($wiki->status == 'ok')
-		{
-			if (isset($_REQUEST['subpage']['--']))
-			{
-				$wiki->delete();
-				
-				$swStatus .= ' '.$wiki->namewithoutlanguage();
-			}
-		}
-		foreach($swLanguages as $ln)
-		{
-			if (isset($_REQUEST['subpage'][$ln]))
-			{
-			
-				$wiki2 = new swWiki;
-				$wiki2->name = $name.'/'.$ln;
-				$wiki2->lookup();
-				if ($wiki2->status == 'ok')
-				{
-					$wiki2->delete();
-					$swStatus .= ' /'.$ln;	
-				}
-			
-			}
-		}
-
 		
 		$swParsedName = $name2;
 		
@@ -59,15 +30,17 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 		if ($wiki->status == 'ok')
 		{
 			$swStatus = 'Deleted: '.$wiki->name;
-			$wiki->delete();
-			$swParsedName = '';
-					
+			
 			if (swGetArrayValue($_POST,'submitdeletewithfile',false))
 			{
 				$path = $swRoot.'/site/files/'.str_replace('Image:','',$wiki->name);
 				@unlink($path);
-				$swStatus = 'Deleted with file: '.$name;
+				$swStatus = 'Deleted with file: '.$wiki->name;
 			}
+
+			$wiki->delete();
+			$swParsedName = '';
+
 		}	
 		
 		// do it again for all subpages
@@ -86,10 +59,13 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 			}
 		}
 	}
+	
+	$swParsedName = '';
+	$swParsedContent = '';
 }
 
 
-if ($name)
+elseif ($name)
 {
 		
 	$swParsedName = $wiki->name;
@@ -98,9 +74,15 @@ if ($name)
 	$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("delete",$lang).'</div>';
 
 	
-	$swParsedContent .= PHP_EOL.'<form method="post" action="'.$wiki->link('delete').'">';
+	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
+	$swParsedContent .= PHP_EOL.'<input type="hidden" name="name" value="'.$wiki->name.'" />';
+	$swParsedContent .= PHP_EOL.'<input type="hidden" name="action" value="delete" />';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitcancel" value="'.swSystemMessage('cancel',$lang).'" />';
-	$swParsedContent .= ' <input type="submit" name="submitdelete" value="'.swSystemMessage('delete',$lang).'" style="color:red" />';
+	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitdelete" value="'.swSystemMessage('delete',$lang).'" style="color:red" />';
+	
+	if ($wiki->wikinamespace() == 'Image') $swParsedContent .= PHP_EOL.'<input type="submit" name="submitdeletewithfile" value="'.swSystemMessage('delete-with-file',$lang).'" style="color:red" />';
+
+	
 	$swParsedContent .= PHP_EOL.'<p></p>';
 	$swParsedContent .= PHP_EOL.'<p>';
 	

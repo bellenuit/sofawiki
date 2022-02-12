@@ -1769,7 +1769,7 @@ class xpRnd extends swExpressionFunction
 	function run(&$stack)
 	{
 		
-		$stack[] = swConvertText15(rand(0,999999));	
+		$stack[] = swConvertText15(rand(0,1000000000)/1000000000);	
 	}
 }
 

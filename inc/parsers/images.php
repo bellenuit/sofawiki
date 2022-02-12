@@ -751,6 +751,7 @@ function drawHandles()
 			$e = str_replace('.','',$e);
 			
 			$link = '<a class="sw-'.$e.'" href="site/files/'.$val.'" '.$t.'>'.$val.'</a>';
+			
 			if ($this->ignorelinks) $link = '';
 			$s = str_replace('[[Media:'.$val.']]', $link, $s); 
 		}
@@ -783,6 +784,62 @@ function drawHandles()
 			$s = str_replace('[[Media:'.$val.'|'.$label.']]', $link, $s); 
 		}
 		
+		
+	    // Secure Download Links
+		preg_match_all("/\[\[Download:([^\|]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
+		
+		global $swMediaFileTypeDownload;
+		
+		foreach ($matches as $v)
+		{
+			$val = $v[1];
+			
+			// extensions for download not in new window and filebased class for link
+			$pos = strrpos($val,'.');
+			
+			$t = '';
+			if ($pos)
+			{
+				$e = substr($val,$pos).'.';
+				if (stristr($swMediaFileTypeDownload.'.',$e))
+					$t = "";
+			}
+			$e = str_replace('.','',$e);
+			
+			$link = '<a class="sw-'.$e.'" href="index.php?action=download&name=Image:'.$val.'" '.$t.' target="_blank">'.$val.'</a>';
+			
+			if ($this->ignorelinks) $link = '';
+			$s = str_replace('[[Download:'.$val.']]', $link, $s); 
+		}
+		
+		
+		// Secure Download Links with alt text
+		 preg_match_all("@\[\[Download:([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER); 
+		
+		foreach ($matches as $v)
+		{
+			$val = $v[1];
+			$label = $v[3];
+			
+			$t = 'target="_blank"';
+			
+			
+			// extensions for download not in new window and filebased class for link
+			$pos = strrpos($val,'.');
+			$t = '';
+			if ($pos)
+			{
+				$e = substr($val,$pos).'.';
+				if (stristr($swMediaFileTypeDownload.'.',$e)) 
+					$t = "";
+			}
+			$e = str_replace('.','',$e);
+			
+			$link = '<a class="sw-'.$e.'" ndex.php?action=download&name=Image:'.$val.'" '.$t.' target="_blank">'.$label.'</a>';
+			if ($this->ignorelinks) $link = '';
+			$s = str_replace('[[Download:'.$val.'|'.$label.']]', $link, $s); 
+		}
+	
 		
 		$wiki->parsedContent = $s;
 				

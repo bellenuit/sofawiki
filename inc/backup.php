@@ -48,6 +48,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 		$emptydirectories[] = 'sofawiki/site/queries';
 		$emptydirectories[] = 'sofawiki/site/revisions';
 		$emptydirectories[] = 'sofawiki/site/upload';
+		$emptydirectories[] = 'sofawiki/site/uploadbig';
 		
 		$includeddirectories[] = 'sofawiki/site';
 		$includeddirectories[] = 'sofawiki/site/functions';
@@ -331,6 +332,7 @@ function swSnapShot($username)
 	$emptydirectories[] = 'sofawiki/site/revisions';
 	$emptydirectories[] = 'sofawiki/site/skins';
 	$emptydirectories[] = 'sofawiki/site/upload';
+	$emptydirectories[] = 'sofawiki/site/uploadbig';
 	
 	$includeddirectories[] = 'sofawiki/inc';
 	$includeddirectories[] = 'sofawiki/inc/functions';

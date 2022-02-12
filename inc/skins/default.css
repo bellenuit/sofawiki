@@ -439,6 +439,10 @@ h1, h2, h3, h4, h5
 	font-family: Helvetica, Arial, Sans-Serif;
 }
 
+h1 
+{
+	margin-top: 0px;
+}
 
 iframe.youtube
 {
@@ -669,7 +673,7 @@ video.yfrog
 
 	#mobileappmenu 				{ display: none; }
 
-	#title    					{ position: absolute; top: 50px; left: 160px; width: 600px; }
+	#title    					{  }
 
 	.dropdownmobilemenu 		{ display: none; }
 	
@@ -689,7 +693,7 @@ video.yfrog
 	
 	#mobilemenu 				{ display: inline-block; }
 	
-	#title     					{ position: static;  width: calc(100% - 32px); padding-left: 16px; padding-right: 16px; }
+	#title     					{ width: calc(100% - 32px); padding-left: 16px; padding-right: 16px; }
 
 	.desktop   					{ display: none; }
 

@@ -121,6 +121,14 @@ switch ($wiki->status)
 						$swParsedContent .= PHP_EOL.$submitbutton;
 						
 						if ($namefieldtype=='text') $swParsedContent .= PHP_EOL.'<p>'.swSystemMessage('name',$lang).'</p>';
+						
+						
+						if ($action=='new')
+						{
+							if (isset($_REQUEST['name'])) $wiki->name = $_REQUEST['name'];
+							
+						}
+						
 						$swParsedContent .= PHP_EOL.'<input type="'.$namefieldtype.'" name="name" value="'.$wiki->name.'" />';
 
 						
@@ -133,8 +141,10 @@ switch ($wiki->status)
 								$wikisub->lookup(); // by revision again.
 							$wikisub->comment = '';
 							
-							
-							
+							if ($action=='new')
+							{
+								if (isset($_REQUEST['content'])) $wikisub->content = $_REQUEST['content'];
+							}
 							
 							
 							if (count($wikis)>1) $swParsedContent .= '<p>'.$wikisub->name.'</p>';

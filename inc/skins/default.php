@@ -50,12 +50,11 @@ if (!count($swEditMenus))
 	echo PHP_EOL.'</div><!-- mobileappmenu -->';
 }
 
-
+echo PHP_EOL.'<div id="content">';
 echo PHP_EOL.'<div id="title">';
 echo PHP_EOL.'<h1>'.$swParsedName.'</h1>';
 echo PHP_EOL.'</div><!-- title -->';
 
-echo PHP_EOL.'<div id="content">';
 echo PHP_EOL.'<div id="parsedcontent">';
 echo $swParsedContent;
 echo PHP_EOL.'</div><!-- parsedcontent -->';

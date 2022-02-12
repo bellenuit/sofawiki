@@ -141,7 +141,6 @@ function swGetValue($s, $key, $getArray = false)
 	
 	foreach ($matches as $v)
 	{
-		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
 		
 		$value = $v[1];
 				
