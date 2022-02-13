@@ -82,22 +82,34 @@ class swImagesParser extends swParser
 					
 					
 				}
-								
-				if (file_exists($swRoot.'/site/files/'.$file))
-				{
-					$checkis = md5_file($swRoot.'/site/files/'.$file);
+			
+				if (isset($_REQUEST['checksum']))
+				{			
+					global $swStatus;
+					global $swError;
+					if (file_exists($swRoot.'/site/files/'.$file))
+					{
+						$checkis = md5_file($swRoot.'/site/files/'.$file);
+		
+						$checkshould = @$wiki->internalfields['imagechecksum'][0];
 	
-					$checkshould = @$wiki->internalfields['imagechecksum'][0];
-
-					if ($checkis == $checkshould)
-						$swEditMenus['imagechecksum'] = "checksum ok";
-					elseif ( $checkshould == '')
-						$swEditMenus['imagechecksum'] = "no checksum";
+						if ($checkis == $checkshould)
+							$swStatus = "checksum ok";
+						elseif ( $checkshould == '')
+							$swError = "no checksum";
+						else
+							$swError = "checksum error (is ".$checkis.'  should be '.$checkshould;
+					}	
 					else
-						$swEditMenus['imagechecksum'] = "checksum error (is ".$checkis.'  should be '.$checkshould;
-				}	
+						$swError = "file missing";
+				}
 				else
-					$swEditMenus['imagechecksum'] = "file missing";
+				{
+					global $swAdditionalEditMenus;
+
+					$swAdditionalEditMenus['viewmenu-checksum'] = '<a href="index.php?checksum=1&name='.$wiki->name.'">Checksum</a>';
+					
+				}
 
 			
 			}

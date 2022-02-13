@@ -34,6 +34,9 @@ echo trim(str_replace('"',"'",$d));
 <link rel='stylesheet' href="inc/skins/default.css"/>
 <?php echo @$skinstylesheet; ?>
 <link rel='stylesheet' href="inc/skins/markrelationcode.css"/>
+<link rel="apple-touch-icon" sizes="180x180" href="inc/skins/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="inc/skins/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="inc/skins/favicon-16x16.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 <?php

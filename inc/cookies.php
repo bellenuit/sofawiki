@@ -67,12 +67,16 @@ function swHandleCookie($id,$default,$period=9000000,$refresh = true)
  * @param $id
  */
 
-function swGetCookie($id)
+function swGetCookie($id,$period=9000000,$refresh = true)
 {
 	global $swCookiePrefix;
 	$key= $swCookiePrefix.'-'.$id;
 	if (array_key_exists($key, $_COOKIE)) 
-		return $_COOKIE[$key];
+	{
+		$result = $_COOKIE[$key];
+		if ($refresh) if (!setcookie($key, $result, time() + $period)) echotime('headerssent refresh cookie '.$id);
+		return $result;
+	}
 }
 
 /**

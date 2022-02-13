@@ -865,6 +865,12 @@ if ($user->hasright('special','special') && $action != 'logout')
 
 	}
 }
+
+
+if (isset($swAdditionalEditMenus))
+{
+	foreach($swAdditionalEditMenus as $k=>$v) $swEditMenus[$k] = $v;
+}	
 	
 
 if (!$username) $swEditMenus = array();
