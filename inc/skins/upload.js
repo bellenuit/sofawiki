@@ -366,3 +366,9 @@ function getClock(current, start, done, todo)
 	return clock
 
 }
+
+window.onerror = function myErrorHandler(errorMsg, url, lineNumber)
+{
+    showStatus("Error occured: " + errorMsg + "<br>" + lineNumber);//or any message
+    return false;
+}

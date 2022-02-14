@@ -1177,7 +1177,8 @@ class swRelationLineHandler
 												{
 													$tp = current($r->tuples);
 													
-
+													if(!$tp) continue;
+														
 													foreach($tp->pfields as $k=>$v)
 													{
 														$dict[$k] =$v;
@@ -2502,7 +2503,6 @@ class swRelation
 				$ps[] = trim($p);
 			}
 			$newps = array_diff($this->header,$ps);
-						
 			$this->project(join(', ',$newps));
 			return;
 		}

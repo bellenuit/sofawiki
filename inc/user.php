@@ -31,11 +31,23 @@ class swUser extends swRecord
 		
 		$allrights = $swAllUserRights.$this->content;
 		
-		//echo "hasright $action,$name - $allrights<br>";
+		$grouplist = swGetValue($allrights,'_group',true);
+		{
+			
+			foreach($grouplist as $g)
+			{
+				$groupwiki = new swUser;
+				$groupwiki->name = 'User:'.$g;
+				$groupwiki->lookup();
+				$allrights .= $groupwiki->content;
+			}
+		}
 		
 		$rightlist = swGetValue($allrights,'_'.$action,true);
+
 		
 		//print_r($rightlist);
+		
 		
 		foreach($rightlist as $right)
 		{

@@ -21,7 +21,7 @@ set previous = "'.$previous.'"
 set next = "'.$next.'"
 
 filter _namespace "main", _name
-select _name not (regex "\/")
+select _name not (regex "/")
 extend _link = urltext(_name)
 filter _link "*"
 update _link = urltext(_link)
