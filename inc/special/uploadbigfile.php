@@ -213,7 +213,7 @@ if (isset($_POST['composechunks']) && isset($_POST['filename']))
 	
 	
 	
-	echo 'OK <a href="index.php?action=download&name=Image:'.$filename.'" target="_blank">'.$filename.'</a>';
+	echo 'OK '.$filename;
 	
 	if ($user->hasright('view','image:')) echo '<br><a href="index.php?name=Image:'.$filename.'" target="_blank">Image:'.$filename.'</a>';
 	
