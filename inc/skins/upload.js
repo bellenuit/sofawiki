@@ -135,7 +135,8 @@ function parseFile(file, name="", prefix="", comment="") {
 				setTimeout(function() { checkChunks(); } , 10000);
 			}
 				
-	    });
+	    })
+	    .catch(err =>  { showStatus(err); setTimeout(function() { checkChunks(); } , 10000) } );
 	}
 
 
@@ -214,7 +215,8 @@ function parseFile(file, name="", prefix="", comment="") {
 				showStatus("Recontacting server")
 				setTimeout(function() { uploadJob(); } , 10000);
 			}
-		});
+		})
+		.catch(err =>  { showStatus(err); setTimeout(function() { uploadJob(); } , 10000) } );
 	}
    
 /**
@@ -283,7 +285,8 @@ function parseFile(file, name="", prefix="", comment="") {
 				showStatus("Recontacting server")
 				setTimeout(function() { composeChunks(); } , 10000);
 			}
-		});
+		})
+		.catch(err =>  { showStatus(err); setTimeout(function() { composeChunks(); } , 10000) } );
 	}
 
 	
