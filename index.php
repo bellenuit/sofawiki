@@ -386,6 +386,13 @@ $swFooter = '';
 
 echotime('action '.$action);
 
+if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99) $action = 'indexerror';
+	
+if ($action == 'logout')
+{
+	$failaction = swGetArrayValue($_REQUEST,'failaction','logout');
+	$action = $failaction;
+}
 
 
 
@@ -671,13 +678,6 @@ if ($swRedirectedFrom)
 	$swParsedName = $wiki->namewithoutlanguage();
 }
 	
-if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99) $action = 'indexerror';
-	
-if ($action == 'logout')
-{
-	$failaction = swGetArrayValue($_REQUEST,'failaction','logout');
-	$action = $failaction;
-}
 	
 
 // build menus
