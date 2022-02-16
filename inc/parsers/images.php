@@ -479,7 +479,9 @@ function drawHandles()
 				
 				if (count($files))
 				{
-					$s .= '<h4>Cache</h4><p><a href="'.$wiki->link('editview','--').'&imagecacherefresh=1" rel="nofollow">'.swSystemMessage('Image Cache Refresh',$lang).'</a>';
+					$swAdditionalEditMenus['viewmenu-imagecacherefresh'] = '<a href="'.$wiki->link('editview','--').'&imagecacherefresh=1" rel="nofollow">'.swSystemMessage('Image Cache Refresh',$lang).'</a>';
+					
+					$s .= '<h4>Cache</h4><p>';
 ;
 					foreach($files as $f)
 					{

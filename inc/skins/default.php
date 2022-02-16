@@ -16,7 +16,7 @@ echo PHP_EOL.'<div id="menu">';
 echo PHP_EOL.$swHomeMenu. '<br/>'; 
 foreach($swLangMenus as $item) {echo PHP_EOL.$item.'<br/>'; } 
 echo '<br/>'.PHP_EOL; 
-foreach($swLoginMenus as $item) {echo PHP_EOL.$item.'<br/>'; }
+if (!$username) foreach($swLoginMenus as $item) {echo PHP_EOL.$item.'<br/>'; }
 echo PHP_EOL.swSystemMessage("skin-menu",$lang, true). '<br/>';
 echo PHP_EOL.$swSearchMenu; 
 echo PHP_EOL.'</div><!-- menu -->';

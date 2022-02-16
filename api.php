@@ -125,11 +125,13 @@ include_once $swRoot.'/inc/parsers/redirection.php';
 include_once $swRoot.'/inc/parsers/displayname.php';
 include_once $swRoot.'/inc/parsers/tidy.php';
 include_once $swRoot.'/inc/parsers/category.php';
+include_once $swRoot.'/inc/parsers/sublang.php';
 include_once $swRoot.'/inc/parsers/fields.php';
 include_once $swRoot.'/inc/parsers/templates.php';
 include_once $swRoot.'/inc/parsers/images.php';
 include_once $swRoot.'/inc/parsers/links.php';
 include_once $swRoot.'/inc/parsers/style.php';
+
 
 // search only
 include_once $swRoot.'/inc/parsers/nowiki.php';
