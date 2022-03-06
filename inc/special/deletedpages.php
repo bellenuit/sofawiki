@@ -47,12 +47,15 @@ else
 	  }
 		
 	} while ($key = swDbaNextKey($urldb));
+	
+	$rel->label('_name "", timestamp "", user ""');
+	$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');
+
+	$swParsedContent = '<p>'.$rel->toHtml('grid');
+
 }
 
-$rel->label('_name "", timestamp "", user ""');
-$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');
 
-$swParsedContent = '<p>'.$rel->toHtml('grid');
 
 $swParseSpecial = true;
 
