@@ -108,5 +108,75 @@ this.previousElementSibling.disabled = false;" />
 $swFunctions["uploadzone"] = new swUploadZoneFunction;
 
 
+function swHandleUploadFile($file, $filename, $content='',$deleteexisting=false)
+{
+	global $swStatus;
+	global $swRoot;
+	global $swError;
+	global $user;
+	
+	if ($filename == "") $filename = $file['name'];
+	
+	$newfile = $swRoot.'/site/files/'.$filename;
+	
+	if (is_uploaded_file($file['tmp_name']))
+	{
+	   $swStatus .= "\nFile ".$filename.' uploaded. ';
+	   	   
+	   if (file_exists($newfile))
+	   {
+	   		if ($deleteexisting)
+	   		{
+	   			$swStatus .= 'Deleting existing file. ';
+	   		}
+	   		else
+	   		{
+	   			$filename0 = $filename;
+	   			$fields = explode('.',$filename0);
+	   			if (count($fields)>1)
+	   				$fext = array_pop($fields);
+	   			$froot = join('.',$fields);
+	   			
+	   			$i=0;
+	   			while (file_exists($newfile))
+	   			{
+	   				$i++;
+	   				$filename = $froot.$i.'.'.$fext;
+	   				$newfile = $swRoot.'/site/files/'.$filename;
+	   			}
+	   			$swStatus .= 'Renaming uploaded file as: '.$filename.'. ';
+	   		}
+	   }
+	   
+	   if (!move_uploaded_file($file['tmp_name'],$newfile)) 
+		  {
+		  // if an error occurs the file could not
+		  // be written, read or possibly does not exist
+		  $swError .=  'Error Uploading File. '.$newfile.' ';
+	   }
+	   else
+	   {
+			$swStatus .=  'OK. ';
+	   }
+	}
+	else
+	{
+		$swError .=  'Error: File '.$filename.' not uploaded. ';
+	}
+	
+	
+	$wiki= new swWiki;
+	$wiki->name ='Image:'.$filename;
+	$wiki->user = $user->name;
+	$wiki->content = str_replace("\\",'',$content)
+	.PHP_EOL.'[[imagechecksum::'.md5_file($newfile).']]';
+	if ($filename != "")
+		$wiki->insert();
+	
+	
+	return $filename;
+
+}
+
 
 ?>

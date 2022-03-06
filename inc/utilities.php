@@ -548,6 +548,3 @@ function swReadField($handle)
 
 
 }
-
-
-?>

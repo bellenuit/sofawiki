@@ -12,8 +12,6 @@ define("CRLF", "\r\n");
 define("LF", "\n");
 define("TAB", "\t");
 
-$swDbaHandler = 'sqlite3';
-
 /**
  *  Opens a database and returns it
  * 
@@ -39,6 +37,13 @@ function swDbaOpen($file, $mode, $handler)
 			return;
 		}
 	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		$db = new swPersistanceDba;
+		$db->persistance = $file;
+		$db->open();
+		return $db;
+	}
 	
 	return @dba_open($file,$mode,$swDbaHandler);
 }
@@ -53,6 +58,11 @@ function swDbaFirstKey($db)
 {
 	global $swDbaHandler;
 	if ($swDbaHandler == 'sqlite3') return $db->firstkey();
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 reset($db->dict);
+		 return key($db->dict);
+	}
 		
 	return @dba_firstkey($db);
 }
@@ -67,6 +77,11 @@ function swDbaNextKey($db)
 {
 	global $swDbaHandler;
 	if ($swDbaHandler == 'sqlite3') return $db->nextkey();
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 next($db->dict);
+		 return key($db->dict);
+	}
 
 	return @dba_nextkey($db);
 }
@@ -82,7 +97,12 @@ function swDbaExists($key,$db)
 {
 	global $swDbaHandler;
 	if ($swDbaHandler == 'sqlite3') return $db->exists($key);
-	
+	elseif ($swDbaHandler == 'persistance')
+	{
+		if ($db)	return array_key_exists($key, $db->dict);
+		else 		return false;
+	}
+
 	return @dba_exists($key,$db);
 }
 
@@ -107,6 +127,10 @@ function swDbaFetch($key,$db)
 			$err->notify();			
 			return false;
 		}
+	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 return @$db->dict[$key];
 	}	
 	
 	return @dba_fetch($key,$db);
@@ -135,6 +159,10 @@ function swDbaReplace($key,$value,$db)
 			return false;
 		}
 	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 $db->dict[$key] = $value;
+	}	
 		
 	return @dba_replace($key,$value,$db);
 }
@@ -161,6 +189,11 @@ function swDbaSync($db)
 			return false;
 		}
 	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 $db->save();
+		 return true;
+	}	
 	return @dba_sync($db);
 }
 
@@ -187,6 +220,11 @@ function swDbaDelete($key,$db)
 			return false;
 		}
 	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 unset($db->dict[$key]);
+		 return;
+	}	
 	return @dba_delete($key,$db);
 }
 
@@ -211,7 +249,13 @@ function swDbaClose($db)
 			return false;
 		}
 
+	}
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 $db->save();
+		 return true;
 	}	
+		
 	return @dba_close($db);
 }
 
@@ -226,6 +270,12 @@ function swDbaCount($db)
 	global $swDbaHandler;
 	if ($swDbaHandler == 'sqlite3')
 		return $db->count();
+		
+	elseif ($swDbaHandler == 'persistance')
+	{
+		 return count($db->dict);
+	}	
+
 	
 	return 0; // there is no native function
 }
@@ -251,20 +301,30 @@ class swDba
 	
 	function __construct($path)
 	{
-		global $swRoot;
+		global $swRoot; 
 		$this->db = new SQLite3($path);
 		$this->path = str_replace($swRoot,'',$path);
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
+		
 		if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
 		{
 			throw new swDbaError('swdba is busy');
 		}
 			
-		$this->db->exec('PRAGMA journal_mode = DELETE'); // we do not use rollback
-		if (!@$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
+		$this->db->exec('PRAGMA journal_mode = WAL'); 
+		$this->db->exec('PRAGMA synchronous=NORMAL');
+		
+		if (!$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
 		{
 			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg());
 		}
 		$this->journal = array();
+		
+		
 	}
 	
 		
@@ -322,10 +382,13 @@ class swDba
 		
 		if ($this->db->lastErrorCode())
 		{
+			$this->db->exec('VACUUM');
 			throw new swDbaError('swDba exists error '.$this->db->lastErrorMsg());
 		}
-		
-		$row = $result->fetchArray();
+		else
+		{
+			$row = $result->fetchArray();
+		}
 		
 		if ($row['c']) return true;
 		else return false;
@@ -345,10 +408,13 @@ class swDba
 		
 		if ($this->db->lastErrorCode())
 		{
+			$this->db->exec('VACUUM');
 			throw new swDbaError('swDba fetch error '.$this->db->lastErrorMsg());
 		}
-		
-		$row = $result->fetchArray();
+		else
+		{
+			$row = $result->fetchArray();
+		}
 		return $row['v'];
 	}
 
@@ -395,6 +461,7 @@ class swDba
 
 		if ($this->db->lastErrorCode())
 		{
+			$this->db->exec('VACUUM');
 			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
 		}		
 		$this->journal = array();
@@ -439,6 +506,18 @@ class swDba
 		
 }
 
+
+/**
+ *  Last resort class if neither Sqlite nor dba functions are present
+ */
+
+
+class swPersistanceDba extends swPersistance
+{
+	var $dict = array();
+}
+
+
 /**
  *  Holds an error class.
  */
@@ -460,11 +539,3 @@ class swDbaError extends Exception
 }
 
 
-
-
-  
-
-
-
-	
-?>

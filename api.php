@@ -26,15 +26,16 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.7.5';  
+$swVersion = '3.7.6';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
 $swLangURL = false;
 $swOldStyle = false;
-$swOldSearch = true;
+$swOldSearch = false;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
+$swDbaHandler = 'persistance'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
 
 
 
@@ -51,12 +52,19 @@ $swRoot = dirname(__FILE__); // must be first
 ini_set('pcre.jit',0); // prevent preg_match to be limited to 2700 characters error 503
 	
 include_once $swRoot.'/inc/utilities.php'; // must be first as used by others
+include_once $swRoot.'/inc/notify.php';
+include_once $swRoot.'/inc/cookies.php';
+
+//swCookieTest('api61');
+
 include_once $swRoot.'/inc/persistance.php';
 include_once $swRoot.'/inc/bitmap.php';
 include_once $swRoot.'/inc/bloom.php';
 include_once $swRoot.'/inc/backup.php';
 include_once $swRoot.'/inc/chart.php';
-include_once $swRoot.'/inc/cookies.php';
+
+
+
 include_once $swRoot.'/inc/cron.php';
 include_once $swRoot.'/inc/db.php';
 include_once $swRoot.'/inc/dba.php';
@@ -67,8 +75,12 @@ include_once $swRoot.'/inc/expression.php'; // last for unit tests
 include_once $swRoot.'/inc/filter.php';
 include_once $swRoot.'/inc/function.php';
 include_once $swRoot.'/inc/legacy.php';
+
+
+
 include_once $swRoot.'/inc/monogram.php';
-include_once $swRoot.'/inc/notify.php';
+
+
 include_once $swRoot.'/inc/parser.php';
 include_once $swRoot.'/inc/record.php';
 include_once $swRoot.'/inc/rss.php';
@@ -76,12 +88,16 @@ include_once $swRoot.'/inc/semaphore.php';
 include_once $swRoot.'/inc/sitemap.php';
 include_once $swRoot.'/inc/user.php';
 
+
+
+
 include_once $swRoot.'/inc/wiki.php';
 
 include_once $swRoot.'/inc/relation.php';
 include_once $swRoot.'/inc/relationfilter.php';
 
 include_once $swRoot.'/inc/editortemplate.php';
+include_once $swRoot.'/inc/mail.php';
 
 // external code
 include_once $swRoot.'/inc/diff.php';
@@ -190,6 +206,7 @@ $swSpecials['Tickets'] = 'tickets.php';
 $swSpecials['Wanted Pages'] = 'wantedpages.php';
 $swSpecials['Field Search'] = 'fieldsearch.php';
 $swSpecials['Upload Big'] = 'uploadbig.php';
+$swSpecials['Active Users'] = 'activeusers.php';
 
 /*
 	initialize variables

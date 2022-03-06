@@ -29,10 +29,10 @@ foreach($powerusers as $p) $ticketusers[]=$p->username;
 
 $mytickets = true;
 
-function swhtmlselect($name, $list, $v, $default)
+function swHtmlSelect($name, $list, $v, $default)
 {
 	if (!$v) $v = $default;
-	$s = '<select name="'.$name.'" style="width:95%">';
+	$s = '<select name="'.$name.'">';
 	foreach ($list as $p)
 		$s .= ( $v == $p ? ' <option value="'.$p.'" selected>'.$p.'</option> ' : 
 ' <option value="'.$p.'">'.$p.'</option> ' );
@@ -49,8 +49,6 @@ if (isset($_POST['submitopen']))
 project id max';
 	$test = swRelationToTable($q);
 	
-	
-	
 	$id = @$test[0]['id_max'];
 	
 	$id = (int)@$id+1;
@@ -66,6 +64,26 @@ project id max';
 		if (!$w->revision) $found = false;
 		$id++;
 	}
+
+	
+	if (isset($_FILES['uploadedfile']) && $_FILES['uploadedfile'] && $_FILES['uploadedfile']['size'])
+	{		
+		$file = $_FILES['uploadedfile'];
+		$filename = 'ticket-'.$id.'-'.$file['name'];
+		$deleteexisting = false;
+
+		$imagefile =  swHandleUploadFile($file, $filename, '', $deleteexisting);
+		
+		if (substr($imagefile,-4)=='.jpg' || substr($imagefile,-5)=='.jpeg' || substr($imagefile,-4)=='.png' )
+		{
+			$text .= "\n".'<nowiki><img src="site/files/'.$imagefile.'" width=100%/></nowiki>';
+		}
+		else
+		{
+			$text .= "\n".'[[Media:'.$imagefile.']]';
+		}
+	}
+	
 	
 	
 	
@@ -89,7 +107,7 @@ project id max';
 	$assigned = '';
 	$mytickets = false;
 	$status = '';
-	$id = '';
+	//$id = '';
 }
 
 if (isset($_POST['submitcomment']))
@@ -101,6 +119,28 @@ if (isset($_POST['submitcomment']))
 	$fields = $w->internalfields;
 	$oldtext = $w->content;
 	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
+	
+	
+	
+	if (isset($_FILES['uploadedfile']) && $_FILES['uploadedfile'] && $_FILES['uploadedfile']['size'])
+	{
+		
+		$file = $_FILES['uploadedfile'];
+		$filename = 'ticket-'.$id.'-'.$file['name'];
+		$deleteexisting = false;
+
+		$imagefile =  swHandleUploadFile($file, $filename, '', $deleteexisting);
+		
+		if (substr($imagefile,-4)=='.jpg' || substr($imagefile,-5)=='.jpeg' || substr($imagefile,-4)=='.png' )
+		{
+			$text .= "\n".'<nowiki><img src="site/files/'.$imagefile.'" width=100%/></nowiki>';
+		}
+		else
+		{
+			$text .= "\n".'[[Media:'.$imagefile.']]';
+		}
+	}
+
 	
 	$activity = '';
 	if ($text != '')
@@ -157,6 +197,28 @@ if (isset($_POST['submitresolve']))
 	$fields = $w->internalfields;
 	$oldtext = $w->content;
 	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
+	
+	print_r($_FILES);
+	
+	if (isset($_FILES['uploadedfile']) && $_FILES['uploadedfile'] && $_FILES['uploadedfile']['size'])
+	{
+		
+		$file = $_FILES['uploadedfile'];
+		$filename = 'ticket-'.$id.'-'.$file['name'];
+		$deleteexisting = false;
+
+		$imagefile =  swHandleUploadFile($file, $filename, '', $deleteexisting);
+		
+		if (substr($imagefile,-4)=='.jpg' || substr($imagefile,-5)=='.jpeg' || substr($imagefile,-4)=='.png' )
+		{
+			$text .= "\n".'<nowiki><img src="site/files/'.$imagefile.'" width=100%/></nowiki>';
+		}
+		else
+		{
+			$text .= "\n".'[[Media:'.$imagefile.']]';
+		}
+	}
+
 	
 	$activity = '';
 	if ($text != '')
@@ -275,6 +337,7 @@ if (isset($_POST['submitclose']))
 	$mytickets = false;
 	$assigned = '';
 	$id = '';
+	$status = 'open';
 }
 
 
@@ -282,9 +345,22 @@ if (isset($_POST['submitclose']))
 if ($ticketaction == 'new')
 {
 
-	$swParsedContent .= "\n".'===New Ticket===';
-	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table class="blanktable"><tr><td >Title</td><td ><input type="text" name="title" value="" autocomplete="off" style="width:95%" /></td></tr><tr><td>Text</td><td><textarea name="text" rows="20" cols="80" style="width:95%"></textarea></td></tr><tr><td>Assign to </td><td>'.swhtmlselect('assigned',$ticketusers,$username,$username).'</td></tr><tr><td>Priority</td><td>'.swhtmlselect('priority',$priorities,'2 normal','2 normal').'</td></tr><tr><td></td><td><input type="submit" name="submitopen" value="Open Ticket" /></td></tr></table></form></nowiki>';
-	$mytickets = false;
+	$swParsedContent .= '<nowiki><div id="editzone" class="editzone">
+		<div class="editheader">New ticket</div>';
+	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" enctype="multipart/form-data">
+<input type="submit" name="submitopen" value="Open Ticket">
+<input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxFileSize.'" />
+<p>Title
+<input type="text" name="title" value="" autocomplete="off" />
+<p>Text
+<textarea name="text" rows="4" cols="80"></textarea>
+<p>Assign to
+'.swHtmlSelect('assigned',$ticketusers,$username,$username).'
+<p>Priority
+'.swHtmlSelect('priority',$priorities,'2 normal','2 normal').'
+<p>Add File
+<input type="file" name="uploadedfile" />
+</form></div></nowiki>';	$mytickets = false;
 	$assigned = '';
 }
 if ($ticketaction == 'activity')
@@ -327,7 +403,7 @@ if ($ticketaction == 'help')
 
 if ($status)
 {
-		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, assigned, status "'.$status.'"
+		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, creator, assigned, status "'.$status.'"
 order priority, id 9');
 
 
@@ -345,7 +421,7 @@ order priority, id 9');
 		foreach($lines as $line)
 		{
 			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned to '.@$line['assigned'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
+			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned from '.@$line['creator']. ' to '.@$line['assigned'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
 		  $i++;
 		}
 		$mytickets = false;
@@ -357,7 +433,7 @@ if ($mytickets) $assigned = $username; // default
 
 if ($assigned && !$id)
 {
-		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, assigned "'.$assigned.'"
+		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, creator, assigned "'.$assigned.'"
 select status !== "closed"
 select status !== "resolved"
 order priority, id 9');
@@ -366,7 +442,20 @@ order priority, id 9');
 		foreach($lines as $line)
 		{
 			if ($i > 100) break;
-			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> ('.substr(@$line['priority'],2).'): '.@$line['title'];
+			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned from '.@$line['creator'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
+		  $i++;
+		}
+		
+		$lines = swRelationToTable('filter _namespace "ticket", id, title, priority, status, assigned, creator "'.$assigned.'"
+select status !== "closed"
+select status !== "resolved"
+order priority, id 9');
+		$i=0;
+		$swParsedContent .= "\n".'===Tickets created from '.$assigned.'===';
+		foreach($lines as $line)
+		{
+			if ($i > 100) break;
+			$swParsedContent .= "\n".'<nowiki><a href="index.php?name=special:tickets&id='.@$line['id'].'">ticket #'.@$line['id'].'</a></nowiki> (assigned to '.@$line['assigned'].' with priority '.substr(@$line['priority'],2).'): '.@$line['title'];
 		  $i++;
 		}
 }
@@ -374,33 +463,49 @@ order priority, id 9');
 
 if ($id)
 {
+
+
 		$w = new swWiki;
 		$w->name = 'Ticket:'.$id;
 		$w->lookup();
 		$fields = $w->internalfields;
-		$swParsedContent .= "\n".'===Ticket #'.$id.': '.array_pop($fields['title']).'===';
+		// $swParsedContent .= "\n".'===Ticket #'.$id.': '.array_pop($fields['title']).'===';
+		
+		$swParsedContent .= "\n\n".'<nowiki><div id="editzone" class="editzone">
+<div class="editheader">Ticket #'.$id.': '.array_pop($fields['title']).'</div></nowiki>';
+		
 		
 		$text = $w->content;
 		$text = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $text);
 		$lines = $fields['activity'];
+		$swParsedContent .= '<div class="ticketcontent" style="padding-left:10px; padding-right: 10px;">';
 		$swParsedContent .= "\n".trim($text);
 		$swParsedContent .="\n\n----\n\n";
-		foreach($lines as $line)
-		{
-			$swParsedContent .= "''".$line."''\n";
-			
-		}	
-		
+		$swParsedContent .= '</div>';
 		$status = @$fields['status'][0];
 		
+
 		switch($status)
 		{
 			case 'open':  // allows to comment, reassign, change priority and set reseolved. creator can also close it.
 			
-			$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" class="ticketform"><table><tr><td>Comment</td><td><textarea name="text" rows="10" cols="80" style="width:95%"></textarea></td></tr><tr><td>Reassign to </td><td>'.swhtmlselect('assigned',$ticketusers,@$fields['assigned'][0],'').'</td></tr><tr><td>Change Priority</td> <td>'.swhtmlselect('priority',$priorities,@$fields['priority'][0],'').'</td></tr><tr><td></td><td><input type="hidden" name="id" value='.$id.'><input type="submit" name="submitcomment" value="Comment Ticket" /><input type="submit" name="submitresolve" value="Set Resolved" /></td></tr></table></form></nowiki>';
+			$swParsedContent .= "\n\n".'<nowiki><form method="post" action="index.php?name=special:tickets" enctype="multipart/form-data">
+			
+<input type="submit" name="submitcomment" value="Comment Ticket" />
+<input type="submit" name="submitresolve" value="Set Resolved" />
+<input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxFileSize.'" />
+<p>Comment
+<textarea name="text" rows="4" cols="80"></textarea>
+<p>Reassign to 
+'.swHtmlSelect('assigned',$ticketusers,@$fields['assigned'][0],'').'
+<p>Change Priority
+'.swHtmlSelect('priority',$priorities,@$fields['priority'][0],'').'
+<p>Add File
+<input type="file" name="uploadedfile" />
+<input type="hidden" name="id" value='.$id.'></form></nowiki>';
 			
 			break;
-			case 'resolved':  // only creator can close, but anybody can reopen.
+			case 'resolved':  // only creator can close, but anybody can reopen.  <input type="file" name="uploadedfile" />
 			
 			if ($username == @$fields['creator'][0])
 			{
@@ -420,15 +525,47 @@ if ($id)
 			}
 			break;
 		}
+
+
+		$swParsedContent .= '<div class="ticketcontent" style="padding-left:10px; padding-right: 10px;">';
+		foreach($lines as $line)
+		{
+			$swParsedContent .= "''".$line."''\n";
+			
+		}	
+
+
+
+
 		$swParsedContent .= "\n".'Creator: '.@$fields['creator'][0];
 		$swParsedContent .= "\n".'Assigned to: '.@$fields['assigned'][0];
 		$swParsedContent .= "\n".'Priority: '.substr(@$fields['priority'][0],2);
 		$swParsedContent .= "\n".'Status: '.@$fields['status'][0];
-		$swParsedContent .= "\n".'<nowiki><a href="index.php?name=Ticket:'.$id.'&action=edit" target="_blank">Edit Ticket</a> </nowiki>';
+		$swParsedContent .= "\n".'<nowiki><a href="index.php?name=Ticket:'.$id.'&action=edit" target="_blank">Edit Ticket</a> </div></div></nowiki>';
 		
 }
 
-
+/*
+if (isset($swTicketMail))
+{
+	$mailreader = new swMailReader;
+	$mailreader->init($swTicketServer, $swTicketMail, $swTicketMailPassword);
+	foreach($ticketusers as $t) $mailreader->addUser($t);
+	$swParsedContent .= "\n"."\n".'===Mail===';
+	$id = $mailreader->getNextMessageID();
+	$subject = $mailreader->getMessageSubject($id);
+	$swParsedContent .= "\n'''".$subject."'''";
+	$swParsedContent .= "\n";
+	$message = $mailreader->getMessageBodyText($id);
+	$swParsedContent .= $message;
+	
+	// we have the text
+	// identify ticket #nn
+	// identify separator ----write above this line---
+	// 
+	
+}
+*/
 
  
 $swParseSpecial = true;

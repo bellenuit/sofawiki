@@ -8,7 +8,6 @@ $swParsedContent = '<div id="editzone" class="editzone">
 <div class="editheader">'.swSystemMessage("upload",$lang).'</div>
 <form action="index.php" method="post" enctype="multipart/form-data">
 <input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxFileSize.'" />
-<input type="hidden" name="action" value="uploadfile" />
 <input type="submit" value="Upload" />
 <p>
 <input type="file" name="uploadedfile" />

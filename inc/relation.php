@@ -1177,11 +1177,12 @@ class swRelationLineHandler
 												{
 													$tp = current($r->tuples);
 													
-													if(!$tp) continue;
-														
-													foreach($tp->pfields as $k=>$v)
+													if($tp)
 													{
-														$dict[$k] =$v;
+														foreach($tp->pfields as $k=>$v)
+														{
+															$dict[$k] =$v;
+														}
 													}
 												}
 											}

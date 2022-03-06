@@ -255,6 +255,3 @@ function swGetDeny($ip)
 	}
 	
 }
-
-
-?>

@@ -26,7 +26,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
  */
 
 
-function swHandleCookie($id,$default,$period=9000000,$refresh = true)
+function swHandleCookie($id,$default='',$period=9000000,$refresh = true)
 {
 
 	
@@ -36,19 +36,20 @@ function swHandleCookie($id,$default,$period=9000000,$refresh = true)
 	if (array_key_exists($id, $_POST)) 
 	{
 		$result =  $_POST[$id];
-		if (!setcookie($key, $result, time() + $period)) echotime('headerssent post cookie '.$id); 
+		if (!setcookie($key, $result, time() + $period,'/')) echotime('headerssent post cookie '.$id); 
 	}
 	elseif (array_key_exists($id, $_GET)) 
 	{
 		$result =  $_GET[$id];
-		if (!setcookie($key, $result, time() + $period)) echotime('headerssent get cookie '.$id); 
+		if (!setcookie($key, $result, time() + $period,'/')) echotime('headerssent get cookie '.$id); 
 		
 	}
 	elseif (array_key_exists($key, $_COOKIE)) 
 	{
 		$result =  $_COOKIE[$key];
+		//echotime('handlecookie '.$key.' '.$result);
 		// we refresh the cookie here to make it live longer
-		if ($refresh) if (!setcookie($key, $result, time() + $period)) echotime('headerssent refresh cookie '.$id);
+		if ($refresh) if (!setcookie($key, $result, time() + $period,'/')) echotime('headerssent refresh cookie '.$id);
 	}
 	else
 	{
@@ -74,7 +75,7 @@ function swGetCookie($id,$period=9000000,$refresh = true)
 	if (array_key_exists($key, $_COOKIE)) 
 	{
 		$result = $_COOKIE[$key];
-		if ($refresh) if (!setcookie($key, $result, time() + $period)) echotime('headerssent refresh cookie '.$id);
+		if ($refresh) if (!setcookie($key, $result, time() + $period,'/')) echotime('headerssent refresh cookie '.$id);
 		return $result;
 	}
 }
@@ -94,10 +95,12 @@ function swSetCookie($id,$value,$period = 9000000)
 {
 	global $swCookiePrefix;
 	$key= $swCookiePrefix.'-'.$id;
-	if (!setcookie($key, $value, time() + $period)) echotime('headerssent set cookie '.$id); 
+	if (!setcookie($key, $value, time() + $period,'/')) echotime('headerssent set cookie '.$id); 
 }
 
-
-
-
-?>
+function swCookieTest($s='')
+{
+	$v = rand();
+	$period = 1000;
+	if (!setcookie('cookietest', $v, time() + $period,'/')) echotime('headerssent set cookie '.$id); 
+}

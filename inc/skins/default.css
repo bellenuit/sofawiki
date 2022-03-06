@@ -322,6 +322,7 @@ del
 	color: red;
 }
 
+
 div.editzone
 {
 	border: 1px solid black;
@@ -406,9 +407,20 @@ div.editzone form input[type="password"]
 
 div.editzone form select
 {
+	
+	appearance: none;
+	background-color: white;
+	border: 1px solid black;
+	padding: 0 1em 0 0;
+	margin: 0;
+	
+	
+	
 	margin-top: 4px;
 	margin-bottom: 4px;
-	height: 20px;
+	height: 26px;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-size: 13px;
 	width: 100%;
 }
 
@@ -470,7 +482,7 @@ input[type="text"]
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	border: 1px solid black;
 	font-weight: bold;
-	font-size: 16px;
+	font-size: 13px;
 }
 
 input[type="password"]
@@ -481,14 +493,14 @@ input[type="password"]
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	border: 1px solid black;
 	font-weight: bold;
-	font-size: 16px;
+	font-size: 13px;
 }
 
 input[type="submit"] 
 {
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	font-weight: bold;
-	font-size: 16px;
+	font-size: 13px;
 	background-color: white;
 	border: 1px solid black;
 	padding-right: 10px;
@@ -508,7 +520,7 @@ input[type="file"]
 {
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	font-weight: normal;
-	font-size: 16px;
+	font-size: 13px;
 	background-color: white;
 	border: 1px solid black;
 	padding-right: 10px;
@@ -562,6 +574,8 @@ a.invalid
 {
 	color: red;
 }
+
+
 
 span.error 
 {

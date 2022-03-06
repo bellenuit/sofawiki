@@ -8,8 +8,8 @@
  *	@version 3.7.1
  *  
  */
- 
 
+ob_start(); // protect header for cookies
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -31,12 +31,14 @@ if (swGetDeny($_SERVER['REMOTE_ADDR']))
    die('invalid acces '.$_SERVER['REMOTE_ADDR']);
 } 
 
-
+// echotime(print_r($_COOKIE, true));
 
 // to keep session longer than some minutes use in .htaccess php_value session.cookie_lifetime 0 
 session_name('PHPSESSION_'.@$swCookiePrefix);
 session_start();
 
+
+//swCookieTest('index41');
 
 
 // get valid globals
@@ -87,16 +89,14 @@ if (!isset($powerusers))
 	$powerusers[] = $poweruser;
 }
 
-
-
 // create user
 $knownuser = false;
 $username = swHandleCookie('username','',$swUserCookieExpiration);
 if ($action == 'logout') 
 {
 	unset($_SESSION[$swMainName.'-username']);
-	swSetCookie('username','',0);
-	swSetCookie('passwordtoken','',0);
+	swSetCookie('username','',1000);
+	swSetCookie('passwordtoken','',1000);
 	$username = ''; $pass = '';
 	
 	session_write_close();
@@ -105,60 +105,87 @@ if ($action == 'logout')
 
 }
 if(isset($_SESSION[$swMainName.'-username'])&& $_SESSION[$swMainName.'-username'] != '')
-{	$knownuser = true;  $username = $_SESSION[$swMainName.'-username']; }
-if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt))
-{	$knownuser = true; }
-if($username && swGetCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()-24*60*60).$swEncryptionSalt))
-{	$knownuser = true; } 
+{	
+	$knownuser = true; 
+	$username = $_SESSION[$swMainName.'-username']; 
+	$passwordtoken = md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
+	swSetCookie('passwordtoken',$passwordtoken,$swUserCookieExpiration);
+	echotime('session');
+}
+elseif($username && swHandleCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt))
+{	
+	$knownuser = true; 
+	echotime('passwordtoken');
+}
+elseif($username && swHandleCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()-24*60*60).$swEncryptionSalt))
+{	
+	$knownuser = true;
+	echotime('passwordtoken1');
+} 
 
 $altuser = swHandleCookie('altuser','',$swUserCookieExpiration);
 
 
 if (isset($_REQUEST['submitlogin'])) $knownuser = false;
 
+
+//echo $username; echo ' '.swGetCookie('passwordtoken'); echo ' '.md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt); 
+//echo '<p>'.swNameURL($username).date('Ymd',time()).$swEncryptionSalt;
+//echo ' ('.$knownuser.')';
+
+
 if($knownuser)
 {
-        $found=false;
-       	foreach($powerusers as $p)
-        {
-       		if ($found) continue;
-       		if ($username == $p->username)
-			{
-				$user = $p;
-				$found = true;
-				
-				error_reporting(E_ALL);
-				ini_set("display_errors", 1); 
+    //echo " known ";
+    $found=false;
+   	foreach($powerusers as $p)
+    {
+   		if ($found) continue;
+   		if ($username == $p->username)
+		{
+			$user = $p;
+			$user->name = 'User:'.$username;
+			$found = true;
+			
+			error_reporting(E_ALL);
+			ini_set("display_errors", 1); 
 
-			}
+		}
+	}
+	
+	if (!$found)
+	{
+		$user = new swUser;
+		
+		$user->name = 'User:'.$username;
+		$user->lookup();
+		$user->username = $username;
+		
+		if (substr($username,0,3) == 'ip.')
+			$user->ipuser = true;
+		
+		if (!$user->visible())
+		{
+			$username = '';
+			$user->username = '';
 		}
 		
-		if (!$found)
-		{
-			$user = new swUser;
-			
-			$user->name = 'User:'.$username;
-			$user->lookup();
-			$user->username = $username;
-			
-			if (substr($username,0,3) == 'ip.')
-				$user->ipuser = true;
-			
-			if (!$user->visible())
-			{
-				$username = '';
-				$user->username = '';
-			}
-			
-			error_reporting(0);
-			ini_set("display_errors", 0); 
+		error_reporting(0);
+		ini_set("display_errors", 0); 
 
-		}
-		if ($action=='login' & !$user->ipuser) $action='view'; // do not stay in login 
+	}
+	if ($action=='login' & !$user->ipuser) $action='view'; // do not stay in login 
 		
 }
 else
 {
+	//echotime(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
+	//echotime('needed '.md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt));
+	//echotime('cookie '.swGetCookie('passwordtoken'));
+	
+
+	
+	
 	if (array_key_exists('username', $_REQUEST)) 
 		$username = trim($_REQUEST['username']);
 		
@@ -175,6 +202,7 @@ else
        	if ($username == $p->username)
 		{
 			$user = $p;
+			$user->name = 'User:'.$username;
 			$user->pass = $pass;
 			$found = true;
 			error_reporting(E_ALL);
@@ -217,16 +245,18 @@ else
 	
 	
 	$user->name = 'User:'.$username;
-	
-	
+	echotime('valid? '.$pass );
+	echotime(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
 	if ($user->validpassword())
 	{
 		
 		$_SESSION[$swMainName.'-username'] = $username;
 		$passwordtoken = md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
+		echotime('valid '.$passwordtoken);
 		swSetCookie('passwordtoken',$passwordtoken,$swUserCookieExpiration);
 		$user->username = $username = $user->nameshort();
 		$action='view';
+		// echo 'valid';
 		
 	}
     else
@@ -254,9 +284,12 @@ else
 		$user->content = $swAllUserRights;
 		
 		$username = '';
+		
     }
+ 
 }
 
+// swCookieTest('index291');
 
 if ($user->name != '' && isset($altuser) && $altuser != '')
 {
@@ -281,6 +314,8 @@ if ($action == 'logout')
 }
 
 echotime('user '.$username);
+
+ob_end_flush();
 
 
 //session_write_close(); 1.9.0 moved down to end
@@ -856,11 +891,18 @@ if ($user->hasright('upload','') && $action != 'logout')
 if ($user->hasright('special','special') && $action != 'logout')
 {	
 	ksort($swSpecials);
+	
+	// force list first
+	$k = 'All Pages';
+	$linkwiki->name = 'Special:'.$k; 
+	$m = 'listmenu-';
+	$swEditMenus[$m.$k] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.$k.'</a>';
+	
 	foreach ($swSpecials as $k=>$v)
 	{
 		$linkwiki->name = 'Special:'.$k; 
 		$m = 'specialmenu-';
-		if (in_array($k, array('All Pages','Categories','Dead End Pages ','Images','Long Pages','Most Linked Categories','Most Linked Pages', 'Orphaned Pages', 'Protected Pages','Recent Changes', 'Redirects', 'Short Pages', 'System Messages ','Templates', 'Uncategorized Pages', 'Unused Files', 'Unused Templates', 'Users' , 'Wanted Pages'))) $m = 'listmenu-';
+		if (in_array($k, array('All Pages','Categories','Dead End Pages','Deleted Pages','Images','Long Pages','Most Linked Categories','Most Linked Pages', 'Orphaned Pages', 'Protected Pages','Recent Changes', 'Redirects', 'Short Pages', 'System Messages ','Templates', 'Uncategorized Pages', 'Unused Categories', 'Unused Files', 'Unused Templates', 'Users' , 'Wanted Pages'))) $m = 'listmenu-';
 		$swEditMenus[$m.$k] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.$k.'</a>';
 
 	}
@@ -970,6 +1012,11 @@ if (!isset($swOvertime))
 
 swLog($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 swSemaphoreRelease();
+
+
+/*print_r($_COOKIE);
+echo $username;
+print_r($user);*/
 
 
 ?>
