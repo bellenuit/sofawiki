@@ -74,7 +74,7 @@ project id max';
 
 		$imagefile =  swHandleUploadFile($file, $filename, '', $deleteexisting);
 		
-		if (substr($imagefile,-4)=='.jpg' || substr($imagefile,-5)=='.jpeg' || substr($imagefile,-4)=='.png' )
+		if (substr($imagefile,-4)=='.jpg' || substr($imagefile,-5)=='.jpeg' || substr($imagefile,-4)=='.png' )
 		{
 			$text .= "\n".'<nowiki><img src="site/files/'.$imagefile.'" width=100%/></nowiki>';
 		}
