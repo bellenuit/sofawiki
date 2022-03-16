@@ -64,7 +64,8 @@ $swParsedContent = "'''Version''' {{version}}
 '''Pages''' {{countpages}}
 '''Revisions''' {{countrevisions}}
 '''Base path''' ".$swRoot."
-'''RAM disk''' ".$swRamdiskPath;
+'''RAM disk''' ".$swRamdiskPath."
+'''swDbaHandler''' ".$swDbaHandler;
 
 if ($deepl = swTranslateUsage())
 $swParsedContent .=  "
