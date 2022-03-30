@@ -790,7 +790,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	// view
 	if ($user->hasright('view', $editwiki->name) && $editwiki->revision)
 	{
-		$swEditMenus['viewmenu-article'] = '<a href="'.$editwiki->link('view','--').'" rel="nofollow" accesskey="v">'.swSystemMessage('view',$lang).' ^V</a>';
+		$swEditMenus['viewmenu-article'] = '<a href="'.$editwiki->link('view','--').'" rel="nofollow" accesskey="v">'.swSystemMessage('view',$lang).'</a>';
 		$swEditMenus['viewmenu-history'] = '<a href="'.$editwiki->link('history','--').'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
 		
 		foreach ($swLanguages as $l)
@@ -808,7 +808,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	
 	if ($user->hasright('modify', $editwiki->name) && $editwiki->status == 'ok') 
 	{
-		$swEditMenus['editmenu-edit'] = '<a href="'.$editwiki->link('edit','--').'" rel="nofollow" accesskey="e">'.swSystemMessage('edit',$lang).' ^E</a>';
+		$swEditMenus['editmenu-edit'] = '<a href="'.$editwiki->link('edit','--').'" rel="nofollow" accesskey="e">'.swSystemMessage('edit',$lang).'</a>';
 		if (isset($editwiki->internalfields['editortemplate']))
 		{
 			$swEditMenus['editmenu-source'] = '<a href="'.$editwiki->link('editsource','--').'" rel="nofollow">'.swSystemMessage('edit-source',$lang).'</a>';
@@ -861,9 +861,9 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 if ($user->hasright('create', '*'))
 {
 	if ($action != 'special' && $action != 'modify' && $action != 'new' && $wiki->status == '')
-		$swEditMenus['newmenu-new'] = '<a href="'.$wiki->link('edit').'&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' ^N</a>';
+		$swEditMenus['newmenu-new'] = '<a href="'.$wiki->link('edit').'&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).'</a>';
 	else
-		$swEditMenus['newmenu-new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' ^N</a>';
+		$swEditMenus['newmenu-new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' </a>';
 	
 	$templatewiki = new swWiki;
 	$templatewiki->name = 'System:editortemplate';
@@ -885,7 +885,7 @@ if ($user->hasright('upload','') && $action != 'logout')
 {
 	$linkwiki = new swWiki;
 	$linkwiki->name = 'special:upload'; 
-	$swEditMenus['newmenu-upload'] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow" accesskey="U">'.swSystemMessage('upload',$lang).' ^U</a>';
+	$swEditMenus['newmenu-upload'] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow" accesskey="U">'.swSystemMessage('upload',$lang).'</a>';
 }
 
 if ($user->hasright('special','special') && $action != 'logout')

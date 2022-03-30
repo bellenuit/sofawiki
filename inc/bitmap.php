@@ -170,7 +170,7 @@ class swBitmap extends swPersistance
 		$bitmask = 128 >> $bit;
 
 		if ($this->map == '') $this->dehexit();	
-		$ch = $this->map[$byte];
+		$ch = @$this->map[$byte];
 		$ch = ord($ch);
 		$ch = $ch | $bitmask;
 		$ch = chr($ch);
@@ -224,7 +224,7 @@ class swBitmap extends swPersistance
 		$bitmask = 128 >> $bit;
 		
 		if ($this->map == '') $this->dehexit();	
-		$ch = $this->map[$byte];
+		$ch = @$this->map[$byte];
 		$ch = ord($ch);
 		$ch = $ch & $bitmask;
 		if ($ch) 

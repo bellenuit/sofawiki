@@ -118,23 +118,28 @@ class swRecord extends swPersistance
 			// check revisions but only if this is the global name
 			// ressource limit else
 			// some namespaces however are priority
+			// 30.3.2022 move to check them all.
 			
 			global $name, $swMainName;
 			// suppressed empty needle
+			/*
 			if (@stristr($this->name,$swMainName) || @stristr($name,$this->name) 
 			|| !stristr($this->name,':') || (!stristr($this->name,'/') &&   (stristr($this->name,'template') || stristr($this->name,'image')) ) )
+			{*/
+			
+			$revs = swGetAllRevisionsFromName($this->name);
+			sort($revs, SORT_NUMERIC); 
+			$this->revision = array_pop($revs);
+			echotime('revision '.$this->revision);
+			
+			if (!$this->revision)
 			{
-					$revs = swGetAllRevisionsFromName($this->name);
-					sort($revs, SORT_NUMERIC); 
-					$this->revision = array_pop($revs);
-					echotime('revision '.$this->revision);
-					
-					if (!$this->revision)
-					{
-						$fpt = fopen($c,'c');
-						fclose($fpt);
-					}
+				$fpt = fopen($c,'c');
+				fclose($fpt);
 			}
+			/*
+			}
+			*/
 			
 		}
 			

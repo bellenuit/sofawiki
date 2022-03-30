@@ -116,8 +116,12 @@ $done = '';
 		
 		swUnlink($swRoot.'/site/indexes/bloom.raw');
 	 	swUnlink($swRoot.'/site/indexes/bloombitmap.txt');
+	 	
+	 	swUnlink($swRoot.'/site/indexes/monogram.db');
 	
-		$done .= '<p>Deleted bloom';
+		$done .= '<p>Deleted bloom and monogram';
+		
+		
 	}
 	
 	
@@ -280,7 +284,7 @@ switch($_REQUEST['index'])
 								  
 								 // echotime('k' .$k);
 								  
-							  } while ($k !== FALSE);
+							  } while ($k !== FALSE && $k != '' && $k != 0);
 
 							  $swParsedContent .= '<p>length: '.$counter;
 							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);

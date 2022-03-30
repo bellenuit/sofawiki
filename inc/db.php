@@ -88,13 +88,14 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->inited = true;
 		
 		//selfhealing
-		$this->pathbase = "$swRoot/site/";
-		if (!is_dir( "$swRoot/site/")) mkdir ( "$swRoot/site/",0777); // mode does not work
-		if (!is_dir( $this->pathbase.'current/')) mkdir ( $this->pathbase.'current/', 0777); 
-		if (!is_dir( $this->pathbase.'indexes/')) mkdir ( $this->pathbase.'indexes/', 0777);
-		if (!is_dir( $this->pathbase.'queries/')) mkdir ( $this->pathbase.'queries/', 0777);
-		if (!is_dir( $this->pathbase.'files/')) mkdir ( $this->pathbase.'files/', 0777);
-		if (!is_dir( "$swRoot/site/revisions/")) mkdir ( "$swRoot/site/revisions/", 0777);
+		$this->pathbase = $swRoot.'/site/';
+		if (!is_dir($this->pathbase)) 			   mkdir($this->pathbase,0777); // mode does not work
+		if (!is_dir($this->pathbase.'cache/'))     mkdir($this->pathbase.'cache/', 0777); 
+		if (!is_dir($this->pathbase.'current/'))   mkdir($this->pathbase.'current/', 0777); 
+		if (!is_dir($this->pathbase.'indexes/'))   mkdir($this->pathbase.'indexes/', 0777);
+		if (!is_dir($this->pathbase.'queries/'))   mkdir($this->pathbase.'queries/', 0777);
+		if (!is_dir($this->pathbase.'files/'))     mkdir($this->pathbase.'files/', 0777);
+		if (!is_dir($this->pathbase.'revisions/')) mkdir($this->pathbase.'revisions/', 0777);
 		
 		$bitmaperror = false;
 		

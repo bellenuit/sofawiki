@@ -114,24 +114,34 @@ class swImagesParser extends swParser
 			
 			}
 			
-			if (substr($file,-4) == '.jpg' || substr($file,-5) == '.jpeg' || substr($file,-4) == '.png' || substr($file,-4) == '.gif')
+			$fileinfo = pathinfo($file);
+			$fileextension = strtolower($fileinfo['extension']);
+			
+			if (in_array($fileextension, array('jpg','jpeg','png','gif')))
 			{
 				
-				
 				$path = $swRoot.'/site/files/'.$file;
-				$img = @ImageCreateFromJpeg($path); 
+				switch($fileextension)
+				{
+					case 'jpg':
+					case 'jpeg': $img = @imagecreatefromjpeg($path); break;
+					case 'png': $img = @Imagecreatefrompng($path); break;
+					case 'gif': $img = @imagecreatefromgif($path); break;
+					default: $img = null;
+				}
+				
 				if ($img)
 				{
 					$originalwidth = ImagesX($img);
 					$originalheight = ImagesY($img);
-					$scaledheight = $originalheight * 640 / $originalwidth;
-								
+					$scaledheight = min($originalheight,$originalheight * 640 / $originalwidth);
+					$scaledwidth = $scaledheight*$originalwidth/$originalheight;
 				
 				
-					$s .='<p><div style="position:relative"><img class="embeddimage" id="image" alt="" src="site/files/'.$file.'" style="width:640px; height:'.$scaledheight.'px; position:absolute; top:0px; left:0px;"><canvas id="imagecanvas" style="position:absolute; top:0px; left:0px;" onmouseleave="drawCrop()" /></div>';
+					$s .='<p><div style="position:relative"><img class="embeddimage" id="image" alt="" src="site/files/'.$file.'" style="width:'.$scaledwidth.'px; height:'.$scaledheight.'px; position:absolute; top:0px; left:0px;"><canvas id="imagecanvas" style="position:absolute; top:0px; left:0px;" onmouseleave="drawCrop()" /></div>';
 					$s .= $wiki->parsedContent;
 					
-					if (substr($file,-4) == '.jpg' || substr($file,-4) == 'jpeg')
+					if (in_array($fileextension, array('jpg','jpeg','png','gif')))
 					{
 					
 					$s .= '<div style="position:relative"><h4>Crop</h4>';
@@ -158,7 +168,9 @@ class swImagesParser extends swParser
 				{
 					$scaledheight = $originalwidth = 0;
 				}
-
+				
+				$savename = $wiki->name;
+				if ($fileextension != 'jpg') $savename.= '.jpg';
 				
 				$s .= "<nowiki><script>
 				
@@ -412,7 +424,7 @@ function drawCrop()
 	hfield.setAttribute('value',Math.round(h*formscale));
 	tfield.setAttribute('value',Math.round(x*formscale));
 	lfield.setAttribute('value',Math.round(y*formscale));
-	textfield.setAttribute('value',w+'-'+h+'-'+x+'-'+y+'-".str_replace('Image:','',$wiki->name)."');
+	textfield.setAttribute('value',w+'-'+h+'-'+x+'-'+y+'-".str_replace('Image:','',$savename)."');
 	
 	
 	// fill outside

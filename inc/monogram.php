@@ -193,7 +193,11 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		
 	swDbaSync($swMonogramIndex);
 	
-	
+	if ($counter)
+	{
+		global $swOvertime;
+		$swOvertime = true;
+	}
 	
 	return $counter;	 
 }

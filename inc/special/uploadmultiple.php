@@ -39,7 +39,7 @@ foreach($files as $file)
 $wiki->name = 'Upload multiple';
 
 if ($i>100) $swParsedContent .= '<br/><br/>Limited to 500 files. Reload to get the rest of it.'; 
-if (!$found) $swParsedContent .= '<br/><br/>No file found'; 
+if (!$found) $swParsedContent .= '<br/><br/>No file found in site/upload/'; 
 
 $swParseSpecial = false;
 
