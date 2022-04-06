@@ -245,7 +245,7 @@ function swIndexRamDiskDB()
 		if (count($swRamDiskJobs)>500) swUpdateRamDiskDB();
 				
 	}
-	if (count($swRamDiskJobs)) $swOvertime = true;
+	if (is_array($swRamDiskJobs) && count($swRamDiskJobs)) $swOvertime = true;
 	swUpdateRamDiskDB();
 	return true;
 

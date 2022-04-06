@@ -315,7 +315,7 @@ if ($action == 'logout')
 
 echotime('user '.$username);
 
-ob_end_flush();
+
 
 
 //session_write_close(); 1.9.0 moved down to end
@@ -707,6 +707,8 @@ switch ($action)
 
 }
 
+ob_end_flush();
+
 if ($swRedirectedFrom)
 {
 	$swStatus = 'Redirected from '.$swRedirectedFrom;
@@ -918,14 +920,19 @@ if (isset($swAdditionalEditMenus))
 if (!$username) $swEditMenus = array();
 
 
-$swLangMenus = array();
+if (!isset ($swLangMenus)) $swLangMenus = array();
 if (count($swLanguages)>1)
 foreach ($swLanguages as $v)
 {
+		if (!isset($swLangMenus[$v])) // interlanguage link already defined by link parser
+		{
+		
 		if ($swLangURL)
 			$swLangMenus[$v] = '<a href="'.$wiki->link('view',$v).'">'.swSystemMessage($v,$lang).'</a>';
 		else
 			$swLangMenus[$v] = '<a href="'.$wiki->link('view','--').'&amp;lang='.$v.'">'.swSystemMessage($v,$lang).'</a>';
+			
+		}
 }
 unset($v);
 $swSearchMenu = '<div id="searchmenu">

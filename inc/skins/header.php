@@ -1,9 +1,5 @@
 <?php if (isset($_REQUEST['ajax']))
 {
-	if (isset($swOvertime) && $swOvertime)
-		echo '1';
-		else
-		echo '0';
 	echo $swParsedContent;
 		
 	return;

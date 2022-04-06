@@ -18,7 +18,7 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 		$wiki->user = $user->name;
 		$wiki->lookup();
 		
-		$swParsedName = $name2;
+		// $swParsedName = $name2;
 		
 		$wiki->parsers = $swParsers;
 		$swParsedContent = $wiki->parse();
@@ -27,7 +27,7 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 		$wiki->name = $name;
 		$wiki->user = $user->name;
 		$wiki->lookup();
-		if ($wiki->status == 'ok')
+		if ($wiki->status == 'ok' && isset($_POST['subpage']['--']))
 		{
 			$swStatus = 'Deleted: '.$wiki->name;
 			
@@ -39,12 +39,9 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 			}
 
 			$wiki->delete();
-			$swParsedName = '';
 
 		}	
-		
-		// do it again for all subpages
-		
+				
 		foreach($swLanguages as $ln)
 		{
 			
@@ -52,15 +49,15 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 			$wiki2->name = $name.'/'.$ln;
 			$wiki->user = $user->name;
 			$wiki2->lookup();
-			if ($wiki2->revision > 0 && $wiki->status !== 'deleted')
+			if ($wiki2->revision > 0 && $wiki2->status !== 'deleted' && isset($_POST['subpage'][$ln]))
 			{
 				$wiki2->delete();
-				$swStatus .=' /'.$ln;
+				$swStatus .= ' Deleted: '.$wiki2->name;;
 			}
 		}
 	}
 	
-	$swParsedName = '';
+	$swParsedName = $swStatus;
 	$swParsedContent = '';
 }
 
