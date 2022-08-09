@@ -37,89 +37,130 @@ class swWiki extends swRecord
 							 $this->parsedContent = "<pre>$s</pre>";
 							 break;
 			
-			default:  $docache = false; 
-			
-					
-			
-					  foreach ($this->parsers as $key=>$parser)
-								{	
-										
-										
-										if (is_a($parser,'swCacheParser'))
-										{
-											$r = $parser->dowork($this); 
-											if ($r==2) break;
-											if ($r==1) $docache = true; 
-											continue;
-										}
-										
-										
-										
-										//echo  $this->parsedContent;
-										//print_r($parser); 
-										
-										// get all <nowiki> tags and replace with magic word
-										$s = $this->parsedContent; 
-										
-										//echotime('nowiki start');
-										
-										
-										$nowikis = array();
-										if (stristr($s,'<nowiki>'))
-										{
-											
-											
-											
-											preg_match_all("/<nowiki>(.*)<\/nowiki>/Us", $s, $matches, PREG_SET_ORDER);
-											
-											
-											
-											$i = 0;
-											foreach ($matches as $v)
-											{
-												$i++;
-												$k = "(NOWIKI$i)"; 
-												$nowikis[$k] = $v[0];
-												$s = str_replace($v[0],$k,$s);
-											}
-											
-										}
-										
-										//echotime('nowiki end');
-										
-										
-										$this->parsedContent = $s;
-										
-										//echotime('parse start');
-										$parser->dowork($this); 
-										//echotime('parse done');
-										
-										// put nowiki tags back
-										
-										$s = $this->parsedContent; 
-										foreach($nowikis as $k=>$v)
-										{
-											
-											$s = str_replace($k,$v,$s);
-										
-										}
-										$this->parsedContent = $s;
-										
-										
+			default:  		$docache = false; 
+							$nowikis = array();
+							foreach ($this->parsers as $key=>$parser)
+							{	
+								
+									
+								if (is_a($parser,'swCacheParser'))
+								{
+									$r = $parser->dowork($this); 
+									if ($r==2) break;
+									if ($r==1) $docache = true; 
+									continue;
 								}
 								
-								// clean nowiki
-								$s = $this->parsedContent;
-								$s = str_replace("<nowiki>","",$s);
-								$s = str_replace("</nowiki>","",$s);	
+								
+								
+								//echo  $this->parsedContent;
+								//print_r($parser); 
+								
+								// get all <nowiki> tags and replace with magic word
+								$s = $this->parsedContent; 
+								
+								if (strstr($s,'<nowiki>'))
+								{
+									
+									echotime('nowiki start '.strlen($s));
+									
+									
+									$offset = 0;
+									
+									$pos = strpos($s,'<nowiki>',$offset);
+									
+									$lines = array();
+									
+									
+									// offset-----pos<nowiki>----pos2</nowiki>
+									
+									while (true)
+									{
+										$pos2 = strpos($s,'</nowiki>',$pos);
+										if ($pos !== false && $pos2 !== false)
+										{
+											// before match
+											$lines[] = substr($s,$offset,$pos-$offset);
+											$v = substr($s,$pos+strlen('<nowiki>'),$pos2-$pos-strlen('<nowiki>'));
+											$k = 'NOWIKI('.md5($v).')'; 
+											$nowikis[$k] = $v;
+											// match
+											$lines[] = $k;
+											$offset = $pos2+strlen('</nowiki>');
+											$pos = strpos($s,'<nowiki>',$offset);
+										}
+										else
+										{
+											$lines[] = substr($s,$offset);
+											break;
+										}
+										
+									} 
+									
+									
+									if (count($lines)) $s = join('',$lines);
+								
+								}
+								
+								// print_r($lines);
+								
 								$this->parsedContent = $s;
 								
-								if ($docache)
-								{
-									$parser=new swPutCacheParser;
-									$parser->dowork($this); 
+								echotime('parse start '.$key.' '.strlen($s));
+								$parser->dowork($this); 
+								//echotime('parse done');
+								
+								//echo $key.' '.strlen($s);
 									
+							}
+							
+							
+							
+							// put nowiki tags back
+							
+							$s = $this->parsedContent; 
+							
+							if (strstr($s,'NOWIKI('))
+							{
+								$lines = [];
+								$offset = 0;
+								preg_match_all("/NOWIKI\([0-9a-f]{32}\)/Us", $s, $matches, PREG_SET_ORDER);
+								//print_r($matches);
+								foreach ($matches as $v)
+								{
+									$p = strpos($s,$v[0],$offset);
+									$lines[] = substr($s,$offset,$p-$offset);
+									$lines[] = $nowikis[$v[0]];
+									$offset = $p+40;
 								}
+								
+								$lines[] = substr($s,$offset);
+								
+								$s = join('',$lines);
+							}
+							
+							//echo $s;
+							
+							/*
+							foreach($nowikis as $k=>$v)
+							{
+								$s = str_replace($k,$v,$s); // lent!
+							}
+							*/
+							$this->parsedContent = $s;
+							
+							// clean nowiki
+							$s = $this->parsedContent;
+							//$s = str_replace("<nowiki>","",$s);
+							//$s = str_replace("</nowiki>","",$s);	
+							$this->parsedContent = $s;
+							
+							if ($docache)
+							{
+								$parser=new swPutCacheParser;
+								$parser->dowork($this); 
+								
+							}
 								
 		}
 		

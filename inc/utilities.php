@@ -257,7 +257,7 @@ function swGetAllFields($s,$allowinternalvariables=false)
 
 }
 
-function swReplaceFields($s,$fields,$options)
+function swReplaceFields($s,$fields,$options='')
 {
 	$fields0 = swGetAllFields($s);
 	
@@ -285,6 +285,9 @@ function swReplaceFields($s,$fields,$options)
 		// add new field
 		if (is_array($value))
 		{
+			
+			
+			
 			$s .= PHP_EOL.'[['.$key;
 			if (!count($value)) $s .= '::';
 			foreach($value as $v)
@@ -293,6 +296,8 @@ function swReplaceFields($s,$fields,$options)
 			}
 			$s .= ']]';
 		}
+		elseif($value == '⦵') 
+			; // do nothing
 		else
 			$s .= PHP_EOL.'[['.$key.'::'.swEscape($value).']]';
 	}

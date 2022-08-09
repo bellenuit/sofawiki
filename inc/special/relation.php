@@ -9,6 +9,7 @@ $swMaxOverallSearchTime *=3;
 $q = swGetArrayValue($_REQUEST,'q');
 $submitrefresh = swGetArrayValue($_REQUEST,'submitrefresh');
 $submkitwikitext = swGetArrayValue($_REQUEST,'submitwikitext');
+$submitexecute = swGetArrayValue($_REQUEST,'submitexecute');
 if ($submitrefresh)
 	$swDebugRefresh = true;
 
@@ -19,8 +20,8 @@ $swParsedContent = '<nowiki>
 <input type="submit" name="submit" value="Run ^R" accesskey="r"/>
 <input type="submit" name="submitrefresh" value="Run Refresh" />
 <input type="submit" name="submitwikitext" value="Run Wikitext" />
+<input type="submit" name="submitexecute" value="Run Execute" />
 <input type="hidden" name="name" value="special:relation" />
-<code id="editor" display:none">'.$q.'</code>
 <textarea id="shadoweditor" name="q" rows=8>'.$q.'</textarea>
 </form>
 </div><!-- editzone -->

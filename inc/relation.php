@@ -472,6 +472,36 @@ class swRelationLineHandler
 									}
 									
 									break; 	
+
+				case 'execute':		if(!isset($_REQUEST['submitexecute']) && !isset($_REQUEST['confirmexecute']))
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Ignore execute without submit run execute '.$ptagerrorend.$ptag2;	
+										$this->errors[]=$il;
+									}
+									elseif (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Excecute Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$this->stack[] = swRelationExcecute($r,$body);
+										
+										if (!isset($_REQUEST['confirmexecute']))
+										{										
+											$this->result .='<nowiki><form method="post" action="index.php"></nowiki>';
+											global $name;
+											$this->result .=  '<nowiki><input type="hidden" name="name" value="'.$name.'"></nowiki>';
+		
+											$this->result .=  '<nowiki><input type="submit" name="confirmexecute" value="Confirm" style="color:red"></nowiki>';
+											$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
+											$this->result .='<nowiki></form></nowiki>';
+										}
+
+									}
+									break;				
+
 				case 'extend':		if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Extend Stack empty'.$ptagerrorend.$ptag2;
@@ -3321,6 +3351,7 @@ class swRelation
 		
 		$grid = false;
 		$linegrid = false;
+		$spacegrid = false;
 		$edit = '';
 		$editfile = '';
 		
@@ -3335,6 +3366,12 @@ class swRelation
 		{
 			$limit = substr($limit,8);
 			$linegrid = true; 
+			$grid = true;
+		}
+		elseif (substr($limit,0,9) == 'spacegrid')
+		{
+			$limit = substr($limit,9);
+			$spacegrid = true; 
 			$grid = true;
 		}
 		elseif (substr($limit,0,4) == 'edit')
@@ -3383,6 +3420,8 @@ class swRelation
 		
 		if ($linegrid)
 			$lines[]= '{| class="sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
+		elseif ($spacegrid)
+			$lines[]= '{| class="sortable spacegrid" maxgrid="'.$limit.'" id="table'.$id.'"';
 		elseif ($grid)
 			$lines[]= '{| class="print sortable" maxgrid="'.$limit.'" id="table'.$id.'"';
 		else
@@ -3391,12 +3430,16 @@ class swRelation
 		$k = count($this->header);
 		
 		$line = '';
+		$alllables = '';
 		foreach($this->header as $f)
 		{
+			if ($spacegrid) continue;
 			if (isset($this->labels[$f]))
 				$ls = $this->labels[$f];
 			else
 				$ls = $f;
+			
+			$alllables .= $ls;
 			
 			if (@$this->formats[$f])
 			{
@@ -3411,9 +3454,11 @@ class swRelation
 			
 			else  $line = '! '.$td.$ls;
 		}
-		//$line = '! '.join(' !! ',$ls);
-		$lines[]= '|-';
-		$lines[]= $line;
+		if ($alllables) // not all are empty
+		{
+			$lines[]= '|-';
+			$lines[]= $line;
+		}
 		
 		$c = count($this->tuples);
 		$i0 = 0;
@@ -3565,7 +3610,7 @@ class swRelation
 		{
 			$d = $dicts[$i];
 			if ($i>0) $lastd = $dicts[$i-1]; else $lastd = null;
-			if ($i<$c-1) $nextd = $dicts[$i+1]; else $lastd = null;
+			if ($i<$c-1) $nextd = $dicts[$i+1]; else $nextd = null;
 			
 			$eachhashappened = false;
 			$m = count($selectors);
@@ -3631,7 +3676,7 @@ class swRelation
 											else // must be last
 											{
 												
-												if ($i==0 or $nextd[$key] != $d[$k])
+												if ($i==$c-1 or $nextd[$key] != $d[$key])
 												{
 													foreach($this->header as $f)
 													{

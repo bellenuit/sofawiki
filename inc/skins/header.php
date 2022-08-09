@@ -2,7 +2,7 @@
 {
 	echo $swParsedContent;
 		
-	return;
+	exit;
 
 }
 ?><!DOCTYPE HTML>
@@ -29,10 +29,9 @@ echo trim(str_replace('"',"'",$d));
 ?>'">
 <link rel='stylesheet' href="inc/skins/default.css"/>
 <?php echo @$skinstylesheet; ?>
-<link rel='stylesheet' href="inc/skins/markrelationcode.css"/>
-<link rel="apple-touch-icon" sizes="180x180" href="inc/skins/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="inc/skins/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="inc/skins/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="site/skins/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="site/skins/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="site/skins/favicon-16x16.png">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 <?php
@@ -85,7 +84,7 @@ $groupHeader = '<div class="dropdown-content">';
 $barHeaderFooter = '</a>'.PHP_EOL;
 $barFooter = $itemFooter = $groupFooter = '</div>'.PHP_EOL;
 
-if (count($swEditMenus))
+if (count($swEditMenus) || true)
 {
 	$sep = ''; //'&nbsp;&nbsp;&nbsp;';
 	
@@ -140,27 +139,44 @@ if (count($swEditMenus))
 		$mainmenus['debug'] .= $itemSilentHeader.$swDebug.$itemFooter;
 		 
 	}
-	$mainmenus['login'] = $barHeaderDesktop.$barHeaderHeader.'User:'.$username.$barHeaderFooter.$groupHeader; 	
+	if (count($swLangMenus))
+	{
+		$mainmenus['lang']  = $barHeaderDesktop.$barHeaderHeader.swSystemMessage($lang,$lang).$barHeaderFooter.$groupHeader;
+		foreach($swLangMenus as $item) {$mainmenus['lang'] .= $itemHeader.$item.$itemFooter;}
+	}
+
+	if ($username)
+		$mainmenus['login'] = $barHeaderDesktop.$barHeaderHeader.'User:'.$username.$barHeaderFooter.$groupHeader;
+	else
+		$mainmenus['login'] = $barHeaderDesktop.$barHeaderHeader.swSystemMessage('login',$lang).$barHeaderFooter.$groupHeader;
+	 	
+
 	foreach($swLoginMenus as $item)
 	{
 		if ($item == $username) continue;
 		$mainmenus['login'] .= $itemHeader.$item.$itemFooter;
 	}
-
 	
-	$mainmenus['search']  = $barHeader.$swSingleSearchMenu;
+	$mainmenus['search']  = $barHeader.'<div>'.$swSingleSearchMenu;
 	
 		
 	foreach($mainmenus as $item) {echo $item.$groupFooter.$barFooter.PHP_EOL ; }
 	
-	
-	
-	
-	echo '</div>';
-	
-}
 
-echo '
+	if (trim($swStatus) || trim($swError))
+	{
+		echo PHP_EOL.'<div class="dropdown"><div class="dropdown-item-status">';
+		echo trim($swStatus);
+		if (trim($swError)) 
+		{
+			if (trim($swStatus)) echo ' ';
+			echo PHP_EOL.'<span class="error">'.trim($swError).'</span>';
+		}
+		echo PHP_EOL.'</div></div>';
+	}
+	
+	
+	echo '
 <script>
 function showAppMenu(parent)
 {
@@ -184,21 +200,17 @@ function hideAppMenu()
 
 window.onclick = hideAppMenu;
 </script>';
-	
 
-if (trim($swStatus) || trim($swError))
-{
-	echo PHP_EOL.'<div id="appmenu">';
-	echo PHP_EOL.'<div class="dropdown"><div class="dropdown-item-status">';
-	echo trim($swStatus);
-	if (trim($swError)) 
-	{
-		if (trim($swStatus)) echo '<br>';
-		echo PHP_EOL.'<span class="error">'.trim($swError).'</span>';
-	}
-	echo PHP_EOL.'</div></div>';
-	echo PHP_EOL.'</div><!-- appmenu -->';
+	
+	echo $barFooter;
+	echo $barFooter;
 	
 }
+
+
+
+	
+
+
 
 echo PHP_EOL.'<div id="page">';

@@ -179,10 +179,15 @@ function swRelationVirtual($url)
 	$wiki->parsers[] = new swCacheparser;
 	$wiki->parsers[] = new swTidyParser;
 	$wiki->parsers[] = new swTemplateParser;
+	$wiki->parsers[] = new swStyleParser;
 	
 	$wiki->parse();
 	
+	
+	
 	$list = swGetAllFields($wiki->parsedContent);
+	
+	//echo $wiki->parsedContent;
 	
 	// normalize array, to a table, but using only used fields and field
 	$maxcount = 1;
@@ -822,7 +827,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			*/
 	
-			$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any', '_status');
+			$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any', '_status', '_name', '_revision');
 			$notinvalues = array('_displayname', '_length', '_namespace', '_status');
 			
 			// echo " bigbefore ".$bigbloom->length;
@@ -838,6 +843,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					{
 						// echo ' ,'.$field;
 						$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
+						
+						$tocheckcount = $gr->countbits();
+						echotime('bloom -'.$field.'- '. $tocheckcount); 	
+						
 						// echo ' field '.$field.' '.$gr->length;
 						$bigbloom = $bigbloom->andop($gr);
 					}
@@ -858,6 +867,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 								if ($hand != '' && strlen($hand)>2)
 								{
 									$gr = swGetBloomBitmapFromTerm($hand);
+									
+									$tocheckcount = $gr->countbits();
+									echotime('bloom '.$hand.' '. $tocheckcount); 	
+									
 									$gr->redim($bigbloom->length, true);
 									$band = $band->andop($gr);
 								}
@@ -876,7 +889,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			$bigbloom->redim($tocheckbitmap->length,true);
 			
+			//$tocheckcount = $tocheckbitmap->countbits();
+			//echotime('bloom0 '.$tocheckcount); 	
+			
+			//$tocheckcount = $bigbloom->countbits();
+			//echotime('bigbloom '.$tocheckcount.print_r($bigbloom->toarray(),true)); 		
+	
+			
 			$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
+			
+			$tocheckcount = $tocheckbitmap->countbits();
+			echotime('bloom1 '.$tocheckcount); 	
 			$nottocheck = $bigbloom->notop();
 			
 			//echo " big ".$bigbloom->length;
@@ -1334,23 +1357,42 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ($sp != ':') $ns[$sp]= $sp;
 	}
 
-	echotime('sync');
 	
-	$d = array();	
+	
+	if ($bdbrwritable)
+	{	
+		// dba_replace('_filter',$filter,$bdb);
+		swDbaReplace('_overtime',serialize($overtime),$bdb);
+		swDbaReplace('_bitmapcount',$bitmap->countbits(),$bdb);
+		swDbaReplace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
+	$bitmap->hexit();
+		swDbaReplace('_bitmap',serialize($bitmap),$bdb);
+	$checkedbitmap->hexit();
+		swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$bdb);
+		swDbaReplace('_header',serialize($header),$bdb);
+		
+	}
+
+	//echotime('sync');
+	
 	
 	swDbaSync($bdb);
 	
-	
+	$d = array();	
 	
 	$key = swDbaFirstKey($bdb);
 
-	echotime('userrights');
+	//echotime('userrights');
 	
 	while($key)
 	{
 		//echotime('key '.$key);
 		
-		if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
+		if (substr($key,0,1)=='_')
+		{
+			$key = swDbaNextKey($bdb); 
+			continue;
+		}
 		
 		$keys = explode('-',$key);
 		$kr = $keys[0];
@@ -1358,8 +1400,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if (!$db->currentbitmap->getbit($kr))
 		{
 			//echotime('delete');
-			swDbaDelete($key,$bdb);
-			$bitmap->unsetbit($kr);
+			//swDbaDelete($key,$bdb);
+			//$bitmap->unsetbit($kr);
+			
+			$key = swDbaNextKey($bdb);
+			continue;
 		}
 		
 		$d = @unserialize(swDbaFetch($key,$bdb)); // can be wrong
@@ -1370,7 +1415,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$dnf =explode(':',$dn);
 			$dns = swNameURL(array_shift($dnf));
 			$nss = join(PHP_EOL,$ns);
-			if (!stristr($nss,$dns) && !$user->hasright('view',$dn)) continue;
+			if (!stristr($nss,$dns) && !$user->hasright('view',$dn))
+			{
+				$key = swDbaNextKey($bdb);
+				continue;
+			}
 		}
 				
 		if (!in_array('_revision',$result->header)) unset($d['_revision']);
@@ -1386,21 +1435,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$key = swDbaNextKey($bdb);
 	}
 	
-	echotime('header');
+	//echotime('header');
 	
-	if ($bdbrwritable)
-	{	
-		// dba_replace('_filter',$filter,$bdb);
-		swDbaReplace('_overtime',serialize($overtime),$bdb);
-		swDbaReplace('_bitmapcount',$bitmap->countbits(),$bdb);
-		swDbaReplace('_checkedbitmapcount',$checkedbitmap->countbits(),$bdb);
-	$bitmap->hexit();
-		swDbaReplace('_bitmap',serialize($bitmap),$bdb);
-	$checkedbitmap->hexit();
-		swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$bdb);
-		swDbaReplace('_header',serialize($header),$bdb);
-		
-	}
 	
 	swDbaClose($bdb);
 	
@@ -1413,7 +1449,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	
 	// print_r($result);
-	echotime('filter end');
+	//echotime('filter end');
 	
 	//print_r($result);
 	

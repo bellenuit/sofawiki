@@ -329,6 +329,10 @@ switch($_REQUEST['index'])
 						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
 						 			
 						 			$bm2 = swGetBloomBitmapFromTerm($_REQUEST['term']);
+						 			
+						 			$tocheckcount = $bm2->countbits();
+									echotime('bloom '.$_REQUEST['term']); 
+									
 						 			$c0 = $bm2->countbits();
 						 			$n = $db->currentbitmap->countbits();
 						 			
@@ -345,7 +349,7 @@ switch($_REQUEST['index'])
 									
 									
 									// if ($c0 < 2000)
-									$arr = $bm->toarray();
+									$arr = $bm2->toarray(); /* IMPORTANT */ 
 									
 									$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
 																	

@@ -82,6 +82,9 @@ function tablefilter(id) {
   allvisible = true;
   
   for (i = 0; i < tr.length; i++) {
+	th = tr[i].getElementsByTagName("th");
+	if (th.length > 0) continue;
+	
     // Hide the row initially.
     tr[i].style.display = "none";
   
@@ -91,7 +94,7 @@ function tablefilter(id) {
       if (cell) {
         // if (cell.innerHTML.toUpperCase().indexOf(filter) > -1) {
 	    if (cell.innerHTML.match(regexfiler)) {
-		     if (maxgrid == '' || visiblerows <= maxgrid) {
+		     if (maxgrid == '' || visiblerows < maxgrid) {
 	          tr[i].style.display = "";
 	          visiblerows++;
 	          break;
@@ -104,6 +107,7 @@ function tablefilter(id) {
       }
     }
   }
+  
   plus = document.getElementById('plus'+theid);
   if (plus)
   {

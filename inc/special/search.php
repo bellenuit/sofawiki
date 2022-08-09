@@ -14,6 +14,14 @@ $swError = '';
 $found = false;
 $name = 'special:search';
 
+
+if (count($swLanguages)>1)
+foreach ($swLanguages as $v)
+{
+	$swLangMenus[$v] = '<a href="index.php?action=search&query='.$urlquery.'&lang='.$v.'">'.swSystemMessage($v,$v).'</a>';
+}
+
+
 if (@$swOldSearch)
 {
 	include "inc/special/oldsearch.php";

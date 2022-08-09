@@ -420,7 +420,11 @@ class swDba
 
 	function delete($key)
 	{
+		$test = $this->exists($key);
+	 	if (!$test) return;
+		
 		$this->journal[$key] = false;
+		if (count($this->journal) >= 1000) $this->sync();
 	 	
 	}
 	
@@ -440,7 +444,7 @@ class swDba
 	{
 		if (!count($this->journal)) return;
 		
-		echotime('sync '.count($this->journal));
+		echotime('sync '.count($this->journal).' alt '.$this->count());
 		
 		$lines = array();
 		$lines[] = "PRAGMA synchronous=OFF; ";
@@ -465,6 +469,8 @@ class swDba
 			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
 		}		
 		$this->journal = array();
+		
+		echotime('sync end '.count($this->journal));
 		
 	}
 	

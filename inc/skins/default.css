@@ -11,11 +11,12 @@
 	background-color: white;
 	border-bottom: 0.5px solid black;
 	color: black; 
-	font-size: 100%;
+	font-size: 13px;
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	font-weight: bold;
 	padding-top: 0px;
 	box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.2);
+	z-index: 10;
 } 
 
 #editmenu a
@@ -49,7 +50,7 @@
 	background-color: lightgreen;
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	padding: 10px;
-	font-size: 13px;	
+	font-size: 100%;	
 } 
 
 #info
@@ -119,7 +120,9 @@
 
 #page
 {
+	
 	position: relative;
+	background-color: white;
 }
 
 #search
@@ -153,7 +156,7 @@
 
 .dropdown
 {
-  height: 18px;
+  height: 26px;
   position: relative;
   padding: 0px;
   display: inline-block;
@@ -179,7 +182,7 @@
   min-width: 240px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
  
-  z-index: 1;
+  z-index: 10;
 }
 
 .dropdown-content a
@@ -195,37 +198,40 @@
 
 .dropdown-item
 {
-	height: 18px;
-	padding-top: 6px;
-	padding-bottom: 2px;
-	padding-right: 8px;
-	padding-left: 8px;
+	height: 26px;
 }
 
 .dropdown-item a
 {
 	display: block;
-	width: 100%;
+	width: calc(100% - 16px);
+	height: 26px;
+	padding-right: 8px;
+	padding-left: 8px;
+	color: black;
+	text-decoration: none;
 }
 
 .dropdown-item-header
 {
+	display: block;
+	width: calc(100% - 16px);
 	height: 18px;
-	padding-top: 6px;
-	padding-bottom: 2px;
+	padding-top: 4px;
+	padding-bottom: 4px;
 	padding-right: 8px;
 	padding-left: 8px;
-	display: block;
 }
 
 .dropdown-item-status
 {
-	height: 18px;
+	display: block;
+	width: calc(100% - 16px);
+	height: 26px;
 	padding-top: 6px;
 	padding-bottom: 2px;
 	padding-right: 8px;
 	padding-left: 8px;
-	display: block;
 	color: green;
 }
 
@@ -250,7 +256,9 @@
   text-decoration: underline;
 }
 
-.dropdown-item a
+
+
+.dropdown a
 {
   color: black;
   text-decoration: none;
@@ -310,6 +318,10 @@ table.datatable th
     cursor: pointer;
 }
 
+.spacegrid tr
+{
+	display:inline;
+}
 
 body
 {
@@ -555,7 +567,12 @@ input.searchfield
 
 input.singlesearchfield
 { 
-	border: none; color: gray;
+	border: none; color: black; z-index: 20;
+}
+
+input.singlesearchfield:focus
+{
+	/* nothing */
 }
 
 ins 
@@ -709,13 +726,13 @@ video.yfrog
 
 	.dropdownmobilemenu 		{ display: none; }
 	
-	input.singlesearchfield 	{ width: 200px;}
+	input.singlesearchfield 	{ width: 200px; }
 }
 
 @media all and (max-width:640px)
 {
 
-	#appmenu   					{ height: auto; padding-bottom: 8px; }
+	#appmenu   					{ height: auto; padding-bottom: 8px; border-bottom: 0.8px solid black;}
 	
 	#content   					{ position: static;  width: calc(100% - 32px); padding-left: 16px; padding-right: 16px; }
 
@@ -731,19 +748,20 @@ video.yfrog
 
 	.dropdownmobilemenu 		{ display: inline-block; }	
 	.dropdown-item-header 		{ height: 32px; padding-top: 7px; padding-bottom: 7px;  font-size: 22px;}
+	.dropdown-item-status 		{ height: 32px; padding-top: 7px; padding-bottom: 7px;  font-size: 22px;}
 	.dropdown-item 				{ height: 32px; padding-top: 7px; padding-bottom: 7px; min-width: 360px;  font-size: 22px;}
 	.dropdown-item-silent 		{ height: 32px; padding-top: 7px; padding-bottom: 7px; min-width: 360px;  font-size: 22px;}
 
-	body      					{ font-size: 120%; }
+	body      					{ font-size: 120%; line-height: 140%;}
 
-	input[type="text"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px);}
+	input[type="text"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px); font-size: 120%;}
 	
-	input[type="password"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px);}
+	input[type="password"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px); font-size: 120%;}
 
-	input[type="submit"]    	{ border: 1px solid black; background-color: white; color: black; margin: 20px; min-width: calc(50% - 20px); font-size: 120%} 
+	input[type="submit"]    	{ border: 1px solid black; background-color: white; color: black; margin: 20px; min-width: calc(50% - 20px);} 
 	
 	input[type="submit"]:hover 	{ background-color: lightgray; cursor: pointer; }
 	
-	input.singlesearchfield 	{ width: 300px; font-size: 22px; margin-left: 8px; }
+	input.singlesearchfield 	{ width: 300px; font-size: 22px; margin-left: 8px; font-size: 22px;}
 	
 }

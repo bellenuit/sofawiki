@@ -16,7 +16,7 @@ xmlhttp.onreadystatechange=function()
     {
     	s = xmlhttp.responseText;
 		overtime = s.substr(0,1);
-		t = s.substr(1);
+		t = s.substr(0);
 		document.getElementById("parsedcontent").innerHTML=t;
 		if (overtime=="1")
 		{
@@ -47,11 +47,4 @@ setTimeout(function()
 }
 
 ?>
-<script src="inc/skins/markrelationcode.js"></script>
-<script>
-	editor = document.getElementById("editor");
-	if (editor){ let mini = miniEditor(editor,markRelationCode);  markRelationCode();}
-	
-</script>
-
 </html>

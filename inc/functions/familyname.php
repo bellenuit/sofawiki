@@ -14,6 +14,10 @@ class swFamilyNameFunction extends swFunction
 	 	return "(name) defines family name for albphabetical order, using exceptions";
 	}
 
+	function arity()
+	{
+		return 1;
+	}
 	
 	function dowork($args)
 	{

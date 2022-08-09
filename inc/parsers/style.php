@@ -25,6 +25,7 @@ class swStyleParser extends swParser
 		
 		$s = $wiki->parsedContent;
 		
+		echotime('parse style');
 		
 		//echo "<p>STYLE</p>$s";
 
@@ -37,7 +38,7 @@ class swStyleParser extends swParser
 		$s = "\n".$s."\n";
 		
 		// table parser
-		
+		/*
 		//echo strlen($s);
 		// preg_match_all('/\n{\|(.*?)\n\|}/s', $s, $matches, PREG_SET_ORDER);
 		$tablestart = strpos($s,"\n{|");
@@ -161,7 +162,7 @@ class swStyleParser extends swParser
 			$tableend = strpos($s,"\n|}",$tablestart);
 			
 		}
-			
+		*/	
 	
 		// headers     	
 		// id must use single token
@@ -227,8 +228,15 @@ class swStyleParser extends swParser
 		$lines = explode("\n",$s);
 		$s = '';
 		$state = '';
+		$tablerow = '';
+		echotime('parse lines '.count($lines));
+		
+		//print_r($lines);
+		
 		foreach ($lines as $line)
 		{
+			//echo '(<p>'.$tablerow.') '.$line; 
+			
 			
 			if (trim($line) == '') 
 			{  
@@ -239,30 +247,76 @@ class swStyleParser extends swParser
 				}
 				continue;
 			}
-						
-			switch (substr($line,0,3))
+			
+					
+			switch (substr($line.' ',0,3))
 			{
-				case '<h2':
-				case '<h3':
-				case '<h4':
-				case '<h5':
-				case '<di':
-				case '</d':
-				case '<ta':
-				case '<ul':
-				case '<ol':
-				case '<pr':
-				case '<bl': 
-				case '<hr':
-				
-							 	if ($state == 'p')
-								{
-									$s .= '</p>';
-									$state = '';
-								}
-								$s .= $line; break;
+				case '{| ':   $s.= '<table '.substr($line,3).'>'; $tablerow = ''; 
+							  break;
+				case '|+ ':   $s.= '<caption>'.substr($line,3).'</caption>'; 
+							  break;
+				case '|} ':   if ($tablerow) $s.= $tablerow .'</tr>';
+							  $s.= '</table>';
+							  $tablerow = '';
+							  break;
+				case '|- ':   if ($tablerow) $s.= $tablerow .'</tr>'; 
+							  $tablerow = '<tr '.substr($line,3).'>';
+							  break;
 								
-				default: 	if (substr($line,0,1)==' ')
+				default: 	if (substr($line,0,1)=='!')
+							{
+								if (!$tablerow) $tablerow = '<tr>';
+								$cells = explode(' !! ', substr($line,2));
+								foreach($cells as $cell)
+								{
+									$t = strpos($cell,' | ');
+									if ($t>0) 
+									{
+										$c = substr($cell,$t+3);
+										if (!$c) $c = '&nbsp;';
+										$tablerow .= '<th '.substr($cell,0,3).'>'.$c.' </th>';
+									}
+									else
+									{
+										if (!$cell) $cell = '&nbsp;';
+										$tablerow .= '<th>'.$cell.' </th>';
+									}
+								}					
+							}
+							elseif (substr($line,0,1)=='|')
+							{
+								if (!$tablerow) $tablerow = '<tr>';
+								$cells = explode(' || ', substr($line,2));
+								foreach($cells as $cell)
+								{
+									$t = strpos($cell,' | ');
+									if ($t>0) 
+									{
+										$c = substr($cell,$t+3);
+										if (!$c) $c = '&nbsp;';
+										$tablerow .= '<td '.substr($cell,0,3).'>'.$c.' </td>';
+									}
+									else
+									{
+										$tablerow .= '<td>'.$cell.'</td>';
+									}
+								}	
+							}
+							elseif ($tablerow)
+							{
+								// continue last cell
+								if (substr($line,0,1) == '<')
+								{	
+									
+									$tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
+
+								}
+								else
+								{
+									$tablerow = substr($tablerow,0,-5).'<br>'.$line.substr($tablerow,-5); // </td>
+								}
+							}
+							elseif (substr($line,0,1)==' ')
 							{
 								if ($state == 'p')
 								{
@@ -276,14 +330,25 @@ class swStyleParser extends swParser
 							{
 								$s .= '<br>'.$line;
 							}
-							else
+							elseif (substr($line,0,1) == '<')
 							{
-								if (trim($line) != '') 
+								if ($state == 'p')
+								{
+									$s .= '</p><p>'.$line;
+									$state = '';
+								}
+								else
 								{
 									$s .= '<p>'.$line;
-									$state = 'p';	
-								}						
+									$state = 'p';
+								}	
 							}
+							elseif (trim($line) != '') 
+							{
+									$s .= '<p>'.$line;
+									$state = 'p';	
+							}						
+				
 			}
 			//$s.="(STATE $state)";
 			
@@ -292,6 +357,7 @@ class swStyleParser extends swParser
 		// bugs
 		$s = str_replace("<p><div","<div",$s);
 		$s = str_replace("</div></p>","</div>",$s);
+		$s = str_replace('<td></td>','<td><&nbsp;/td>',$s);
 
 	
 		

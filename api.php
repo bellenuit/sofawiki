@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.7.9';  
+$swVersion = '3.8.0';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -35,7 +35,8 @@ $swOldStyle = false;
 $swOldSearch = false;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
-$swDbaHandler = 'persistance'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
+$swRamdiskPath = 'db';
+$swDbaHandler = 'sqlite3'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
 
 
 
@@ -251,7 +252,7 @@ $swDefaultSkin = 'default';
 $swDefaultLang = 'en';
 
 $swMediaFileTypeDownload = '';
-$swRamdiskPath = '';
+
 
 
 
