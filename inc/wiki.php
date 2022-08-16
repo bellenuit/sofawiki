@@ -301,10 +301,10 @@ class swWiki extends swRecord
 			
 		if ($subpagelang && $subpagelang!= "--")
 		{
-		if (substr($result,-3,1) == "/")
-			$result = substr($result,0,-3)."/".$subpagelang;
-		else
-			$result = $result."/".$subpagelang;
+			if (substr($result,-3,1) == "/")
+				$result = substr($result,0,-3)."/".$subpagelang;
+			else
+				$result = $result."/".$subpagelang;
 		}
 		
 		// 
@@ -313,9 +313,9 @@ class swWiki extends swRecord
 		global $swMainName; 
 		if ($swSimpleURL && ($action =="" || $action =="view") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt")
 		{
-			$result = swNameURL($this->name);
+			$result = swNameURL($this->namewithoutlanguage());
 			if (!$result) 
-				$result = $swMainName;			
+				$result = swNameURL($swMainName);			
 			if ($swLangURL)
 			{
 				if ($subpagelang && $subpagelang != '--')
@@ -328,12 +328,10 @@ class swWiki extends swRecord
 				}
 			}
 			if (stristr($this->name,":"))
-				$result = './'.$result; // force relative link
+				$result = './'.$result.'&i'; // force relative link
 				
 		}
-		
-		
-		
+
 		return $result;
 	
 	}

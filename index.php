@@ -934,6 +934,7 @@ foreach ($swLanguages as $v)
 			
 		}
 }
+
 unset($v);
 $swSearchMenu = '<div id="searchmenu">
 <form method="get" action="index.php">

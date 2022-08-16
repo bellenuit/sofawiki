@@ -59,12 +59,12 @@ function swInitRamdisk()
 		if ($swRamDiskDB) return; 
 		if (!file_exists($swRamDiskDBpath))
 		{
-			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'c', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'c');
 			echotime('new db');
 		}
 		else
 		{
-			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'rdt', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'rdt');
 			echotime('open db');  // if it fails, it is false
 		}
 		return;
@@ -194,7 +194,7 @@ function swUnlink($path)
 			
 			if (isset($swRamDiskDB) and $swRamDiskDB) swDBA_close($swRamDiskDB);
 
-			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt', 'db4');
+			$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt');
 			if ($swRamDiskDB)
 			{
 				swDbaDelete($path,$swRamDiskDB);
@@ -225,7 +225,7 @@ function swIndexRamDiskDB()
 	global $db;
 	global $swOvertime;
 	
-	$k = rand(0,$db->lastrevision/1000)*1000; //echo $k;
+	$k = rand(0,$db->lastrevision/1000)*1000; 
 	
 	global $swMemoryLimit;
 	
@@ -260,7 +260,7 @@ function swUpdateRamDiskDB()
 	if (!@count($swRamDiskJobs)) return;
 	
 	if ($swRamDiskDB) swDbaClose($swRamDiskDB);
-	$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt', 'db4');
+	$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt');
 	if ($swRamDiskDB)
 	{
 		foreach($swRamDiskJobs as $k=>$v)

@@ -242,6 +242,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if (!trim($filter)) return new swRelation('',null,null);
 	
+	
+	
+	
 	global $swIndexError;
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
@@ -396,6 +399,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	//echotime($mdfilter);
 	$bdbfile = $cachefilebase.'.db';
+	//echo $bdbfile; return;
 	
 	if ($refresh)
 		{ echotime('refresh'); if (file_exists($bdbfile)) unlink($bdbfile);}
@@ -493,15 +497,15 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	$firstrun = ! file_exists($bdbfile);
 	
 	if (file_exists($bdbfile))
-		$bdb = swDbaOpen($bdbfile, 'wdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'wdt');
 	else
 	{
-		$bdb = swDbaOpen($bdbfile, 'c', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'c');
 	}
 	if (!$bdb)
 	{
 		// try read only
-		$bdb = swDbaOpen($bdbfile, 'rdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'rdt');
 		
 				
 		if (!$bdb)
@@ -590,6 +594,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	
 	$db->init();
+	
 	$maxlastrevision = $db->lastrevision;
 	if ($db->indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($db->indexedbitmap->length); // fallback
 	
@@ -615,8 +620,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	global $swMonogramIndex;
 	swOpenMonogram();
 	
+	
+	
 	if (isset($swMonogramIndex) && $firstrun)
-	{		
+	{		;
 		$notinlabels = array('_paragraph', '_word');
 		$notinvalues = array('_paragraph', '_word');
 		
@@ -693,7 +700,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 
 	}
 	
-
+	
 	
 	$dur = 0; // check always at least 50 records
 		
@@ -704,17 +711,24 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ((!$cached || $tocheckcount > 50) && ($namefilter || $namespacefilter))
 		{
 			
-			$urldbpath = $db->pathbase.'indexes/urls.db';
-			if (file_exists($urldbpath))
-			$urldb = swDbaOpen($urldbpath, 'rdt', 'db4');
-			if (!@$urldb)
+			
+			//global $swDbaHandler;
+			//$urldbpath = $db->pathbase.'indexes/urls.db';
+			//if (file_exists($urldbpath))
+			//$urldb = swDbaOpen($urldbpath, 'rdt', $swDbaHandler);
+			
+			
+			global $db;
+			if (!$db->urldb)
 			{
 				echotime('urldb failed');
 			}
 			else
 			{				
 				
-				$r0 = swDbaFirstKey($urldb);		
+				
+				
+				$r0 = swDbaFirstKey($db->urldb);		
 				
 				do 
 				{
@@ -743,7 +757,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{	
-							$line = swDbaFetch($r0,$urldb);
+							$line = swDbaFetch($r0,$db->urldb);
 							$fs = explode(' ',$line);
 							$st = array_shift($fs);
 							$r = array_shift($fs);
@@ -777,7 +791,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if (!$orfound)
 						{
-							$line = swDbaFetch($r0,$urldb);
+							$line = swDbaFetch($r0,$db->urldb);
 							$fs = explode(' ',$line);
 							$st = array_shift($fs);
 							$r = array_shift($fs);
@@ -792,7 +806,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 					}
 				
-				} while ($r0 = swDbaNextKey($urldb));
+				} while ($r0 = swDbaNextKey($db->urldb));
 				
 			
 			} // else db failed		
@@ -801,6 +815,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			echotime('namefilter '.$tocheckcount); 	
 			
 		}
+		
+		
 				
 		if (!$cached) //bloom
 		{
@@ -826,6 +842,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			
 			*/
+			
+			
 	
 			$notinlabels = array('_displayname', '_length', '_namespace', '_template', '_content', '_short', '_paragraph', '_word','_any', '_status', '_name', '_revision');
 			$notinvalues = array('_displayname', '_length', '_namespace', '_status');
@@ -887,6 +905,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			}
 			// echo ' bigafter '.$bigbloom->length;
 			
+			
+			
 			$bigbloom->redim($tocheckbitmap->length,true);
 			
 			//$tocheckcount = $tocheckbitmap->countbits();
@@ -919,13 +939,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			
 			
 			$tocheckcount = $tocheckbitmap->countbits();
-			echotime('bloom '.$tocheckcount); 			
+			echotime('bloom '.$tocheckcount); 	
+			
+					
 		}
 		if (!$cached && array_key_exists('_paragraph',$fields))
 		{
 			$hors = $fields['_paragraph'];
 			
-		}		
+		}	
+		
+		
 		
 		$starttime = microtime(true);
 		
@@ -941,6 +965,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			// print_r($fields);
 			global $swMemoryLimit;
 			$allrows = array();
+			
+			
 			
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
@@ -1246,15 +1272,22 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							}
 							else
 							{
+								
+								
 								swDbaReplace($primary,serialize($line),$bdb); // use less memory
+								
+								
 							}
 						}
 					}
 					$bitmap->setbit($k);
+					
 				}
 				$checkedbitmap->setbit($k);
 				
+				
 			}
+			
 			
 			// if isindex and all _offset point to the same value, we will drop the _offset column for indexes
 			if ($isindex)
@@ -1293,6 +1326,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	}
 	
+	
+	
 	if ($isindex)
 	{
 		
@@ -1309,7 +1344,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				
 				swDbaClose($bdb);
 				unset($bdbfile);
-				$bdb = swDbaOpen($bdbfile, 'c', 'db4');
+				$bdb = swDbaOpen($bdbfile, 'c');
 				foreach($allrows as $primary=>$line) swDbaReplace($primary,serialize($line),$bdb);
 				$bitmap == new swBitmap;
 				$checkedbitmap == new swBitmap;
@@ -1516,18 +1551,17 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		echotime('refresh');
 		if (file_exists($bdbfile)) unlink($bdbfile);
 	}
-
 	if (file_exists($bdbfile))
-		$bdb = swDbaOpen($bdbfile, 'wdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'wdt');
 	else
 	{
-		$bdb = swDbaOpen($bdbfile, 'c', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'c');
 		swDbaReplace('_filter',$filter,$bdb);
 	}
 	if (!$bdb)
 	{
 		// try read only
-		$bdb = swDbaOpen($bdbfile, 'rdt', 'db4');
+		$bdb = swDbaOpen($bdbfile, 'rdt');
 		
 				
 		if (!$bdb)

@@ -182,13 +182,6 @@ class swRecord extends swPersistance
 		global $swCurrentRecords;
 		$this->error = '';
 		
-		/*
-		if($this->revision)
-		{
-			$this = $swCurrentRecords[$this->revision];
-			return;
-		}
-		*/
 		
 		if ($this->persistance && $this->revision) // allready open
 		{
@@ -218,70 +211,22 @@ class swRecord extends swPersistance
 		}
 		elseif ($this->revision)
 		{
-			
-			// we have a serialized version that is faster to read
-			$s = '';
-			global $swRamdiskPath;
-			
-			/*
-			if ($swRamdiskPath == '') 
-			{
-				global $swShortIndex;
-				if ($swShortIndex && $db->shortbitmap->getbit($this->revision))
-				{
-					@fseek($swShortIndex, 512*($this->revision-1));
-					$s = @fread($swShortIndex,512);
-				}
-			}
-			*/
-			/*
-			$hasshort = false;
-			if (strstr($s,'[[_ ]]'))
-			{
-				$hasshort = true;
-				$s = rtrim($s);
+			$file = swGetPath($this->revision);
 				
-			}
-			else
+			if (!file_exists($file)) 
 			{
-				if ($swRamdiskPath == '') 
-				{
-					$file = swGetPath($this->revision,true);
-					if (file_exists($file))
-					{
-						$this->persistance = $file;
-						$this->open();
-						$this->error = '';
-						$swCurrentRecords[$this->revision] = $this;
-						$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
+				$pathlist = explode('/',$file);
+				$fname = array_pop($pathlist);
+				$this->error ='missing '.$fname;  
+				return;
+			}
 
-						return;
-					}
-				}
-				*/
-				// echotime('lookup '.$this->revision);
-				$file = swGetPath($this->revision);
-				
-				if (!file_exists($file)) 
-				{
-					$pathlist = explode('/',$file);
-					$fname = array_pop($pathlist);
-					$this->error ='missing '.$fname;  
-					return;
-				}
-				//if ($this->name)
-				//		echotime('read '.$this->name);
-				
-				$s = swFileGet($file);
-			/*
-			}
-			*/
-			
-			
+			$s = swFileGet($file);
 			
 			$this->error = ''; 
 			
 			$this->revision = swGetValue($s,"_revision");
+			
 			$this->name = swGetValue($s,"_name");
 			$this->user = swGetValue($s,"_user");
 			$this->timestamp = swGetValue($s,"_timestamp");
@@ -291,8 +236,8 @@ class swRecord extends swPersistance
 			$this->checksum = swGetValue($s,"_checksum");
 			
 			$pos = strpos($s,"[[_ ]]");
-			$this->content = substr($s,$pos+strlen("[[_ ]]"));
-			
+
+			$this->content = substr($s,$pos+strlen("[[_ ]]"));			
 			
 			
 			if ($this->encoding != "UTF8")
@@ -313,7 +258,6 @@ class swRecord extends swPersistance
 				
 			}
 			
-			
 			// bug character 146 not displayed in UTF 8
 			$t146 = utf8_encode(chr(146));
 			$this->name = str_replace($t146, "'", $this->name);
@@ -326,8 +270,9 @@ class swRecord extends swPersistance
 			$this->content = str_replace($t156, "oe", $this->content);
 			
 			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
-						
-			if (!preg_match('//u', $this->name))// check valid utf8 string
+			
+			
+			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			{
 				$this->name =  swNameURL($this->name);
 				echotime($s);
@@ -335,10 +280,8 @@ class swRecord extends swPersistance
 
 			
 			$this->internalfields = swGetAllFields($this->content, true);
-			
+
 			$swCurrentRecords[$this->revision] = $this;
-			
-			// if ($hasshort) return;
 			
 			$db->updateIndexes($this->revision);
 			if ($db->currentbitmap->getbit($this->revision))

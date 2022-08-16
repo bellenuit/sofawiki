@@ -152,14 +152,13 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 					
 		$urldbpath = $this->pathbase.'indexes/urls.db';
-		global $swDbaHandler;
 		if (file_exists($urldbpath))
 		{
-			$this->urldb = swDbaOpen($urldbpath, 'wdt', $swDbaHandler);
+			$this->urldb = swDbaOpen($urldbpath, 'wdt');
 		}
 		else
 		{
-			$this->urldb = swDbaOpen($urldbpath, 'c', $swDbaHandler);	
+			$this->urldb = swDbaOpen($urldbpath, 'c');	
 		}
 
 		$lastwrite = $this->getLastRevisionFolderItem($force || $this->lastrevision < 200);
@@ -301,7 +300,7 @@ class swDB extends swPersistance //extend may be obsolete
 				$swIndexError = true;
 				break;
 			}
-			$this->updateIndexes($r);
+			$this->updateIndexes($r, true); // topdown
 			$c++; 
 		}
 		if (!$swIndexError)
@@ -314,8 +313,11 @@ class swDB extends swPersistance //extend may be obsolete
 	}
 	
 	
-	function updateIndexes($rev)
+	function updateIndexes($rev, $topdown = false)
 	{
+		
+		
+		
 		
 		$this->lastrevision = max($this->indexedbitmap->length-1,$rev);
 		
@@ -330,8 +332,12 @@ class swDB extends swPersistance //extend may be obsolete
 		$r = new swRecord;
 		$r->revision = $rev;
 		$this->currentupdaterev = $rev;
+		
+
+		
 		if (!$source = $r->readHeader()) return false;
 		
+// 		echotime( 'update '.$rev, true);
 		$this->indexedbitmap->setbit($rev);
 		
 		if ($r->status == '') return false;
@@ -346,17 +352,33 @@ class swDB extends swPersistance //extend may be obsolete
 			if ($line)
 			{
 				$revs = explode(' ',$line);
+// 				echotime('revs '.$rev.'  '.$url.' '.count($revs), true);
 				
 				if (count($revs)>=2) // should always be the case 
 				{
 					$oldstatus = array_shift($revs); 
-					$oldrev = array_shift($revs);   
+					reset($revs);
+					$oldrev = current($revs);   
+					$firststatus = end($revs);
+					reset($revs);
 					
-					if ($rev < $oldrev) $status = $oldstatus;
-					$revs[] = $oldrev;
-					$revs[] = $rev;
-					$revs = array_unique($revs);
-					rsort($revs,SORT_NUMERIC);
+					if ($rev > $oldrev)
+					{
+						array_unshift($revs,$rev);
+					}
+					elseif ($rev < $firststatus)
+					{
+						$revs[] = $rev;
+					}
+					else
+					{
+						if ($rev < $oldrev) $status = $oldstatus;
+						$revs[] = $rev;
+// 						echotime('unique', true);
+						$revs = array_unique($revs);
+// 						echotime('rsort', true);
+						rsort($revs,SORT_NUMERIC);
+					}
 					
 					// current status one letter, then all revision in reverse order
 					// o 4323 2332 1123
@@ -364,8 +386,12 @@ class swDB extends swPersistance //extend may be obsolete
 					// p 6781
 					$line = $status.' '.join(' ',$revs);
 					
+// 					echotime('replace start', true);
+					
 					swDbaReplace($url, $line, $this->urldb);  // url index
 					swDbaReplace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
+					
+// 					echotime('replace end', true);
 					
 					// set bits for last revision
 					$rlast = array_shift($revs);
@@ -379,22 +405,36 @@ class swDB extends swPersistance //extend may be obsolete
 					{
 						$this->currentbitmap->unsetbit($rlast);
 					}
-					
+// 					echotime('bitmap center '.count($revs), true);
 					// unset bits for older revisions
+					if (! $topdown)
 					while ($rother = array_shift($revs))
 					{
 						$this->currentbitmap->unsetbit($rother);
 						$this->protectedbitmap->unsetbit($rother);
 						$this->deletedbitmap->unsetbit($rother);
 					}
+					else
+					{
+						if ($rev < $rlast)
+						{
+							$this->currentbitmap->unsetbit($rev);
+							$this->protectedbitmap->unsetbit($rev);
+							$this->deletedbitmap->unsetbit($rev);
+						}
+					}
+// 					echotime('bitmaps end', true);
 				}
 			}
 		}
 		else
 		{
 			$line = $status.' '.$rev;
+			
+// 			echotime('replace2 start', true); 
 			swDbaReplace($url,$line, $this->urldb);
 			swDbaReplace(' '.$rev, $url, $this->urldb);
+// 			echotime('replace2 end', true);
 		
 			if ($status == 'p') $this->protectedbitmap->setbit($rev);
 			if ($status == 'd') $this->deletedbitmap->setbit($rev);
@@ -406,6 +446,7 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		
 		$this->touched = true;	
+// 		echotime('update end', true);
 		return true;
 
 	}

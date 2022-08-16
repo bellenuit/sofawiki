@@ -20,9 +20,14 @@ define("TAB", "\t");
  *  @param $handler 'db', 'db4', 'sqlite3'
  */
 
-function swDbaOpen($file, $mode, $handler)
+function swDbaOpen($file, $mode, $handler='')
 {
 	global $swDbaHandler;
+	
+	if ($handler)
+	{
+		exit("swdbaopen file $file $handler");
+	}
 	
 	if ($swDbaHandler == 'sqlite3')
 	{
@@ -32,6 +37,7 @@ function swDbaOpen($file, $mode, $handler)
 		}
 		catch (swDbaError $err)
 		{
+			
 			echotime('db busy');
 			$err->notify();
 			return;
@@ -291,6 +297,8 @@ function swDbaCount($db)
  * $rows holds the relation (allowing holding status firstkey-nextkey
  * $journal holds modifications that are not synched
  */
+ 
+
 
 class swDba
 {
@@ -301,9 +309,30 @@ class swDba
 	
 	function __construct($path)
 	{
-		global $swRoot; 
-		$this->db = new SQLite3($path);
+		
+		global $swRoot;
+		
+			try
+			{
+				//echo "construct $path ";
+				$this->db = new SQLite3($path);
+				
+				
+						if (! $this->db)
+		{
+			throw new swDbaError('swDba construct db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+				//$this->db->open($path);
+			}
+			catch (Exception $err)
+			{
+				echo 'swDba open errror '.$err->getMessage().' '.$path; return;
+			}
+		
 		$this->path = str_replace($swRoot,'',$path);
+		
+		
+		
 		if (! $this->db)
 		{
 			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg().' path'.$path);
@@ -315,8 +344,8 @@ class swDba
 			throw new swDbaError('swdba is busy');
 		}
 			
-		$this->db->exec('PRAGMA journal_mode = WAL'); 
-		$this->db->exec('PRAGMA synchronous=NORMAL');
+		//$this->db->exec('PRAGMA journal_mode = WAL'); 
+		//$this->db->exec('PRAGMA synchronous=NORMAL');
 		
 		if (!$this->db->exec('CREATE TABLE IF NOT EXISTS kv (k text unique, v text)'))
 		{
@@ -330,6 +359,12 @@ class swDba
 		
 	function firstKey()
 	{	
+		
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba firstKey db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
 		
 		$this->sync();
 		
@@ -354,7 +389,10 @@ class swDba
 	
 	function nextKey()
 	{
-		
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba nextKey db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}		
 		if (!$this->rows)
 		{
 			throw new swDbaError('swDba nextKey without firstKey error');
@@ -371,6 +409,12 @@ class swDba
 	
 	function exists($key)
 	{
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba exists db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
+		
 		if (isset($this->journal[$key])) 
 		{
 			if ($this->journal[$key] === false) return false; else return true;
@@ -397,6 +441,11 @@ class swDba
 	
 	function fetch($key)
 	{
+		
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba fetch db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
 		if (isset($this->journal[$key]))
 		{
 			return $this->journal[$key];
@@ -420,6 +469,11 @@ class swDba
 
 	function delete($key)
 	{
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba delete db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
 		$test = $this->exists($key);
 	 	if (!$test) return;
 		
@@ -430,7 +484,12 @@ class swDba
 	
 	function replace($key, $value)
 	{
-	 	$test = $this->fetch($key);
+	 	if (! $this->db)
+		{
+			throw new swDbaError('swDba replace db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
+		$test = $this->fetch($key);
 	 	if ($test == $value) return;
 	 	
 	 	$this->journal[$key] = $value;
@@ -442,6 +501,13 @@ class swDba
 	
 	function sync()
 	{
+		
+				
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba sync db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
 		if (!count($this->journal)) return;
 		
 		echotime('sync '.count($this->journal).' alt '.$this->count());
@@ -481,11 +547,20 @@ class swDba
 	
 	function __destruct()
 	{
+		
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba destruct db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
 		$this->sync();
 		
 		if (rand(0, 100) > 90 || true) $this->db->exec('PRAGMA optimize');
 		
+		
+		
 		$this->db->close();
+		
+		//echo "desctruc $path ";
 	}	
 	
 	function listDatabases()
@@ -495,6 +570,11 @@ class swDba
 	
 	function count()
 	{
+		if (! $this->db)
+		{
+			throw new swDbaError('swDba count db not exist '.$this->db->lastErrorMsg().' path'.$path);
+		}
+		
 		$statement = $this->db->prepare('SELECT count(k) as c FROM kv');
 		$result = $statement->execute();
 		

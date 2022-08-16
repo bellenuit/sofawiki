@@ -13,6 +13,8 @@ $swParsedName = 'Special:All Pages';
 
 echotime('all pages start');
 
+
+
 $namespace = 'main';
 if (isset($_REQUEST['namespace'])) $namespace = $_REQUEST['namespace'];
 if ($namespace == '*') $namespace = '';
@@ -50,6 +52,7 @@ label _nameurl ""
 print grid 50
 
 ';
+
 
 $lh = new swRelationLineHandler;
 $swParsedContent .= $lh->run($q);

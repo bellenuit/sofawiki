@@ -2,12 +2,13 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-function echotime($s)
+function echotime($s, $direct=false)
 {
 	global $swStartTime;
 	$endtime = microtime(true);
 	global $swDebug;
 	$swDebug .=  sprintf('%04d',($endtime-$swStartTime)*1000).' '.$s.'<br>';
+	if ($direct) echo sprintf('%04d',($endtime-$swStartTime)*1000).' '.$s.'<br>';
 }
 
 function echomem($s,$direct=false)

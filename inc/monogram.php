@@ -21,11 +21,11 @@ function swOpenMonogram()
 	global $swMonogramIndexWritable;
 	global $swRoot;
 	$path = $swRoot.'/site/indexes/monogram.db';
-	
+
 	if (file_exists($path))
-		$swMonogramIndex = swDbaOpen($path, 'wdt', 'db4');
+		$swMonogramIndex = swDbaOpen($path, 'wdt'); 
 	else
-		$swMonogramIndex = swDbaOpen($path, 'c', 'db4');	
+		$swMonogramIndex = swDbaOpen($path, 'c');	
 	if ($swMonogramIndex)
 	{
 		$swMonogramIndexWritable = true;
@@ -33,7 +33,7 @@ function swOpenMonogram()
 	else
 	{
 		// try read only
-		$swMonogramIndex = swDbaOpen($path, 'rdt', 'db4');
+		$swMonogramIndex = swDbaOpen($path, 'rdt');
 		
 		$swMonogramIndexWritable = false;
 		
@@ -66,7 +66,7 @@ function swClearMonogram()
 function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 {
 	
-	echotime('indexmonogram'); 
+	echotime('indexmonogram');
 	
 	global $swMonogramIndex;
 	global $swMonogramIndexWritable;
@@ -80,7 +80,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		echotime('monogram readonly');
 		return;
 	}
-
+// return;
 	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
 	{	
 		//echo $s;
@@ -100,6 +100,8 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 	$bitmaps = array();
 	
 	global $swMemoryLimit;
+	
+	
 	
 	for($i = $l;$i>0;$i--)
 	{
@@ -122,6 +124,11 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		$record = new swWiki;
 		$record->revision = $i;
 		$record->lookup();
+		global $swRoot;
+		touch($swRoot.'/site/test'.$i);
+// 		echo $i;
+// 		continue;
+// 		return	;
 		
 		$fieldlist = $record->internalfields;
 		
@@ -152,7 +159,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 			}
 		}
 		
-		
+// 		return;
 				
 		foreach($fieldlist as $k=>$vs)
 		{	
@@ -170,8 +177,9 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 			if (!isset($bitmaps[$k.' *'])) $bitmaps[$k.' *'] = new swBitmap;
 			$bitmaps[$k.' *']->setbit($i); // field present
 		}
+// 		return;
 	}
-	
+// 	return;
 	foreach($bitmaps as $k=>$bm)
 	{
 		if ($s = swDbaFetch($k,$swMonogramIndex))
@@ -187,11 +195,12 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		$bm->hexit(); // save for db
 		swDbaReplace($k,serialize($bm),$swMonogramIndex);
 	}
-	
+// 	return;
 	$checkedbitmap->hexit(); // save for db
 	swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$swMonogramIndex);
 		
 	swDbaSync($swMonogramIndex);
+// 	return;
 	
 	if ($counter)
 	{

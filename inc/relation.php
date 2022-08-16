@@ -38,6 +38,10 @@ class swRelationLineHandler
 		
 		$this->functions = array();
 		$this->compiledexpressions = array();
+		
+		
+		
+		
 		echotime('relation '.strlen($t));
 		try 
 		{
@@ -51,6 +55,8 @@ class swRelationLineHandler
 		{
 			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
 		}
+		
+		
 		
 		$list = p_dump();
 		$profiles = array();
@@ -128,6 +134,8 @@ class swRelationLineHandler
 		$t = str_replace("\n", PHP_EOL, $t);
 		
 		
+		
+		
 		$lines = explode(PHP_EOL,$t);
 		//if ($internal) print_r($lines);
 		$c = count($lines);
@@ -135,10 +143,14 @@ class swRelationLineHandler
 		$rtime = microtime();
 		
 		$parameteroffset = 0;
+		
+		
 		$this->currentline = "";
 		
 		for ($i=0; $i < $c; $i++)
 		{
+			
+			
 			if ($internal) 
 			{
 				//echo 'internal'. $this->offsets[$internal].' ';;
@@ -1442,7 +1454,7 @@ class swRelationLineHandler
 			}		
 		}
 		if (isset($lastcommand)) p_close($lastcommand); 
-				
+			
 		/*
 		global $swOvertime; 
 		global $lang;		

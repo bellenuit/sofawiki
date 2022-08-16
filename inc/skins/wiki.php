@@ -7,9 +7,9 @@ echo PHP_EOL.swSystemMessage("skin-header",$lang, true);
 
 echo PHP_EOL.'</div>';
 
-echo PHP_EOL.'<div id="langmenu">';
-foreach($swLangMenus as $item) {echo PHP_EOL.$item.' ' ; } 
-echo PHP_EOL.'</div>';
+//echo PHP_EOL.'<div id="langmenu">';
+//foreach($swLangMenus as $item) {echo PHP_EOL.$item.' ' ; } 
+//echo PHP_EOL.'</div>';
 
 echo PHP_EOL.'<div id="menu">';
 
@@ -29,7 +29,7 @@ foreach($swLoginMenus as $item)
 
 echo PHP_EOL.'<br/><br/><br/>';
 
-echo PHP_EOL.$swSearchMenu; 
+// echo PHP_EOL.$swSearchMenu; 
 
 
 

@@ -163,98 +163,94 @@ function swGetValue($s, $key, $getArray = false)
 function swGetAllFields($s,$allowinternalvariables=false)
 {
 	
-// old		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
+// removed regex by state machine, as regex lead to 503 errors on complex pages
 
 	$result=array();
 	
-	// real fields
+	$state = 'start';
 	
-	preg_match_all("@\[\[([A-Za-z_][^\n\][|#<>{},:+\/]*?)::((?:.|\n)*?)\]\]@", $s, $matches, PREG_SET_ORDER);
-		
-		
-// \[\[([A-Za-z_][^\s\][|#<>{}m,:]*?)::((?:.|\n)+?)\]\] the search pattern
-// \[\[ two opening square braquets
-// [A-Za-z_] First letter of field name must be a latin letter or underscore
-// [^\s\][|#<>{}m,:]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
-// :: The field separator
-// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
-// \]\]: Closing brackets
-		
-	foreach ($matches as $v)
+	$slist = array();
+	$clist = array();
+	
+	for($i=0;$i < strlen($s); $i++)
 	{
-		// if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
+		$ch = $s[$i];
 		
-		$key = $v[1];
-		$value = $v[2];
-		
-		if (!$allowinternalvariables && substr($key,0,1)=='_') continue; // earlier we allowed here also _description
-		
-		$values = explode('::',$value);
-		
-		foreach($values as $v)
-			$result[$key][]=swUnescape($v); 
-	}	
-	
-	// categories
-	
-	$result['_category'] = array();
-	
-	preg_match_all("@\[\[(?:C|c)ategory:([^:](?:.)*?)(?:\||\]\])@", $s, $matches, PREG_SET_ORDER);	
-	
-	foreach ($matches as $v)
-	{
-		if (strstr($v[0], '{{') || strstr($v[0], '}}')) continue;
-		
-		$value = $v[1];
-		
-		$result['_category'][] = $value;
-		
+		switch($state)
+		{
+			case 'start':	switch($ch)
+							{
+								case '[' : $state = 'sleft'; break;
+								case '{' : $state = 'cleft'; break;
+								default: ;
+							}; break;
+			case 'sleft':	switch($ch)
+							{
+								case '[' : $state = 'square'; $start=$i+1; break;
+								default: $state = 'start' ;
+							}; break;
+			case 'square':	switch($ch)
+							{
+								case ']' : $state = 'sright'; $end=$i; break;
+								default: $state = 'square' ;
+							}; break;
+			case 'sright':	switch($ch)
+							{
+								case ']' : $slist[]=substr($s,$start,$end-$start); $state = 'start'; break;
+								default: $state = 'square' ;
+							}; break;
+			case 'cleft':	switch($ch)
+							{
+								case '{' : $state = 'curly'; $start=$i+1; break;
+								default: $state = 'start' ;
+							}; break;
+			case 'curly':	switch($ch)
+							{
+								case '}' : $state = 'cright'; $end=$i; break;
+								default: $state = 'curly' ;
+							}; break;
+			case 'cright':	switch($ch)
+							{
+								case ']' : $clist[]=substr($s,$start,$end-$start); $state = 'start'; break;
+								default: $state = 'curly' ;
+							}; break;
+		}
 	}
-	
-	// links
-	
-	$result['_link'] = array();
-	
-	preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
-	
-	
-	foreach ($matches as $v)
+	foreach($slist as $elem)
 	{
-		if (strstr($v[0],'::')) continue;            								     
-	
-		$value = $v[1];
-		
-		if (in_array($value, $result['_category'])) continue;
-		
-		if (!in_array($value, $result['_link'])) $result['_link'][] = $value;
-		
-	}	
-	
-	// templates
-	
-	$result['_template'] = array();
+		if ($elem == '') continue;
 
-	
-		
-	preg_match_all("@\{\{(.*?)(?:\||\}\})@", $s, $matches, PREG_SET_ORDER);
-	
-	foreach ($matches as $v)
-	{
-		if (substr($v[1],0,1) == '{') continue;
-		
-		if (!in_array($v[1],$result['_template']))
-			$result['_template'][]=$v[1];
-	
+// 		real fields
+		$fields = explode('::',$elem);
+		if (count($fields)>1)
+		{
+			for($i = 1; $i<count($fields); $i++)
+			{
+				$result[$fields[0]][] = $fields[$i];
+			}
+		}
+//      categories
+		elseif(strtolower(substr($elem,0,strlen('category:'))) == 'category:')
+		{
+			$result['_category'][] = substr($elem,strlen('category:'));
+		}
+// 		internal links
+		else
+		{
+// 			puts entire link. should we parse for | ?
+			$fields = explode('|',$elem);
+			$result['_links'][] = $fields[0];
+		}
+
 	}
-	
-	// remove empty templates, links and categories
-	foreach(array_keys($result) as $key)
+	foreach($clist as $elem)
 	{
-		if (!count($result[$key])) unset($result[$key]);
+		$field = explode('|', $elem);
+		$result['_template'][] = $fields[0];
 	}
 	
 	return $result;
-
+	
 }
 
 function swReplaceFields($s,$fields,$options='')

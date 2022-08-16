@@ -42,8 +42,8 @@ $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom"
 <a href="index.php?name=special:indexes&index=indexnames">Index Names</a> 
 <a href="index.php?name=special:indexes&index=docron">Do Cron</a>';
 
-$swParsedContent .= "\n<form method='get' action='index.php'><p><pre>";
-$swParsedContent .= "\n</pre><input type='hidden' name='name' value='special:indexes'>";
+$swParsedContent .= "\n<form method='get' action='index.php'><p>";
+$swParsedContent .= "\n<input type='hidden' name='name' value='special:indexes'>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
@@ -446,7 +446,7 @@ switch($_REQUEST['index'])
 							{
 								$path = $querypath.$_REQUEST['q'];
 								$results = array();
-								if ($bdb = swDbaOpen($path, 'wdt', 'db4'))
+								if ($bdb = swDbaOpen($path, 'wdt'))
 								{
 									$filter = swDbaFetch('_filter',$bdb);
 									swRelationFilter($filter);
@@ -461,7 +461,7 @@ switch($_REQUEST['index'])
 								{
 									$path = $querypath.$_REQUEST['q'];
 									$results = array();
-									if ($bdb = swDbaOpen($path, 'wdt', 'db4'))
+									if ($bdb = swDbaOpen($path, 'wdt'))
 									{
 										$results['filter'] = swDbaFetch('_filter',$bdb);
 										$results['bitmapcount'] = swDbaFetch('_bitmapcount',$bdb);
@@ -642,7 +642,7 @@ switch($_REQUEST['index'])
 											}
 											else
 											{
-												$bdb = swDbaOpen($querypath.$v,'r','db4');
+												$bdb = swDbaOpen($querypath.$v,'r');
 												if ($bdb)
 													$results['filter'] = swDbaFetch('_filter',$bdb);
 												
