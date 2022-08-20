@@ -629,8 +629,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		$bigbloom = new swBitmap();
 		
-		$bms = swGetMonogramBitmapFromTerm('_checkedbitmap','');
-		$bm = $bms[0];
+		$bm = swGetMonogramBitmapFromTerm('_checkedbitmap','');
 		$notcheckd = $bm->notop();
 		
 		$bigbloom->init($bm->length,true);
@@ -641,8 +640,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			{				
 				if (! in_array($field,$notinlabels))
 				{
-					$grs = swGetMonogramBitmapFromTerm($field, '*'); 
-					$gr = $grs[0];
+					$gr = swGetMonogramBitmapFromTerm($field, '*'); 
 					$bigbloom = $bigbloom->andop($gr);
 				}
 				
@@ -664,8 +662,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						{
 							if ($hand != '')
 							{
-								$grs = swGetMonogramBitmapFromTerm($field,$hand); 
-								$gr = $grs[0];
+								$gr = swGetMonogramBitmapFromTerm($field,$hand); 
 								$gr->redim($bigbloom->length, true);
 								$band = $band->andop($gr);
 							}

@@ -211,11 +211,14 @@ function swGetAllFields($s,$allowinternalvariables=false)
 							}; break;
 			case 'cright':	switch($ch)
 							{
-								case ']' : $clist[]=substr($s,$start,$end-$start); $state = 'start'; break;
+								case '}' : $clist[]=substr($s,$start,$end-$start); $state = 'start'; break;
 								default: $state = 'curly' ;
 							}; break;
 		}
 	}
+	echotime($state);
+	$result = array();
+// 	echotime('slist'.print_r($slist,true));
 	foreach($slist as $elem)
 	{
 		if ($elem == '') continue;
@@ -245,10 +248,10 @@ function swGetAllFields($s,$allowinternalvariables=false)
 	}
 	foreach($clist as $elem)
 	{
-		$field = explode('|', $elem);
+		$fields = explode('|', $elem);
 		$result['_template'][] = $fields[0];
 	}
-	
+	//echotime('fields'.print_r($result,true));
 	return $result;
 	
 }

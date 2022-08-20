@@ -28,7 +28,7 @@ insert "*"
 order _namespace
 extend _namespace2 = _namespace
 update _namespace2 = "<b>"._namespace."</b>" where _namespace == namespace
-update _namespace = "<nowiki><a href="._singlequote."index.php?nama=special:all-pages&namespace="._namespace._singlequote.">"._namespace2."</a> </nowiki>"
+update _namespace = "<nowiki><a href="._singlequote."index.php?name=special:all-pages&namespace="._namespace._singlequote.">"._namespace2."</a> </nowiki>"
 project _namespace concat
 update _namespace_concat = replace(_namespace_concat,"::","")
 rename _namespace_concat Namespaces

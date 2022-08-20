@@ -127,19 +127,8 @@ class swRecord extends swPersistance
 			|| !stristr($this->name,':') || (!stristr($this->name,'/') &&   (stristr($this->name,'template') || stristr($this->name,'image')) ) )
 			{*/
 			
-			$revs = swGetAllRevisionsFromName($this->name);
-			sort($revs, SORT_NUMERIC); 
-			$this->revision = array_pop($revs);
+			$this->revision = swGetCurrentRevisionFromName($this->name);
 			echotime('revision '.$this->revision);
-			
-			if (!$this->revision)
-			{
-				$fpt = fopen($c,'c');
-				fclose($fpt);
-			}
-			/*
-			}
-			*/
 			
 		}
 			

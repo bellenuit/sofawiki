@@ -118,7 +118,7 @@ function swRelationFilterOvertimeRetake()
 			
 			if ($i>250) return; // only checks the 250 most recent
 			
-			$bdb = swDbaOpen($file, 'wdt', 'db4'); // force write. don't open if used and therefore blocked
+			$bdb = swDbaOpen($file, 'wdt'); // force write. don't open if used and therefore blocked
 			if (!$bdb) continue;
 			
 			$s = swDbaFetch('_overtime',$bdb);

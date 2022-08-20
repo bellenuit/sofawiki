@@ -315,12 +315,8 @@ function swGetBloomBitmapFromTerm($term)
 	
 	$bm->map = substr($bm->map,0,strlen($db->bloombitmap->map));
 	
-	// add all non indexed	
-	//$notindexed = $db->bloombitmap->notop();
-	// $bm = $bm->orop($notindexed);
-	
-	//echotime('bloom end');
-		
+	$bm = $bm->orop($db->indexedbitmap);
+			
 	return $bm;
 	
 }

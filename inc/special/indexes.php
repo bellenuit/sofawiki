@@ -46,9 +46,10 @@ $swParsedContent .= "\n<form method='get' action='index.php'><p>";
 $swParsedContent .= "\n<input type='hidden' name='name' value='special:indexes'>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom and Monogram' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Reset Caches' style='color:red'/>";
 
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
@@ -57,14 +58,8 @@ $swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Inde
 
 
 $done = '';
-	if (isset($_REQUEST['submitreset']) && $swRamdiskPath != '')
+	if (isset($_REQUEST['submitreset']))
 	{
-		// delete all in ramdisk
-		$files = glob($swRamdiskPath.'*.txt');
-		if (is_array($files))
-			foreach($files as $file) { unlink($file); }
-		$done .= '<p>Deleted ramdisk';
-		swUnlink($swRoot.'/site/indexes/records.db');
 		$swOvertime = true;
 		
 	}
@@ -72,6 +67,13 @@ $done = '';
 
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetcurrent']))
 	{
+		// delete all in ramdisk
+		$files = glob($swRamdiskPath.'*.txt');
+		if (is_array($files))
+			foreach($files as $file) { unlink($file); }
+
+		swUnlink($swRoot.'/site/indexes/records.db');
+		
 		// delete all current
 		$path =$swRoot.'/site/current';
 		$dir = opendir($path);
@@ -106,6 +108,21 @@ $done = '';
 				
 	}
 	
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetcaches']))
+	{
+		// delete all queries
+		$path =$swRoot.'/site/cache/';
+		$dir = opendir($path);
+		while($file = readdir($dir))
+    	{
+			if($file != '..' && $file != '.')
+			{
+				swUnlink($swRoot.'/site/cache/'.$file);
+			}
+		}
+		$done .= '<p>Deleted caches';
+				
+	}
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
 	{
 	 	
@@ -235,6 +252,25 @@ switch($_REQUEST['index'])
 						$swParsedContent .= '<p>'.$urlcount.' urls (includes deleted)';
 						$swParsedContent .= '<p>'.$revisioncount.' revisions';
 						
+						$swParsedContent .= "<form method='get' action='index.php'><p>";
+						$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
+						$swParsedContent .= "</pre><input type='hidden' name='index' value='urls'>";
+						$swParsedContent .= "</pre><input type='text' name='url' value='".@$_REQUEST['url']."'>";
+						$swParsedContent .= "<input type='submit' name='submitterm' value='Test URL' />";
+						$swParsedContent .= "</form>";
+						
+						if ($_REQUEST['url'])
+						{
+							$line = swDbaFetch($_REQUEST['url'],$db->urldb);
+							$swParsedContent .= '<p>'.$line.'<p>';
+							
+							$revs = explode(' ',$line);
+							array_shift($revs);
+							foreach($revs as $rev)
+							{
+								if ($db->currentbitmap->getbit($rev)) $swParsedContent .= ' '.$rev.' current';
+							}
+						}
 
 	
 						  break;
@@ -365,11 +401,10 @@ switch($_REQUEST['index'])
 						 	if ($l0)
 						 	$swParsedContent .= '<p>Indexed: '.$l0;					
 							
-							$bms = swGetMonogramBitmapFromTerm('_checkedbitmap','');
-							$bm = $bms[0];
+							$bm = swGetMonogramBitmapFromTerm('_checkedbitmap','');
 							$swParsedContent .= '<p>length: '.$bm->length;
 						 	$swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0,2);
 						 	$swParsedContent .= '<p>';
 						 	
 						 	
@@ -388,12 +423,14 @@ switch($_REQUEST['index'])
 	
 						 	if (isset($_REQUEST['field']) && isset($_REQUEST['term']))
 						 	{
-							 	$bms = swGetMonogramBitmapFromTerm($_REQUEST['field'], $_REQUEST['term']);
-							 	$bm = $bms[0];
+							 	$bm = swGetMonogramBitmapFromTerm($_REQUEST['field'], $_REQUEST['term']);
+							 	$bm = $bm->andop($db->currentbitmap);
 							 	$arr = $bm->toarray();
 							 	$swParsedContent .= '<p>Field : '.$_REQUEST['field'];
 							 	$swParsedContent .= '<p>Term : '.$_REQUEST['term'];
 							 	$swParsedContent .= '<p>Count : '.count($arr);
+							 	$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+
 							 	$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
 						 	}
 						 	else

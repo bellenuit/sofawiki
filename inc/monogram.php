@@ -225,6 +225,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 function swGetMonogramBitmapFromTerm($field, $term)
 {
 	global $swMonogramIndex;
+	global $db;
 	
 	if (!$swMonogramIndex) swOpenMonogram();
 	
@@ -237,16 +238,12 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	}
 	else
 	{
-		$result[0] = new swBitmap;
-		$result[1] = new swBitmap;
-		return $result;
+		$checkedbitmap = new swBitmap;
 	}
 	
 	if ($field == '_checkedbitmap')
 	{
-		$result[0] = $checkedbitmap;
-		$result[1] = $checkedbitmap;
-		return $result;
+		return $checkedbitmap;
 	}
 	
 	
@@ -267,14 +264,13 @@ function swGetMonogramBitmapFromTerm($field, $term)
 		}
 		else
 		{
-			$result[0] = new swBitmap;
-			$result[1] = $checkedbitmap;
-			return $result;
+			$bitmap = new swBitmap;
+			$bitmap = $bitmap->orop($db->indexedbitmap);
+			return $bitmap;
 		}
 	}
-	$result[0] = $bitmap;
-	$result[1] = $checkedbitmap;
-	return $result;	
+	$bitmap = $bitmap->orop($db->indexedbitmap);
+	return $bitmap;	
 }
 
 /**

@@ -1777,7 +1777,7 @@ class swRelation
 		$c = strlen($s);
 		$ch = substr($s,0,1);
 		
-		if (!stristr($list1,$ch)) $result = '_'; else $result = '';
+		if ($ch == '' || !stristr($list1,$ch)) $result = '_'; else $result = '';
 		for($i = 0; $i<$c; $i++)
 		{
 			$ch = substr($s,$i,1);

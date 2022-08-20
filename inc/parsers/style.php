@@ -330,12 +330,16 @@ class swStyleParser extends swParser
 							{
 								$s .= '<br>'.$line;
 							}
-							elseif (substr($line,0,1) == '<')
+							elseif (substr($line,0,1) == '<') 
 							{
 								if ($state == 'p')
 								{
 									$s .= '</p><p>'.$line;
 									$state = '';
+								}
+								elseif(preg_replace('/<.*?>/', '', $line) =='') // only single tag on line
+								{
+									$s .= $line;
 								}
 								else
 								{
@@ -357,7 +361,11 @@ class swStyleParser extends swParser
 		// bugs
 		$s = str_replace("<p><div","<div",$s);
 		$s = str_replace("</div></p>","</div>",$s);
-		$s = str_replace('<td></td>','<td><&nbsp;/td>',$s);
+		$s = str_replace('<td></td>','<td>&nbsp;</td>',$s);
+		$s = str_replace('<br></div>',"</div>",$s);
+		$s = str_replace('</div><br>',"</div>",$s);
+		$s = str_replace('<br><div>',"<div>",$s);
+		$s = str_replace('<div><br>',"<div>",$s);
 
 	
 		
@@ -624,7 +632,7 @@ class swStyleParser extends swParser
 		$s = str_replace("<td><br/>","<td>",$s);
 		$s = str_replace("<th><br/>","<th>",$s);
 		$s = str_replace("</div><br/>","</div>",$s);
-		$s = str_replace("</div><br/>","</div>",$s);
+		$s = str_replace("</div><br>","</div>",$s);
 		
 		
 		

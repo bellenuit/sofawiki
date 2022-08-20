@@ -18,7 +18,7 @@ $deleted = $db->deletedbitmap->toarray();
 
 $urldbpath = $db->pathbase.'indexes/urls.db';
 if (file_exists($urldbpath))
-		$urldb = swDbaOpen($urldbpath, 'rdt', 'db4');
+		$urldb = swDbaOpen($urldbpath, 'rdt');
 if (!@$urldb)
 {
 	echotime('urldb failed');

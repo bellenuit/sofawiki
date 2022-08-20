@@ -32,6 +32,7 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swAllRevisionsCache = array();
+$swCurrentRevsisionCache = array();
 
 /**
  * Holds the database indexes 
@@ -164,7 +165,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$lastwrite = $this->getLastRevisionFolderItem($force || $this->lastrevision < 200);
 		
 		// 95% full 
-		if ($lastwrite > 0 && $this->indexedbitmap->countbits() / $lastwrite < 0.95 ) $bitmaperror = 'index less 95';
+		if ($lastwrite > 0 && $lastwrite - $this->indexedbitmap->countbits() > 100 ) $bitmaperror = 'index less 100';
 		if ($this->currentbitmap->countbits()==0 ) $bitmaperror = 'current 0';
 		if ($this->lastrevision == 0) $bitmaperror = 'lastrevision 0';
 
@@ -296,8 +297,9 @@ class swDB extends swPersistance //extend may be obsolete
 			{
 				echotime('overtime INDEX '.$c.' '.$r);
 				$swOvertime = true;
-				$swError = 'Index incomplete. Please reload';
+				$swError = 'Index incomplete. Please reload ';
 				$swIndexError = true;
+				echotime('incomplete '.$lastindex.' '.$r);
 				break;
 			}
 			$this->updateIndexes($r, true); // topdown
@@ -334,11 +336,11 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->currentupdaterev = $rev;
 		
 
-		
+		$this->indexedbitmap->setbit($rev);
 		if (!$source = $r->readHeader()) return false;
 		
 // 		echotime( 'update '.$rev, true);
-		$this->indexedbitmap->setbit($rev);
+		
 		
 		if ($r->status == '') return false;
 		if ($r->revision == 0) return false;
@@ -352,78 +354,55 @@ class swDB extends swPersistance //extend may be obsolete
 			if ($line)
 			{
 				$revs = explode(' ',$line);
-// 				echotime('revs '.$rev.'  '.$url.' '.count($revs), true);
 				
 				if (count($revs)>=2) // should always be the case 
 				{
-					$oldstatus = array_shift($revs); 
-					reset($revs);
-					$oldrev = current($revs);   
-					$firststatus = end($revs);
-					reset($revs);
+					$oldstatus = $revs[0];
+					$oldrev = $revs[1];   
+					$firststatus = $revs[count($revs)-1];
 					
 					if ($rev > $oldrev)
 					{
+						// remove old status, add new status and rev at start
+						array_shift($revs);
 						array_unshift($revs,$rev);
+						array_unshift($revs,$status);
+						
+						// unset current bit for oldrev
+						$this->currentbitmap->unsetbit($oldrev);
+						// set current bit for new rev if o or p
+						switch ($status)
+						{
+							case 'o' : 	$this->currentbitmap->setbit($rev); break;
+							case 'p' : 	$this->currentbitmap->setbit($rev); $this->protectedbitmap->setbit($rev); break;
+							case 'd' : 	$this->deletedbitmap->setbit($rev); break;
+
+						}	
 					}
 					elseif ($rev < $firststatus)
 					{
 						$revs[] = $rev;
+						$this->currentbitmap->unsetbit($rev);
 					}
 					else
 					{
-						if ($rev < $oldrev) $status = $oldstatus;
+						array_shift($revs);
 						$revs[] = $rev;
-// 						echotime('unique', true);
 						$revs = array_unique($revs);
-// 						echotime('rsort', true);
 						rsort($revs,SORT_NUMERIC);
+						array_unshift($revs,$oldstatus);
 					}
 					
 					// current status one letter, then all revision in reverse order
 					// o 4323 2332 1123
 					// d 4371 3322
 					// p 6781
-					$line = $status.' '.join(' ',$revs);
+					$line = join(' ',$revs);
 					
 // 					echotime('replace start', true);
 					
 					swDbaReplace($url, $line, $this->urldb);  // url index
 					swDbaReplace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
-					
-// 					echotime('replace end', true);
-					
-					// set bits for last revision
-					$rlast = array_shift($revs);
-					if ($status == 'p') $this->protectedbitmap->setbit($rlast);
-					if ($status == 'd') $this->deletedbitmap->setbit($rlast);
-					if ($status == 'o' || $status == 'p')
-					{
-						$this->currentbitmap->setbit($rlast);
-					}
-					else
-					{
-						$this->currentbitmap->unsetbit($rlast);
-					}
-// 					echotime('bitmap center '.count($revs), true);
-					// unset bits for older revisions
-					if (! $topdown)
-					while ($rother = array_shift($revs))
-					{
-						$this->currentbitmap->unsetbit($rother);
-						$this->protectedbitmap->unsetbit($rother);
-						$this->deletedbitmap->unsetbit($rother);
-					}
-					else
-					{
-						if ($rev < $rlast)
-						{
-							$this->currentbitmap->unsetbit($rev);
-							$this->protectedbitmap->unsetbit($rev);
-							$this->deletedbitmap->unsetbit($rev);
-						}
-					}
-// 					echotime('bitmaps end', true);
 				}
 			}
 		}
@@ -529,6 +508,43 @@ function swGetLastRevision()
  */
 
 
+function swGetCurrentRevisionFromName($name)
+{	
+	echotime('getcurrentrevision '.$name);
+	
+	global $swCurrentRevisionCache;
+	if (isset($swCurrentRevisionCache[$name]))
+		return $swCurrentRevisionCache[$name];
+	global $db;	
+	
+	$url= swNameURL($name);
+	
+	global $db;
+	
+	if (swDbaExists($url,$db->urldb))
+	{
+		$s = swDbaFetch($url,$db->urldb);
+		$revs = explode(' ',$s);
+		$status = $revs[0];
+		$current = $revs[1];
+		
+		if ($status == 'o' || $status == 'p')
+		{
+			$swCurrentRevisionCache[$name] = $current;
+			return $current;
+		}
+	}
+	
+}	
+
+
+/**
+ * Returns all revisions for a name to build a history
+ *
+ * @param name
+ */
+
+
 function swGetAllRevisionsFromName($name)
 {	
 	echotime('getallrevisions '.$name);
@@ -553,10 +569,6 @@ function swGetAllRevisionsFromName($name)
 	
 	$swAllRevisionsCache[$name] = $revs;
 	return $revs;
-		
-	$r = new swRecord;
-	$r->name = $name;
-	$md = $r->md5Name();
 	
 }	
 
