@@ -124,11 +124,6 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		$record = new swWiki;
 		$record->revision = $i;
 		$record->lookup();
-		global $swRoot;
-		touch($swRoot.'/site/test'.$i);
-// 		echo $i;
-// 		continue;
-// 		return	;
 		
 		$fieldlist = $record->internalfields;
 		
