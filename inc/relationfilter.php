@@ -543,7 +543,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	if ($isindex)
 	{
 		$key = swDbaFirstKey($bdb);
-		while(substr($key,0,1)=='_' && $key) $key = swdba_nextkey($bdb);
+		while(substr($key,0,1)=='_' && $key) $key = swDbaNextKey($bdb);
 		if ($key)
 		{
 			$d = @unserialize(swDbaFetch($key,$bdb));
@@ -1790,6 +1790,8 @@ label _name ""
 print linegrid 50';
 	}
 	
+	
+	
 	$singlequote = "'";
 	$results = swSystemMessage('results',$lang);
 	$results1 = swSystemMessage('result',$lang);
@@ -1858,6 +1860,16 @@ end while
 
 
 echo " "';
+global $swUseFulltext;
+if ($swUseFulltext)
+{
+$q= 'fulltext "'.$term.'"
+update body = _lt."nowiki"._gt.body._lt."/nowiki"._gt
+extend t = _leftsquare._leftsquare.url._pipe.title._rightsquare._rightsquare._lt."br"._gt.body
+project t
+label t ""
+print linegrid 50';
+}
 
 $lh = new swRelationLineHandler;
 $s = $lh->run($q);

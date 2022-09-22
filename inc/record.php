@@ -128,7 +128,7 @@ class swRecord extends swPersistance
 			{*/
 			
 			$this->revision = swGetCurrentRevisionFromName($this->name);
-			echotime('revision '.$this->revision);
+// 			echotime('revision '.$this->revision);
 			
 		}
 			

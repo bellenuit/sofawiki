@@ -72,7 +72,7 @@ class swDB extends swPersistance //extend may be obsolete
 		global $swRamdiskPath;
 		global $swOvertime;
 
-		echotime('init '.$force);
+// 		echotime('init '.$force);
 		
 		if (isset($swRamdiskPath) && $swRamdiskPath != '') swInitRamdisk();
 
@@ -510,7 +510,7 @@ function swGetLastRevision()
 
 function swGetCurrentRevisionFromName($name)
 {	
-	echotime('getcurrentrevision '.$name);
+// 	echotime('getcurrentrevision '.$name);
 	
 	global $swCurrentRevisionCache;
 	if (isset($swCurrentRevisionCache[$name]))

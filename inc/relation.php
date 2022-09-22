@@ -565,6 +565,12 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;	
+				case 'fulltext':	$xp = new swExpression();
+									$xp->compile($body);
+									$b = $xp->evaluate($dict);
+									$r = swQueryFulltext($b);
+									$this->stack[] = $r;
+									break;
 				case 'function':	$line = str_replace('(',' (',$line);
 			 						$fields = explode(' ',$line);
 			 						$command = array_shift($fields);
@@ -598,7 +604,7 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Function missing end'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
-									break; 
+									b>reak; 
 				case 'if':			$xp = new swExpression();
 									$xp->compile($body);
 									$ifstack[] = $i;

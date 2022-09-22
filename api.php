@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.2';  
+$swVersion = '3.8.4';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -80,6 +80,7 @@ include_once $swRoot.'/inc/legacy.php';
 
 
 include_once $swRoot.'/inc/monogram.php';
+include_once $swRoot.'/inc/fulltext.php';
 
 
 include_once $swRoot.'/inc/parser.php';

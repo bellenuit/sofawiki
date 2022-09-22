@@ -451,8 +451,9 @@ switch($_REQUEST['index'])
 							 	
 								foreach($list as $k=>$vs)
 							 	{
+								 	if (substr($k,0,1) == '_') continue;
 								 	sort($vs);
-								 	$swParsedContent .= '<p>'.$k.' '.join('',$vs);
+								 	$swParsedContent .= '<p>'.$k.' '.join(' ',$vs);
 							 	}
 						 	}
 						 	

@@ -110,17 +110,17 @@ if(isset($_SESSION[$swMainName.'-username'])&& $_SESSION[$swMainName.'-username'
 	$username = $_SESSION[$swMainName.'-username']; 
 	$passwordtoken = md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
 	swSetCookie('passwordtoken',$passwordtoken,$swUserCookieExpiration);
-	echotime('session');
+// 	echotime('session');
 }
 elseif($username && swHandleCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt))
 {	
 	$knownuser = true; 
-	echotime('passwordtoken');
+// 	echotime('passwordtoken');
 }
 elseif($username && swHandleCookie('passwordtoken') == md5(swNameURL($username).date('Ymd',time()-24*60*60).$swEncryptionSalt))
 {	
 	$knownuser = true;
-	echotime('passwordtoken1');
+// 	echotime('passwordtoken1');
 } 
 
 $altuser = swHandleCookie('altuser','',$swUserCookieExpiration);
@@ -245,14 +245,14 @@ else
 	
 	
 	$user->name = 'User:'.$username;
-	echotime('valid? '.$pass );
-	echotime(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
+// 	echotime('valid? '.$pass );
+// 	echotime(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
 	if ($user->validpassword())
 	{
 		
 		$_SESSION[$swMainName.'-username'] = $username;
 		$passwordtoken = md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt);
-		echotime('valid '.$passwordtoken);
+// 		echotime('valid '.$passwordtoken);
 		swSetCookie('passwordtoken',$passwordtoken,$swUserCookieExpiration);
 		$user->username = $username = $user->nameshort();
 		$action='view';
@@ -983,6 +983,11 @@ echotime("skin");
 /* SOFADOC_INCLUDE inc/skins/zeitung.php */
 
 // apply page skin
+
+// fulltextindex
+
+swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
+
 
 if (!array_key_exists($skin,$swSkins)) $skin = 'default';
 if ($swSkins[$skin])

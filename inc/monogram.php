@@ -6,6 +6,7 @@
  *  
  *  The monogram index is used by the relationfilter function.
  *  It is better suited than the bloom filter for short length data.
+ *  3.8.4 monogram uses more exensive digrams
  */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
@@ -161,9 +162,9 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 			foreach($vs as $v)
 			{
 				$vu = swNameURL($v);
-				for($ci=0;$ci<strlen($vu);$ci++)
+				for($ci=0;$ci<strlen($vu)-1;$ci++)
 				{
-					$c = substr($vu,$ci,1);
+					$c = substr($vu,$ci,2);
 					if (!isset($bitmaps[$k.' '.$c])) $bitmaps[$k.' '.$c] = new swBitmap;
 					$bitmaps[$k.' '.$c]->setbit($i);
 				}
@@ -226,6 +227,8 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	
 	$result = array();
 	
+	//echo "($field) ($term)";
+	
 	
 	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
 	{
@@ -244,27 +247,57 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	
 	$bitmap = new swBitmap;
 	$bitmap->redim($checkedbitmap->length, true);
-
-	$cs = str_split($term);
+	//echo $bitmap->countbits().' ';
 	
-	foreach($cs as $c)
+	if ($term == '*' || !$term)
 	{
-		//echo $c;
-		
-		if ($s = swDbaFetch($field.' '.$c,$swMonogramIndex))
-		{
-			$bc = unserialize($s);
-			$bitmap = $bitmap->andop($bc);  // does not work ??
+		if ($s = swDbaFetch($field.' *',$swMonogramIndex))
+			{
+				$bc = unserialize($s);
+				//echo $bc->countbits().' ';
+				$bitmap = $bitmap->andop($bc);  // does not work ??
+				//echo $bitmap->countbits().'; ';
+	
+			}
+			else
+			{
+				$bc = new swBitmap;
+				$bitmap = $bitmap->andop($bc);
+			}
 
-		}
-		else
+	}
+	else
+	{
+		$vu = swNameURL($term);
+		for($ci=0;$ci<strlen($vu)-1;$ci++)
 		{
-			$bitmap = new swBitmap;
-			$bitmap = $bitmap->orop($db->indexedbitmap);
-			return $bitmap;
+			$c = substr($vu,$ci,2);
+			
+			// echo $c.'=';
+			
+			if ($s = swDbaFetch($field.' '.$c,$swMonogramIndex))
+			{
+				$bc = unserialize($s);
+				//echo $bc->countbits().' ';
+				$bitmap = $bitmap->andop($bc);  // does not work ??
+				//echo $bitmap->countbits().', ';
+				$found = true;
+	
+			}
+			else
+			{
+				$bc = new swBitmap;
+				$bitmap = $bitmap->andop($bc);
+			}
 		}
 	}
-	$bitmap = $bitmap->orop($db->indexedbitmap);
+	// add not checked;
+	$ib = $db->indexedbitmap->duplicate();
+	// remove checked
+	$nc =  $checkedbitmap->notop();
+	$ib = $ib->andop($nc);
+	$bitmap = $bitmap->orop($ib);
+	//echo $bitmap->countbits().'.';
 	return $bitmap;	
 }
 
