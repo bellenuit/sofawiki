@@ -276,7 +276,7 @@ function swFulltextSnippet($s, $os,$querylines)
 			default:
 			$v = str_replace('"','',$q);
 			$v=swDetrigramize($v);
-			$s = str_ireplace($v,'<b>'.$v.'</b>', $s);
+			$s = preg_replace('/('.$v.')/i', '<b>$1</b>', $s);
 
 		}
 	}
