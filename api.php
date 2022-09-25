@@ -97,6 +97,7 @@ include_once $swRoot.'/inc/wiki.php';
 
 include_once $swRoot.'/inc/relation.php';
 include_once $swRoot.'/inc/relationfilter.php';
+include_once $swRoot.'/inc/relationexecute.php';
 
 include_once $swRoot.'/inc/editortemplate.php';
 include_once $swRoot.'/inc/mail.php';

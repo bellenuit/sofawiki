@@ -188,7 +188,18 @@ class swRecord extends swPersistance
 			// check bit for what reason ever it was not set.
 			if ($this->revision > 0 && !$db->currentbitmap->getbit($this->revision))
 			{
-				$db->currentbitmap->setbit($this->revision);
+				$currentrev = swGetCurrentRevisionFromName($this->name);
+				if ($currentrev == $this->revision) 
+				{
+					$db->currentbitmap->setbit($this->revision);
+				}
+				else
+				{
+					// we have a problem
+					$this->persistance = NULL;
+					$this->revision = $currentrev;
+					$this->lookup();
+				}
 			}
 			
 			if (!preg_match('//u', $this->name)) // check valid utf8 string

@@ -492,13 +492,13 @@ class swRelationLineHandler
 									}
 									elseif (count($this->stack)<1)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Excecute Stack empty'.$ptagerrorend.$ptag2;
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Execute Stack empty'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
 									else
 									{
 										$r = array_pop($this->stack);
-										$this->stack[] = swRelationExcecute($r,$body);
+										$this->stack[] = swRelationExecute($r,$body);
 										
 										if (!isset($_REQUEST['confirmexecute']))
 										{										

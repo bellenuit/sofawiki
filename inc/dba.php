@@ -550,7 +550,7 @@ class swDba
 		
 		if (! $this->db)
 		{
-			throw new swDbaError('swDba destruct db not exist '.$this->db->lastErrorMsg().' path'.$path);
+			throw new swDbaError('swDba destruct db not exist. path'.$path);
 		}
 		$this->sync();
 		

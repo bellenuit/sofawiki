@@ -2,7 +2,7 @@
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
-function swRelationExcecute($r,$body)
+function swRelationExecute($r,$body)
 {
 	switch(trim($body))
 	{
