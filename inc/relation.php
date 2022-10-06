@@ -604,7 +604,7 @@ class swRelationLineHandler
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Function missing end'.$ptagerrorend.$ptag2;
 										$this->errors[]=$il;
 									}
-									b>reak; 
+									break; 
 				case 'if':			$xp = new swExpression();
 									$xp->compile($body);
 									$ifstack[] = $i;

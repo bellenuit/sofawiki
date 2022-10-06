@@ -11,10 +11,10 @@ $filename = trim($_POST['filename']);
 $deleteexisting = false;
 if (isset($_POST['deleteexisting'])) $deleteexisting = true;
 
-$filename .=  swHandleUploadFile($file, $filename, $content, $deleteexisting);
+$filename =  swHandleUploadFile($file, $filename, $content, $deleteexisting);
 
 $swParsedContent .=  '<p><a href="index.php?name=image:'.$filename.'">Image:'.$filename.'</a>';
-$swParsedContent .=  '<p><img src="site/files/'.$filename.'" style="width:100%">';
+$swParsedContent .=  '<p><img src="site/files/'.$filename.'" style="max-width:100%">';
 
 
 
