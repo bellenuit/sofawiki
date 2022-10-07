@@ -3937,8 +3937,8 @@ class swOrderedDictionary
 							if ($btext == '∞') { return -1 ; }
 							if ($atext == '-∞') { if ($btext != '⦵') return 1; if ($btext != '-∞') return -1 ; $test = 0; break; }
 							if ($btext == '-∞') { if ($atext != '⦵') return -1; return 1 ; }
-							if ($atext == '⦵') { if ($btext != '⦵') return -1 ; $test = 0; break; }
-							if ($btext == '⦵') { return 1 ; }
+							if ($atext === '⦵') { if ($btext != '⦵') return -1 ; $test = 0; break; }
+							if ($btext === '⦵') { return 1 ; }
 							if (floatval($atext) > floatval($btext)) return 1;
 							if (floatval($atext) < floatval($btext)) return -1;
 							break;
@@ -3946,8 +3946,8 @@ class swOrderedDictionary
 							if ($btext == '∞') { return 1 ; }
 							if ($atext == '-∞') { if ($btext != '⦵') return -1; if ($btext != '-∞') return 1 ; $test = 0; break; }
 							if ($btext == '-∞') { if ($atext != '⦵') return 1; return -1 ; }
-							if ($atext == '⦵') { if ($btext != '⦵') return 1 ; $test = 0; break; }
-							if ($btext == '⦵') { return -1 ; }
+							if ($atext === '⦵') { if ($btext != '⦵') return 1 ; $test = 0; break; }
+							if ($btext === '⦵') { return -1 ; }
 							if (floatval($atext) > floatval($btext)) return -1;
 							if (floatval($atext) < floatval($btext)) return 1;
 							break;
@@ -3973,7 +3973,7 @@ class swAccumulator
 	
 	function add($t)
 	{
-		if ($t != '') $this->list[] = $t;
+		$this->list[] = $t;
 	}
 	
 	function doClone()
@@ -3998,11 +3998,11 @@ class swAccumulator
 		$acc = 0; $i=0;
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
 			$acc += floatval($t);
 			$i++;
 		}
-		if (!$i) return '⦵';
+		if (!$i) return 'a⦵'.count($this->list);
 		$v = $acc / $i;
 		return swConvertText12($v);
 	}
@@ -4031,8 +4031,8 @@ class swAccumulator
 		$acc = '⦵';
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
-			if ($acc == '⦵') $acc = floatval($t);
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($acc === '⦵') $acc = floatval($t);
 			if (floatval($t) > $acc)
 				$acc = floatval($t);
 		}
@@ -4056,7 +4056,7 @@ class swAccumulator
 		//print_r($this->list);
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc[] = floatval($t);
 		}
 		if (count($acc)==0) return '⦵';
@@ -4089,8 +4089,8 @@ class swAccumulator
 		$acc = '⦵';
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
-			if ($acc == '⦵') $acc = floatval($t);
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($acc === '⦵') $acc = floatval($t);
 			if (floatval($t) < $acc)
 				$acc = floatval($t);
 		}
@@ -4114,7 +4114,7 @@ class swAccumulator
 		$i = 0;
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 			$acc2 += floatval($t) * floatval($t);
 			$i++;
@@ -4131,7 +4131,7 @@ class swAccumulator
 		$i = 0;
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 			$acc2 += floatval($t) * floatval($t);
 			$i++;
@@ -4147,7 +4147,7 @@ class swAccumulator
 		$acc = 0;
 		foreach($this->list as $t)
 		{
-			if ($t == '⦵' || $t == '∞' || $t == '-∞') continue;
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
 			$acc += floatval($t);
 		}
 		return swConvertText12($acc);
@@ -4203,7 +4203,7 @@ function array_clone($arr)
 
 function swNumberformat($d,$f)
 {	
-	if ($d == '∞' || $d == '-∞' || $d == '⦵') { return $d; }
+	if ($d == '∞' || $d == '-∞' || $d === '⦵') { return $d; }
 	
 	if (substr($f,-1,1)=='n')
 	{

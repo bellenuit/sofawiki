@@ -285,12 +285,12 @@ class xpAbs extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '⦵') 
+		if ($a === '∞' || $a === '⦵') 
 		{
 			$stack[] = $a; 
 			return;
 		}
-		if ($a == '-∞') 
+		if ($a === '-∞') 
 		{ 
 			$stack[] = '∞';
 			return;
@@ -308,27 +308,27 @@ class xpAdd extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '-∞')
+		if ($a === '∞' && $b === '-∞')
 		{ 
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞' && $b == '∞')
+		if ($a === '-∞' && $b === '∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' || $b == '∞')
+		if ($a === '∞' || $b === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '-∞' || $b == '-∞')
+		if ($a === '-∞' || $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
@@ -347,16 +347,16 @@ class xpAnd extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-	if ($a == '⦵' || $b == '⦵')
+	if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 		}
 		else
 		{
-			if ($a == '∞') $a = '1';
-			if ($b == '∞') $b = '1';
-			if ($a == '-∞') $a = '1';
-			if ($b == '-∞') $b = '1';
+			if ($a === '∞') $a = '1';
+			if ($b === '∞') $b = '1';
+			if ($a === '-∞') $a = '1';
+			if ($b === '-∞') $b = '1';
 			$a = floatval($a);
 			$b = floatval($b);
 			if ($a && $b)
@@ -379,13 +379,13 @@ class xpAndRight extends swExpressionFunction //?
 		echo "ans"; if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' || $a == '-∞') $a = '1';
-		if ($b == '∞' || $b == '-∞') $b = '1';
+		if ($a === '∞' || $a === '-∞') $a = '1';
+		if ($b === '∞' || $b === '-∞') $b = '1';
 		$a = floatval($a);
 		$b = floatval($b);		
 		if ($a && $b) $stack[] = '1';
@@ -400,7 +400,7 @@ class xpCeil extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵')
+		if ($a === '∞' || $a === '-∞' || $a === '⦵')
 		{
 			$stack[] = $a;
 			return;
@@ -443,7 +443,7 @@ class xpCos extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵')
+		if ($a === '∞' || $a === '-∞' || $a === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
@@ -463,57 +463,57 @@ class xpDiv extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '-∞')
+		if ($a === '∞' && $b === '-∞')
 		{ 
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '∞')
+		if ($a === '-∞' && $b === '∞')
 		{ 
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{ 
 			$stack[] = '0';
 			return;
 		}
-		if (floatval($a)>0 && $b == '∞')
+		if (floatval($a)>0 && $b === '∞')
 		{ 
 			$stack[] = '∞';
 			return;
 		}
-		if (floatval($a)>0 && $b == '-∞')
+		if (floatval($a)>0 && $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '∞')
+		if (floatval($a)<0 && $b === '∞')
 		{ 
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '-∞')
+		if (floatval($a)<0 && $b === '-∞')
 		{
 			$stack[] = '∞';
 			return;
@@ -548,27 +548,27 @@ class xpEqN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '∞' || $b == '∞')
+		if ($a === '∞' || $b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' || $b == '-∞')
+		if ($a === '-∞' || $b === '-∞')
 		{
 			$stack[] = '0';
 			return;
@@ -615,12 +615,12 @@ class xpExp extends swExpressionFunction
 	{
 		if (count($stack) < 2) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '⦵')
+		if ($a === '∞' || $a === '⦵')
 		{
 			$stack[] = $a;
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{ 
 			$stack[] = '0';
 			return;
@@ -646,7 +646,7 @@ class xpFloor extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '⦵')
+		if ($a === '∞' || $a === '⦵')
 		{
 			$stack[] = $a;
 			return;
@@ -678,37 +678,37 @@ class xpGeN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($b == '∞')
+		if ($b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($b == '-∞')
+		if ($b === '-∞')
 		{
 			$stack[] = '0';
 			return;
@@ -741,37 +741,37 @@ class xpGtN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{ 
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($b == '∞')
+		if ($b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($b == '-∞')
+		if ($b === '-∞')
 		{
 			$stack[] = '0';
 			return;
@@ -868,57 +868,57 @@ class xpIdiv extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '-∞')
+		if ($a === '∞' && $b === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '∞')
+		if ($a === '-∞' && $b === '∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if (floatval($a)>0 && $b == '∞')
+		if (floatval($a)>0 && $b === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if (floatval($a)>0 && $b == '-∞')
+		if (floatval($a)>0 && $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '∞')
+		if (floatval($a)<0 && $b === '∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '-∞')
+		if (floatval($a)<0 && $b === '-∞')
 		{
 			$stack[] = '∞';
 			return;
@@ -955,37 +955,37 @@ class xpLeN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($b == '∞')
+		if ($b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($b == '-∞')
+		if ($b === '-∞')
 		{
 			$stack[] = '1';
 			return;
@@ -1029,17 +1029,17 @@ class xpLn extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵')
+		if ($a === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
@@ -1061,17 +1061,17 @@ class xpLog extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵')
+		if ($a === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
@@ -1105,37 +1105,37 @@ class xpLtN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($b == '∞')
+		if ($b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($b == '-∞')
+		if ($b === '-∞')
 		{
 			$stack[] = '1';
 			return;
@@ -1168,22 +1168,22 @@ class xpMax extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' || $b == '∞' )
+		if ($a === '∞' || $b === '∞' )
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = $b;
 			return;
 		}
-		if ($b == '-∞')
+		if ($b === '-∞')
 		{
 			$stack[] = $a;
 			return;
@@ -1202,22 +1202,22 @@ class xpMin extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack); 
-			if ($a == '⦵' || $b == '⦵')
+			if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞' || $b == '-∞' )
+		if ($a === '-∞' || $b === '-∞' )
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = $b;
 			return;
 		}
-		if ($b == '∞')
+		if ($b === '∞')
 		{
 			$stack[] = $a;
 			return;
@@ -1237,57 +1237,57 @@ class xpMod extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞' && $b == '-∞')
+		if ($a === '∞' && $b === '-∞')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{ 
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '∞')
+		if ($a === '-∞' && $b === '∞')
 		{ 
 			$stack[] = '⦵'; 
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{ 
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if (floatval($a)>0 && $b == '∞')
+		if (floatval($a)>0 && $b === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if (floatval($a)>0 && $b == '-∞')
+		if (floatval($a)>0 && $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '∞')
+		if (floatval($a)<0 && $b === '∞')
 		{ 
 			$stack[] = '-∞';
 			return;
 		}
-		if (floatval($a)<0 && $b == '-∞')
+		if (floatval($a)<0 && $b === '-∞')
 		{
 			$stack[] = '∞';
 			return;
@@ -1324,90 +1324,90 @@ class xpMul extends swExpressionFunction
 		$a = array_pop($stack);
 		$b = array_pop($stack);
 	
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}	
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '∞' && $b == '-∞')
+		if ($a === '∞' && $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if ($a == '∞' && floatval($b) > 0)
+		if ($a === '∞' && floatval($b) > 0)
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '∞' && floatval($b) < 0)
+		if ($a === '∞' && floatval($b) < 0)
 		{ 
 			$stack[] = '-∞'; 
 			return; 
 		}
-		if ($a == '∞' && floatval($b) == 0) 
+		if ($a === '∞' && floatval($b) == 0) 
 		{ 
 			$stack[] = '⦵'; 
 			return;
 		}		
-		if ($a == '-∞' && $b == '∞')
+		if ($a === '-∞' && $b === '∞')
 		{ 
 			$stack[] = '-∞'; 
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{ 
 			$stack[] = '∞'; 
 			return;
 		}
-		if ($a == '-∞' && floatval($b) > 0)
+		if ($a === '-∞' && floatval($b) > 0)
 		{ 
 			$stack[] = '∞';
 			return;
 		}
-		if ($a == '-∞' && floatval($b) < 0)
+		if ($a === '-∞' && floatval($b) < 0)
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if ($a == '-∞' && floatval($b) == 0)
+		if ($a === '-∞' && floatval($b) == 0)
 		{
 			$stack[] = '⦵';
 			return;
 		}
 		
-		if (floatval($a) > 0 && $b == '∞')
+		if (floatval($a) > 0 && $b === '∞')
 		{
 			$stack[] = '∞';
 			return;
 		}
-		if (floatval($a) > 0 && $b == '-∞')
+		if (floatval($a) > 0 && $b === '-∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
 
-		if (floatval($a) < 0 && $b == '∞')
+		if (floatval($a) < 0 && $b === '∞')
 		{ 
 			$stack[] = '-∞'; 
 			return;
 		}
-		if (floatval($a) < 0 && $b == '-∞') 
+		if (floatval($a) < 0 && $b === '-∞') 
 		{ 
 			$stack[] = '∞';
 			return;
 		}
 
-		if (floatval($a) == 0 && $b == '∞')
+		if (floatval($a) == 0 && $b === '∞')
 		{ 
 			$stack[] = '⦵';
 			return;
 		}
-		if (floatval($a) == 0 && $b == '-∞')
+		if (floatval($a) == 0 && $b === '-∞')
 		{ 
 			$stack[] = '⦵';
 			return;
@@ -1466,27 +1466,27 @@ class xpNeN extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '∞' && $b == '∞')
+		if ($a === '∞' && $b === '∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '-∞' && $b == '-∞')
+		if ($a === '-∞' && $b === '-∞')
 		{
 			$stack[] = '0';
 			return;
 		}
-		if ($a == '∞' || $b == '∞')
+		if ($a === '∞' || $b === '∞')
 		{
 			$stack[] = '1';
 			return;
 		}
-		if ($a == '-∞' || $b == '-∞')
+		if ($a === '-∞' || $b === '-∞')
 		{
 			$stack[] = '1';
 			return;
@@ -1505,17 +1505,17 @@ class xpNeg extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵')
+		if ($a === '⦵')
 		{
 			$stack[] = '⦵';
 			return;
 		}
-		if ($a == '∞')
+		if ($a === '∞')
 		{
 			$stack[] = '-∞';
 			return;
 		}
-		if ($a == '-∞')
+		if ($a === '-∞')
 		{
 			$stack[] = '∞';
 			return;
@@ -1546,9 +1546,9 @@ class xpNot extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵') $stack[] = '⦵';
-		elseif($a == '∞') $stack[] = '0';
-		elseif($a == '-∞') $stack[] = '0'; 
+		if ($a === '⦵') $stack[] = '⦵';
+		elseif($a === '∞') $stack[] = '0';
+		elseif($a === '-∞') $stack[] = '0'; 
 		elseif(floatval($a) != 0) $stack[] = '0';
 		else $stack[] = '1';
 	}
@@ -1562,16 +1562,16 @@ class xpOr extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵')
+		if ($a === '⦵' || $b === '⦵')
 		{
 			$stack[] = '⦵';
 		}
 		else
 		{
-			if ($a == '∞') $a = '1';
-			if ($b == '∞') $b = '1';
-			if ($a == '-∞') $a = '1';
-			if ($b == '-∞') $b = '1';
+			if ($a === '∞') $a = '1';
+			if ($b === '∞') $b = '1';
+			if ($a === '-∞') $a = '1';
+			if ($b === '-∞') $b = '1';
 			$a = floatval($a);
 			$b = floatval($b);
 			if ($a || $b)
@@ -1612,7 +1612,7 @@ class xpPad extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $a == '∞' || $a == '-∞')
+		if ($a === '⦵' || $a === '∞' || $a === '-∞')
 		{
 			$stack[] = $b;
 			return;
@@ -1630,10 +1630,10 @@ class xpPow extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵') $stack[] = '⦵';
-		elseif ($a == '∞' && $b == '-∞') $stack[] = '-∞';
-		elseif ($a == '∞' && $b == '∞') $stack[] = '∞';
-		elseif ($a == '-∞') $stack[] = '1';
+		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
+		elseif ($a === '∞' && $b === '-∞') $stack[] = '-∞';
+		elseif ($a === '∞' && $b === '∞') $stack[] = '∞';
+		elseif ($a === '-∞') $stack[] = '1';
 		elseif ($a == '0' && $b == '0') $stack[] = '1';
 		else
 		{
@@ -1785,7 +1785,7 @@ class xpRound extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵') $stack[] = $a;
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = $a;
 		else
 		{
 			$a = floatval($a);
@@ -1805,7 +1805,7 @@ class XPSecondsToSql extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵') $a = 0;
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') $a = 0;
 		$a = floatval($a);
 		$stack[] = date('Y-m-d H:i:s',$a);		
 	}
@@ -1818,9 +1818,9 @@ class xpSign extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵') $stack[] = '⦵';
-		elseif ($a == '∞') $stack[] = '1'; 
-		elseif ($a == '-∞') $stack[] = '-1'; 
+		if ($a === '⦵') $stack[] = '⦵';
+		elseif ($a === '∞') $stack[] = '1'; 
+		elseif ($a === '-∞') $stack[] = '-1'; 
 		else
 		{
 			$a = floatval($a);
@@ -1838,7 +1838,7 @@ class xpSin extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵') $stack[] = '⦵';
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = '⦵';
 		else
 		{
 			$a = floatval($a);
@@ -1869,9 +1869,9 @@ class xpSqrt extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '⦵') $stack[] = '⦵';
-		elseif ($a == '∞') $stack[] = '∞';
-		elseif ($a == '-∞') $stack[] = '⦵';
+		if ($a === '⦵') $stack[] = '⦵';
+		elseif ($a === '∞') $stack[] = '∞';
+		elseif ($a === '-∞') $stack[] = '⦵';
 		else
 		{
 			$a = floatval($a);
@@ -1889,15 +1889,15 @@ class xpSub extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵') $stack[] = '⦵';
-		elseif ($a == '∞' && $b == '-∞') $stack[] = '-∞'; 
-		elseif ($a == '-∞' && $b == '∞') $stack[] = '∞';
-		elseif ($a == '∞' && $b == '∞') $stack[] = '⦵'; 
-		elseif ($a == '-∞' && $b == '-∞') $stack[] = '⦵'; 
-		elseif ($a == '∞') $stack[] = '-∞'; 
-		elseif ($a == '-∞') $stack[] = '∞'; 
-		elseif ($b == '∞') $stack[] = '∞'; 
-		elseif ($b == '-∞') $stack[] = '-∞'; 
+		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
+		elseif ($a === '∞' && $b === '-∞') $stack[] = '-∞'; 
+		elseif ($a === '-∞' && $b === '∞') $stack[] = '∞';
+		elseif ($a === '∞' && $b === '∞') $stack[] = '⦵'; 
+		elseif ($a === '-∞' && $b === '-∞') $stack[] = '⦵'; 
+		elseif ($a === '∞') $stack[] = '-∞'; 
+		elseif ($a === '-∞') $stack[] = '∞'; 
+		elseif ($b === '∞') $stack[] = '∞'; 
+		elseif ($b === '-∞') $stack[] = '-∞'; 
 		else
 		{
 			$a = floatval($a);
@@ -1929,7 +1929,7 @@ class xpTan extends swExpressionFunction
 	{
 		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = array_pop($stack);
-		if ($a == '∞' || $a == '-∞' || $a == '⦵') $stack[] = '⦵';
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = '⦵';
 		else 
 		{
 			$stack[] = swConvertText15(tan(floatval($a)));		
@@ -2009,13 +2009,13 @@ class xpXor extends swExpressionFunction
 		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
 		$a = array_pop($stack);
 		$b = array_pop($stack);
-		if ($a == '⦵' || $b == '⦵') $stack[] = '⦵';
+		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
 		else
 		{
-			if ($a == '∞') $a = '1';
-			if ($b == '∞') $b = '1';
-			if ($a == '-∞') $a = '1';
-			if ($b == '-∞') $b = '1';
+			if ($a === '∞') $a = '1';
+			if ($b === '∞') $b = '1';
+			if ($a === '-∞') $a = '1';
+			if ($b === '-∞') $b = '1';
 			$a = floatval($a);
 			$b = floatval($b);		
 			if (!$b && $a) $stack[] = '1';
