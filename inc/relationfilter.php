@@ -1843,8 +1843,11 @@ while i < c
 if substr(v,i,1) == " " or substr(v,i,1) == "|"
 if i > l
 set s = substr(v,l,i-l)
-set bold = _singlequote._singlequote._singlequote
-update _paragraph = regexreplacemod(_paragraph,s,bold.s.bold,"i")
+set bold = _lt."b"._gt  // we need tags, as apostrophs could be in the text
+set unbold = _lt."#b"._gt // regex does not support the slash
+set unbold2 = _lt."/b"._gt
+update _paragraph = regexreplacemod(_paragraph,s,bold.s.unbold,"i")
+update _paragraph = replace(_paragraph,unbold,unbold2)
 end if
 set l = i + 1
 end if
@@ -1868,6 +1871,9 @@ print linegrid 50';
 
 $lh = new swRelationLineHandler;
 $s = $lh->run($q);
+
+
+
 
 return $s;
 
