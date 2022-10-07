@@ -680,12 +680,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$bigbloom = $bigbloom->orop($notcheckd);	
 		
 		$bigbloom->redim($tocheckbitmap->length,true);
-		
-		echotime($bigbloom->countbits().' '.$bigbloom->length);
-		echotime($tocheckbitmap->countbits().' '.$tocheckbitmap->length);
-		
+				
 		$tocheckbitmap = $tocheckbitmap->andop($bigbloom);
-		echotime($tocheckbitmap->countbits().' '.$tocheckbitmap->length);
 
 		
 			
@@ -693,7 +689,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		
 		$checkedbitmap = $checkedbitmap->orop($nottocheck);
 		
-		echotime('monogram '.$tocheckbitmap->countbits().' of '.$tocheckbitmap->length);
+		echotime('monogram '.$tocheckbitmap->countbits());
 
 	}
 	
@@ -860,7 +856,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						$gr = swGetBloomBitmapFromTerm('-'.$field.'-'); // field has always [[ and :: or ]]
 						
 						$tocheckcount = $gr->countbits();
-						echotime('bloom -'.$field.'- '. $tocheckcount); 	
+		
 						
 						// echo ' field '.$field.' '.$gr->length;
 						$bigbloom = $bigbloom->andop($gr);
@@ -916,7 +912,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$tocheckbitmap = $tocheckbitmap->andop($bigbloom);	
 			
 			$tocheckcount = $tocheckbitmap->countbits();
-			echotime('bloom1 '.$tocheckcount); 	
+
 			$nottocheck = $bigbloom->notop();
 			
 			//echo " big ".$bigbloom->length;
@@ -1316,9 +1312,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				
 			}
 	
-			echotime('checked '.$checkedcount);
-			echotime('length '.floor($checkedlength/1024/1024).' MB');
-			echomem("filter");	
+			echotime('cachefile '.floor($checkedlength/1024).' KB');
+			echomem("relationfilter");	
 		}
 	
 	}
@@ -1724,7 +1719,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$key = swDbaNextKey($bdb); 
 		
 	}
-	
+	echomem('relationfilter');
 	return $result;
 }
 

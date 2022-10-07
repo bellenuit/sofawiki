@@ -115,6 +115,20 @@ class swQueryFunction extends swFunction
 								array_push($rowstack,swUniqueTuples($set)); 
 								break;
 
+				case 'FILTER': 	global $swDebugRefresh;
+								$f = join(' ',$fs);
+								$r = swRelationFilter($f, array(), $swDebugRefresh);
+								$set = array();
+								foreach($r->tuples as $tp)
+								{
+									$row = [];
+									foreach($tp->fields() as $k=>$v) $row[$k] = swUnescape($v);
+									$set[] = $row;
+								}
+								array_push($rowstack,$set); 
+								break;
+				
+				
 				case 'IMPORT':  if (!array_key_exists(0,$fs)) { $error = 'Missing pagename'; $errorline = $line; break; }
 								$mode = array_shift($fs);
 								$iname = swNameURL(array_shift($fs));

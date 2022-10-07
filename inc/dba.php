@@ -510,7 +510,7 @@ class swDba
 		
 		if (!count($this->journal)) return;
 		
-		echotime('sync '.count($this->journal).' alt '.$this->count());
+		echotime('sync '.$this->count().' + '.count($this->journal));
 		
 		$lines = array();
 		$lines[] = "PRAGMA synchronous=OFF; ";
@@ -536,7 +536,7 @@ class swDba
 		}		
 		$this->journal = array();
 		
-		echotime('sync end '.count($this->journal));
+		//echotime('sync end '.count($this->journal));
 		
 	}
 	

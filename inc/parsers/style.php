@@ -229,7 +229,7 @@ class swStyleParser extends swParser
 		$s = '';
 		$state = '';
 		$tablerow = '';
-		echotime('parse lines '.count($lines));
+		//echotime('parse lines '.count($lines));
 		
 		//print_r($lines);
 		

@@ -277,7 +277,6 @@ class swRecord extends swPersistance
 				$this->name =  swNameURL($this->name);
 				echotime($s);
 			}
-
 			
 			$this->internalfields = swGetAllFields($this->content, true);
 
@@ -344,6 +343,8 @@ class swRecord extends swPersistance
 			}
 			if ($rec2->revision < $this->revision) // does not already exist
 			{
+				echotime('writecurrent '.$this->revision.'>'.$rec2->revision.' '.$this->name);
+				
 				// must be first to unset old revision if there is.
 				//echotime('writec '. $this->name.' '.$this->revision);
 				$this->internalfields = swGetAllFields($this->content);

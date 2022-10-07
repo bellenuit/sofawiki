@@ -312,7 +312,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	if ($swDebugRefresh || stristr($flags,'refresh'))
 		{ echotime('refresh'); if (file_exists($cachefile)) unlink($cachefile);}
 	
-	//echomem('before');
 	$chunks = array();
 	if (file_exists($cachefile)) 
 	{
@@ -332,7 +331,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				}
 			}
 			fclose($handle);
-			//echomem('primary');
 			echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'" target="_blank">'.md5($mdfilter).'.txt</a> ');
 			
 			// 1+ file for revisions
@@ -361,7 +359,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				//echomem('merged');
 			}
 			echotime('cached '.count($goodrevisions));
-			echomem('cached');
 		}
 
 	}
@@ -494,7 +491,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 									}
 							}
 							$tocheckcount = $tocheck->countbits();
-							echotime('- * '.$tocheckcount);
+							echotime('- '.$field.' !0 '.$tocheckcount);
 						}
 						
 					
@@ -582,6 +579,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			if ($toc>0) {
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
+				
 				
 				if (memory_get_usage()>$swMemoryLimit) 
 				{
@@ -777,11 +775,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				$row = array('_header'=>$header);
 				swWriteRow($handle2, $row );
 				fclose($handle2);
+				$checkedlength = filesize($cachefile);
 				swSemaphoreRelease($cachefile);
 			}			
 			
 			echotime('good '.count($goodrevisions));
-			echomem("filter");	
+			
 			} // if toc>0
 	
 	}
@@ -811,7 +810,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		unset($goodrevisions);
 		$goodrevisions = $set;
 		unset($set);
-		
+		echotime('cachefile '.floor($checkedlength/1024).' KB');
+		echomem('filter');	
 		return $goodrevisions;
 	
 }

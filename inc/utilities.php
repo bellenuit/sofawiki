@@ -216,7 +216,6 @@ function swGetAllFields($s,$allowinternalvariables=false)
 							}; break;
 		}
 	}
-	echotime($state);
 	$result = array();
 // 	echotime('slist'.print_r($slist,true));
 	foreach($slist as $elem)

@@ -970,8 +970,10 @@ if (isset($_POST) || @$swPreventOvertimeSearchAgain)
 else
 	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
 
+swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
 
-echotime("skin");
+
+echotime('skin');
 
 /* SOFADOC_INCLUDE inc/skins/default.php */
 /* SOFADOC_INCLUDE inc/skins/diary.php */
@@ -986,7 +988,7 @@ echotime("skin");
 
 // fulltextindex
 
-swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
+
 
 
 if (!array_key_exists($skin,$swSkins)) $skin = 'default';
