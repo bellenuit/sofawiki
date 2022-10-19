@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.5';  
+$swVersion = '3.8.6';  
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -37,7 +37,7 @@ $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
 $swRamdiskPath = 'db';
 $swDbaHandler = 'sqlite3'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
-
+$swWikiTextPre = 'true';
 
 
 /*

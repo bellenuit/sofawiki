@@ -116,7 +116,7 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 			break;
 		}
 		if ($checkedbitmap->getbit($i)) continue;
-		
+		if (!$db->indexedbitmap->getbit($i)) continue;
 		$checkedbitmap->setbit($i);
 		if (!$db->currentbitmap->getbit($i)) continue;
 		
@@ -238,6 +238,8 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	{
 		$checkedbitmap = new swBitmap;
 	}
+	$notchecked = $checkedbitmap->notop();
+	$notchecked->redim($db->indexedbitmap->length, true);
 	
 	if ($field == '_checkedbitmap')
 	{
@@ -246,22 +248,24 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	
 	
 	$bitmap = new swBitmap;
-	$bitmap->redim($checkedbitmap->length, true);
-	//echo $bitmap->countbits().' ';
+	$bitmap->redim($db->indexedbitmap->length, true);
+	
 	
 	if ($term == '*' || !$term)
 	{
 		if ($s = swDbaFetch($field.' *',$swMonogramIndex))
 			{
 				$bc = unserialize($s);
-				//echo $bc->countbits().' ';
-				$bitmap = $bitmap->andop($bc);  // does not work ??
-				//echo $bitmap->countbits().'; ';
+				$bc = $bc->orop($notchecked);
+				// echo $bc->countbits().' ';
+				$bitmap = $bitmap->andop($bc); 
 	
 			}
 			else
 			{
 				$bc = new swBitmap;
+				$bc->redim($db->indexedbitmap->length, true);
+				$bc = $bc->orop($notchecked);
 				$bitmap = $bitmap->andop($bc);
 			}
 
@@ -273,31 +277,26 @@ function swGetMonogramBitmapFromTerm($field, $term)
 		{
 			$c = substr($vu,$ci,2);
 			
-			// echo $c.'=';
-			
 			if ($s = swDbaFetch($field.' '.$c,$swMonogramIndex))
 			{
 				$bc = unserialize($s);
 				//echo $bc->countbits().' ';
+				$bc = $bc->orop($notchecked);
 				$bitmap = $bitmap->andop($bc);  // does not work ??
-				//echo $bitmap->countbits().', ';
 				$found = true;
 	
 			}
 			else
 			{
 				$bc = new swBitmap;
+				$bc->redim($db->indexedbitmap->length, false);
+				$bc = $bc->orop($notchecked);
+				//echo $bc->countbits().'- ';
 				$bitmap = $bitmap->andop($bc);
 			}
 		}
 	}
-	// add not checked;
-	$ib = $db->indexedbitmap->duplicate();
-	// remove checked
-	$nc =  $checkedbitmap->notop();
-	$ib = $ib->andop($nc);
-	$bitmap = $bitmap->orop($ib);
-	//echo $bitmap->countbits().'.';
+	// echo $bitmap->countbits().' ';
 	return $bitmap;	
 }
 

@@ -55,6 +55,7 @@ stop
 end if
 
 filter '.$field.' "*", _name
+
 select trim('.$field.') !== ""
 update '.$field.' = substr(field,0,255)."..." where length('.$field.')>255
 

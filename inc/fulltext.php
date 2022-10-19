@@ -134,7 +134,7 @@ function swQueryFulltext($query)
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
 		}
-		else
+		elseif ($db->indexedbitmap->getbit($rev))
 		{
 			$q = "DELETE FROM pages WHERE revision = $rev";
 			if (!$swFulltextIndex->exec($q))

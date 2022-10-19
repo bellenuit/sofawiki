@@ -410,6 +410,18 @@ class xpCeil extends swExpressionFunction
 	}
 }
 
+class xpBigramStat extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':bigramstat' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
+		$a = array_pop($stack);
+		$stack[] = swBigramStat($a);		
+	}
+}
+
+
 /**
  * Nop function
  */
@@ -1019,6 +1031,19 @@ class xpLeS extends swExpressionFunction
 		$b = array_pop($stack);	
 		if ($b <= $a) $stack[] = '1';
 		else $stack[] = '0';		
+	}
+}
+
+class xpLevenshtein extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':levenshtein' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		
+		$stack[] = levenshtein($a,$b);	
 	}
 }
 
@@ -1724,9 +1749,10 @@ class xpRegexReplaceMod extends swExpressionFunction
 		$b = array_pop($stack);
 		$c = array_pop($stack);	
 		$d = array_pop($stack);	
+		$c = str_replace('/','\/',$c);  // does not 
+		$c = str_replace('∫','\\',$c);
 		$b = str_replace('/','\/',$b);  // does not 
 		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
-		// echo "a $a<br> b $b<br> c $c<br> d $d";
 		$stack[] = preg_replace('/'.$c.'/'.$a,$b,$d);		
 	}
 }
@@ -1966,6 +1992,128 @@ class xpTrim extends swExpressionFunction
 	}
 }
 
+class xpTrigramSimilarity extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':trigramsimilarity' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		$alist = explode(' ',$a);
+		$blist = explode(' ',$b);
+		$u = array_unique(array_merge($alist,$blist));	
+		$i = array_intersect($alist,$blist);
+		$jaccard = 0;
+		if (count($u)>0) $jaccard = 1.0*count($i)/count($u); // /count($u);
+		$stack[] = $jaccard;	
+	}
+}
+
+class xpCosineSimilarity extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':cosinesimilarity' ;}
+	
+	// createfunction depreciated. should be replaced with anonymous function
+	
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		$alist = explode(' ',$a);
+		$blist = explode(' ',$b);
+		$alistw = array();
+		$alistsum = 0;
+		foreach($alist as $elem)
+		{
+			$fields = explode('=',$elem);
+			if (!isset($fields[1])) continue;
+			$alistw[$fields[0]] = $fields[1];
+			$alistsum += intval($fields[1]);
+		}
+		$blistw = array();
+		$blistsum = 0;
+		foreach($blist as $elem)
+		{
+			$fields = explode('=',$elem);
+			if (!isset($fields[1])) continue;
+			$blistw[$fields[0]] = $fields[1];
+			$blistsum += intval($fields[1]);
+		}
+		
+		if ($alistsum == 0 || $blistsum  == 0)
+		{
+			$stack[] = 0;
+			return;
+		}
+		$dotxy = 0;
+		$dotxx = 0;
+		$dotyy = 0;
+				
+		foreach($alistw as $k=>$v)
+		{
+			$dotxx += intval($v)*intval($v);
+			if (isset($blistw[$k])) $dotxy += intval($v)*intval($blistw[$k]);
+		}
+		foreach($blistw as $k=>$v)
+		{
+			$dotyy += intval($v)*intval($v);
+		}
+		
+		$stack[] = $dotxy / sqrt($dotxx*$dotyy);	
+	}}
+
+
+class xpTrigramWeightedSimilarity extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':trigramweightedsimilarity' ;}
+	function run(&$stack)
+	{
+		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
+		$a = array_pop($stack);
+		$b = array_pop($stack);
+		$alist = explode(' ',$a);
+		$blist = explode(' ',$b);
+		$alistw = array();
+		$alistsum = 0;
+		foreach($alist as $elem)
+		{
+			$fields = explode('=',$elem);
+			if (!isset($fields[1])) continue;
+			$alistw[$fields[0]] = $fields[1];
+			$alistsum += intval($fields[1]);
+		}
+		$blistw = array();
+		$blistsum = 0;
+		foreach($blist as $elem)
+		{
+			$fields = explode('=',$elem);
+			if (!isset($fields[1])) continue;
+			$blistw[$fields[0]] = $fields[1];
+			$blistsum += intval($fields[1]);
+		}
+		
+		if ($alistsum == 0 || $blistsum  == 0)
+		{
+			$stack[] = 0;
+			return;
+		}
+		$score = 0;
+				
+		foreach($alistw as $k=>$v)
+		{
+			// Bray-Curtis using relative weights to compensate for text size differences
+			if (isset($blistw[$k])) $score += min(1.0*intval($v)/intval($alistsum),1.0*intval($blistw[$k])/intval($blistsum));
+		}
+		
+		
+		
+		$stack[] = $score;	
+	}
+}
+
+
 class xpTrue extends swExpressionFunction
 {
 	function __construct() { $this->arity = 0; $this->label = ':true' ;}
@@ -2102,4 +2250,9 @@ $swExpressionFunctions[':resume'] = new XpResume;
 $swExpressionFunctions[':template'] = new XpTemplate;
 
 $swExpressionFunctions[':fileexists'] = new xpFileExists;
+$swExpressionFunctions[':trigramsimilarity'] = new xpTrigramSimilarity;
+$swExpressionFunctions[':trigramweightedsimilarity'] = new xpTrigramWeightedSimilarity;
+$swExpressionFunctions[':cosinesimilarity'] = new xpCosineSimilarity;
+$swExpressionFunctions[':levenshtein'] = new xpLevenshtein;
+$swExpressionFunctions[':bigramstat'] = new xpBigramStat;
 

@@ -856,6 +856,20 @@ class swRelationLineHandler
 									}
 									break;
 									
+				
+				case 'parse':		if (count($this->stack)<1)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Parse Stack empty'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$r = array_pop($this->stack);
+										$r->parse($body);
+										$this->stack[] = $r;
+									}
+									break;	
+									
 				case 'pivot':		if (count($this->stack)<1)
 									{
 										$this->result .= $ptag.$ptagerror.$ti.' Error : Pivot Stack empty'.$ptagerrorend.$ptag2;
@@ -2472,13 +2486,11 @@ class swRelation
 		$c = count($this->tuples);
 		
 		$newtuples = array();
-		for ($i=0;$i<$c;$i++)
+		foreach ($this->tuples as $tp)
 		{
-			$tp = $this->tuples[$i];
+			//$tp = $this->tuples[$i];
 			$d = $tp->fields();
 			$v = $d[$field];
-			
-			
 			
 			if (preg_match($reg,$v,$matches))
 			{
@@ -3527,7 +3539,7 @@ class swRelation
 				$fields[]=$td.$t;				
 			}
 			
-			$line = '| '.join(' || ',$fields);
+			$line = '| '.join(PHP_EOL.'| ',$fields);
 			
 			if ($i>$c && $grid) 
 				$lines[] = '|- style="display: none"';
@@ -3933,20 +3945,20 @@ class swOrderedDictionary
 				case 'a' : $test = strcasecmp($atext,$btext); if ($test != 0) return $test; break;
 				case 'z' : $test = strcasecmp($atext,$btext); if ($test != 0) return -$test; break;
 				case '1' :  // order infinity, numbers, -infinity, undefined
-							if ($atext == '∞') { if ($btext != '∞') return 1 ; $test = 0; break; }
-							if ($btext == '∞') { return -1 ; }
-							if ($atext == '-∞') { if ($btext != '⦵') return 1; if ($btext != '-∞') return -1 ; $test = 0; break; }
-							if ($btext == '-∞') { if ($atext != '⦵') return -1; return 1 ; }
-							if ($atext === '⦵') { if ($btext != '⦵') return -1 ; $test = 0; break; }
+							if ($atext === '∞') { if ($btext !== '∞') return 1 ; $test = 0; break; }
+							if ($btext === '∞') { return -1 ; }
+							if ($atext === '-∞') { if ($btext !== '⦵') return 1; if ($btext !== '-∞') return -1 ; $test = 0; break; }
+							if ($btext === '-∞') { if ($atext !== '⦵') return -1; return 1 ; }
+							if ($atext === '⦵') { if ($btext !== '⦵') return -1 ; $test = 0; break; }
 							if ($btext === '⦵') { return 1 ; }
 							if (floatval($atext) > floatval($btext)) return 1;
 							if (floatval($atext) < floatval($btext)) return -1;
 							break;
-				case '9' : 	if ($atext == '∞') { if ($btext != '∞') return -1 ; $test = 0; break; }
-							if ($btext == '∞') { return 1 ; }
-							if ($atext == '-∞') { if ($btext != '⦵') return -1; if ($btext != '-∞') return 1 ; $test = 0; break; }
-							if ($btext == '-∞') { if ($atext != '⦵') return 1; return -1 ; }
-							if ($atext === '⦵') { if ($btext != '⦵') return 1 ; $test = 0; break; }
+				case '9' : 	if ($atext === '∞') { if ($btext !== '∞') return -1 ; $test = 0; break; }
+							if ($btext === '∞') { return 1 ; }
+							if ($atext === '-∞') { if ($btext !== '⦵') return -1; if ($btext !== '-∞') return 1 ; $test = 0; break; }
+							if ($btext === '-∞') { if ($atext !== '⦵') return 1; return -1 ; }
+							if ($atext === '⦵') { if ($btext !== '⦵') return 1 ; $test = 0; break; }
 							if ($btext === '⦵') { return -1 ; }
 							if (floatval($atext) > floatval($btext)) return -1;
 							if (floatval($atext) < floatval($btext)) return 1;

@@ -23,12 +23,13 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=currentbitmap">currentbitmap</a>
 <a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
-<a href="index.php?name=special:indexes&index=urls">urls</a>
+<br><a href="index.php?name=special:indexes&index=urls">urls</a>
 ';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 $swParsedContent .= ' <a href="index.php?name=special:indexes&index=db">db</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloom</a>
 <a href="index.php?name=special:indexes&index=monogram">monogram</a>
+<a href="index.php?name=special:indexes&index=fields">fields</a>
 <a href="index.php?name=special:indexes&index=queries">queries</a>
 <br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
@@ -54,12 +55,13 @@ $swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Rese
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Index DB, Index Bloom, Index Names, Reset Bitmaps, Rebuild Index</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Index DB, Index Bloom, Index Monogram, ndex Names, Reset Bitmaps, Rebuild Index</i>";
 
 
 $done = '';
 	if (isset($_REQUEST['submitreset']))
 	{
+		swUnlink($swRoot.'/site/indexes/fields.db');
 		$swOvertime = true;
 		
 	}
@@ -250,7 +252,8 @@ switch($_REQUEST['index'])
 						
 						
 						$swParsedContent .= '<p>'.$urlcount.' urls (includes deleted)';
-						$swParsedContent .= '<p>'.$revisioncount.' revisions';
+						$swParsedContent .= '<br>'.$revisioncount.' revisions';
+						$swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/urls.db')/1024/1024).' MB';
 						
 						$swParsedContent .= "<form method='get' action='index.php'><p>";
 						$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
@@ -259,7 +262,7 @@ switch($_REQUEST['index'])
 						$swParsedContent .= "<input type='submit' name='submitterm' value='Test URL' />";
 						$swParsedContent .= "</form>";
 						
-						if ($_REQUEST['url'])
+						if (@$_REQUEST['url'])
 						{
 							$line = swDbaFetch($_REQUEST['url'],$db->urldb);
 							$swParsedContent .= '<p>'.$line.'<p>';
@@ -323,6 +326,7 @@ switch($_REQUEST['index'])
 							  } while ($k !== FALSE && $k != '' && $k != 0);
 
 							  $swParsedContent .= '<p>length: '.$counter;
+							  $swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/records.db')/1024/1024).' MB';
 							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
 							  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 							  
@@ -404,6 +408,7 @@ switch($_REQUEST['index'])
 							$bm = swGetMonogramBitmapFromTerm('_checkedbitmap','');
 							$swParsedContent .= '<p>length: '.$bm->length;
 						 	$swParsedContent .= '<br>countbits: '.$bm->countbits();
+						 	$swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/monogram.db')/1024/1024).' MB';
 						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0,2);
 						 	$swParsedContent .= '<p>';
 						 	
@@ -460,7 +465,40 @@ switch($_REQUEST['index'])
 						 	
 							
 							break;
-	case "docron": 		   $swParsedContent .= '<h3>Cron</h3><p>'.swCron() ; break;
+	case 'fields':			$swParsedContent .= '<h3>fields</h3><p>';
+	
+							$path = $swRoot.'/site/indexes/fields.db';
+							$fielddb = new SQLite3($path);
+							$fielddb->exec("VACUUM");
+							$result = $fielddb->querySingle("SELECT COUNT(DISTINCT revision) FROM fields");
+							$swParsedContent .= '<p>'.$result.' revisions';
+							$result = $fielddb->querySingle("SELECT COUNT(revision) FROM fields");
+							$swParsedContent .= '<br>'.$result.' rows';
+							$result = $fielddb->querySingle("SELECT COUNT(DISTINCT key) FROM fields");
+							$swParsedContent .= '<br>'.$result.' fields: ';
+							$result = $fielddb->query("SELECT DISTINCT key FROM fields ORDER BY key");
+							while ($row = $result->fetchArray(SQLITE3_ASSOC))
+							{
+								$swParsedContent .= $row['key'].' ';
+							}
+							$result = $fielddb->querySingle("SELECT COUNT(DISTINCT value) FROM fields");
+							$swParsedContent .= '<br>'.$result.' values ';	
+							$swParsedContent .= '<br>'.floor(filesize($path)/1024/1024).' MB ';	
+							
+							
+							if (isset($_REQUEST['revision']))
+							{
+								$rev = $_REQUEST['revision'];
+								$result = $fielddb->query("SELECT * FROM fields WHERE revision = '$rev'");
+								while ($row = $result->fetchArray(SQLITE3_ASSOC))
+								{
+									$swParsedContent .= '<br>'.print_r($row,true);
+								}
+							}
+	
+							break;
+	
+	case 'docron': 		   $swParsedContent .= '<h3>Cron</h3><p>'.swCron() ; break;
 	
 							
 							
@@ -706,7 +744,7 @@ switch($_REQUEST['index'])
 							break;
 						
 
-	case "indexnames": $result = swRelationToTable('filter _name, _revision'); 
+	case "indexnames": 	$result = swRelationToTable('filter index _name'); 
 						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
 	
 	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;

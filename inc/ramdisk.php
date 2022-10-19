@@ -10,6 +10,8 @@ is a pure reading cache, just duplicate files from harddisk
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swRamDiskDBpath = $swRoot.'/site/indexes/records.db';
+if (!is_dir($swRoot.'/site/')) mkdir($swRoot.'/site/');
+if (!is_dir($swRoot.'/site/indexes')) mkdir($swRoot.'/site/indexes');
 $swRamDiskDBfilter = '/site/revisions/';
 $swMemcache;
 

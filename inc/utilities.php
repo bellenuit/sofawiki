@@ -48,6 +48,7 @@ function swEscape($s)
   		$s = str_replace('&lt;','<lt>',$s);
   		$s = str_replace('&gt;','<gt>',$s);
   		$s = str_replace('\\','<backslash>',$s);
+  		
   		return $s;
 }
 
@@ -551,3 +552,5 @@ function swReadField($handle)
 
 
 }
+
+

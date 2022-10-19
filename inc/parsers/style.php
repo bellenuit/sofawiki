@@ -233,6 +233,9 @@ class swStyleParser extends swParser
 		
 		//print_r($lines);
 		
+		global $swWikiTextPre;
+		// $swWikiTextPre = true;
+		
 		foreach ($lines as $line)
 		{
 			//echo '(<p>'.$tablerow.') '.$line; 
@@ -316,7 +319,7 @@ class swStyleParser extends swParser
 									$tablerow = substr($tablerow,0,-5).'<br>'.$line.substr($tablerow,-5); // </td>
 								}
 							}
-							elseif (substr($line,0,1)==' ')
+							elseif (substr($line,0,1)==' ' && $swWikiTextPre)
 							{
 								if ($state == 'p')
 								{

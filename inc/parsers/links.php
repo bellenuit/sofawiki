@@ -50,6 +50,9 @@ class swLinksParser extends swParser
 		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
 		
 		$categories = array();
+		$oldstrings = array();
+		$newstrings = array();
+		$replacements = array();
 		
 		foreach ($matches as $v)
 		{
@@ -80,7 +83,7 @@ class swLinksParser extends swParser
 			}
 			else
 			{
-				$label = $val;
+				$label = $val; 
 				if (substr($label,0,1) == ":") $label = substr($label,1);
 			}
 			
@@ -210,67 +213,39 @@ class swLinksParser extends swParser
   					}
 				}
 				
+				global $db;
+				$rev = swGetCurrentRevisionFromName($val);
+				$rev2 = swGetCurrentRevisionFromName($val.'/'.$lang);
+				$linkwiki->name = $val;
 				
-				
-				if (true)
+				if ($db->currentbitmap->getbit($rev) || $db->currentbitmap->getbit($rev2))
 				{
-					// now check if not deleted
-					$linkwiki->name = $val;
-					
-					$linkwiki->lookup();
-					
-					if ($linkwiki->visible())
+					if ($user->hasright('view', $val))
 					{
-						if ($user->hasright('view', $linkwiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
-						else
-							$s = str_replace($v[0], $label, $s);
+						$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
 					}
 					else
-					{
-						// maybe there is a local version
-						$linkwiki->lookupLocalName();
-						if ($linkwiki->visible())
-						{
-							$linkwiki->name = $val;
-							if ($user->hasright('view', $linkwiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
-							else
-								$s = str_replace($v[0], $label, $s);
-						}
-						else
-						{
-						
-						
-							if ($user->hasright('modify', $wiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
-							else
-								$s = str_replace($v[0], $label,$s);
-						}
-						
-					}
-				
-				}
-				elseif($val=="")
-				{
-					$s = str_replace($v[0], $label,$s);
+						$s = str_replace($v[0], $label, $s);
 				}
 				else
 				{
-					$linkwiki = new swWiki();
-					$linkwiki->name = $val;
-					
-					if ($user->hasright('modify', $wiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
-						else
-							$s = str_replace($v[0], $label ,$s);
+					if ($user->hasright('view', $val))
+						$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
+					else
+						$s = str_replace($v[0], $label, $s);						
 				}
-				
+									
+								
 				$wiki->internalLinks[] = $val0;
 				
 				
 			}
 		}
+		
+
+        
+		
+		
 
 
 		if (count($categories) > 0)
@@ -287,6 +262,8 @@ class swLinksParser extends swParser
 	}
 
 }
+
+
 
 $swParsers["links"] = new swLinksParser;
 

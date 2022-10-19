@@ -5,7 +5,7 @@
  *	
  *  @author Matthias Bürcher 2010 matti@belle-nuit.com
  *  @link https://www.sofawiki.com
- *	@version 3.7.1
+ *	@version 3.8.5
  *  
  */
 

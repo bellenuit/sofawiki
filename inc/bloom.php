@@ -270,22 +270,15 @@ function swGetBloomBitmapFromTerm($term)
 	global $swBloomIndex;
 	
 	$bm = new swBitmap;
+	$bm->redim($db->indexedbitmap->length, true);
 	
-	$bm->init($db->bloombitmap->length, true);
-	
-	if (strlen(swNameURL($term))<3) return $bm;
-	
-	// echotime('bloom '.$term);
-	
-	if (!$swBloomIndex)
+	if (!$swBloomIndex || strlen(swNameURL($term))<3)
 	{
-		echotime('nobloomindex');
+		
 		return $bm;
 	}
 						 			
 	$hashes = swGetHashesFromTerm($term);
-	
-	// print_r($hashes);
 	
 	global $swMemoryLimit;
 	 	
@@ -295,7 +288,6 @@ function swGetBloomBitmapFromTerm($term)
 		
 		
 		$hbm = new swBitmap;
-		$hbm->init($db->bloombitmap->length, true);
 		$hbm->map = '';
 				
 		$blocks = floor(($db->lastrevision+1)/65536);
@@ -310,13 +302,15 @@ function swGetBloomBitmapFromTerm($term)
 			
 			$hbm->map .= $test;
 		}
+		
 		$bm = $bm->andop($hbm);
 	}
 	
-	$bm->map = substr($bm->map,0,strlen($db->bloombitmap->map));
+	$notchecked = $db->bloombitmap->notop();
+	$notchecked->redim($db->indexedbitmap->length, true);
+
+	$bm = $bm->orop($notchecked);
 	
-	$bm = $bm->orop($db->indexedbitmap);
-			
 	return $bm;
 	
 }

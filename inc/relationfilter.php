@@ -238,6 +238,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	// If the hint as spaces, all words must be present, but not necessarily in that order (AND)
 	// If the hint has pipes, at least one of the part must be present (OR)
 	// If a fields is present multiple times, there are multiple results. Fields with less occurences are padded
+	// If the hint has the form /!.+/ the cache captures all values, but returns only exact matches (keep only one index file, but search fast in it, works only with sqlite3, no binary logic can be used however.
 	
 	
 	if (!trim($filter)) return new swRelation('',null,null);
@@ -265,31 +266,20 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($swIndexError) return new swRelation('');
 	
-	
-	$isindex = false;
 	if (substr($filter,0,5)=='index')
 	{
 		$filter2 = substr($filter,5);
 		$filter2 = trim($filter2);
-		if (stristr($filter2,' ')) throw new swExpressionError('filter index invalid field',88);
-		$indexkey = $filter2;
-		$offsetrelevant = false;
-		$cacheoffsetrelevant = false;
-		$filter2 .= ' "*"';
-		$isindex = true;
-		$pairs = array($filter2);
-		$pairs[] = '_revision';
-		$pairs[] = '_offset';
 		
+		return swRelationIndexSearch($filter2,$globals);		
 	}
-	else
-		$pairs = explode(',',$filter);
+
+	$pairs = explode(',',$filter);
 	
-	// print_r($pairs);
 	// parse query
 	// currently, inline comma is not supported on hint.
 	
-		$fields = array(); 
+	$fields = array(); 
 	$getAllFields = false;
 	$getContent = false;
 	$newpairs = array();
@@ -310,15 +300,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 			$xp = new swExpression();
 			$xp->compile($h);
 			
-			// print_r($globals);
-			
-			$h = $xp->evaluate($globals);
-			
-			
-			
+			$h = $xp->evaluate($globals);			
 		}
-		if ($f == '*')	
-			$getAllFields = true;
+		if ($f == '*')	$getAllFields = true;
 		elseif ($f == '_content' && $h=='')
 		{
 			$getContent = true;
@@ -326,11 +310,17 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		}	
 		elseif ($h == '*')
 		{
-			$hors2 = $fields[$f] = "*";
+			$fields[$f] = "*";
+			$hors2 = '';
 		}
 		elseif 	($h == '')
 		{
 			$hors2 = $fields[$f] = null;
+		}
+		elseif (substr($h,0,1) == '!')
+		{
+			$fields[$f] = '!'.swNameURL(substr($h,1));
+			$hors2 = '';
 		}
 			// make each individual url but keep spaces as separator
 		else
@@ -355,6 +345,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		}	
 		if ($h == null)
 			$newpairs[] = $f;
+		elseif (substr($h,0,1) == '!')
+			$newpairs[] = $f.' "!"';
 		else
 			$newpairs[] = $f.' "'.$h.'"';
 		if ($f == '_name')
@@ -367,8 +359,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	
 	// print_r($fields);
-	if (!$isindex)
-		$filter = join(', ',$newpairs); // needed values for cache.
+	
+	$filter = join(', ',$newpairs); // needed values for cache.
 	echotime('filter '.$filter);
 	
 	// if * there must be at least one hint, we cannot return the entire database
@@ -403,95 +395,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	
 	if ($refresh)
 		{ echotime('refresh'); if (file_exists($bdbfile)) unlink($bdbfile);}
-		
-	/*	
-	// if we do not already have a cache, then we try to read all indexes first
-	if (! $isindex && !file_exists($bdbfile))
-	{
-		
-		
-		$q = array();
-		$fs = array();
-		$first = true;
-		$validindex = true;
-		//print_r($pairs);
-		
-		foreach($pairs as $p)
-		{
-			$p = trim($p);
-			$elems = explode(' ',$p);
-			$key = array_shift($elems);
-			$hint = join(' ',$elems);
-			
-			$fs[] = 'index '.$key;
-			$q[] = 'filter index '.$key;
-			if (trim($hint)) $q[] = 'select hint('.$key.', '.$hint.')';
-			if (!$first) $q[] = 'join natural';
-			$first = false;
-			
-			if (substr($key,0,1)=='_') 
-			{
-				switch ($key)
-				{
-					case "_name" : 
-					case "_word" :
-					case "_template ": break;
-					
-					default: $validindex = false;
-					
-				}
-			}
-			
-		}
-
-		if ($validindex)
-		{
-			global $swDebugRefresh;
-			$dr = $swDebugRefresh;
-			$swDebugRefresh = false;
-			
-			$indextable = swRelationToTable(join(PHP_EOL,$q));
-			
-			foreach($fs as $f)
-			{
-				$mdfilter = $f;
-				$mdfilter .= 'v2'; // create new hashes for swdba
-				$mdfilter = urlencode($mdfilter);
-				$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
-				//echotime($mdfilter);
-				$ff = $cachefilebase.'.db';
-				
-				$fdb = swdba_open($ff, 'wdt', 'db4');
-				if ($s = swdba_fetch('_checkedbitmap',$fdb))
-				{
-					$fb = @unserialize($s);
-					if (isset($indexcheckedbitmap))
-					{
-						$indexcheckedbitmap->andop($fb);
-					}
-					else
-					{
-						$indexcheckedbitmap = $fb;
-					}						
-				}
-				else echotime($ff);
-				
-			}
-			
-			$swDebugRefresh = $dr;
-			
-			echotime('useindex '.count($indextable).'/'.@count($indexcheckedbitmap));
-
-		}
-		
-				
-	}
-	*/
-	
-	
-	
-	
-	
 	
 	$bdbrwritable = true;
 	$firstrun = ! file_exists($bdbfile);
@@ -538,72 +441,16 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		if ($checkedbitmap === FALSE) $checkedbitmap = new swBitmap;
 	}
 	else 
-		$checkedbitmap = new swBitmap;
-	
-	if ($isindex)
-	{
-		$key = swDbaFirstKey($bdb);
-		while(substr($key,0,1)=='_' && $key) $key = swDbaNextKey($bdb);
-		if ($key)
-		{
-			$d = @unserialize(swDbaFetch($key,$bdb));
-			if (isset($d['_offset'])) 
-			{
-				$offsetrelevant = true;
-				$cacheoffsetrelevant = true;
-			}
-		}
-		else
-		{
-			$cacheoffsetrelevant = true; // no valid record, so we do not care
-		}
-	}
-	
+		$checkedbitmap = new swBitmap;	
 		
-	if (isset($indextable))	
-	{
-		//print_r($indextable);
-		foreach($indextable as $row)
-		{
-			//echotime(print_r($row,true));
-			$revision = $row['_revision'];
-			$offset = $row['_offset'];
-			unset($row['_revision']);
-			unset($row['_offset']);
-			
-			swDbaReplace($revision.'-'.$offset,serialize($row),$bdb);
-			$bitmap->setbit($revision);
-			$checkedbitmap->setbit($revision);	
-		}
-		if (isset($indexcheckedbitmap))
-		{
-			$frs = $indexcheckedbitmap->toarray();
-			foreach($frs as $revision)
-			{
-				$checkedbitmap->setbit($revision);	
-			}
-		}
-		$cached = $bitmap->countbits();
-		echotime('indexed '. $cached);
-	}
-	
-	else	
-	{
-		$cached = $bitmap->countbits();
-		echotime('cached '. $cached);
-	}
+	$cached = $bitmap->countbits();
+	echotime('cached '. $cached);
 	
 	$db->init();
 	
 	$maxlastrevision = $db->lastrevision;
 	if ($db->indexedbitmap->length < $maxlastrevision) $db->RebuildIndexes($db->indexedbitmap->length); // fallback
-	
-	//echo " indexed ".$db->indexedbitmap->length;
-	//echo " checked ".$checkedbitmap->length;
-	//echo $checkedbitmap->getbit($checkedbitmap->length-1);
-	// echotime('after init');
-	
-	
+		
 	$bitmap->redim($maxlastrevision+1,false);
 	$checkedbitmap->redim($maxlastrevision+1,false);
 	
@@ -630,9 +477,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		$bigbloom = new swBitmap();
 		
 		$bm = swGetMonogramBitmapFromTerm('_checkedbitmap','');
-		$notcheckd = $bm->notop();
+		$bm->redim($db->indexedbitmap->length,false);
+		$notcheckd = $bm->notop(); // echo $bm->countbits();
 		
-		$bigbloom->init($bm->length,true);
+		$bigbloom->init($bm->length,true); // echo $bigbloom->countbits();
 		
 		foreach($fields as $field=>$hors)
 		{
@@ -647,7 +495,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				if ($field == '_paragraph') $field = '_content';
 				if ($field == '_word') $field = '_content';
 				
-				if (! in_array($field,$notinvalues) && is_array($hors))
+				if (! in_array($field,$notinvalues) && is_array($hors)) // array excludes '*' and '!abc'
 				{
 					
 					$bor = new swBitmap();
@@ -664,15 +512,18 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							{
 								$gr = swGetMonogramBitmapFromTerm($field,$hand); 
 								$gr->redim($bigbloom->length, true);
-								$band = $band->andop($gr);
+								$band = $band->andop($gr); 
 							}
 						}
 	
 						
 						$bor = $bor->orop($band);
 						
+						
 					}
 					$bigbloom = $bigbloom->andop($bor);	
+					
+					// echo $bigbloom->countbits();
 				}
 			}
 		}
@@ -734,7 +585,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 										
 					if (!stristr($n,':')) $n= 'main:'.$n;
 										
-					if ($namespacefilter and $namespacefilter != '*')
+					if ($namespacefilter)
 					{
 						$orfound = false;
 						
@@ -766,7 +617,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 					}
 					
-					if ($namefilter and $namefilter != '*')
+					if ($namefilter)
 					{
 						$orfound = false;
 						
@@ -938,7 +789,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		}
 		if (!$cached && array_key_exists('_paragraph',$fields))
 		{
-			$hors = $fields['_paragraph'];
+			$hors = $fields['_paragraph']; //?
 			
 		}	
 		
@@ -1042,20 +893,104 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_url'][] = swNameURL($record->name);
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
-					$fieldlist['_content'][] = $record->content;
-					$fieldlist['_length'][] = strlen($record->content);
-					$fieldlist['_short'][] = substr($record->content,0,160);
-				
-					
-					$fieldlist['_paragraph'] = explode(PHP_EOL, $record->content);
 					
 					
-					$s = preg_replace("/[0123456789:\/.]/","-", $record->content);
-					$fieldlist['_word'] = explode('-', swNameURL($s));
-					$fieldlist['_word'] = array_values(array_filter($fieldlist['_word'], function ($var){return strlen($var)>=3;})); 
+					// the following cost, so we do them only if they are in the query
 					
-				
-					//print_r($fieldlist['_word']);
+					
+					if (array_key_exists('_content',$fields)) $fieldlist['_content'][] = $record->content;
+					if (array_key_exists('_length',$fields)) $fieldlist['_length'][] = strlen($record->content);
+					if (array_key_exists('_short',$fields)) $fieldlist['_short'][] = substr($record->content,0,160);
+					if (array_key_exists('_paragraph',$fields)) $fieldlist['_paragraph'] = explode(PHP_EOL, $record->content);
+									
+					if (array_key_exists('_paragraph',$fields) || array_key_exists('_trigram',$fields) || array_key_exists('_trigram32',$fields) || array_key_exists('_bigram',$fields) ||  array_key_exists('_bigramw',$fields) || array_key_exists('_bmc',$fields) || array_key_exists('_bmt',$fields) )
+					{
+						$s = preg_replace("/[0123456789:\/.]/","-", $record->content);
+						$s = swNameURL($s);
+						
+						if (array_key_exists('_paragraph',$fields))
+						{
+							$fieldlist['_word'] = explode('-', $s);
+							$fieldlist['_word'] = array_values(array_filter($fieldlist['_word'], function ($var){return strlen($var)>=3;})); 
+						}
+					
+						if (array_key_exists('_trigram',$fields))
+						{
+							$cs = strlen($s); 
+							$trigrams = array();
+							for($i=0;$i<$cs-2;$i++)
+							{
+								$trigrams[substr($s,$i,3)] = '1';
+							}
+							$fieldlist['_trigram'] = array_keys($trigrams);
+						}
+						
+						if (array_key_exists('_trigram32',$fields))
+						{
+							$cs = strlen($s); 
+							$trigrams = array();
+							for($i=0;$i<$cs-2;$i++)
+							{
+								$tr = substr($s,$i,3);
+								if (strstr($tr,'-')) continue;
+								if (!isset($trigrams[$tr])) $trigrams[$tr]=0;
+								$trigrams[$tr]++;
+							}
+							
+							//rsort($trigrams,SORT_NUMERIC);
+							uasort($trigrams, function($a, $b) { return $b - $a; });
+							$trigrams = array_slice($trigrams,0,64, true);
+							$trigrams = array_keys($trigrams);
+							sort($trigrams,SORT_STRING );
+							$trigrams = array(join(' ',$trigrams));
+							//print_r($trigrams);
+							$fieldlist['_trigram32'] = $trigrams;
+						}
+						
+						if (array_key_exists('_bigram',$fields))
+						{
+							$cs = strlen($s); 
+							$bigrams = array();
+							for($i=0;$i<$cs-1;$i++)
+							{
+								$tr = substr($s,$i,2);
+								if (strstr($tr,'-')) continue;
+								if (!isset($bigrams[$tr])) $bigrams[$tr]=0;
+								$bigrams[$tr]++;
+							}
+							
+							//rsort($trigrams,SORT_NUMERIC);
+							uasort($bigrams, function($a, $b) { return $b - $a; });
+							// $bigrams = array_slice($bigrams,0,count($bigrams)/2, true);
+							$bigrams = array_keys($bigrams);
+							sort($bigrams,SORT_STRING );
+							$bigrams = array(join(' ',$bigrams));
+							//print_r($trigrams);
+							$fieldlist['_bigram'] = $bigrams;
+						}
+						if (array_key_exists('_bigramstat',$fields))
+						{
+							
+							$fieldlist['_bigramw'] = array(swBigramStat($s));
+						}
+						if (array_key_exists('_bmc',$fields) && array_key_exists('_bmt',$fields))
+						{
+							$cs = strlen($s); 
+							$bigrams = array();
+							for($i=0;$i<$cs-1;$i++)
+							{
+								$tr = substr($s,$i,2);
+								if (strstr($tr,'-')) continue;
+								if (!isset($bigrams[$tr])) $bigrams[$tr]=0;
+								$bigrams[$tr]++;
+							}
+							
+							$fieldlist['_bmt'] = array_keys($bigrams);
+							$fieldlist['_bmc'] = array_values($bigrams);
+						}
+					}
+					
+					if (array_key_exists('_bloom',$fields)) $fieldlist['_bloom'] = explode(PHP_EOL, $record->content);
 					
 					
 					$ns = swNameURL($record->wikinamespace());
@@ -1081,7 +1016,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					// normalize array, to a table, but using only used fields and field
 					// $maxcount = count($fieldlist[$field]);
 					$maxcount = 1;
-					// print_r($fields);
+
 					foreach($fields as $key=>$v)
 					{
 						if (isset($fieldlist[$key]))
@@ -1095,11 +1030,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						$maxcountall = max($maxcountall,count($fieldist0[$key]));
 						
 					}
-					//echo $record->revision.' '.$maxcountall.'; ';
-					if ($isindex)
-					{
-						$maxcount = $maxcountall;
-					}	
 	
 					$fieldlist2 = array();
 					foreach($fieldlist as $key=>$v)
@@ -1117,11 +1047,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							{	
 								if (count($v) > 0)
 									$fieldlist2[$fi][$key] = $v[count($v)-1];
-							}
-							
-							if ($isindex)
-							{
-								if (count(array_unique($v))>1) {$offsetrelevant = true; }
 							}
 							
 							
@@ -1150,10 +1075,10 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							}
 							elseif (array_key_exists($key,$fieldlist2[$fi]))
 							{
-								if ($hint=='*')
+								if ($hint=='*' || (!is_array($hint) && (substr($hint,0,1) == '!')))
 								{
 									$fieldfound = true;
-																	}
+								}
 								else
 								{									
 									$flv =  swNameURL($fieldlist2[$fi][$key]);
@@ -1194,18 +1119,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if ($found)
 						{
-							if ($isindex)
-							{
-								if ($fieldlist2[$fi][$indexkey])
-								{
-									$fieldlist2[$fi]['_offset'] = $fi;
-									$fieldlist2[$fi]['_revision'] = $revision;
-									$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
-								}
-							}
-							else
-							
-								$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
+							$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
 						}
 						
 
@@ -1250,28 +1164,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 							//print_r($line);
 							if (array_key_exists($key,$fields) || ( $key != '_revision' && $key != '_url') )
 							{
-								if ($value) 
-								{
-									$linehascontent = true;
-								}
+								if ($value) $linehascontent = true;
 							}
 						}
 						
-						if ($linehascontent) 
-						{
-							if ($isindex)
-							{
-								$allrows[$primary] = $line; // delay offsetrelevant
-							}
-							else
-							{
-								
-								
-								swDbaReplace($primary,serialize($line),$bdb); // use less memory
-								
-								
-							}
-						}
+						if ($linehascontent) swDbaReplace($primary,serialize($line),$bdb); // use less memory
 					}
 					$bitmap->setbit($k);
 					
@@ -1281,36 +1178,6 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 				
 			}
 			
-			
-			// if isindex and all _offset point to the same value, we will drop the _offset column for indexes
-			if ($isindex)
-			{
-				if (!$offsetrelevant)
-				{
-					echotime('offsetnotrelevant');
-					$allrows2 = array();
-					foreach($allrows as $primary=>$line)
-					{
-						if (substr($primary,-2,2) === '-0')
-						{
-							unset($line['_offset']);
-							$allrows2[$primary] = $line;
-						}
-					}
-					$allrows = $allrows2;
-					
-					// print_r($allrows);
-					
-					
-				}
-				
-				foreach($allrows as $primary=>$line) 
-				{
-					
-					swDbaReplace($primary,serialize($line),$bdb);
-				}
-				
-			}
 	
 			echotime('cachefile '.floor($checkedlength/1024).' KB');
 			echomem("relationfilter");	
@@ -1319,48 +1186,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	}
 	
 	
-	
-	if ($isindex)
-	{
 		
-		if ($offsetrelevant)
-		{
-			if ($cacheoffsetrelevant)
-			{
-				// everything is ok
-			}
-			else
-			{
-				// we need to set offset for each which is really complicated as we do not have information on max, so we need to reset all old data. bad case
-				echotime('lateoffsetrelevant');
-				
-				swDbaClose($bdb);
-				unset($bdbfile);
-				$bdb = swDbaOpen($bdbfile, 'c');
-				foreach($allrows as $primary=>$line) swDbaReplace($primary,serialize($line),$bdb);
-				$bitmap == new swBitmap;
-				$checkedbitmap == new swBitmap;
-				
-				foreach($allrows as $key=>$line)
-				{
-					$keys = explode('-',$key);
-					$kr = $keys[0];
-					
-					$bitmap->setbit($kr);
-					$checkedbitmap->setbit($kr);
-				}
-				
-			}
-		}
-		else
-		{
-			unset($fields['_offset']);
-			$header = array_keys($fields);
-			$result = new swRelation($header,null,null);
-
-		}
-	}
-	
 	
 	// TO DO FILTER NAMESPACE HERE 
 	global $user;
@@ -1878,6 +1704,362 @@ $s = $lh->run($q);
 return $s;
 
 
+}
+
+function swBigramStat($s)
+{
+	
+	$s = preg_replace("/[0123456789:\/.]/","-", $s);
+	$s = swNameURL($s); 
+	$cs = strlen($s); 
+	$bigrams = array();
+	for($i=0;$i<$cs-1;$i++)
+	{
+		$tr = substr($s,$i,2);
+		if (strstr($tr,'-')) continue;
+		if (!isset($bigrams[$tr])) $bigrams[$tr]=0;
+		$bigrams[$tr]++;
+	}
+	uasort($bigrams, function($a, $b) { return $b - $a; });
+	$bigrams2 = array();
+	foreach($bigrams as $bigramkey=>$bigramvalue)
+	{
+		$bigrams2[] = $bigramkey.'='.$bigramvalue;
+	}
+	
+	return join(' ',$bigrams2);
+}
+
+function swRelationIndexSearch($filter, $globals = array())
+{
+	//echo $filter;
+	echotime('filter index');
+	
+	global $swDbaHandler;
+	if ($swDbaHandler !== 'sqlite3')
+	{
+		throw new swRelationError('Filter index works only with SQLite3 database handler',87);
+	}
+	
+	
+	
+	// searches through all user defined 
+	$fields = array();
+	// we need a state machine to parse the filter, because the values in quotes might contain spaces
+	
+	$state = 'start';
+	
+	$characters = preg_split('//u', $filter);
+	$buffer = ''; $key = '';
+	foreach($characters as $ch)
+	{
+		switch ($state)
+		{
+			case 'start':			switch ($ch)
+									{
+										case ' ':  	break;
+										default :	$buffer = $ch;
+													$state = 'field';
+									}
+									break;
+			case 'field':			switch ($ch)
+									{
+										case ' ':	$key = $buffer;
+													$buffer = '';
+													$state = 'value';
+													break;
+										case ',':	$key = $buffer;
+													$fields[$buffer] = '';
+													$key = '';
+													$buffer = '';
+													$state = 'start';
+													break;
+										default:	$buffer .= $ch;
+									}
+									break;
+			case 'value':			switch ($ch)
+									{
+										case ',':	$fields[$key] = $buffer;
+													$key = '';
+													$buffer = '';
+													$state = 'start';
+													break;
+										case '"':	$buffer .= $ch;
+													$state = 'quotedvalue';
+													break;
+										default: 	$buffer .= $ch;	
+									}
+									break;
+			case 'quotedvalue':		switch ($ch)
+									{
+										case '"':	$buffer .= $ch;
+													$state = 'value';
+													break;
+										default: 	$buffer .= $ch;	
+									}
+									break;
+		}
+		
+	}
+	if ($buffer)
+	{
+		switch ($state)
+		{
+			case 'field':	$fields[$buffer] = '';
+							break;
+			case 'start':	break;
+			default:		$fields[$key] = $buffer;
+		}
+	}
+	
+	//print_r($fields);
+	
+	// check all fields
+	$relation = new swRelation('revision, row, key, value');
+	
+	foreach($fields as $k=>$f)
+	{
+		if (!$relation->validName($k)) 
+		{
+			throw new swRelationError('Invalid field name "'.$k.'"',87);
+		}
+		if (substr($k,0,1) == '_' && $k !== '_name')
+		{
+			throw new swRelationError('Invalid underscore name for filter index "'.$k.'"',87);
+		}
+	}
+	
+	// resolve expressions
+	foreach($fields as $k=>$v)
+	{
+		$xp = new swExpression();
+		$xp->compile($v);
+		$fields[$k] = trim($xp->evaluate($globals));
+	}
+	
+	// index fields 
+	global $swRoot;
+	global $db;
+	$path = $swRoot.'/site/indexes/fields.db';
+	try
+	{
+		$fielddb = new SQLite3($path);
+		if (! $fielddb)
+		{
+			throw new swDbaError('fields.db construct db not exist '.$fielddb->lastErrorMsg().' path '.$path);
+		}
+
+	}
+	catch (Exception $err)
+	{
+		echo 'fields.db open errror '.$err->getMessage().' '.$path; return;
+	}
+	
+	if (!$fielddb->exec('CREATE TABLE IF NOT EXISTS fields (revision, row, key, value)'))
+	{
+			throw new swDbaError('swDba create table error '.$fielddb->lastErrorMsg());
+	}
+	if (!$fielddb->exec('CREATE TABLE IF NOT EXISTS aux (key, value)'))
+	{
+			throw new swDbaError('swDba create table error '.$fielddb->lastErrorMsg());
+	}
+	if (!$fielddb->exec('CREATE INDEX IF NOT EXISTS revisions ON fields (revision, row)'))
+	{
+			throw new swDbaError('swDba create table error '.$fielddb->lastErrorMsg());
+	}
+	if (!$fielddb->exec('CREATE INDEX IF NOT EXISTS vals ON fields (key, value)'))
+	{
+			throw new swDbaError('swDba create table error '.$fielddb->lastErrorMsg());
+	}
+	
+	$checkedbitmap = new swBitmap;
+	$c = $db->currentbitmap->length;
+	$checkedbitmap->redim($c);
+	$result = $fielddb->query("SELECT DISTINCT revision FROM fields");
+	while ($row = $result->fetchArray(SQLITE3_ASSOC))
+	{
+		$checkedbitmap->setbit($row['revision']);
+	}
+	
+	$journal = array();
+	
+	$starttime = microtime(true);
+	global $swMaxSearchTime;
+	global $swOvertime;
+	
+	$l= 0;
+	
+	echotime('start '.$checkedbitmap->countbits().'/'.$db->currentbitmap->countbits());
+	
+	for ($i = 1; $i<= $c; $i++)
+	{
+		
+		$nowtime = microtime(true);	
+		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
+		if ($dur>$swMaxSearchTime || count($journal)>10000) 
+		{ 
+			$swOvertime = true;
+			echotime('searchtime fields'); 
+			break;
+		}
+
+		
+		if ($db->currentbitmap->getbit($i) && !$checkedbitmap->getbit($i))
+		{
+			// we need to index
+			$record = new swWiki;
+			$record->revision = $i;
+			$record->lookup();
+		
+			$fieldlist = $record->internalfields;
+			
+			foreach($fieldlist as $key=>$value)
+			{
+				if (substr($key,0,1)=='_') unset($fieldlist[$key]);
+			}
+			
+			$fieldlist['_name'][] = $record->name;
+			
+			// normalize
+			$maxrows = 0;
+			foreach($fieldlist as $f) $maxrows = max(count($f),$maxrows);
+			
+			
+			
+			foreach($fieldlist as $key=>$list)
+			{
+				
+				$j = 1; $lastv = '';
+				foreach($list as $v)
+				{
+					$lastv = $v = $fielddb->escapeString($v);
+					$journal[]= "INSERT INTO fields (revision,row,key,value) VALUES ('$i','$j','$key','$v');";
+					$j++;
+				}
+				
+				while($j <= $maxrows)
+				{
+					$journal[]= "INSERT INTO fields (revision,row,key,value) VALUES ('$i','$j','$key','$lastv');";
+					$j++;
+				}
+				
+
+			}
+			
+			$checkedbitmap->setbit($i);
+			
+			//echo $i.' ';
+						
+			$l++;
+		}
+		elseif (!$db->currentbitmap->getbit($i) && $checkedbitmap->getbit($i))
+		{
+			$journal[]= "DELETE FROM fields WHERE revision = '$i';";
+			$checkedbitmap->unsetbit($i);
+			echotime(-$i);
+			$l++;
+		}
+		
+	}
+	
+	echotime('lookup '.$l.' '.$checkedbitmap->countbits().'/'.$db->currentbitmap->countbits());
+	
+	if (count($journal))
+	{
+		array_unshift($journal, "PRAGMA synchronous=OFF; ");
+		$journal[] = "PRAGMA synchronous=ON; ";
+		//$checkedbitmap->hexit();
+		//$v = serialize($checkedbitmap);
+		//echo $v;
+		// $v = $fielddb->escapeString($v);
+		// $journal[]= "REPLACE INTO aux (key,value) VALUES ('checkedbitmap','$v');"; 
+		$q = join(PHP_EOL,$journal);
+		// echo $q;
+		$fielddb->exec($q);
+		echotime('synced '.count($journal));
+	}
+	
+	// query database
+	$qstart = "SELECT t1.value as _name ";
+	$qbody = "FROM fields t1 ";
+	$qend = "WHERE t1.key = '_name' ";
+	$first = ''; $t = 1;
+	
+	$headerfields=array_keys($fields);
+	uasort($fields, function($a, $b) { return strlen($b) - strlen($a); }); // with the joins, we start with the more restrictive, leaving also left joins for columns without values at the end.
+	
+	foreach($fields as $k=>$v)
+	{
+		$t++;
+		$qstart .= ", t$t.value AS $k ";
+		if ($v)
+			$qbody .= "JOIN fields t$t ON t1.revision = t$t.revision AND t1.row = t$t.row ";
+		else
+			$qbody .= "LEFT JOIN fields t$t ON t1.revision = t$t.revision AND t1.row = t$t.row ";
+		$qend .= "AND t$t.key = '$k' ";
+		if ($v) $qend .= "AND t$t.value = '$v' ";	
+	}
+	$first = '';
+		
+	$q = $qstart . $qbody.$qend;
+	
+	echotime($q);
+	
+	// echo $q;
+	
+	$result = $fielddb->query($q);
+	
+
+	
+	
+	// TO DO FILTER NAMESPACE HERE 
+	global $user;
+	global $swSearchNamespaces;
+	global $swTranscludeNamespaces;
+		
+	$ns = array();
+	$searcheverywhere = FALSE;
+	foreach($swSearchNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	foreach($swTranscludeNamespaces as $sp)
+	{
+		if (stristr($sp,'*')) $searcheverywhere = TRUE;
+		$sp = swNameURL($sp);
+		if (!stristr($sp,':')) $sp .= ':';
+		if ($sp != ':') $ns[$sp]= $sp;
+	}
+	$relation->header = $headerfields;
+	$first = true;
+	while ($row = $result->fetchArray(SQLITE3_ASSOC))
+	{
+		
+		
+		$dn = @$d['_name'];
+		
+		if (!$searcheverywhere && stristr($dn,':'))
+		{
+			$dnf =explode(':',$dn);
+			$dns = swNameURL(array_shift($dnf));
+			$nss = join(PHP_EOL,$ns);
+			if (!stristr($nss,$dns) && !$user->hasright('view',$dn))
+			{
+				continue;
+			}
+		}
+		if (!array_key_exists('_name',$fields)) unset($row['_name']);
+		
+		$tp = new swTuple($row);
+		$relation->tuples[$tp->hash()] = $tp;
+	}
+		
+	return $relation;
+	
+	
 }
 
 

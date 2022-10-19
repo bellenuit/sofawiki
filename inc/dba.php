@@ -318,7 +318,7 @@ class swDba
 				$this->db = new SQLite3($path);
 				
 				
-						if (! $this->db)
+		if (! $this->db)
 		{
 			throw new swDbaError('swDba construct db not exist '.$this->db->lastErrorMsg().' path'.$path);
 		}
@@ -326,7 +326,7 @@ class swDba
 			}
 			catch (Exception $err)
 			{
-				echo 'swDba open errror '.$err->getMessage().' '.$path; return;
+				throw new swDbaError( 'swDba open errror '.$err->getMessage().' '.$path);
 			}
 		
 		$this->path = str_replace($swRoot,'',$path);
@@ -351,6 +351,11 @@ class swDba
 		{
 			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg());
 		}
+		if (!$this->db->exec('CREATE TABLE IF NOT EXISTS idx (k text unique, v text)'))
+		{
+			throw new swDbaError('swDba create table error '.$this->db->lastErrorMsg());
+		}
+
 		$this->journal = array();
 		
 		
@@ -550,7 +555,7 @@ class swDba
 		
 		if (! $this->db)
 		{
-			throw new swDbaError('swDba destruct db not exist. path'.$path);
+			throw new swDbaError('swDba destruct db not exist.');
 		}
 		$this->sync();
 		
