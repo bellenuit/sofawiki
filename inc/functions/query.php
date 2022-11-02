@@ -5,332 +5,6 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 // utf8
 
 
-// from http://www.php.net/manual/fr/function.array-multisort.php 
-// modified
-
-// modifiers: ! DESC  # NUMERIC
-function array_sort_func($a,$b=NULL) { 
-   static $keys; 
-   if($b===NULL) return $keys=$a; 
-      
-   foreach($keys as $k) 
-   { 
-      $numeric = false;
-      $desc = false;
-      $familyname = false;
-      $url = false;
-      $nocase = false;
-      if (stristr($k,'#')) { $numeric = true; $k = str_replace('#','',$k);}
-      if (stristr($k,'!')) { $desc = true;  $k = str_replace('!','',$k) ;}
-      if (stristr($k,'?')) { $familyname = true;  $k = str_replace('?','',$k) ;}
-      if (stristr($k,'@')) { $url = true;  $k = str_replace('@','',$k) ;}
-      if (stristr($k,'&')) { $nocase = true;  $k = str_replace('&','',$k) ;}
-      
-      if ($numeric)
-      {
-      	$fa = floatval(@$a[$k]);
-      	$fb = floatval(@$b[$k]);
-      	$p = 1;
-      	if ($desc) $p = -1;
-      	if ($fa > $fb) return $p;
-      	if ($fa < $fb) return -$p;
-      }
-      else
-      {
-      	if ($familyname)
-      	{
-      		$ca = swGetFamilyname(@$a[$k]);
-      		$cb = swGetFamilyname(@$b[$k]);
-      	}
-      	elseif ($url)
-      	{
-      		$ca = swNameURL(@$a[$k]);
-      		$cb = swNameURL(@$b[$k]);
-      	}
-      	elseif ($nocase)
-      	{
-      		$ca = strtolower(@$a[$k]);
-      		$cb = strtolower(@$b[$k]);
-      	}
-      	else
-      	{
-      		$ca = @$a[$k];
-      		$cb = @$b[$k];
-      	}
-      	
-      	if($ca !== $cb) 
-      
-         if ($desc)
-         	return strcmp($cb,$ca); 
-         else
-         	return strcmp($ca,$cb); 
-      }
-    } 
-   return 0; 
-} 
-
-function array_sort($keys) { 
-
-   $array = reset($keys);
-   if (!is_array($array)) $array = array();
-   array_shift($keys); 
-   array_sort_func($keys); 
-   usort($array,"array_sort_func");  
-   return $array;
-} 
-
-
-function swQueryTupleExpression($row, $term) 
-{
-	// on success, returns a string
-	// on error, returns an array
-	// lexical analysis, to preserve quoted strings.
-	
-	$quotes = explode('"',$term);
-	$arguments = array();
-	$even = true;
-	for($i=0;$i<count($quotes);$i++)
-	{
-		if ($even)
-		{
-			if ($quotes[$i])
-			{
-				$args = explode(" ",$quotes[$i]);
-				foreach($args as $arg)
-				{
-					if ($arg != '')
-						$arguments[]=$arg;
-				}
-			}
-			elseif (count($arguments) && $i<count($quotes)-1)	// double quote
-			{
-				$arg = array_pop($arguments);
-				$even = !$even;
-				$i++;
-				$arg.='"'.$quotes[$i];
-				$arguments[] = $arg;
-			}
-		}
-		else
-		{
-			$arguments[] = '"'.$quotes[$i];
-		}
-		$even = !$even;
-	}
-	$calcstack = array();
-	foreach($arguments as $arg)
-	{
-		if (array_key_exists($arg,$row))
-		{
-			array_push($calcstack,$row[$arg]);
-		}
-		else
-		{
-			switch ($arg)
-			{
-				case '': break;
-				case '+' : 
-					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error +');	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b+$a); break;
-				case '-' : 
-					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error -');	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b-$a); break;
-				case '*' : 
-				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty *'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b*$a); break;
-				case '/' :
-				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty /'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack);
-					  if ($a == 0)  { return array('_error'=>'Expression division by zero'); 	}
-					  array_push($calcstack,$b/$a); break;
-				case '.' : 
-				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty .'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b.$a); break;
-				case '::' : 
-				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty ::'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b.'::'.$a); break;
-				case 'SUBSTR' : 
-				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty SUBSTR'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  $s= array_pop($calcstack); 
-					  array_push($calcstack,substr($s,$b,$a)); break;
-				case 'STRLEN' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty STRLEN'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,strlen($a)); break;
-				case 'REPLACE' : 
-				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty REPLACE'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  $s= array_pop($calcstack); 
-					  array_push($calcstack,str_replace($b,$a,$s)); break;
-				case 'REGEX' : 
-				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty REGEX'); 	}
-					  $a = array_pop($calcstack); 
-					  $b= array_pop($calcstack); 
-					  $s= array_pop($calcstack); 
-					  array_push($calcstack,preg_replace($b,$a,$s)); break;
-				case 'TRIM' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty TRIM'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,trim($a)); break;
-				case 'URLIFY' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty URLIFY'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,swNameURL($a)); break;
-				case 'ABS' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty ABS'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,abs($a)); break;
-				case 'SQRT' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty SQRT'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,sqrt(floatval($a))); break;
-				case 'SIGN' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty SIGN');	}
-				      $a = array_pop($calcstack); 
-					  if ($a>0) $b=1; elseif($a<0) $b=-1; else $b=0;
-					  array_push($calcstack,$b); break;
-				case 'COPY' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty COPY'); 	}
-					  $a = array_pop($calcstack); 
-					  array_push($calcstack,$a);
-					  array_push($calcstack,$a);break;
-				case 'POP' : 
-				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty POP'); 	}
-					  $a = array_pop($calcstack);  break;
-				case 'RAND' : 
-				      $a = rand(0,100);
-					  array_push($calcstack,$a);break;
-				case 'SWAP' : 
-				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty SWAP'); 	}
-					  $a = array_pop($calcstack); $b = array_pop($calcstack); 
-					  array_push($calcstack,$a); array_push($calcstack,$b); break;
-				default: 
-						switch(substr($arg,0,1))
-						{
-							case '-': case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': 
-								array_push($calcstack,$arg); break; //should check also all other letters.
-							
-							case '"': array_push($calcstack,substr($arg,1)); break;  
-							
-							default : array_push($calcstack,$arg); break; 
-								
-							
-							
-						}
-			}
-		}
-	
-	}
-	if (count($calcstack) < 1) return array('_error'=>'Expression Stack empty error 44');
-	return array_pop($calcstack); 
-
-}
-
-function swQuerySetKey($set, $term)
-{
-	$set2 = array();
-	if (!is_array($set)) return array('_error'=>'QuerySetKey Set is not array');
-	if (!is_string($term)) return array('_error'=>'QuerySetKey Term is not string');
-	foreach($set as $key=>$row)
-	{
-		$sortkey = swQueryTupleExpression($row,$term);
-		if (is_array($sortkey)) //error
-			return array('_error'=>'QuerySetKey sortkey Expression error');
-		$set2[$sortkey] = $row;
-	}
-	return $set2;
-}
-
-	
-function swCleanTupleFieldOrder($rows)
-{
-	// make sure that all rows have the same order of fields
-	// rows may have not all keys or not in the same order
-	// rowkey is maintained
-	
-	$keys = array();
-	foreach($rows as $k=>$row)
-	{
-		foreach ($row as $key=>$v)
-		{
-			$keys[$key] = 1;  
-		}
-	}
-	
-	$rows2 = array();
-	
-	foreach($rows as $k=>$row)
-	{
-		$row2 = array();
-		foreach ($keys as $key=>$foo)
-		{
-			$row2[$key] = @$row[$key];
-		}
-		$rows2[$k] = $row2;
-	}
-	return $rows2;
-}
-
-
-
-
-function swUniqueTuples($set)
-{
-	
-	// make sure that there are no duplicate tuples
-	
-	$set2 = array();
-	foreach($set as $line)
-	{
-		$set2[join('::',$line)] = $line;
-	}
-	unset($set);
-	
-	// uasort($set2, 'swMultifieldSort'); // do not sort any more, only uniqueness
-	$set3 = array();
-	foreach($set2 as $line)
-	{
-		$set3[] = $line;
-	}
-	return $set3;
-}
-
-function swMultifieldSort($a,$b) { 
-
-if (is_array($a)) $a = join('::',$a);
-if (is_array($b)) $b = join('::',$b);
-return $a>$b;
-
-}
-
-function swQuery($args)
-{
-	$query = new swQueryFunction;
-	$query->searcheverywhere = true;
-	$query->outputraw = true;
-	$table = $query->dowork($args);	
-	if (is_array($table))
-		// $tuple = array_pop($table); //why??
-		$tuple = $table;
-	else
-		$tuple = array();
-	return $tuple;
-}
-
 
 
 class swQueryFunction extends swFunction
@@ -359,6 +33,7 @@ class swQueryFunction extends swFunction
 		$extra = '';
 		$numbercolumns = array();
 		$outputformat = 'HTML';
+		$navigationlimit = 0;
 		$verbose = false;
 		global $lang;
 		
@@ -413,11 +88,47 @@ class swQueryFunction extends swFunction
 								$datatablestyle = join(' ',$fs);
 								break;
 
-				case 'SELECT':  $set = swFilter($line,$ns,'query','current');
+				case 'SELECT':  // allow peak values from top stack when value starts with $
+								// but this must be done rewriting line.
+								if ($p = strpos($line,' WHERE'))
+								{
+									
+									$q1 = substr($line,$p+strlen(' WHERE')+1);
+									$ws = explode(' ',$q1);
+									
+									
+									if (count($ws)==3 && substr($ws[2],0,1) =='$')
+									{
+										
+										$r = array_pop($rowstack);
+										array_push($rowstack,$r);	
+										$l = array_pop($r);
+										$k = substr($ws[2],1);
+										if (!isset($l[$k])) { $error = 'Unknown field'; $errorline = $line; break; }
+										$line = substr($line,0,- strlen($ws[2])).$l[$k];
+										//echo $line;
+									}
+								}
+				
+								$set = swFilter($line,$ns,'query','current');
 								if (isset($set['_error'])) { $error = $set['_error']; $errorline = $line; break; }
 								array_push($rowstack,swUniqueTuples($set)); 
 								break;
 
+				case 'FILTER': 	global $swDebugRefresh;
+								$f = join(' ',$fs);
+								$r = swRelationFilter($f, array(), $swDebugRefresh);
+								$set = array();
+								foreach($r->tuples as $tp)
+								{
+									$row = [];
+									foreach($tp->fields() as $k=>$v) $row[$k] = swUnescape($v);
+									$set[] = $row;
+								}
+								array_push($rowstack,$set); 
+								break;
+				
+				
 				case 'IMPORT':  if (!array_key_exists(0,$fs)) { $error = 'Missing pagename'; $errorline = $line; break; }
 								$mode = array_shift($fs);
 								$iname = swNameURL(array_shift($fs));
@@ -438,7 +149,7 @@ class swQueryFunction extends swFunction
 								$w = new swWiki;
 								$w->name = $iname;
 								
-								if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($iname)) 
+								if (function_exists('swVirtualLinkHook') && $hooklink = swVirtualLinkHook($iname)) 
 								{
 									
 									//echo "<p>l ".$hooklink.".";
@@ -488,6 +199,7 @@ class swQueryFunction extends swFunction
 										// pad
 										foreach($w->internalfields as $k=>$v)
 										{
+											if (count($v))
 											for($vi=count($v);$vi<$maxrows;$vi++)
 											{
 												$rs[$vi][$k] = $rs[count($v)-1][$k];
@@ -502,7 +214,29 @@ class swQueryFunction extends swFunction
 									array_push($rowstack,swUniqueTuples($rs)); 
 								break;
 				
-				
+				case "DATA":    $d = join(' ',$fs);
+								$datafields = swGetAllFields($d, true);
+								//print_r($datafields);
+								$maxrows = 0;
+										foreach($datafields as $k=>$v)
+										{
+											$maxrows = max($maxrows, count($v)+1);
+											foreach($v as $vi=>$vv)
+												$rs[$vi][$k] = $vv;
+										}
+										// pad
+										foreach($datafields as $k=>$v)
+										{
+											for($vi=count($v);$vi<$maxrows;$vi++)
+											{
+												$rs[$vi][$k] = $rs[count($v)-1][$k];
+											}
+										}
+								
+								if (isset($rs))
+									array_push($rowstack,swUniqueTuples($rs)); 
+								break;
+								
 				case 'WHERE':   if (!array_key_exists(0,$fs)) { $error = 'Missing field'; $errorline = $line; break; }
 								if (!array_key_exists(1,$fs)) { $error = 'Missing operator'; $errorline = $line; break; }
 								if (count($rowstack)<1) { $error = 'Empty stack'; $errorline = $line; break; }
@@ -574,7 +308,7 @@ class swQueryFunction extends swFunction
 									
 									$keys[] = $key;
 								}
-								$r2 = array_sort($keys);
+								$r2 = swQuerySort($keys);
 								array_push($rowstack,$r2); // if they were unique, they are still
 								break;
 							  
@@ -802,7 +536,7 @@ class swQueryFunction extends swFunction
 								
 								
 								
-								$r2 = array_sort($keys);
+								$r2 = swQuerySort($keys);
 								if (!is_array($r2)) $r2 = array();
 								
 								// now group actually
@@ -887,7 +621,7 @@ class swQueryFunction extends swFunction
 											case 'MIN' : $r4[$k][$key.'-min'] = min(@$r3[$k][$key]); break;
 											case 'COUNT' : $r4[$k][$key.'-count'] = count(@$r3[$k][$key]); break;
 											case 'SUM' : 	$s = 0; if(isset($r3[$k][$key]))
-															{ foreach($r3[$k][$key] as $v) $s+=$v; } 
+															{ foreach($r3[$k][$key] as $v) $s+=floatval($v); } 
 															$r4[$k][$key.'-sum'] = $s; break;
 											case 'CONCAT' : $c = array();
 															if(isset($r3[$k][$key]))
@@ -1011,6 +745,11 @@ class swQueryFunction extends swFunction
 								$outputformat = array_shift($fs);
 								switch($outputformat)
 								{
+									case "LISTPAGED":
+									case "HTMLPAGED":  // HTML htable with pages and navigation included
+														$navigationlimit = 50;
+														if (count($fs)>0) $navigationlimit = array_shift($fs);
+														
 									case "HTML":  // HTML htable
 									case "FIXED": // SQL style as pre
 									case "FIELDS": // sofawiki fields as pre
@@ -1023,6 +762,7 @@ class swQueryFunction extends swFunction
 													break;
 									case "ROWTEMPLATE": if (!array_key_exists(0,$fs)) { $error = 'Missing rowtemplate'; $errorline = $line; break; }
 														$rowtemplate = $fs[0]; break;
+									case "CHART": $chartoptions = join(' ',$fs);  break;// SVG charts						
 									default:  { $error = 'Missing or wrong outputformat'; $errorline = $line; break; }
 								}
 								
@@ -1209,36 +949,105 @@ class swQueryFunction extends swFunction
 		if ($verbose)
 		{
 			$a2 = $args;
-			array_shift($a2);
-			$source = join('<br>| ',$a2);
-			$source = str_replace('<br>| VERBOSE','',$source);
-			$verbosetext = "\n".'<div class="queryverbose">| '.$source;
+			//array_shift($a2);
+			
+			$a3 = array();
+			$prefix = array();
+			$hasswap = false;
+			$haspop = false;
+			foreach($a2 as $a)
+			{
+				$a = trim($a);
+				$fs = explode(' ',$a);
+				$f = array_shift($fs);
+				
+				if ($f == 'VERBOSE') continue;
+				if (strtolower($f) == 'query') continue;
+
+				if ($hasswap) { array_pop($prefix); array_pop($prefix); $prefix[] = '|'; $prefix[] = '|'; $hasswap = false; }
+				if ($haspop) { array_pop($prefix); $haspop = false;}
+				
+				
+				
+				switch($f)
+				{
+					case 'SELECT':
+					case 'DATA':
+					case 'FIELDS':
+					case 'IMPORT': if (count($prefix)) 
+									{ array_pop($prefix); $prefix[] = '|'; } 
+									$prefix[] = '+'; break;
+					case 'COPY': array_pop($prefix); $prefix[] = '|';  $prefix[] = '\\'; break;
+					case 'SWAP': array_pop($prefix); array_pop($prefix); $prefix[] = 'x';  $prefix[] = 'x'; $hasswap = true; break;
+					case 'POP': array_pop($prefix);  $prefix[] = '-';  $haspop = true; break;
+					case 'JOIN':
+					case 'LEFTJOIN':
+					case 'OUTERJOIN':
+					case 'UNION':
+					case 'EXCEPT':
+					case 'CROSS': array_pop($prefix);   $prefix[] = '/'; $haspop = true; break;
+					
+					
+					default: array_pop($prefix); $prefix[] = '|';
+				}
+				$a3[] = join('',$prefix).'  '.$a;
+			}
+			
+			$source = join('<br>',$a3);
+			//$source = str_replace('<br> VERBOSE','',$source);
+			$verbosetext = "\n".'<nowiki><div class="queryverbose"><pre>'.$source;
 			if (count($rows)==1)
-				$verbosetext .= '<br>'.sprintf('%0d row',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</div>';
+				$verbosetext .= '<br>= '.sprintf('%0d row',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</pre></div></nowiki>';
 			else
-				$verbosetext .= '<br>'.sprintf('%0d rows',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</div>';
+				$verbosetext .= '<br>= '.sprintf('%0d rows',count($rows)).' '. sprintf('%0d msec', ($endtime-$starttime)*1000).'</pre></div></nowiki>';
 		}
 		
 		$errortext = '';
 		if ($error) 
-			$errortext .= "\n".'<div class="queryerror">'. swSystemMessage('Query Error - '.$error,$lang).'<br>| '.$errorline.'</div><br>';
+			$errortext .= "\n".'<div class="queryerror">'. swSystemMessage('Query Error - '.$error,$lang).'<br>'.$errorline.'</div><br>';
 		
 		global $swOvertime;
 		
 		$overtimetext = '';
 		if ($swOvertime)
 			$overtimetext .= "\n".'<div class="queryovertime">'.
-		swSystemMessage('Result incomplete, you may want to refresh the page to get more results',$lang)
+		swSystemMessage('there-may-be-more-results',$lang)
 		.'</div>';
 		
-		if (count($rows) > 0)
+		
+		$navigationstart = 0; 
+		if (isset($_REQUEST['start'])) $navigationstart = $_REQUEST['start'];
+		$navigationstart = max(0,$navigationstart);
+		$navigationcount = @count($rows);
+		$navigationstart = min($navigationcount-1,$navigationstart);
+		// remove unused rows
+		if ($navigationlimit>0) 
 		{
-
+			for ($i=0;$i<$navigationstart;$i++) 
+				if (count($rows)>0) array_shift($rows);
+				while (count($rows)>$navigationlimit) array_pop($rows);
+		}
+		// prepare navigation
+		
+		$url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+		$url = preg_replace('/&start=\d*/','', $url);
+		$navigation = '<div class="htmlpagednavigation"><nowiki>';
+		if ($navigationstart>0)
+		$navigation .= '<a href="'.$url.'&start='.sprintf("%0d",$navigationstart-$navigationlimit).'"> '.swSystemMessage('back',$lang).'</a> ';
+		$navigation .= " ".sprintf("%0d",min($navigationstart+1,$navigationcount))." - ".sprintf("%0d",min($navigationstart+$navigationlimit,$navigationcount))." / ".$navigationcount;
+		if ($navigationstart+$navigationlimit<$navigationcount)
+		$navigation .= ' <a href="'.$url.'&start='.sprintf("%0d",$navigationstart+$navigationlimit).'">'.swSystemMessage('forward',$lang).'</a>';
+		$navigation .= '</nowiki></div>';
+		
+		if (@count($rows) > 0)
+		{
 			if ($this->outputraw) return $rows;
 			$rows = swCleanTupleFieldOrder($rows);
 			switch ($outputformat)
 			{
-				case 'HTML': 	$result  .= '<table class="'.$datatablestyle.'">';
+				case 'HTMLPAGED': 
+				case 'HTML': 	if ($navigationlimit>0) $result  .= $navigation;
+								$result .= '<table class="'.$datatablestyle.'">';
 								$result .= '<thead><tr>';
 								reset($rows);
 								$row = current($rows);
@@ -1258,15 +1067,28 @@ class swQueryFunction extends swFunction
 									{
 										if ($v=='') $v = '&nbsp;'; // no collapse
 										if (in_array($key,$numbercolumns))
-										 	$result .=	'<td style="text-align:right">'.$v.'</td>';
+										 	$result .=	'<td style="text-align:right">'.swHTMLSanitize($v).'</td>';
 										 else
-										 	$result .=	'<td>'.$v.'</td>';
+										 	$result .=	'<td>'.swHTMLSanitize($v).'</td>';
 									}
 									$result .= '</tr>';
 								}
 								$result .= '</tbody></table>';
+								if ($navigationlimit>0) $result  .= $navigation;
 								break;
 								
+				case 'LISTPAGED': 
+				case 'LIST': 	if ($navigationlimit>0) $result  .= $navigation;
+								$result  .= '<ul class="'.$datatablestyle.'">';
+								reset($rows);
+								$row = current($rows);
+								foreach ($rows as $rev=>$row)
+								{
+									$result .= '<li>'.swHTMLSanitize(join(' ',$row)).'</li>';
+								}
+								$result .= '</ul>';
+								if ($navigationlimit>0) $result  .= $navigation;
+								break;
 				case 'FIXED'  : $lens = array();
 								foreach ($rows as $rev=>$row)
 								{
@@ -1289,7 +1111,7 @@ class swQueryFunction extends swFunction
 								$result .= "<br>";
 								foreach ($row as $key=>$v)
 								{
-									$result .= str_pad("-",$lens[$k],"-").' ';
+									$result .= str_pad("-",$lens[$key],"-").' ';
 								}
 								$result .= "<br>";
 
@@ -1299,9 +1121,9 @@ class swQueryFunction extends swFunction
 									foreach ($row as $key=>$v)
 									{
 										if (in_array($key,$numbercolumns))
-											$result .= str_pad($v,$lens[$key]," ",STR_PAD_LEFT).' ';
+											$result .= str_pad(swHTMLSanitize($v),$lens[$key]," ",STR_PAD_LEFT).' ';
 										else
-											$result .= str_pad($v,$lens[$key]+1);
+											$result .= str_pad(swHTMLSanitize($v),$lens[$key]+1);
 									}
 									$result .= "<br>";
 								}
@@ -1314,7 +1136,7 @@ class swQueryFunction extends swFunction
 								 {
 									foreach ($row as $k=>$v)
 									{
-										  $result .= '[<nowiki>[</nowiki>'.$k.'::'.$v.']] ';
+										  $result .= '[<leftsquare>'.$k.'::'.swHTMLSanitize($v).']] ';
 										  if ($outputformat == 'FIELDS') $result .='<br>';
 									}
 									$result .= '<br>';
@@ -1349,7 +1171,7 @@ class swQueryFunction extends swFunction
 								 {
 									foreach ($row as $k=>$v)
 									{
-										  $result .= $v;
+										  $result .= swHTMLSanitize($v);
 										  if ($outputformat == 'TEXTSPACE') $result .= ' ';
 									}
 								}
@@ -1363,9 +1185,13 @@ class swQueryFunction extends swFunction
 								 	{
 										  $result .= '{{'.$rowtemplate;
 										foreach ($row as $k=>$v)
-										  $result .= '|'.$v;
+										  $result .= '|'.swHTMLSanitize($v);
 										  $result .= '}}';
 									}
+									break;									
+									
+				case 'CHART' :		$result .= swChart($rows,$chartoptions);
+									break;
 		   }
 		}
 		
@@ -1378,4 +1204,4 @@ class swQueryFunction extends swFunction
 	
 	$swFunctions["query"] = new swQueryFunction;	
 	
-	?>
+

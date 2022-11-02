@@ -12,7 +12,7 @@ $i=0;
 foreach($files as $file)
 {
 	
-	// limit to 100
+	// limit to 500
 	
 	$i++;
 	if ($i>500) continue;
@@ -25,7 +25,7 @@ foreach($files as $file)
 
 		$wiki->name ='Image:'.$shortname;
 		$wiki->user = $user->name;
-		$wiki->content = '';
+		$wiki->content = '[[imagechecksum::'.md5_file($file2).']]';
 		if ($file != '')
 			$wiki->insert();
 
@@ -39,7 +39,7 @@ foreach($files as $file)
 $wiki->name = 'Upload multiple';
 
 if ($i>100) $swParsedContent .= '<br/><br/>Limited to 500 files. Reload to get the rest of it.'; 
-if (!$found) $swParsedContent .= '<br/><br/>No file found'; 
+if (!$found) $swParsedContent .= '<br/><br/>No file found in site/upload/'; 
 
 $swParseSpecial = false;
 

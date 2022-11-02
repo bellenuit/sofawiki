@@ -13,7 +13,8 @@ class swRedirectionParser extends swParser
 	
 	function dowork(&$wiki)
 	{
-		
+		global $action;
+		if (in_array($action,array('delete','edit','editmulti','protect','rename','unprotect'))) return;
 	
 		$s = $wiki->parsedContent;
 		$key = "#REDIRECT"; 
@@ -21,7 +22,7 @@ class swRedirectionParser extends swParser
 		if (substr($s,0,strlen($key))==$key && stristr($s,'[[') && stristr($s,']]'))
 		{
 			
-			$myname = $wiki->name;
+			$myname = $wiki->namewithoutlanguage();
 			$pos = strpos($s,"[[") + strlen("[[");
 			$pos2 = strpos($s,"]]",$pos);
 			

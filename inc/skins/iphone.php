@@ -2,17 +2,18 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<base href="<?php echo $swBaseHrefFolder ?>">
 <title><?php echo $swParsedName ?></title>
 <link rel='stylesheet' href='inc/skins/iphone.css'/>
 <style><?php echo $swParsedCSS ?></style>
-<meta name='viewport' content='width=320; initial-scale=1.0; maximum-scale=2.0; user-scalable=1;' />
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
 
 
 <div id='header'>
 <?php
-echo swSystemMessage("SkinHeader",$lang, true);
+echo swSystemMessage("skin-header",$lang, true);
 ?>
 </div>
 
@@ -61,7 +62,7 @@ $swParsedContent
 foreach($swLangMenus as $item) {echo "<div class='menuitem'>".$item."</div> \n"; }
 
 echo "<div class='menuitem'>".$swHomeMenu."</div>\n"; 
-echo "<div class='menuitem'>".swSystemMessage("SkinMenu",$lang, true)."</div>";
+echo "<div class='menuitem'>".swSystemMessage("skin-menu",$lang, true)."</div>";
 
 
 ?>

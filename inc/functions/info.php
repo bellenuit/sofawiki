@@ -9,6 +9,11 @@ class swVersionFunction extends swFunction
 	 	return "() Shows the Version of SofaWiki";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $swVersion;
@@ -25,6 +30,11 @@ class swCurrentDateFunction extends swFunction
 	function info()
 	{
 	 	return "() Shows current date";
+	}
+	
+	function arity()
+	{
+		return 0;
 	}
 	
 	function dowork($args)
@@ -44,6 +54,11 @@ class swCurrentUserFunction extends swFunction
 	 	return "() Shows current user";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $user;
@@ -60,6 +75,11 @@ class swCurrentSkinFunction extends swFunction
 	function info()
 	{
 	 	return "() Shows current skin";
+	}
+	
+	function arity()
+	{
+		return 0;
 	}
 	
 	function dowork($args)
@@ -81,6 +101,11 @@ class swCurrentNameFunction extends swFunction
 	 	return "() Shows current page name";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		
@@ -97,6 +122,11 @@ class swCurrentURLFunction extends swFunction
 	function info()
 	{
 	 	return "() Shows URL for the current page";
+	}
+	
+	function arity()
+	{
+		return 0;
 	}
 	
 	function dowork($args)
@@ -119,6 +149,11 @@ class swCurrentLangFunction extends swFunction
 	 	return "() Shows current language";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		
@@ -138,6 +173,11 @@ class swCountPagesFunction extends swFunction
 	 	return "() Shows number of pages";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $db;
@@ -155,12 +195,17 @@ class swCountRevisionsFunction extends swFunction
 	 	return "() Shows the number of the revisions";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $db;
 		global $db;
 		$currentbitmap = $db->currentbitmap;
-		return $currentbitmap->length;
+		return $currentbitmap->length-1;
 	}	
 }
 
@@ -173,6 +218,11 @@ class swInstalledFunctionsFunction extends swFunction
 	function info()
 	{
 	 	return "() Returns a list of all installed functions";
+	}
+	
+	function arity()
+	{
+		return 0;
 	}
 	
 	function dowork($args)
@@ -202,6 +252,11 @@ class swInstalledParsersFunction extends swFunction
 	 	return "() Returns a list of all installed parsers";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $swParsers;
@@ -228,6 +283,11 @@ class swInstalledSkinsFunction extends swFunction
 	 	return "() Returns a list of all installed skins";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		global $swSkins;
@@ -252,24 +312,30 @@ class swInstalledTemplatesFunction extends swFunction
 	 	return "() Returns a list of all installed templates";
 	}
 	
+	function arity()
+	{
+		return 0;
+	}
+	
 	function dowork($args)
 	{
 		
-		$revisions = swFilter('SELECT name WHERE name =* Template:','*','data','');
+		$revisions = swRelationToTable('filter _namespace "template", _name');
+		
 		
 		$lines = array();
 		foreach ($revisions as $row)
 		{
-			if (isset($row['name']))
+			if (isset($row['_name']))
 			{
-				$name = $row['name'];
+				$name = $row['_name'];
 				if (is_array($name))
 					$name = array_pop($name);
 					
 		
 				$templatename = substr($name,strlen('Template:'));
 			
-				$lines[$name] = "[[$name|$templatename]]";
+				$lines[$name] = "[[$name]]";
 			}
 		}
 		

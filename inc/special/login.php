@@ -2,31 +2,54 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+$formatttribute = '';
+$hiddenfield = '';
+$passwordtype = 'password';
+
+if (isset($swBlockLoginAutocomplete) && $swBlockLoginAutocomplete)
+{
+	$formatttribute = 'autocomplete="off"';
+	$hiddenfield = '<input autocomplete="false" name="hidden" type="text" style="display:none;">';
+	$passwordtype = 'text';
+}
 
 
-$swParsedName = swSystemMessage("Login",$lang);
-$swParsedContent = "<div id='editzone'>
-		<form method='post' action='index.php'>
-		<table><tr><td>
-		".swSystemMessage("Email",$lang)."</td><td>
-		<input type='text' name='username' value='".$username."' /></td></tr><tr><td>
-		".swSystemMessage("Password",$lang)."</td><td>
-		<input type='password' name='pass' value='' />
-		<input type='hidden' name='name' value='$name' />
-		<input type='hidden' name='action' value='login' />
-		</td></tr><tr><td></td><td>
-		<input type='submit' name='submitlogin' value='".swSystemMessage("Login",$lang)."' /></td></tr></table>
-	</form>";
+$swParsedName = swSystemMessage("login",$lang);
+$swParsedContent = '
+<div id="editzone" class="editzone">
+	<div class="editheader">'.swSystemMessage("login",$lang).'</div>
+	<form method="post" action="index.php" '.$formatttribute.'>
+	<input type="submit" name="submitlogin" value="'.swSystemMessage('login',$lang).'" />
+		'.$hiddenfield.'
+	<p>'.swSystemMessage('email',$lang).'</p>
+	<input type="text" name="username" value="'.$username.'" /0>
+	<p>'.swSystemMessage('password',$lang).'</p>
+	<input type="'.$passwordtype.'" name="pass" value="" />
+	<input type="hidden" name="name" value="'.$name.'" />
+	<input type="hidden" name="action" value="login" />';
+
 	
 	if ($swNewUserEnable)
-	$swParsedContent .= 
-	"<p><a href='index.php?action=newuser'>".swSystemMessage("New User",$lang)."</a></p>";
+	$swParsedContent .= '
+	<p><a href="index.php?action=newuser">'.swSystemMessage('new-user',$lang).'</a></p>';
 	
-	$swParsedContent .= 
-	"<p><a href='index.php?action=lostpassword'>".swSystemMessage("Lost Password",$lang)."</a></p>
-
-	<div id='help'>".swSystemMessage("LoginHelp",$lang)."</div>
+	if (@$swEmailAccess)
+	
+		$swParsedContent .= '
+	<p><a href="index.php?action=askemailaccess">'.swSystemMessage('email-access',$lang).'</a></p>';
+	
+	else
+	
+		$swParsedContent .= '
+	<p><a href="index.php?action=lostpassword">'.swSystemMessage('lost-password',$lang).'</a></p>';
+	
+	$swParsedContent .=	'</form>';
+	
+	$swParsedContent .= '
+	<div id="help">
+		'.swSystemMessage('login-help',$lang).'
 	</div>
-	";
-
+</div>
+	';
+	
 ?>

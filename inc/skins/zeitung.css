@@ -6,6 +6,8 @@ PRE, TT, CODE     { font-family: Courier, monospace }
 BODY, P, BLOCKQUOTE, LI, OL, UL    {font-size: 14px; font-family: Courier, monospace}
 H1, H2, H3, H4, H5, STRONG, ADDRESS  {font-family: Times, Serif}
 H1 {letter-spacing: 1}
+H3 { font-size: 14px; font-family: Courier, monospace; font-weight: bold; text-decoration: underline}
+H4 { font-size: 14px; font-family: Courier, monospace; font-weight: bold}
 H5 {font-weight: lighter; font-size: small}
 STRONG      { font-weight: bold; color: gray }
 EM   { font-weight: bold ; font-style: normal}
@@ -56,6 +58,11 @@ ol li { list-style-type: decimal; }
 #footer { position: absolute; left: 25px;  width:130px; top: 600px;  }
 
 #body { height: 100% }
+
+#page { 
+	
+	background-color: yellow;
+}
 
 #footer2
 {

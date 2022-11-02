@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title><?php echo swSystemMessage("Sitename",$lang);  echo " ".$swParsedName ?></title>
+<base href="<?php echo $swBaseHrefFolder ?>">
+<title><?php echo swSystemMessage("sitename",$lang);  echo " ".$swParsedName ?></title>
 <link rel='stylesheet' href="inc/skins/tele.css"/>
 <style><?php echo $swParsedCSS ?></style>
 </head>
@@ -39,7 +40,7 @@ echo swSystemMessage("SkinHeader",$lang);
 
 $ishome = (($name=="Home" || $name="") && ($action=="view" || $action==""));
 
-$s = swSystemMessage("SkinHeader",$lang, true);
+$s = swSystemMessage("skin-header",$lang, true);
 
 if ($ishome)
 {
@@ -67,7 +68,7 @@ if (!$ishome)
 	
 	
 }
-echo swSystemMessage("SkinMenu",$lang, true). "<br/><br/>";
+echo swSystemMessage("skin-menu",$lang, true). "<br/><br/>";
 
 if (count($swEditMenus)>1)
 	foreach($swEditMenus as $item) {echo $item."<br/>"; }
@@ -98,16 +99,16 @@ $swParsedContent
 
 <div id='footer'><small>
 <?php if ($ishome || true) 
-{ echo swSystemMessage("Impressum",$lang,true);
+{ echo swSystemMessage("impressum",$lang,true);
 echo "<br/>"; 
 foreach($swLoginMenus as $item) {echo $item." " ; } ; echo "</small>"; }  
 
 if (!$ishome && false) {
-echo swSystemMessage("Impressum small",$lang,true);
+echo swSystemMessage("impressum-small",$lang,true);
 echo "<br/><small>"; 
 foreach($swLoginMenus as $item) {echo $item." " ; } ; echo "</small>"; } 
 
-echo swSystemMessage("SkinFooter",$lang, true); ?>
+echo swSystemMessage("skin-footer",$lang, true); ?>
 </div>
 
 </div> <!--body-->

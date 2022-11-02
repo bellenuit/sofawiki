@@ -10,6 +10,10 @@ class swPrettyDateFunction extends swFunction
 	 	return "(date) formats text pretty";
 	}
 
+	function arity()
+	{
+		return 1;
+	}
 	
 	function dowork($args)
 	{

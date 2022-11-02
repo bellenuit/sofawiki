@@ -22,71 +22,81 @@ class swLinksParser extends swParser
 		 // must start with whitespace
 		  $s = " ".$s;
 
-		 // external links without markup must not start with [ ' " first special case first line
-		 $s = preg_replace('@\n(https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', ' <br><a href="$1" target="_blank">$1</a> ', $s);
-		 $s = preg_replace('@[^[\[\'\"](https?://[-A-Za-z0-9.?&=%/+;,:#_\(\)]+)@', ' <a href="$1" target="_blank">$1</a> ', $s);
+		// external links without markup must not start with [ ' " first special case first line
+		 $s = preg_replace('<(\s)(https?://[-A-Za-zÀ-ÿ0-90-9.?&=%/+;,:#_\(\)@]+)>', '$1<a href="$1" target="_blank">$2</a>', $s);
+		 $s = preg_replace('<([^[\[\'\"])(https?://[-A-Za-zÀ-ÿ0-90-9.?&=%/+;,:#_\(\)@]+)>', '$1<a href="$2" target="_blank">$2</a>', $s);
 		 
 		 // external links with markup
-		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+)]@', ' <a href="$1" target="_blank">$1</a> ', $s);
+		 $s = preg_replace('<\[(https?://[-A-Za-zÀ-ÿ0-9.?&=%/+:;,#_\(\)@]+)]>', '<a href="$1" target="_blank">$1</a>', $s);
 
 		 // external links with markup and alternate text
-		 $s = preg_replace('@\[(https?://[-A-Za-z0-9.?&=%/+;,#_\(\)]+) (.*?)\]@', ' <a href="$1" target="_blank">$2</a> ', $s); 
-
+		 $s = preg_replace('<\[(https?://[-A-Za-zÀ-ÿ0-9.?&=%/+:;,#_\(\)@]+) (.*?)\]>', '<a href="$1" target="_blank">$2</a>', $s);
 		 // mail links without markup must have space before
-		  $s = preg_replace('/\s([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', ' <a href="mailto:$1" target="_blank">$1</a> ', $s);
+		  $s = preg_replace('/(\s)([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)/', '$1<a href="mailto:$1" target="_blank">$2</a>', $s);
 		 
 		 // mail links with markup
-		 $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)\]/', ' <a href="mailto:$1" target="_blank">$1</a> ', $s);
+		 $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+)\]/', '<a href="mailto:$1" target="_blank">$1</a>', $s);
 
 		 // mail links with markup and alternate text
-		  $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+) (.*?)\]/', ' <a href="mailto:$1" target="_blank">$2</a> ', $s);
+		  $s = preg_replace('/\[mailto:([-a-zA-Z0-9_.]+@[-a-zA-Z0-9_.]+) (.*?)\]/', '<a href="mailto:$1" target="_blank">$2</a>', $s);
+
 
 
  		 $s = substr($s,1);	
+ 		 
+ 		 
 
 		// internal links
 		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
 		
 		$categories = array();
+		$oldstrings = array();
+		$newstrings = array();
+		$replacements = array();
 		
 		foreach ($matches as $v)
 		{
 			
 			$val = $v[1]; // link
 			
+			
+			
 			// ignore fields
 			if (stristr($val,"::")) continue; // internal variables
 			
+			$linkwiki = new swWiki();
 			
 			// handle the rest of the links
 			if ($v[2] == "|") // pipe
 			{
 				if ($v[3] != "")
-					$label = $v[3];
+				{	$label = $v[3]; }
 				else
 				{	// pipe trick
-					$label = preg_replace("@(.*):+(.*)@", "$2", $val);  // remove namespace
+					$linkwiki->name = $val;
+					$linkwiki->lookup(true);
+					$label = $linkwiki->getdisplayname(); 
+					$label = preg_replace("@(.*):+(.*)@", "$2", $label);  // remove namespace
 					$label = preg_replace("@(.*)\(+(.*)@", "$1", $label); // remove label
+					$label = trim($label);
 				}
 			}
 			else
 			{
-				$label = $val;
+				$label = $val; 
 				if (substr($label,0,1) == ":") $label = substr($label,1);
 			}
 			
 			$val0 = $val;
-			
-			$linkwiki = new swWiki();
-			
-			if (substr($val,0,8) == "Special:")
+						
+			if (strtolower(substr($val,0,8)) == "special:")
 			{
 				
 				$linkwiki->name = $val;
 				$s = str_replace($v[0], "<a href='".$linkwiki->link('','')."'>$label</a>",$s);
 				continue;
 			}
-			elseif (substr($val,0,9) == "Category:")
+			elseif (strtolower(substr($val,0,9)) == "category:")
 			{
 				$linkwiki->name = $val;
 				$linkwiki->lookupLocalName();
@@ -125,14 +135,14 @@ class swLinksParser extends swParser
 				
 				if (!$this->ignorecategories)
 				{
-						if (substr($val,0,10) == ":Category:") 
+						if (strtolower(substr($val,0,10)) == ":category:") 
 							{ 
 								$val = substr($val,1); 
 								$linkwiki->name = $val;
 								$linkwiki->lookupLocalName();
 								$linkwiki->lookup(true);
 								$v2 = $linkwiki->getdisplayname();
-								if (substr($v2,0,9) == "Category:")
+								if (strtolower(substr($v2,0,9)) == "category:")
 								$v2 = substr($v2,9);
 								
 								if ($v[2] == "|")
@@ -191,6 +201,9 @@ class swLinksParser extends swParser
 				
 				// add a hook here for custom handler
 				
+				// TO DO: ONLY IF NAMESPACE DOES NOT EXIST.
+				// TO DO: OPTION NOT BLANK (depending on protocol?)
+				
 				if (function_exists('swInternalLinkHook')) {
   					$hooklink = swInternalLinkHook($val);  					
   					if ($hooklink)
@@ -200,65 +213,39 @@ class swLinksParser extends swParser
   					}
 				}
 				
+				global $db;
+				$rev = swGetCurrentRevisionFromName($val);
+				$rev2 = swGetCurrentRevisionFromName($val.'/'.$lang);
+				$linkwiki->name = $val;
 				
-				
-				if (true)
+				if ($db->currentbitmap->getbit($rev) || $db->currentbitmap->getbit($rev2))
 				{
-					// now check if not deleted
-					$linkwiki->name = $val;
-					
-					$linkwiki->lookup();
-					
-					if ($linkwiki->visible())
+					if ($user->hasright('view', $val))
 					{
-						if ($user->hasright('view', $linkwiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
-						else
-							$s = str_replace($v[0], $label, $s);
+						$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
 					}
 					else
-					{
-						// maybe there is a local version
-						$linkwiki->lookupLocalName();
-						if ($linkwiki->visible())
-						{
-							$linkwiki->name = $val;
-							if ($user->hasright('view', $linkwiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."'>$label</a>",$s);
-							else
-								$s = str_replace($v[0], $label, $s);
-						}
-						else
-						{
-						
-						
-							if ($user->hasright('modify', $wiki->name))
-								$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label </a>",$s);
-							else
-								$s = str_replace($v[0], $label,$s);
-						}
-						
-					}
-				
-				}
-				elseif($val=="")
-				{
-					$s = str_replace($v[0], $label,$s);
+						$s = str_replace($v[0], $label, $s);
 				}
 				else
 				{
-					$linkwiki = new swWiki();
-					$linkwiki->name = $val;
-					
-					if ($user->hasright('modify', $wiki->name))
-							$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
-						else
-							$s = str_replace($v[0], $label ,$s);
+					if ($user->hasright('view', $val))
+						$s = str_replace($v[0], "<a href='".$linkwiki->link("",$lang)."' class='invalid'>$label</a>",$s);
+					else
+						$s = str_replace($v[0], $label, $s);						
 				}
-				
+									
+								
 				$wiki->internalLinks[] = $val0;
+				
+				
 			}
 		}
+		
+
+        
+		
+		
 
 
 		if (count($categories) > 0)
@@ -270,9 +257,13 @@ class swLinksParser extends swParser
 		$wiki->parsedContent = $s;
 		
 		
+		
+		
 	}
 
 }
+
+
 
 $swParsers["links"] = new swLinksParser;
 

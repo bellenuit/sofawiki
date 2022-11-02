@@ -5,55 +5,26 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 $swParsedName = "Special:Most Linked Categories";
 $swParsedContent = "";
 
+$q = '
+filter _name, _category "*"
+extend cat = urltext(_category)
+project cat, _category first, _name count
+order _name_count 9
+update _category_first = "[[:Category:"._category_first."]]"
+project _category_first, _name_count 
+​label _category_first "Category", _name_count "Count"
+print 100
+';
 
-$start = @$_REQUEST['start'];
-$limit = 500;
+$lh = new swRelationLineHandler;
+$swParsedContent .= $lh->run($q);
+$swParseSpecial = true;
+
+
+
 		
 
-$revisions = swQuery(array('SELECT _name, _category WHERE _category','CALC n _category URLIFY %(.*)/.*% $1 REGEX','GROUP n, _name COUNT BY n',
-'ORDER _name-count NUMERIC DESC'));
 
-$lines = array();
-foreach ($revisions as $row)
-{
-	
-	
-	$name = @$row['n'];
-	$count = @$row['_name-count'];
-	if (stristr($name,'/')) $name = substr($name,0,strpos($name,'/'));
-	
-	// false positives
-	if ($name == '') continue;
-	
-	$url = swNameURL($name);
-	$lines[$url] = '<li><a href="index.php?name=category:'.$url.'">Category:'.$name.'</a> '.$count.'</li> ';
-
-}
-$count = count($lines);
-
-$lines2 = array();
-$i =0;
-foreach($lines as $line)
-{
-	if ($i < $start) { $i++; continue;}
-	$i++;
-	if ($i > $start + $limit) continue;
-	$lines2[] = $line;
-}
-
-
-$navigation = '<nowiki><div class="categorynavigation">';
-if ($start>0)
-	$navigation .= '<a href="index.php?name=special:most-linked-categories&start='.sprintf("%0d",$start-$limit).'"> '.swSystemMessage('back',$lang).'</a> ';
-		
-$navigation .= " ".sprintf("%0d",min($start+1,$count))." - ".sprintf("%0d",min($start+$limit,$count))." / ".$count;
-if ($start<$count-$limit)
-	$navigation .= ' <a href="index.php?name=special:most-linked-categories&start='.sprintf("%0d",$start+$limit).'">'.swSystemMessage('forward',$lang).'</a>';
-	$navigation .= '</div></nowiki>';
-
-$swParsedContent .= $navigation.join(' ',$lines2).$navigation;
-
-$swParseSpecial = false;
 
 
 ?>

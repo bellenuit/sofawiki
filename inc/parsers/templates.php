@@ -20,126 +20,161 @@ class swTemplateParser extends swParser
 		$s = $wiki->parsedContent;
 		
 		
+				
 		global $swFunctions;
 		$this->functions = $swFunctions;
 		global $swTranscludeNamespaces;
 		$this->transcludenamespaces = array_flip($swTranscludeNamespaces);
 		
 		
-		// if language version, replace {{}} with non-language version of same page
-		if (stristr($wiki->name,'/') && stristr($s, '{{}}'))
-		{
-			$myname2 = substr($wiki->name,0,-3);
-			{
-				$wiki2 = new swWiki;
-				$wiki2->name = $myname2;
-				$wiki2->lookup();
-				
-				if (trim($wiki2->content) == '')
-					$s = str_replace('{{}}'."\n",'',$s);
-				else
-				{
-					$s = str_replace('{{}}',$wiki2->content,$s);
-					foreach ($wiki2->internalfields as $k=>$v)
-					{
-						foreach ($v as $item)
-						{
-								$wiki->internalfields[$k][] = $item;
-						}
-					}
-				}
-			}
-		}
-		
 		$s0 = '';
 		
-		// search for most inner {{ }} pair, but without {{{ }}} therefore we search a letter before
-		while (preg_match("@[^\{]\{\{([^\{])*?\}\}@"," ".$s,$matches) && $s0 != $s)
+		// simple check unbalanced curly brackets against error 503 when PRCE looks too far
+		$matches1 = explode('{{',$s);
+		$matches2 = explode('}}',$s);
+		if (count($matches1) != count($matches2)) { global $swError; $swError = 'Unbalanced curly brackets'; return; };
+		
+		// single { and } are now valid inside templates
+		
+		while ($s0 != $s) // start to first }}
 		{
+			
+			
+			
 			$s0 = $s;
-			$val0 = substr($matches[0],3,-2);
 			
-			// we must protect pipe characters inside [[ ]] because they are parsed later in links.php
+			$endpos = strpos($s,'}}');  //echo $endpos;
+			if ($endpos === FALSE ) continue;
 			
-			$val0protected = preg_replace("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@",'[[$1&pipeprotected;$3]]',$val0);
+			$startpos = strrpos(substr($s,0,$endpos),'{{'); //echo $startpos;
+			if ($startpos === FALSE ) continue;
 			
-			$verylongvals = explode("|",$val0protected);
-			$vals = array();
+			$val0 = substr($s,$startpos+2,$endpos-$startpos-2);
+			$valheader = substr($s,0,$startpos);
+			$valfooter = substr($s,$endpos+2);
 			
 			
-			foreach($verylongvals as $v)
+			
+			if ($val0) // last {{ to end
 			{
-				$v = str_replace('&pipeprotected;','|',$v);
 				
-				if (substr($v,0,2)== "::")
-					$vals[] = substr($v,2);
-				else
-					$vals[] = trim(str_replace("\n","",$v));
-			}
-			
-			$vheader = trim($vals[0]);
-			
-			if (array_key_exists($vheader,$this->functions)) // template is function
-			{
-				$f = $this->functions[$vheader];
+				
+				
+				// should not have {{ nor }}
+				
+				if (stristr($val0,"{{") || stristr($val0,"}}") ) { $wiki->parsedContent = $val0; return; } 
+				
 								
+				$val0protected = preg_replace("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@",'[[$1&pipeprotected;$3]]',$val0);
+				$verylongvals = explode("|",$val0protected);
+				
+				$vals = array();
 				
 				
-				$c = $f->dowork($vals);
-								
-			}
-			elseif(substr($vheader,0,1) == ':') // transclude verbatim from main namespace
-			{
-				$vheader = substr($vheader,1);
-				if (strpos($vheader,':')>0) //not allow, just ignore it
-					$s = str_replace("{{".$val0."}}",'',$s);
-				else
+			
+			
+				foreach($verylongvals as $v)
 				{
-					$linkwiki = new swWiki();
-					$linkwiki->name = $vheader;
-					$linkwiki->lookupLocalname();
-					$linkwiki->lookup();
-					$c = $linkwiki->content;
+					$v = str_replace('&pipeprotected;','|',$v);
+					
+					if (substr($v,0,2)== "::")
+					{
+						$v = substr($v,2); 
+						//evaluate style inside template
+						
+						$p = new swStyleParser;
+						$p->domakepretty = false;
+						$w2 = new swWiki;
+						$w2->parsedContent = $v;
+						$p->doWork($w2);
+						$v = $w2->parsedContent;
+					}
+					else
+						$v = trim($v);
+					$vals[] = $v;
 				}
 				
-			}
-			elseif (strpos($vheader,':')>0) // // transclude verbatim not main namespace
-			{
-				$ns = strtolower(substr($vheader,0,strpos($vheader,':')));
-				$nf = substr($vheader,strpos($vheader,':')+1);
-				if ($ns != 'system' && !array_key_exists('*',$this->transcludenamespaces) &&
-					 !array_key_exists($ns,$this->transcludenamespaces)) //not allow, just ignore it
-						$c = '';
-				elseif ($ns == 'system')
+				// print_r($vals);
+				
+				$vheader = trim($vals[0]);
+				
+				// echotime('template '.$vheader);
+				
+				
+				if (array_key_exists($vheader,$this->functions)) // template is function
 				{
-					global $lang;
-					$c = swSystemMessage($nf,$lang);
+					$f = $this->functions[$vheader];
+					$c = $f->dowork($vals);
+									
 				}
-				else
+				elseif(substr($vheader,0,1) == ':') // transclude verbatim from main namespace
+				{
+					$vheader = substr($vheader,1);
+					if (strpos($vheader,':')>0) //not allow, just ignore it
+						$s = str_replace("{{".$val0."}}",'',$s);
+					else
+					{
+						$linkwiki = new swWiki();
+						$linkwiki->name = $vheader;
+						$linkwiki->lookupLocalname();
+						$linkwiki->lookup();
+						$c = $linkwiki->content;
+					}
+					
+				}
+				elseif (strpos($vheader,':')>0) // // transclude verbatim not main namespace
+				{
+					$ns = strtolower(substr($vheader,0,strpos($vheader,':')));
+					$nf = substr($vheader,strpos($vheader,':')+1);
+					if ($ns != 'system' && !array_key_exists('*',$this->transcludenamespaces) &&
+						 !array_key_exists($ns,$this->transcludenamespaces)) //not allow, just ignore it
+							$c = '';
+					elseif ($ns == 'system')
+					{
+						global $lang;
+						$c = swSystemMessage($nf,$lang);
+					}
+					else
+					{
+						$linkwiki = new swWiki();
+						$linkwiki->name = $vheader;
+						$linkwiki->lookupLocalname();
+						$linkwiki->lookup();
+						$c = $linkwiki->content;
+						
+					}
+				}
+				else // true template
 				{
 					$linkwiki = new swWiki();
-					$linkwiki->name = $vheader;
+					$linkwiki->name = 'Template:'.$vheader;
 					$linkwiki->lookupLocalname();
 					$linkwiki->lookup();
 					$c = $linkwiki->content;
 					
-				}
-			}
-			else // true template
-			{
-				$linkwiki = new swWiki();
-				$linkwiki->name = 'Template:'.$vheader;
-				$linkwiki->lookupLocalname();
-				$linkwiki->lookup();
-				$c = $linkwiki->content;
+					for ($i = 1; $i< count($vals); $i++)
+					{
+						$c = str_replace("{{{".$i."}}}",$vals[$i],$c);
+						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/",$vals[$i],$c);
+					}
+					// remove optional parameters
+					for ($i = 1; $i<10; $i++)
+					{
+						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/","$1",$c);
+					}
 				
-				for ($i = 1; $i< count($vals); $i++)
-				{
-					$c = str_replace("{{{".$i."}}}",$vals[$i],$c);
 				}
-			}
 				
-			$s = str_replace("{{".$val0."}}",$c,$s);   
+				// if (!strstr($s,'{{'.$val0.'}}')) echo "something went wrong<p>{{".$val0."}}<p>$s";
+				
+				
+				
+				$s = $valheader.$c.$valfooter;
+				
+			
+			}
+			
+			  
 		}
 				
 		$wiki->parsedContent = $s;

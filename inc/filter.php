@@ -1,218 +1,28 @@
 <?php
+	
+/**
+ *	Provides functions for the query function.
+ *
+ *  <b>Starting Sofawiki 3.0.0, swQuery and swFilter are depreciated. Use swRelation and swRelationFilter.</b>
+ *
+ */
 
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 
+/**
+  * Returns a table based on the fields of the pages.
+  *
+  * @param $filter 
+  * SELECT fieldlist (FROM namespace)? (WHERE field operator string|WHERE field operator expression)?
+  * SELECT fieldlist FROM VIRTUAL pagename (WHERE field operator string|WHERE field dollaroperator expression)?
+  * If a swVirtualLinkHook() function is present, the filter can access external data
+  * @param $namespace is also limited by the namespaces the user has access to or that are transcludable
+  * @param $filter always "filter"
+  * @param $flags "refresh" or "internal"
+  * @param $checkhint provide a limiting bitmap
 
-function swFilterCompare($operator,$values,$term)
-{	
-	if (!is_array($values))  // single value
-		$values = array($values);
-	
-	$valuelist = array();
-	
-	if ($operator == '*')
-	{
-		if (count($values)>0) return true;
-		return false;
-	}
-	
-	if (substr($operator,0,1)=='!')
-	{
-		$op = substr($operator,1);
-		$result = swFilterCompare($op,$values,$term);
-		return !$result;
-	}	
-	
-	foreach($values as $v)
-	{
-		$valuelist[] = swUnescape($v);
-	}
-	
-	
-	$term = swUnescape($term);
-		
-	switch ($operator)
-	{
-		
-		case '=': foreach($valuelist as $v)
-				   {	if (floatval($v)==floatval($term)) return true; } break;
-		case '<': foreach($valuelist as $v)
-				   {	if (floatval($v)<floatval($term)) return true; } break;
-		case '>': foreach($valuelist as $v)
-				   {	if (floatval($v)>floatval($term)) return true; } break;
-		case '<=': foreach($valuelist as $v)
-				   {	if (floatval($v)<=floatval($term)) return true; } break;
-		case '>=': foreach($valuelist as $v)
-				   {	if (floatval($v)>=floatval($term)) return true; } break;
-		case '==': foreach($valuelist as $v)
-				   {	if ($v==$term) return true; } break;
-		case '=*': foreach($valuelist as $v)
-				   {	if (substr($v,0,strlen($term))==$term) return true; } break;
-		case '*=': foreach($valuelist as $v)
-				   {	if (substr($v,-strlen($term))==$term) return true; } break;
-		case '*=*': 
-						foreach($valuelist as $v)
-				   { if (stripos($v,$term) !== FALSE) return true; } 
-				   break;
-		case '<<': foreach($valuelist as $v)
-				   {	if ($v<$term) return true; } break;
-		case '>>': foreach($valuelist as $v)
-				   {	if ($v>$term) { return true; } } break;
-		case '<<=': foreach($valuelist as $v)
-				   {	if ($v<=$term) return true; } break;
-		case '>>=': foreach($valuelist as $v)
-				   {	if ($v>=$term) return true; } break;
-		case '~~': foreach($valuelist as $v)
-				   {	$v = swNameURL($v);
-						if ($v==$term) return true; } break;
-		case '~*': foreach($valuelist as $v)
-				   {	$v = swNameURL($v);
-						if (substr($v,0,strlen($term))==$term) return true; } break;
-		case '*~': foreach($valuelist as $v)
-				   {	$v = swNameURL($v);
-						if (substr($v,-strlen($term))==$term) return true; } break;
-		case '*~*': foreach($valuelist as $v)
-				   {    $v = swNameURL($v);
-						if (stripos($v,$term) !== FALSE) return true; } break;						
-		case '0': foreach($valuelist as $v)
-				   {	if (trim($v) == '') return true; } break;
-		case 'r=': foreach($valuelist as $v)
-					{ if (preg_match($term, $v, $matches)) return true; }
-					break;
-		default:   return false;
-	}
-	return false;
-}
-
-
-function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,$term,$comparefields)
-{
-	// compares a tuple against an operation and a term and returns a tuple
-	
-	$row = array();
-	
-	// normalize array, to a table, but using only used fields and field
-	$maxcount = count($fieldlist[$field]);
-	foreach($fields as $v)
-	{
-		if (isset($fieldlist[$v]))
-			$maxcount = max($maxcount,count($fieldlist[$v]));
-	}	
-	$fieldlist2 = array();
-	foreach($fieldlist as $key=>$v)
-	{
-		for($fi=0;$fi<count($v);$fi++)
-		{
-			$fieldlist2[$fi][$key] = $v[$fi];
-		}
-		for ($fi=count($v);$fi<$maxcount;$fi++)
-		{
-			$fieldlist2[$fi][$key] = $v[count($v)-1];
-		}
-	}
-	
-	// compare
-	for ($fi=0;$fi<$maxcount;$fi++)
-	{
-		$onefieldvalue = @$fieldlist2[$fi][$field];
-		if ($comparefields)
-		{
-			$term2 = swQueryTupleExpression($fieldlist2[$fi], $term);
-			if (is_array($term2))
-			{
-				return $term2; //error
-			}
-			else
-				$found = swFilterCompare($operator,array($onefieldvalue),$term2);
-		}
-		else
-			$found = swFilterCompare($operator,array($onefieldvalue),$term);
-			
-		if ($found)
-		{
-						
-			foreach ($fields as $f)
-			{
-				// we cannot return an error here, because the data might be an old revision with other data scheme
-				if ($f == '_rating')
-				{
-						$content = $fieldlist[$field];
-						$content = array_shift($content);
-						$contenturl = swNameURL($content);
-						$termurl = swNameURL($term);
-						if ($field == '_*')
-						{	
-							$titleurl = substr($content,0,strpos($content,"\n"));
-						}
-						else
-							$titleurl = '';
-						
-						//row value will be simple rating algorithm: 
-						//counts the number of occurences and the position
-						$rating = 0;
-						$len0 = strlen($titleurl);
-						
-						//if in title, means before \n, it counts 10 times
-						while ($titleurl = stristr($titleurl,$termurl))
-						{
-							$rating += strlen($titleurl) * strlen($termurl) / $len0 / $len0 * 10 ;
-							$titleurl = substr($titleurl,1);
-						}
-						
-						$len0 = strlen($contenturl);
-						
-						while ($contenturl = stristr($contenturl,$termurl))
-						{
-							$rating += strlen($contenturl) * strlen($termurl) / $len0 / $len0 ;
-							$contenturl = substr($contenturl,1);
-						}
-						$row[$revision.'-'.$fi][$f] = sprintf('%09.3f',$rating);
-				}
-				else
-					$row[$revision.'-'.$fi][$f] = @$fieldlist2[$fi][$f];
-			}
-		}
-	}
-
-
-
-
-	return $row;
-
-}
-
-function swGetFilterCacheHeader($filter,$namespace,$mode='query')
-{
-	global $swRoot;
-	
-	// find already searched revisions
-	$mdfilter = $filter;
-	$mdfilter .= $namespace;
-	$mdfilter .= $mode;
-	$mdfilter = urlencode($mdfilter);
-	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
-	$cachefile = $cachefilebase.'.txt';
-	
-	if (rand(0,100) < 1 || !file_exists($cachefile)) swFilter($filter,$namespace,$mode);
-		
-	if (file_exists($cachefile)) 
-	{
-		if ($handle = fopen($cachefile, 'r'))
-		{
-			while ($arr = swReadField($handle))
-			{
-				if (@$arr['_primary'] == '_header')
-				{
-					fclose($handle);
-					return $arr;
-				}
-			}
-			fclose($handle);
-		}
-	 }
-}
-
+  */
 
 function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 {
@@ -221,6 +31,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	global $swMaxSearchTime;
 	global $swMaxOverallSearchTime;
 	global $swStartTime;
+	global $swOvertime;
 	
 	$verbose = 0;
 	if (isset($_REQUEST['verbose'])) $verbose = 1;
@@ -239,7 +50,11 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	$namefilter0 = ''; 
 	$virtualmode = false;
 	
-	if ($swIndexError) return $goodrevisions;
+	if ($swIndexError)
+	{
+		$swOvertime = true;
+		return $goodrevisions;
+	}
 	
 	if ($mode != 'query')
 	{
@@ -380,7 +195,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		}
 	}
 	
-	echotime('filter ['.$mode.'|'.$namespace.'] '.$filter);
+	echotime('filter '.$filter);
 	
 	
 	$comparefields = false;
@@ -399,7 +214,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	if ($operator == '~~'|| $operator == '*~'|| $operator == '~*'|| $operator == '*~*') 
 		$term = swNameURL($term);
 		
-	if ($operator == 'r=')
+	if ($operator == 'r=' || $operator == 'IN')
 	{
 		$delimiter = substr($term,0,1);
 		$pos = strpos($term,$delimiter,1);
@@ -438,8 +253,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	    
 	    $w = new swWiki;
 		$w->name = $urlname;
-	    
-	    if (function_exists('swInternalLinkHook') && $hooklink = swInternalLinkHook($urlname)) 
+	
+	    if (function_exists('swVirtualLinkHook') && $hooklink = swVirtualLinkHook($urlname, $fields, $query)) 
 	    {
   			
   			//echo "<p>l ".$hooklink.".";
@@ -469,7 +284,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		$s = str_replace('<nowiki>','',$s);
 		$s = str_replace('</nowiki>','',$s);
 		
-	
+		$s = swUnescape($s);  
 		
 		$list = swGetAllFields($s);
 		$list['_name'] = $w->name;
@@ -497,7 +312,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	if ($swDebugRefresh || stristr($flags,'refresh'))
 		{ echotime('refresh'); if (file_exists($cachefile)) unlink($cachefile);}
 	
-	//echomem('before');
 	$chunks = array();
 	if (file_exists($cachefile)) 
 	{
@@ -517,7 +331,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				}
 			}
 			fclose($handle);
-			//echomem('primary');
 			echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'" target="_blank">'.md5($mdfilter).'.txt</a> ');
 			
 			// 1+ file for revisions
@@ -546,7 +359,6 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				//echomem('merged');
 			}
 			echotime('cached '.count($goodrevisions));
-			echomem('cached');
 		}
 
 	}
@@ -606,7 +418,10 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 	$nowtime = microtime(true);	
 	$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
 	if ($dur>$swMaxOverallSearchTime) 
+	{
+		$swOvertime = true;
 		echotime('overtime overall');
+	}
 		
 		
 	if (($tocheckcount > 0 || $cachechanged) && $dur<=$swMaxOverallSearchTime)
@@ -676,7 +491,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 									}
 							}
 							$tocheckcount = $tocheck->countbits();
-							echotime('- * '.$tocheckcount);
+							echotime('- '.$field.' !0 '.$tocheckcount);
 						}
 						
 					
@@ -739,7 +554,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			$starttime = microtime(true);
 			if ($swMaxSearchTime<500) $swMaxSearchTime = 500;
 			if ($swMaxOverallSearchTime<2500) $swMaxOverallSearchTime = 2500;
-			global $swOvertime;
+			
 			$overtime = false;
 			
 			
@@ -754,16 +569,25 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			
 			$toc = $tocheck->countbits();
 			$checkedcount += $tocheckcount - $toc;
-			echotime('loop '.$toc);
+			if ($toc > 0 ) echotime('loop '.$toc);
 			
 			
 			
-			
+			global $swMemoryLimit;
 
 			//$handle = tmpfile();
 			if ($toc>0) {
 			for ($k=$maxlastrevision;$k>=1;$k--)
 			{
+				
+				
+				if (memory_get_usage()>$swMemoryLimit) 
+				{
+					echotime('overmemory '.memory_get_usage());
+					$overtime = true;
+					$swOvertime = true;
+					break;
+				}
 				
 				if (!$tocheck->getbit($k)) continue; // we already have ecluded it from the list
 				if ($checkedbitmap->getbit($k)) continue; // it has been checked, should not happen here any more
@@ -779,8 +603,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				{
 					echotime('overtime '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
-					if (!stristr($flags,'internal'))
-							$swOvertime=true;
+					$swOvertime=true;
 					break;
 				}
 				$dur = sprintf("%04d",($nowtime-$swStartTime)*1000);
@@ -788,8 +611,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				{
 					echotime('overtime overall '.$checkedcount.' / '.$tocheckcount);
 					$overtime = true;
-					if (!stristr($flags,'internal'))
-							$swOvertime=true;
+					$swOvertime=true;
 					break;
 				}
 				$record = new swRecord;
@@ -868,6 +690,8 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 							foreach($fieldlist[$key] as $v)
 								$fieldlist['_any'][] = $v; // to do avoid duplicates
 						}
+												
+						
 					}
 					unset($key);
 					unset($keys);
@@ -880,7 +704,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 					if (isset($row['_error'])) return $row;
 					
 				}
-				//print_r($row);
+				//print_r($row); 
 				if (count($row)>0)
 				{
 					foreach($row as $primary=>$line)
@@ -903,7 +727,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 			
 			if (true) {
 			
-				swSemaphoreSignal();
+				swSemaphoreSignal($cachefile);
 				echotime("filter write");
 					
 				if (isset($touched))
@@ -951,11 +775,12 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 				$row = array('_header'=>$header);
 				swWriteRow($handle2, $row );
 				fclose($handle2);
-				swSemaphoreRelease();
+				$checkedlength = filesize($cachefile);
+				swSemaphoreRelease($cachefile);
 			}			
 			
 			echotime('good '.count($goodrevisions));
-			echomem("filter");	
+			
 			} // if toc>0
 	
 	}
@@ -985,11 +810,689 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		unset($goodrevisions);
 		$goodrevisions = $set;
 		unset($set);
-		
+		echotime('cachefile '.floor($checkedlength/1024).' KB');
+		echomem('filter');	
 		return $goodrevisions;
 	
 }
 
+/**
+  * Returns a table from a entire query.
+  *
+  * @param $args query lines
+  * 
+  * NB the actual code is in the swQueryFunction class
+  */
+
+function swQuery($args)
+{
+	$query = new swQueryFunction;
+	$query->searcheverywhere = true;
+	$query->outputraw = true;
+	$table = $query->dowork($args);	
+	if (is_array($table))
+		// $tuple = array_pop($table); //why??
+		$tuple = $table;
+	else
+		$tuple = array();
+	return $tuple;
+}
+
+/**
+  * Compares a tuple against an operation and a term and returns a tuple (the WHERE part in SELECT)
+  *
+  * @param $revision revision number for the key
+  * @param $fieldlist all key-value pairs from the tuple
+  * @param $fields the fields to include in the tuple
+  * @param $field the field to check
+  * @param $operator the comparison operator (==, <, >...)
+  * @param term the value to check against
+  * @param comparefields
+  */
 
 
-?>
+function swQueryFieldlistCompare($revision, $fieldlist,$fields,$field,$operator,$term,$comparefields)
+{
+	// 	
+	$row = array();
+	
+	// normalize array, to a table, but using only used fields and field
+	$maxcount = @count($fieldlist[$field]);
+	foreach($fields as $v)
+	{
+		if (isset($fieldlist[$v]))
+			$maxcount = max($maxcount,count($fieldlist[$v]));
+	}	
+	$fieldlist2 = array();
+	foreach($fieldlist as $key=>$v)
+	{
+		for($fi=0;$fi<@count($v);$fi++)
+		{
+			$fieldlist2[$fi][$key] = $v[$fi];
+		}
+		if (@count($v)>0)
+		for ($fi=@count($v);$fi<$maxcount;$fi++)
+		{
+			$fieldlist2[$fi][$key] = $v[@count($v)-1];
+		}
+	}
+	
+	// compare
+	for ($fi=0;$fi<$maxcount;$fi++)
+	{
+		$onefieldvalue = @$fieldlist2[$fi][$field];
+		if ($comparefields)
+		{
+			$term2 = swQueryTupleExpression($fieldlist2[$fi], $term);
+			if (is_array($term2))
+			{
+				return $term2; //error
+			}
+			else
+				$found = swFilterCompare($operator,array($onefieldvalue),$term2);
+		}
+		else
+			$found = swFilterCompare($operator,array($onefieldvalue),$term);
+			
+		if ($found)
+		{
+						
+			foreach ($fields as $f)
+			{
+				// we cannot return an error here, because the data might be an old revision with other data scheme
+				if ($f == '_rating')
+				{
+						$content = $fieldlist[$field];
+						$content = array_shift($content);
+						$contenturl = swNameURL($content);
+						$termurl = swNameURL($term);
+						if ($field == '_*')
+						{	
+							$titleurl = substr($content,0,strpos($content,"\n"));
+						}
+						else
+							$titleurl = '';
+						
+						//row value will be simple rating algorithm: 
+						//counts the number of occurences and the position
+						$rating = 0;
+						$len0 = strlen($titleurl);
+						$k = 1;
+						
+						//if in title, means before \n, it counts 10 times
+						if ($titleurl = stristr($titleurl,$termurl))
+						{
+							$rating += strlen($titleurl) / $len0 / $k * 10 ;
+							$titleurl = substr($titleurl,1);
+							$k++;
+						}
+						
+						$len0 = strlen($contenturl);
+						$k = 1;
+						
+						if ($contenturl = stristr($contenturl,$termurl))
+						{
+							$rating += strlen($contenturl) / $len0 / $k ;
+							$contenturl = substr($contenturl,1);
+							$k++;
+						}
+						$rating = min(99.999,$rating);
+						$row[$revision.'-'.$fi][$f] = sprintf('%06.3f',$rating);
+				}
+				else
+					$row[$revision.'-'.$fi][$f] = @$fieldlist2[$fi][$f];
+			}
+		}
+	}
+
+	return $row;
+
+}
+
+/**
+  * Compares as list of values against a term and returns if one of them matches
+  *
+  * @param $operator the comparison operator (==, <, >...)
+  * @param $values the list of values
+  * @param term the value to check against
+  */
+
+
+function swFilterCompare($operator,$values,$term)
+{	
+	if (!is_array($values))  // single value
+		$values = array($values);
+	
+	$valuelist = array();
+	
+	if ($operator == '*')
+	{
+		if (count($values)>0) return true;
+		return false;
+	}
+	
+	if (substr($operator,0,1)=='!')
+	{
+		$op = substr($operator,1);
+		$result = swFilterCompare($op,$values,$term);
+		return !$result;
+	}	
+	
+	foreach($values as $v)
+	{
+		$valuelist[] = swUnescape($v);
+	}
+	
+	
+	$term = swUnescape($term);
+		
+	switch ($operator)
+	{
+		
+		case '=': foreach($valuelist as $v)
+				   {	if (floatval($v)==floatval($term)) return true; } break;
+		case '<': foreach($valuelist as $v)
+				   {	if (floatval($v)<floatval($term)) return true; } break;
+		case '>': foreach($valuelist as $v)
+				   {	if (floatval($v)>floatval($term)) return true; } break;
+		case '<=': foreach($valuelist as $v)
+				   {	if (floatval($v)<=floatval($term)) return true; } break;
+		case '>=': foreach($valuelist as $v)
+				   {	if (floatval($v)>=floatval($term)) return true; } break;
+		case '==': foreach($valuelist as $v)
+				   {	if ($v==$term) return true; } break;
+		case '=*': foreach($valuelist as $v)
+				   {	if (substr($v,0,strlen($term))==$term) return true; } break;
+		case '*=': foreach($valuelist as $v)
+				   {	if (substr($v,-strlen($term))==$term) return true; } break;
+		case '*=*': 
+						foreach($valuelist as $v)
+				   { if (stripos($v,$term) !== FALSE) return true; } 
+				   break;
+		case '<<': foreach($valuelist as $v)
+				   {	if ($v<$term) return true; } break;
+		case '>>': foreach($valuelist as $v)
+				   {	if ($v>$term) { return true; } } break;
+		case '<<=': foreach($valuelist as $v)
+				   {	if ($v<=$term) return true; } break;
+		case '>>=': foreach($valuelist as $v)
+				   {	if ($v>=$term) return true; } break;
+		case '~~': foreach($valuelist as $v)
+				   {	$v = swNameURL($v);
+						if ($v==$term) return true; } break;
+		case '~*': foreach($valuelist as $v)
+				   {	$v = swNameURL($v);
+						if (substr($v,0,strlen($term))==$term) return true; } break;
+		case '*~': foreach($valuelist as $v)
+				   {	$v = swNameURL($v);
+						if (substr($v,-strlen($term))==$term) return true; } break;
+		case '*~*': foreach($valuelist as $v)
+				   {    $v = swNameURL($v);
+						if (stripos($v,$term) !== FALSE) return true; } break;						
+		case '0': foreach($valuelist as $v)
+				   {	if (trim($v) == '') return true; } break;
+		case 'r=': foreach($valuelist as $v)
+					{ if (preg_match($term, $v, $matches)) return true; }
+					break;
+		case 'IN':  $termlist = explode('::',$term);
+					//print_r($termlist);
+					foreach($valuelist as $v)
+				   {	
+					    foreach($termlist as $t)
+					   		if (trim($v)==trim($t)) return true; } 
+					break;
+		default:   return false;
+	}
+	return false;
+}
+
+
+/**
+  * Gets header of filter cache from file in /site/queries
+  *
+  * @param $filter
+  * @param $namespace
+  * @param $mode
+  */
+
+
+function swGetFilterCacheHeader($filter,$namespace,$mode='query')
+{
+	global $swRoot;
+	
+	// find already searched revisions
+	$mdfilter = $filter;
+	$mdfilter .= $namespace;
+	$mdfilter .= $mode;
+	$mdfilter = urlencode($mdfilter);
+	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
+	$cachefile = $cachefilebase.'.txt';
+	
+	if (rand(0,100) < 1 || !file_exists($cachefile)) swFilter($filter,$namespace,$mode);
+		
+	if (file_exists($cachefile)) 
+	{
+		if ($handle = fopen($cachefile, 'r'))
+		{
+			while ($arr = swReadField($handle))
+			{
+				if (@$arr['_primary'] == '_header')
+				{
+					fclose($handle);
+					return $arr;
+				}
+			}
+			fclose($handle);
+		}
+	 }
+}
+
+/**
+  * Evaluates a swQuery RPN expression based on values of a tuple and returns result as a string
+  *
+  * @param $row tuple
+  * @param $term RPN expression
+  * Allowed operators are: + - / * . (concat) :: (concat ::) ABS SIGN COPY POP SWAP
+  */
+
+
+function swQueryTupleExpression($row, $term) 
+{
+	// on success, returns a string
+	// on error, returns an array
+	// lexical analysis, to preserve quoted strings.
+	
+	$quotes = explode('"',$term);
+	$arguments = array();
+	$even = true;
+	for($i=0;$i<count($quotes);$i++)
+	{
+		if ($even)
+		{
+			if ($quotes[$i])
+			{
+				$args = explode(" ",$quotes[$i]);
+				foreach($args as $arg)
+				{
+					if ($arg != '')
+						$arguments[]=$arg;
+				}
+			}
+			elseif (count($arguments) && $i<count($quotes)-1)	// double quote
+			{
+				$arg = array_pop($arguments);
+				$even = !$even;
+				$i++;
+				$arg.='"'.$quotes[$i];
+				$arguments[] = $arg;
+			}
+		}
+		else
+		{
+			$arguments[] = '"'.$quotes[$i];
+		}
+		$even = !$even;
+	}
+	$calcstack = array();
+	foreach($arguments as $arg)
+	{
+		if (array_key_exists($arg,$row))
+		{
+			array_push($calcstack,$row[$arg]);
+		}
+		else
+		{
+			switch ($arg)
+			{
+				case '': break;
+				case '+' : 
+					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error +');	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  array_push($calcstack,$b+$a); break;
+				case '-' : 
+					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error -');	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  array_push($calcstack,$b-$a); break;
+				case '*' : 
+				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty *'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  array_push($calcstack,$b*$a); break;
+				case '/' :
+				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty /'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack);
+					  if ($a == 0)  { return array('_error'=>'Expression division by zero'); 	}
+					  array_push($calcstack,$b/$a); break;
+				case '.' : 
+				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty .'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  array_push($calcstack,$b.$a); break;
+				case '::' : 
+				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty ::'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  array_push($calcstack,$b.'::'.$a); break;
+				case 'SUBSTR' : 
+				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty SUBSTR'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  $s= array_pop($calcstack); 
+					  array_push($calcstack,substr($s,$b,$a)); break;
+				case 'STRLEN' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty STRLEN'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,strlen($a)); break;
+				case 'REPLACE' : 
+				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty REPLACE'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  $s= array_pop($calcstack); 
+					  array_push($calcstack,str_replace($b,$a,$s)); break;
+				case 'REGEX' : 
+				      if (count($calcstack)<3) { return array('_error'=>'Expression Stack empty REGEX'); 	}
+					  $a = array_pop($calcstack); 
+					  $b= array_pop($calcstack); 
+					  $s= array_pop($calcstack); 
+					  array_push($calcstack,preg_replace($b,$a,$s)); break;
+				case 'TRIM' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty TRIM'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,trim($a)); break;
+				case 'URLIFY' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty URLIFY'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,swNameURL($a)); break;
+				case 'ABS' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty ABS'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,abs($a)); break;
+				case 'SQRT' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty SQRT'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,sqrt(floatval($a))); break;
+				case 'SIGN' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty SIGN');	}
+				      $a = array_pop($calcstack); 
+					  if ($a>0) $b=1; elseif($a<0) $b=-1; else $b=0;
+					  array_push($calcstack,$b); break;
+				case 'COPY' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty COPY'); 	}
+					  $a = array_pop($calcstack); 
+					  array_push($calcstack,$a);
+					  array_push($calcstack,$a);break;
+				case 'POP' : 
+				      if (count($calcstack)<1) { return array('_error'=>'Expression Stack empty POP'); 	}
+					  $a = array_pop($calcstack);  break;
+				case 'RAND' : 
+				      $a = rand(0,100);
+					  array_push($calcstack,$a);break;
+				case 'SWAP' : 
+				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty SWAP'); 	}
+					  $a = array_pop($calcstack); $b = array_pop($calcstack); 
+					  array_push($calcstack,$a); array_push($calcstack,$b); break;
+				default: 
+				
+				
+						if (substr($arg,0,9) == "FUNCTION-")
+						{
+							$fn = substr($arg,9);
+							global $swFunctions;
+							if (!isset($swFunctions[$fn])) { return array('_error'=>'Fnction '.$fn.' does not exist'); } 
+							$f2 = $swFunctions[$fn];
+							$fargs =array();
+							if ($f2->arity()<0) { return array('_error'=>'Invalid function '.$fn); } 
+							$a = $f2->arity(); 
+							while ($a>0)
+							{
+								
+								if (count($calcstack)>0)
+									$fargs[] = array_pop($calcstack); 
+								else
+									return array('_error'=>'Empty calc stack'); 
+								$a--;
+							}
+							$fargs[] =  $fn;
+							$fargs = array_reverse($fargs);
+							//print_r($fargs);
+
+							$fresult = $f2->dowork($fargs);
+							
+							array_push($calcstack,$fresult);
+						}
+						else
+						switch(substr($arg,0,1))
+						{
+							case '-': case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': 
+								array_push($calcstack,$arg); break; //should check also all other letters.
+							
+							case '"': array_push($calcstack,substr($arg,1)); break;  
+							
+							default : array_push($calcstack,$arg); break; 
+								
+							
+							
+						}
+			}
+		}
+	
+	}
+	if (count($calcstack) < 1) return array('_error'=>'Expression Stack empty error 44');
+	return array_pop($calcstack); 
+
+}
+
+/**
+  * Calculates and sets key for rows of a table using term.
+  *
+  * @param $set
+  * @param $term
+  */
+
+
+function swQuerySetKey($set, $term)
+{
+	$set2 = array();
+	if (!is_array($set)) return array('_error'=>'QuerySetKey Set is not array');
+	if (!is_string($term)) return array('_error'=>'QuerySetKey Term is not string');
+	foreach($set as $key=>$row)
+	{
+		$sortkey = swQueryTupleExpression($row,$term);
+		if (is_array($sortkey)) //error
+			return array('_error'=>'QuerySetKey sortkey Expression error');
+		$set2[$sortkey] = $row;
+	}
+	return $set2;
+}
+
+
+/**
+  * Makes sure that all rows have the same order of fields.
+  * Input rows may have not all keys or not in the same order. Rowkey is maintained.
+  *
+  * @param $rows
+  */
+
+	
+function swCleanTupleFieldOrder($rows)
+{	
+	$keys = array();
+	foreach($rows as $k=>$row)
+	{
+		foreach ($row as $key=>$v)
+		{
+			$keys[$key] = 1;  
+		}
+	}
+	
+	$rows2 = array();
+	
+	foreach($rows as $k=>$row)
+	{
+		$row2 = array();
+		foreach ($keys as $key=>$foo)
+		{
+			$row2[$key] = @$row[$key];
+		}
+		$rows2[$k] = $row2;
+	}
+	return $rows2;
+}
+
+/**
+  * Makes sure that all rows in table are unique
+  *
+  * @param $set table
+  */
+
+
+function swUniqueTuples($set)
+{
+	
+	// make sure that there are no duplicate tuples
+	
+	$set2 = array();
+	foreach($set as $line)
+	{
+		$set2[join('::',$line)] = $line;
+	}
+	unset($set);
+	
+	// uasort($set2, 'swMultifieldSort'); // do not sort any more, only uniqueness
+	$set3 = array();
+	foreach($set2 as $line)
+	{
+		$set3[] = $line;
+	}
+	return $set3;
+
+}
+
+
+/**
+  * Custom compare function for two arrays.
+  *
+  * Compares the array joined with "::"
+  * @param $a
+  * @param $b
+  */
+
+
+function swMultifieldSort($a,$b) { 
+
+if (is_array($a)) $a = join('::',$a);
+if (is_array($b)) $b = join('::',$b);
+return $a>$b;
+
+}
+
+/**
+  * Custom sort function for SwQuery
+  *
+  * @param $keys
+  */
+
+
+function swQuerySort($keys) { 
+
+   $array = reset($keys);
+   if (!is_array($array)) $array = array();
+   array_shift($keys); 
+   swQuerySortCompare($keys); 
+   usort($array,"swQuerySortCompare");  
+   return $array;
+} 
+
+/**
+  * Custom compare function for SwQuery
+  *
+  * Flags are in the key
+  * # numeric
+  * ! desc
+  * ? familyname
+  * @ url
+  * & case insensitive
+  * @param $a
+  * @param $b
+  */
+
+
+// from http://www.php.net/manual/fr/function.array-multisort.php 
+// modified
+
+// modifiers: ! DESC  # NUMERIC
+function swQuerySortCompare($a,$b=NULL) { 
+   static $keys; 
+   if($b===NULL) return $keys=$a; 
+      
+   foreach($keys as $k) 
+   { 
+      $numeric = false;
+      $desc = false;
+      $familyname = false;
+      $url = false;
+      $nocase = false;
+      if (stristr($k,'#')) { $numeric = true; $k = str_replace('#','',$k);}
+      if (stristr($k,'!')) { $desc = true;  $k = str_replace('!','',$k) ;}
+      if (stristr($k,'?')) { $familyname = true;  $k = str_replace('?','',$k) ;}
+      if (stristr($k,'@')) { $url = true;  $k = str_replace('@','',$k) ;}
+      if (stristr($k,'&')) { $nocase = true;  $k = str_replace('&','',$k) ;}
+      
+      if ($numeric)
+      {
+      	$fa = floatval(@$a[$k]);
+      	$fb = floatval(@$b[$k]);
+      	$p = 1;
+      	if ($desc) $p = -1;
+      	if ($fa > $fb) return $p;
+      	if ($fa < $fb) return -$p;
+      }
+      else
+      {
+      	if ($familyname)
+      	{
+      		$ca = swGetFamilyName(@$a[$k]);
+      		$cb = swGetFamilyName(@$b[$k]);
+      	}
+      	elseif ($url)
+      	{
+      		$ca = swNameURL(@$a[$k]);
+      		$cb = swNameURL(@$b[$k]);
+      	}
+      	elseif ($nocase)
+      	{
+      		$ca = strtolower(@$a[$k]);
+      		$cb = strtolower(@$b[$k]);
+      	}
+      	else
+      	{
+      		$ca = @$a[$k];
+      		$cb = @$b[$k];
+      	}
+      	
+      	if($ca !== $cb) 
+      
+         if ($desc)
+         	return strcmp($cb,$ca); 
+         else
+         	return strcmp($ca,$cb); 
+      }
+    } 
+   return 0; 
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+

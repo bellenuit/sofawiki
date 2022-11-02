@@ -19,6 +19,9 @@ class swTidyParser extends swParser
 		
 		$s = $wiki->parsedContent;
 		
+		
+		
+		
 		//tabs and special spaces
 		$s = str_replace("\t",' ',$s);
 		$s = str_replace("\r",'',$s);
@@ -36,6 +39,7 @@ class swTidyParser extends swParser
 		//preserve < and << in query function
 		
 		$s = str_replace('<< ','*SPECIALDOUBLETAGWITHSPACE*',$s);
+		$s = str_replace('<== ','*SPECIALTAGEQUEALEQUALWITHSPACE*',$s);
 		$s = str_replace('<= ','*SPECIALTAGEQUEALWITHSPACE*',$s);
 		$s = str_replace('< ','*SPECIALTAGWITHSPACE*',$s);
 		$s = str_replace('<>','*SPECIALTAGCLOSED*',$s);
@@ -45,6 +49,7 @@ class swTidyParser extends swParser
 		$s = str_replace('*SPECIALDOUBLETAGWITHSPACE*', '<< ',$s);
 		$s = str_replace('*SPECIALTAGCLOSED*','<>',$s);
  		$s = str_replace('*SPECIALTAGEQUEALWITHSPACE*','<= ',$s);
+ 		$s = str_replace('*SPECIALTAGEQUEALEQUALWITHSPACE*','<== ',$s);
        // preserve numbered entities
         $s = preg_replace('/&#([^\s&]*);/', "ENTITY$1ENTITYEND", $s);
         $s = str_replace("&","&amp;",$s);

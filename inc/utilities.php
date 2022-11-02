@@ -13,6 +13,16 @@ function swSimpleSanitize($s)
 	return $s;
 }
 
+
+function swHTMLSanitize($s)
+{
+	// cleans database output to HTML stream
+	$s = str_replace("<","&lt;",$s);
+	$s = str_replace(">","&gt;",$s);
+	return $s;
+}
+
+
 function swLengthSort($a,$b)
 {
 	$sa = strlen($a);
@@ -23,8 +33,31 @@ function swLengthSort($a,$b)
 		return ($sa < $sb); // longer first
 }
 
+function swEscape($s)
+{
+	  	// wikitext relevant characters must be protected when dealing with external data (filter, import)
+	  	
+	  	// escape characters
+  		$s = str_replace(':','<colon>',$s);
+  		$s = str_replace('[','<leftsquare>',$s);
+  		$s = str_replace(']','<rightsquare>',$s);
+  		$s = str_replace('{','<leftcurly>',$s);
+  		$s = str_replace('}','<rightcurly>',$s);
+  		$s = str_replace('|','<pipe>',$s);
+  		//$s = str_replace(' ','<space>',$s);
+  		$s = str_replace('&lt;','<lt>',$s);
+  		$s = str_replace('&gt;','<gt>',$s);
+  		$s = str_replace('\\','<backslash>',$s);
+  		
+  		return $s;
+}
+
 function swUnescape($s)
 {
+	  	
+	  	if ($s && strpos($s, '<')===false) return $s;
+	  	
+	  	// used in expressions and on final renderings
 	  	// escape characters
   		$s = str_replace('<colon>',':',$s);
   		$s = str_replace('<leftsquare>','[',$s);
@@ -78,41 +111,52 @@ function swStrReplace($pattern, $replace, $s)
 function swGetValue($s, $key, $getArray = false)
 {
 	// equivalent to fields parser
-	
-	$pattern = '[['.$key.'::';
-	$results = array();
-	$result = "";
-	$pos = true;
-	while ($pos !== FALSE)
-	{
-		$pos = strpos($s, $pattern);
-		if ($pos !== FALSE)
-		{
-			$pos0 = $pos + strlen($pattern);
-			$pos2 = strpos($s,']]',$pos0);
-			if ($pos2 !== FALSE)
-			{
-				$result = substr($s,$pos0, $pos2-$pos0);
-				$rs =explode('::',$result);
-				foreach($rs as $r)
-				{
-					if (!$getArray) return $r;
-					$results[] = $r;
-				}
-				
-			}
-		}
-		$s = substr($s,$pos+1); 
 		
-	}
-	if (!$getArray)
+	// reject if invalid key
+	if (!preg_match('@[A-Za-z_][^\n\][|#<>{},:+\/]*@',$key))
+	
+// [A-Za-z_] First letter of field name must be a latin letter or underscore
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+
 	{
-		if (count($results)>0)
-			return $results[0];
+		// echo $key;
+		
+		if ($getArray)
+			return array();
 		else
 			return '';
 	}
-	return $results;
+	
+	$result=array();
+	
+	$key = preg_quote($key);
+	preg_match_all('@\[\['.$key.'::((?:.|\n)*?)\]\]@', $s, $matches, PREG_SET_ORDER);
+
+// \[\[ two opening square braquets
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+// :: The field separator
+// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
+// \]\]: Closing brackets
+
+	// print_r($matches);
+	
+	foreach ($matches as $v)
+	{
+		
+		$value = $v[1];
+				
+		$values = explode('::',$value);
+		
+		foreach($values as $v)
+		{
+			if (!$getArray) return $v;
+			
+			$result[]=$v;
+		}	
+		
+	}
+	if (!$getArray) return '';
+	return $result;
 	
 }
 
@@ -120,70 +164,118 @@ function swGetValue($s, $key, $getArray = false)
 function swGetAllFields($s,$allowinternalvariables=false)
 {
 	
-		preg_match_all("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER);
-		
-		$result=array();
-		
-		foreach ($matches as $v)
-		{
-			
-			$val = $v[1]; // link
-			//echotime('field0 '.$val);
-			// handle fields
-			
-			if (!$allowinternalvariables)
-				if (substr($val,0,1)=='_' && substr($val,0,strlen('_description')) != '_description')
-				continue;
-			
-			
-			//echotime('field '.$val);
-			if ($delim = stripos($val,'::'))	// we show only values		
-			{ 
-				$val = $v[1].$v[2].$v[3]; // we use everything 
-				
-				$fieldstring = substr($val,$delim+2);  
-				$key = substr($val,0,$delim);
-				
-				$fields = explode('::',$fieldstring);
-				
-				$t = '';
-				foreach ($fields as $f)
-				{
-					$result[$key][]=$f;
-				}
+// removed regex by state machine, as regex lead to 503 errors on complex pages
 
-				
-			}
-			elseif(substr(strtolower($val),0,strlen('category:')) == 'category:')
-			{
-				$result['_category'][]=substr($v[1],strlen('category:'));
-			}
-			else
-			{
-				$result['_link'][]=$v[1];
-			}
-			
-		}
+	$result=array();
+	
+	$state = 'start';
+	
+	$slist = array();
+	$clist = array();
+	
+	for($i=0;$i < strlen($s); $i++)
+	{
+		$ch = $s[$i];
 		
-		preg_match_all("@\{\{(.*?)\}\}@", $s, $matches, PREG_SET_ORDER);
-		foreach ($matches as $v)
+		switch($state)
 		{
-			if (substr($v[1],0,1) != '{') // not use args
-			{
-				$fields = explode('|',$v[1]);
-				$result['_template'][]=$fields[0];
-			}
-			
+			case 'start':	switch($ch)
+							{
+								case '[' : $state = 'sleft'; break;
+								case '{' : $state = 'cleft'; break;
+								default: ;
+							}; break;
+			case 'sleft':	switch($ch)
+							{
+								case '[' : $state = 'square'; $start=$i+1; break;
+								default: $state = 'start' ;
+							}; break;
+			case 'square':	switch($ch)
+							{
+								case ']' : $state = 'sright'; $end=$i; break;
+								default: $state = 'square' ;
+							}; break;
+			case 'sright':	switch($ch)
+							{
+								case ']' : $slist[]=substr($s,$start,$end-$start); $state = 'start'; break;
+								default: $state = 'square' ;
+							}; break;
+			case 'cleft':	switch($ch)
+							{
+								case '{' : $state = 'curly'; $start=$i+1; break;
+								default: $state = 'start' ;
+							}; break;
+			case 'curly':	switch($ch)
+							{
+								case '}' : $state = 'cright'; $end=$i; break;
+								default: $state = 'curly' ;
+							}; break;
+			case 'cright':	switch($ch)
+							{
+								case '}' : $clist[]=substr($s,$start,$end-$start); $state = 'start'; break;
+								default: $state = 'curly' ;
+							}; break;
 		}
-		return $result;
+	}
+	$result = array();
+// 	echotime('slist'.print_r($slist,true));
+	foreach($slist as $elem)
+	{
+		if ($elem == '') continue;
 
+// 		real fields
+		$fields = explode('::',$elem);
+		if (count($fields)>1)
+		{
+			for($i = 1; $i<count($fields); $i++)
+			{
+				$result[$fields[0]][] = $fields[$i];
+			}
+		}
+//      categories
+		elseif(strtolower(substr($elem,0,strlen('category:'))) == 'category:')
+		{
+			$result['_category'][] = substr($elem,strlen('category:'));
+		}
+// 		internal links
+		else
+		{
+// 			puts entire link. should we parse for | ?
+			$fields = explode('|',$elem);
+			$result['_links'][] = $fields[0];
+		}
+
+	}
+	foreach($clist as $elem)
+	{
+		$fields = explode('|', $elem);
+		$result['_template'][] = $fields[0];
+	}
+	//echotime('fields'.print_r($result,true));
+	return $result;
+	
 }
 
-function swReplaceFields($s,$fields,$options)
+function swReplaceFields($s,$fields,$options='')
 {
 	$fields0 = swGetAllFields($s);
 	
 	// options not implemented. default is replace existing fields, or create it if it exists
+	
+	
+	
+	if (stristr($options,'REMOVE_OLD'))
+	{
+		foreach($fields0 as $key=>$value)
+		{
+			if (substr($key,0,1) != '_')
+				$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
+		}
+		
+	}
+	
+	
+
 	
 	foreach($fields as $key=>$value)
 	{
@@ -191,10 +283,24 @@ function swReplaceFields($s,$fields,$options)
 		$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
 		// add new field
 		if (is_array($value))
-			$s .= PHP_EOL.'[['.$key.'::'.join('::',$value).']]';
+		{
+			
+			
+			
+			$s .= PHP_EOL.'[['.$key;
+			if (!count($value)) $s .= '::';
+			foreach($value as $v)
+			{
+				$s.= '::'.swEscape($v);
+			}
+			$s .= ']]';
+		}
+		elseif($value == '⦵') 
+			; // do nothing
 		else
-			$s .= PHP_EOL.'[['.$key.'::'.$value.']]';
+			$s .= PHP_EOL.'[['.$key.'::'.swEscape($value).']]';
 	}
+	
 	
 	// remove field lines that are empty;
 	$s = str_replace("[[::]]\n\r",'',$s);
@@ -448,4 +554,3 @@ function swReadField($handle)
 }
 
 
-?>

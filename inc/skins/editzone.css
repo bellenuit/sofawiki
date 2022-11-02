@@ -1,0 +1,68 @@
+.editzonecommon {
+ 	position: absolute;
+ 	top: 0px;
+ 	left: 0px;
+ 	right: 0px; 	
+ 	width: 100%;
+ 	height: 100%;
+ 	font-family: monospace;
+ 	font-size   : 12px;
+ 	line-height: 18px;
+  word-break  : normal;
+  word-wrap   : break-word;
+  white-space : pre-wrap;
+  margin      : 0;
+  padding     : 0;
+  border: 0; /*   1px dotted blue; */
+  outline: 0;
+
+ }
+ #editzonesource {
+ 	color: rgba(0,0,0,1);
+
+  background-color: transparent;
+  overflow        : hidden;
+  
+  -webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+visibility: none;
+
+ }
+ 
+ #editzonecolor {
+
+  color           : transparent;
+  background-color: white;
+  overflow        : hidden;
+  /* finetuning */
+  left: 0px;
+  right: 0px;
+  background-color: transparent;
+
+  visibility: none;
+  
+ }
+ #editzonewrapper {
+ 	border: 1px solid black;
+ 	background-color: transparent;
+ 	
+ }
+ #editzone {
+ 	
+ }
+ 
+ #content {
+ 	
+ }
+
+ 
+ mark.parsed { 
+ 	background-color: LightGreen; color: transparent;
+ }
+ 
+ mark.error {
+ 	background-color: LightPink; color:transparent
+ }
+ 
+ 

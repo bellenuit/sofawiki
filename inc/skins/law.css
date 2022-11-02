@@ -1,52 +1,11 @@
-body
-{
-		font-size: 16px;
-		line-height: 24px;
-		font-family: Times, Serif;
-}
 
-h1, h2, h3, h4, h5 {  }
-
-h1, h2, h3
+#content
 {
-	font-size: 18px;
+	width: 600px;
+	left: 160px;
+	top: 120px;
+	position: absolute;
 }
-
-del 
-{
-	color: red;
-}
-ins 
-{
-	color: green; text-decoration: none;
-}
-
-a.invalid
-{
-	color: red;
-}
-
-span.error 
-{
-	color: red;
-}
-span.found 
-{
-	color: green;
-}
-
-#info
-{
-	font-size: 80%;
-	padding-top: 24px;
-	color: gray;
-	
-} 
-
-#help
-{
-	background-color: lightgreen;
-} 
 
 #editmenu
 {
@@ -68,6 +27,32 @@ span.found
 {
 	color: gray;
 } 
+
+#header
+{
+	font-size: 80%;
+	color: gray;
+	position: absolute;
+	left: 10px;
+	top: 64px;
+}
+
+
+
+#help
+{
+	background-color: lightgreen;
+} 
+
+
+#info
+{
+	font-size: 80%;
+	padding-top: 24px;
+	color: gray;
+	
+} 
+
 
 
 #langmenu
@@ -117,14 +102,12 @@ span.found
 	
 } 
 
-#header
+#searchfield
 {
-	font-size: 80%;
-	color: gray;
-	position: absolute;
-	left: 10px;
-	top: 64px;
+	width:120px;
 }
+
+
 
 #title
 {
@@ -134,20 +117,67 @@ span.found
 	position: absolute;
 }
 
-#content
+
+
+a.invalid
 {
-	width: 600px;
-	left: 160px;
-	top: 120px;
-	position: absolute;
+	color: red;
 }
 
+
+body
+{
+		font-size: 16px;
+		line-height: 24px;
+		font-family: Times, Serif;
+}
+
+del 
+{
+	color: red;
+}
+
+
+
+
+h1, h2, h3, h4, h5 {  }
+
+h1, h2, h3
+{
+	font-size: 18px;
+}
 
 iframe.youtube
 {
 	width: 640px;
 	height: 385px;
 }
+
+input.searchfield
+{
+	width:100%;
+}
+
+
+ins 
+{
+	color: green; text-decoration: none;
+}
+
+
+span.error 
+{
+	color: red;
+}
+span.found 
+{
+	color: green;
+}
+
+
+td { vertical-align: top; }
+
+
 
 video.yfrog
 {
@@ -162,4 +192,7 @@ img.yfrog
 
 
 
-td { vertical-align: top;  width: 50% }
+
+
+
+

@@ -2,17 +2,18 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<base href="<?php echo $swBaseHrefFolder ?>">
 <title><?php echo $swParsedName ?></title>
 <link rel='stylesheet' href="inc/skins/tribune.css"/>
 <style><?php echo $swParsedCSS ?></style>
 </head>
 <body>
-<div id='menu1'><p class='menu'><?php echo swSystemMessage("SkinHeader",$lang, true); ?>
+<div id='menu1'><p class='menu'><?php echo swSystemMessage("skin-header",$lang, true); ?>
 <br/> <?php foreach($swLangMenus as $item) {echo $item." " ; } ?>
 <br/><br/>
 <?php 
 echo $swHomeMenu. "<br/>"; 
-echo swSystemMessage("SkinMenu",$lang, true). "<br/><br/>";
+echo swSystemMessage("skin-menu",$lang, true). "<br/><br/>";
 foreach($swEditMenus as $item) {echo $item."<br/>"; }
 echo "<br/>";
 foreach($swLoginMenus as $item) {echo $item."<br/>" ; }
@@ -45,7 +46,7 @@ $swParsedContent
 
 <div id="info"><?php echo "$swFooter" ?>
 <p class='menu'>
- <?php echo swSystemMessage("Copyright",$lang);  echo swSystemMessage("SkinFooter",$lang, true); ?>
+ <?php echo swSystemMessage("copyright",$lang);  echo swSystemMessage("skin-footer",$lang, true); ?>
 </p>
 </div>
 </div>

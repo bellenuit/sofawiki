@@ -3,15 +3,16 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 $replace = swGetArrayValue($_REQUEST,'replace');
-$hint = swGetArrayValue($_REQUEST,'hint');
+$hint = swNameURL(swGetArrayValue($_REQUEST,'hint'));
+$namespace = swGetArrayValue($_REQUEST,'namespace');
 $submitreplace = swGetArrayValue($_REQUEST,'submitreplace');
 $submitreplacepreview = swGetArrayValue($_REQUEST,'submitreplacepreview');
 if (isset($_REQUEST['searchnames'])) { $searchnames = "1"; $searchnameschecked = ' CHECKED';}
 else 
 { $searchnames = 0;  $searchnameschecked = '';}
-if (isset($_REQUEST['searchliteral'])) { $searchliteral = "1"; $searchliteralchecked = ' CHECKED';}
+if (isset($_REQUEST['ignorecase'])) { $ignorecase = "1"; $ignorecasechecked = ' CHECKED';}
 else 
-{ $searchliteral = 0;  $searchliteralchecked = '';}
+{ $ignorecase = 0;  $ignorecasechecked = '';}
 
 $swMaxOverallSearchTime *=5;  
 
@@ -23,7 +24,7 @@ if ($query)
 	$replace = str_replace("\\\\","\\",$replace);
 }
 
-$swParsedName = swSystemMessage('Regex',$lang);
+$swParsedName = 'Special:Regex';
 if ($query) $swParsedName .= ': '.$query;
 
 $regexerror = false;
@@ -35,66 +36,26 @@ if ($query)
 	$ch1 = substr($query,-1,1);
 	
 	
-	if ($ch0 == $ch1 || $searchliteral)
-	{
+	$regex = 'regex'; if ($ignorecase) $regex = 'regexi';
+	$domain = '_content'; if ($searchnames) $domain = '_name';
+	$hint2 = ''; if (isset($hint) && $hint != '') $hint2 = '"'.$hint.'"';
+	
+	$q = 'filter _namespace "'.$namespace.'", _revision, '.$domain.' '.$hint2.'
+select '.$domain.' '.$regex.' "'.$query.'"
+project _revision';
+	
 		
-		
-		if (isset($_REQUEST['searchnames']))
-			$q = 'SELECT _revision WHERE _name r= '.$query;
-		else
-			$q = 'SELECT _revision WHERE _content r= '.$query;
-		
-		
-		if (isset($hint) && $hint != '')
-		{
-			if (isset($_REQUEST['searchnames']))
-			{
-				if ($searchliteral)
-				{
-					$qhint = 'SELECT _revision, _name WHERE _name *=* '.$hint;
-					$q = '';
-				}
-				else
-				{
-					$qhint = 'SELECT _revision, _name WHERE _name *~* '.$hint;
-					$q = 'WHERE _name r= '.$query;
-				}
-				
-			}
-			else
-			{
-				if ($searchliteral)
-				{
-					$qhint = 'SELECT _revision, _content WHERE _content *=* '.$hint;
-					$q = '';	
-				}
-				else
-				{
-					$qhint = 'SELECT _revision, _content WHERE _content *~* '.$hint;
-					$q = 'WHERE _content r= '.$query;	
-				}
-			}
-			
-			$old_error = error_reporting(0); // Turn off error reporting
+	$old_error = error_reporting(0); // Turn off error reporting
+	$swParsedContent .= '<pre>'.$q.'</pre>';
+	$revisions = swRelationToTable($q);
+	error_reporting($old_error);
 
-			$revisions = swQuery(array($qhint, $q));
-			
-			error_reporting($old_error);
-			
-		}
-		else
-			$revisions = swFilter($q,'*');
-	}
-	else
-	{
-		$regexerror = '<br><b>Error: Starting and ending delimiter do not match</b>';
-		$revisions = array();
-	}
+
 }
 else
 	$revisions = array();
 
-ksort($revisions,SORT_NUMERIC);
+// ksort($revisions,SORT_NUMERIC);
 
 if (count($revisions) > 0 && isset($_REQUEST['submitexport'])) //immediate before we limit
 {
@@ -131,27 +92,26 @@ foreach ($revisions as $k=>$v)
 	$record->lookup();
 	
 	$t = '';
+	if ($ignorecase) $case ='i'; else $case='';
+	
 	if (($submitreplacepreview || $submitreplace) && $replace)
-			if ($searchliteral)
-				$t = str_replace($hint,'<del>'.$hint.'</del><ins>'.$replace.'</ins>',$record->content);
-			else
-				$t = preg_replace($query,'<del>$0</del><ins>'.$replace.'</ins>',$record->content);
+	{
+		$t = preg_replace('/'.$query.'/'.$case,'<ins>'.$replace.'</ins><del>$0</del>',$record->content);
+	}
 	else
-			if ($searchliteral)
-				$t = str_replace($hint,'<ins>'.$hint.'</ins>',$record->content);
-			else
-				$t = preg_replace($query,'<ins>$0</ins>',$record->content);
+		$t = preg_replace('/'.$query.'/'.$case,'<ins>$0</ins>',$record->content);
 		
 	$ts = explode("\n",$t);
 	
 	$tlines = array();
 	foreach($ts as $tline)
 	{
-		if (stristr($tline,'<ins>'))
+		if (stristr($tline,'<ins>') || stristr($tline,'<del>'))
 		$tlines[] = $tline;
 	}
 	
 	$t = join("\n",$tlines);
+	
 	
 	
 	if ($submitreplace && @$_REQUEST['revision'.$record->revision])
@@ -160,11 +120,8 @@ foreach ($revisions as $k=>$v)
 			$replaced = 'protected';
 		elseif ($record->status == 'ok' && $user->hasright('modify', $record->name))
 		{
-			if ($searchliteral)
-				$record->content = str_replace($hint,$replace,$record->content);
-			else
-				$record->content = preg_replace($query,$replace,$record->content);
-			$record->comment = 'regex find '.$query.' replace '.$replace;
+			$record->content = preg_replace('/'.$query.'/'.$case,$replace,$record->content);
+			$record->comment = 'regex find /'.$query.'/'.$case.' replace '.$replace;
 			$record->insert();
 			$replaced = 'replaced';
 		}
@@ -182,39 +139,41 @@ foreach ($revisions as $k=>$v)
 	
 }
 
-if(!$query) $query="//";
+if(!$query) $query="";
+if(!$namespace) $namespace="*";
 
 $swParsedContent .= '<div id="editzone"><form method="post" action="index.php">
 		<p>
-		<input type="hidden" name="name" value="special:regex" />
+		Regex <input type="hidden" name="name" value="special:regex" />
 		<input type="text" size=40 name="query" value="'.$query.'" />
-		Hint <input type="text" size=40 name="hint" value="'.$hint.'" />
-		<input type="submit" name="submit" value="'.swSystemMessage('Search',$lang).'" />
-		<input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'>'.swSystemMessage('Search Names',$lang).
-		'<input type="checkbox" name="searchliteral" value="'.$searchliteral.'" / '. $searchliteralchecked.'>'.swSystemMessage('Search Literal',$lang);
+		<br>Hint <input type="text" size=40 name="hint" value="'.$hint.'" />
+		<br>Namespace <input type="text" size=40 name="namespace" value="'.$namespace.'" />
 		
-if (!isset($_REQUEST['searchnames']) && ($query != '//' || $searchliteral))
+		<br><input type="checkbox" name="searchnames" value="'.$searchnames.'" / '. $searchnameschecked.'> Search names
+		<input type="checkbox" name="ignorecase" value="'.$ignorecase.'" / '. $ignorecasechecked.'> Ignore case
+		<br><input type="submit" name="submit" value="'.swSystemMessage('search',$lang).'" />';
+		
+if (!isset($_REQUEST['searchnames']) && ($query != '//'))
 $swParsedContent .= '
-		<input type="text" size=40 name="replace" value="'.$replace.'" />
-		<input type="submit" name="submitreplacepreview" value="'.swSystemMessage('Replace Preview',$lang).'" />';
+		<br><br>Replace <input type="text" size=40 name="replace" value="'.$replace.'" />
+		<br><input type="submit" name="submitreplacepreview" value="'.swSystemMessage('replace-preview',$lang).'" />';
 		
 if (!isset($_REQUEST['searchnames']) && $submitreplacepreview &&!isset($swOvertime) && !$regexerror && count($revisions)>0)
 
-$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("Replace",$lang).'" />';
+$swParsedContent .= ' <input type="submit" name="submitreplace" value="'.swSystemMessage("replace",$lang).'" />';
 
 
 if (count($revisions)>0)
-	$swParsedContent .= ' <input type="submit" name="submitexport" value="'.swSystemMessage("Export",$lang).'" />';
+	$swParsedContent .= ' <input type="submit" name="submitexport" value="'.swSystemMessage("export",$lang).'" />';
 	
-$swParsedContent .= '</p><p><i>Note: You need to use Perl style delimiters at the start and at the end like /searchterm/.
-	<br/>This is a very powerful tool that can change many wiki pages at once. Use it carefully.
+$swParsedContent .= '</p>This is a very powerful tool that can change many wiki pages at once. Use it carefully.
 	<br>Matches: . any \\w azAZ09_ \\W not w \\s whitespace \\S not s \\d 09 \\D non d
 	<br>\\t tab \\n newline \\r return
 \\021  octal char \\xf0  hex char [ab] a ot b [^ab] neither a nor b
 <br>* 0+ + 1 ? 0-1 {n} n times {n,m} n to m times *? mutliple not greedy
 <br>/exp/i case insensitive /^exp/ beginning of string /exp$/ end of string
 <br>The Hint field allows you to enter a string that must be present as url form in the page. This can improve the performance of the regex.
-<br>Search literal translates a literal query in a regex.
+<br>NB: you cannot replace when you search for names only.
 	</i>'.$regexerror.$arraylimited;
 
 $swParsedContent .= '<ul>'.join("\n",$searchtexts).'</ul>';

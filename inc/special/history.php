@@ -7,7 +7,7 @@ if ($user->hasright("modify", $wiki->name) || $user->hasright("propose", $wiki->
 
  {
 
-	$swParsedName = swSystemMessage("History",$lang)." ".$wiki->localname($lang); ;
+	$swParsedName = swSystemMessage("history",$lang)." ".$wiki->name ;
 		
 	$list= $wiki->history();
 	$historytexts = array();
@@ -26,7 +26,7 @@ if ($user->hasright("modify", $wiki->name) || $user->hasright("propose", $wiki->
  }
 else
 {
-	$swError = swSystemMessage("No access",$lang);
+	$swError = swSystemMessage("no-access",$lang);
 }
 
 

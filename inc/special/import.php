@@ -3,9 +3,29 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 $swParsedName = 'Special:Import';
-$swParsedContent = 'Imports pages from the Upload directory as new revisions';
+$swParsedContent = 'Imports pages from the Upload directory as new revisions. It accept also Zip files.';
 
-$files = glob($swRoot.'/site/upload/*.*');
+$files = glob($swRoot.'/site/upload/*.zip');
+foreach($files as $file)
+{
+	unzip($file,$swRoot.'/site/upload');
+	unlink($file);
+}
+
+$dirs = array_filter(glob($swRoot.'/site/upload/*'), 'is_dir');
+foreach($dirs as $dir)
+{
+	$files = glob($dir.'/*.txt');
+	foreach($files as $file)
+	{
+		$f0 = str_replace($dir.'/','',$file);
+		rename($file,$swRoot.'/site/upload/'.$f0);
+	}
+	rmdir($dir);
+}
+
+
+$files = glob($swRoot.'/site/upload/*.txt');
 natsort($files);
 $found = false;
 $i=0;
@@ -52,7 +72,7 @@ foreach($files as $file)
 $wiki->name = 'Import';
 
 if ($i>500) $swParsedContent .= '<br/><br/>Limited to 500 files. Reload to get the rest of it.'; 
-if (!$found) $swParsedContent .= '<br/><br/>No file found'; 
+if (!$found) $swParsedContent .= '<br/><br/>No text file found in site/upload/'; 
 
 $swParseSpecial = false;
 

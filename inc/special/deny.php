@@ -26,8 +26,8 @@ $dateend = swGetArrayValue($_POST,'dateend');
 $denyend = swGetArrayValue($_POST,'denyend');
 if (trim($denyend) == '') $denyend = date("Y-m-d",time());
 $ip = swGetArrayValue($_POST,'ip');
-if (!$datestart) $datestart = max($minfile, date("Y-m-d",time()-29*86400));
-if (!$dateend) $dateend = $maxfile;
+if (!$datestart) $datestart = 'deny-'.date("Y-m-d",time()-30*86400);
+if (!$dateend) $dateend = 'deny-'.date("Y-m-d",time());
 
 // $swParsedContent .= "\n</select>";
 $swParsedContent .= "\n<p>Deny Manager:<br>Search for unsuccessful logins. After $swDenyCount attempts, IP will be blocked for the day";
@@ -54,6 +54,9 @@ $swParsedContent .= "\nIP <input type='text' name='ip' value='$ip' /> ";
 $swParsedContent .= "\n<input type='submit' name='submitallow' value='Allow' />";
 $swParsedContent .= "\n</p></form>";
 
+$swParsedContent .= '<p>Configuration<br>$swDenyCount ='.@$swDenyCount. ' (threshold unsuccessful logins to block for the day)';
+$swParsedContent .= '<br>$swStrongDeny ='.@$swStrongDeny. ' (probability 0-100% that empty login action triggers unsuccessful login)';
+
 
 $rawlines = array();
 
@@ -77,7 +80,10 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 	if (file_exists($file)) 
 	{
 		$t = file_get_contents($file);
-		$swParsedContent .= "<pre>Denied: <b>".$t."</b></pre>";
+		$ts = explode(']]',$t);
+		natsort($ts);
+		$ts = array_filter($ts); // remove empry
+		$swParsedContent .= "<p>Denied: <br><b>".join(']]<br>',$ts)."]]</b>";
 	}
 	
 	
@@ -99,8 +105,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		}
 	} 
 	arsort($rawlines); 
-	$swParsedContent .= "\n\n<pre>\n\n</pre>\n";
-	$swParsedContent .= "\n\n<pre>".join("\n",$rawlines)."\n</pre>\n";	
+	$swParsedContent .= "<p>".join("<br>",$rawlines);	
 
 } 
  

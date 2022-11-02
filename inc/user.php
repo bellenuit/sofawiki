@@ -31,11 +31,23 @@ class swUser extends swRecord
 		
 		$allrights = $swAllUserRights.$this->content;
 		
-		//echo "hasright $action,$name - $allrights<br>";
+		$grouplist = swGetValue($allrights,'_group',true);
+		{
+			
+			foreach($grouplist as $g)
+			{
+				$groupwiki = new swUser;
+				$groupwiki->name = 'User:'.$g;
+				$groupwiki->lookup();
+				$allrights .= $groupwiki->content;
+			}
+		}
 		
 		$rightlist = swGetValue($allrights,'_'.$action,true);
+
 		
 		//print_r($rightlist);
+		
 		
 		foreach($rightlist as $right)
 		{
@@ -55,7 +67,7 @@ class swUser extends swRecord
 			
 			
 			
-			if ($name == '?') { return true;}
+			if ($name == '?') {return true;}
 			
 			if ($right == '*') { return true;}// power users
 			
@@ -108,22 +120,39 @@ class swUser extends swRecord
 		}
 		
 		$kkey = $this->encryptpassword(); 
-		if (stristr($this->content, "[[_pass::$kkey]]")) return true;
+		if (stristr($this->content, "[[_pass::$kkey]]")) 
+		{
+			// token not used
+			if (stristr($this->content, "[[_token::")) 
+			{	
+				$s = $this->content;
+				$s = preg_replace("/\[\[\_token\:\:([^\]]*)\]\]/","",$s);
+				$this->content = $s;
+				$this->comment = 'token not used';
+				$this->user = '';
+				$this->insert();
+				return true;		
+			}		
+			return true;
+		}
+		if ($kkey == $this->ppass) return true;
 		
 		
 		// lost password
 		if (stristr($this->content, "[[_newpass::$kkey]]")) 
 		{
 			$s = $this->content;
-			$s = preg_replace("/\[\[\_pass\:\:(.*)\]\]/","",$s);
-			$s = preg_replace("/\[\[\_newpass\:\:(.*)\]\]/","",$s);
+			$s = preg_replace("/\[\[\_pass\:\:([^\]]*)\]\]/","",$s);
+			$s = preg_replace("/\[\[\_newpass\:\:([^\]]*)\]\]/","",$s);
 			$s .= "[[_pass::$kkey]]";
 			$this->content = $s;
 			$this->comment = 'new password';
+			$this->user = '';
 			$this->insert();
 			return true;
 		
 		}
+		
 				
 	}
 	

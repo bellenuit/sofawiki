@@ -3,53 +3,64 @@
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Orphaned Pages";
-$swParsedContent = "Pages that are not linked (except category, image and template namespace).<br><br>";
+$swParsedContent = "Pages that are not linked in namespace (except subpages).<br><br>";
 
 
 $start = @$_REQUEST['start'];
-$limit = 500;
-		
+if (!$start) $start = 1;
+$limit = 100;
 
-$revisions = swQuery(array('SELECT _name','CALC n _name URLIFY %(.*)/.*% $1 REGEX','WHERE n !=* template:','WHERE n !=* image:',
-'WHERE n !=* category:','PROJECT n','SELECT _link','CALC n _link URLIFY %(.*)/.*% $1 REGEX','PROJECT n','EXCEPT n'));
-
-$lines = array();
-foreach ($revisions as $row)
-{
-	
-	
-	$name = $row['n'];
-	if (stristr($name,'/')) $name = substr($name,0,strpos($name,'/'));
-	$url = swNameURL($name);
-	$lines[$url] = '<li><a href="index.php?name='.$url.'">'.$name.'</a></li> ';
-
-}
-sort($lines);
-$count = count($lines);
-
-$lines2 = array();
-$i =0;
-foreach($lines as $line)
-{
-	if ($i < $start) { $i++; continue;}
-	$i++;
-	if ($i > $start + $limit) continue;
-	$lines2[] = $line;
-}
+$previous = ' <nowiki><a href=\'index.php?name='.swNameURL($name).'&start='.($start-$limit).'\'>&lt--</a></nowiki>';
+$next = ' <nowiki><a href=\'index.php?name='.swNameURL($name).'&start='.($start+$limit).'\'>--&gt;</a></nowiki>';	
 
 
-$navigation = '<nowiki><div class="categorynavigation">';
-if ($start>0)
-	$navigation .= '<a href="index.php?name=special:orphaned-pages&start='.sprintf("%0d",$start-$limit).'"> '.swSystemMessage('back',$lang).'</a> ';
-		
-$navigation .= " ".sprintf("%0d",min($start+1,$count))." - ".sprintf("%0d",min($start+$limit,$count))." / ".$count;
-if ($start<$count-$limit)
-	$navigation .= ' <a href="index.php?name=special:orphaned-pages&start='.sprintf("%0d",$start+$limit).'">'.swSystemMessage('forward',$lang).'</a>';
-	$navigation .= '</div></nowiki>';
+$q = '
+set start = '.$start.'
+set limit1 = '.$limit.'
+set previous = "'.$previous.'"
+set next = "'.$next.'"
 
-$swParsedContent .= $navigation.join(' ',$lines2).$navigation;
+filter _namespace "main", _name
+select _name not (regex "/")
+extend _link = urltext(_name)
+filter _link "*"
+update _link = urltext(_link)
+join leftanti 
+project _name
+update _name = "[["._name."]]"
+order _name a
+label _name ""
 
-$swParseSpecial = false;
+// add counter
+dup
+project _name count
+set nc = _name_count
+set ende = min(start+limit1-1,nc)
+set ncs =  start. " - " . ende . " / ". nc
+
+if start > 1 
+set ncs = ncs . previous
+end if
+
+if start + limit1 -1 < nc 
+set ncs = ncs . next
+end if
+
+pop
+
+limit start limit1
+
+echo ncs
+print space
+echo _newline
+echo ncs
+
+';
+
+$lh = new swRelationLineHandler;
+$swParsedContent .= $lh->run($q);
+$swParseSpecial = true;
+
 
 
 ?>

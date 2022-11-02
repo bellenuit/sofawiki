@@ -1,68 +1,65 @@
 <?php
+	
+/** 
+ * Shows a list of all pages, optionally by namespace.
+ *
+ * Used by the $action allpages.
+ * Optional parameter $namespace (default main = main namespay, * = all pages)
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-$swParsedName = "Special:All Pages";
+$swParsedName = 'Special:All Pages';
 
-$start = @$_REQUEST['start'];
-$limit = 500;
-if (isset($_REQUEST['ns']))
-{
-	$ns = @$_REQUEST['ns'];
-	$start = 0; $limit = 999999999;
-}
+echotime('all pages start');
 
-$revisions = swFilter('SELECT _name WHERE _name *','*','query');
-$lines = array();
-$namespaces = array();
 
-echotime('allpages revisions '.count($revisions));
-foreach ($revisions as $row)
-{
-	
-	$name = $row['_name'];
-	if (stristr($name,'/')) $name = substr($name,0,strpos($name,'/'));
-	if (stristr($name,':')) { $namespace = strtolower(substr($name,0,strpos($name,':'))); $namespaces[$namespace] = $namespace; }
-	else $namespace = '';
-	$url = swNameURL($name);
-	if (!$url) continue;
-	
-	
-	if (!isset($ns) || $namespace == $ns)
-	$lines[$url] = '<li><a href="index.php?name='.$url.'">'.$name.'</a></li> ';
 
-}
-sort($lines);
-$count = count($lines);
-echotime('allpages lines '.count($lines));
+$namespace = 'main';
+if (isset($_REQUEST['namespace'])) $namespace = $_REQUEST['namespace'];
+if ($namespace == '*') $namespace = '';
 
-$lines2 = array();
-$i =0;
-foreach($lines as $line)
-{
-	if ($i < $start) { $i++; continue;}
-	$i++;
-	if ($i > $start + $limit) continue;
-	$lines2[] = $line;
-}
-ksort($namespaces);
+$singlequote = "'";
 
-$navigation = '<nowiki><div class="categorynavigation">';
-$navigation .= '<a href="index.php?name=special:all-pages&start=0">all</a> ';
-foreach($namespaces as $namespace)
-	$navigation .= '<a href="index.php?name=special:all-pages&ns='.$namespace.'"> '.$namespace.'</a> ';
-$navigation .= '<br>';
-if ($start>0)
-	$navigation .= '<a href="index.php?name=special:all-pages&start='.sprintf("%0d",$start-$limit).'"> '.swSystemMessage('back',$lang).'</a> ';
-		
-$navigation .= " ".sprintf("%0d",min($start+1,$count))." - ".sprintf("%0d",min($start+$limit,$count))." / ".$count;
-if ($start<$count-$limit)
-	$navigation .= ' <a href="index.php?name=special:all-pages&start='.sprintf("%0d",$start+$limit).'">'.swSystemMessage('forward',$lang).'</a>';
-	$navigation .= '</div></nowiki>';
+$q = '
+set namespace = "'.$namespace.'"
+filter _namespace
+insert "*"
+order _namespace
+extend _namespace2 = _namespace
+update _namespace2 = "<b>"._namespace."</b>" where _namespace == namespace
+update _namespace = "<nowiki><a href="._singlequote."index.php?name=special:all-pages&namespace="._namespace._singlequote.">"._namespace2."</a> </nowiki>"
+project _namespace concat
+update _namespace_concat = replace(_namespace_concat,"::","")
+rename _namespace_concat Namespaces
+print raw
 
-$swParsedContent .= $navigation.join(' ',$lines2).$navigation;
+echo " "
 
-$swParseSpecial = false;
+filter _namespace namespace, _name
+// order _name
+
+order _name a
+// limit 1 10000
+extend mainname = regexreplace(_name,"/\w\w","")
+extend _nameurl = "<nowiki><a href="._singlequote."index.php?name=" ._name._singlequote.">" . _name . "</a> </nowiki>"
+project mainname, _nameurl concat
+rename _nameurl_concat _nameurl
+project _nameurl
+
+label _nameurl "" 
+
+print grid 50
+
+';
+
+
+$lh = new swRelationLineHandler;
+$swParsedContent .= $lh->run($q);
+$swParseSpecial = true;
+
+echotime('all pages end');
+
 
 
 ?>

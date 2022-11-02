@@ -1,39 +1,63 @@
 <?php
+	
+/** 
+ * Shows a list of all deleted pages.
+ *
+ * Used by the $action allpages.
+ * The link will go to the history of the page
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:Deleted Pages";
 
-$swParsedContent = "";
 
-// deletedbitmap && currentbitmap use url
 
 $currentbitmap = $db->currentbitmap->duplicate();
 $deleted = $db->deletedbitmap->toarray();
 
-$swParsedContent .= '<ul>';
-
-$list = array();
-foreach($deleted as $rev)
+$urldbpath = $db->pathbase.'indexes/urls.db';
+if (file_exists($urldbpath))
+		$urldb = swDbaOpen($urldbpath, 'rdt');
+if (!@$urldb)
 {
-	if ($currentbitmap->getbit($rev))
+	echotime('urldb failed');
+}
+else
+{
+	$rel = new swRelation('_name, timestamp, user');
+	$key = swDbaFirstKey($urldb);
+	$dw = new swWiki;
+	do 
 	{
-		$w = new swRecord;
-		$w->revision = $rev;
-		$w->lookup();
-		$url = swNameURL($w->name);
-		if ($w->name != '')
-			$list[$url] = '<li><a class="invalid" href="index.php?action=edit&revision='.$rev.'">'.$w->name.'</a></li>' ;
-	}
+	  
+	  if (substr($key,0,1) != ' ')
+	  {
+		  $value = swDbaFetch($key,$urldb);
+		  if (!$value) continue;
+		  if (substr($value,0,1) == 'd')
+		  {
+			 $dw->name = $key;
+			 $list= $dw->history();
+			 $top = array_pop($list);
+			 $top->lookup(true);
+			 
+			 $rel->insert('"'.swEscape($key).'", "'.print_r($top->timestamp,true).'", "'.$top->user.'"');
+		  }
+	  }
+		
+	} while ($key = swDbaNextKey($urldb));
+	
+	$rel->label('_name "", timestamp "", user ""');
+	$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');
+
+	$swParsedContent = '<p>'.$rel->toHtml('grid');
 
 }
-ksort($list);
-$swParsedContent .= join(' ',$list);
-
-$swParsedContent .= '</ul>';
 
 
-$swParseSpecial = false;
+
+$swParseSpecial = true;
 
 
 ?>

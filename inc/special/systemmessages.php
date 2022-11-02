@@ -4,95 +4,52 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 $swParsedName = "Special:System Messages";
 
-$revisions = swFilter('SELECT _name FROM system: WHERE _name *','*','query');
-$names = array();
-foreach($revisions as $r=>$row)
-{
-	if (isset($row['_name']))
-	{
-		$names[$row['_name']] = $r;
-	}
-}
+$swParsedContent .= "===Translations===";
 
-uksort($names, 'strnatcasecmp'); 
-//ksort($names);
-$swParsedContent = "";
-$oldfirst = "";
-$oldshort = "";
+$lines= array();
 
-$foundmessages=array();
-$foundshorts=array();
-
-$missing = "";
-$pages = "";
-$defaults = "";
-
-foreach ($names as $n=>$s)
-{
-	
-		$first = strtolower(substr($n,7,1));
-		if ($oldfirst && $oldfirst != $first) $pages .= "\n\n";
-		$shorts = explode("/",$n);
-		$short = $shorts[0];
-		if ($short != $oldshort) $pages .= "\n"; else $pages .= " ";
-		$shortname = substr($n,7);
-		
-		$pages .= "[[$n|$shortname]]";
-		$foundmessages[swNameURL($n)] = true;
-		$foundshorts[swNameURL($short)] = true;
-		$oldfirst = $first;
-		$oldshort = $short;
- 	
-}
-
-uksort($swSystemDefaults ,'strnatcasecmp');
-
-$oldfirst = "";
-$oldshort = "";
 
 foreach ($swSystemDefaults as $k=>$v)
 {
-		if (!array_key_exists("system:$k",$foundmessages))
-		{
-			$first = strtolower(substr($k,0,1));
-			if ($oldfirst && $oldfirst != $first) $defaults .= "\n\n";
-			$shorts = explode("/",$k);
-			$short = $shorts[0];
-			if ($short != $oldshort) $defaults .= "\n\n"; else $defaults .= " ";
-			$defaults .= "[[System:$k|$k]] $v ";
-			$oldfirst = $first;
-			$oldshort = $short;
-		
-		}
-}
-$oldfirst = "";
-uksort($foundshorts,'strnatcasecmp');
-
-foreach($foundshorts as $s=>$v)
-{
-	foreach ($swLanguages as $l)
+	if (substr($k,-3,1)=='/')
 	{
-		if (!array_key_exists("$s/$l",$foundmessages))
-		{
-			
-			$first = strtolower(substr($s,7,1));
-			if ($oldfirst != "" && $oldfirst != $first) $missing .= "\n\n";
-			$missing .="[[$s/$l]] ";
-			$oldfirst = $first;
-		}
-	}
+		$key  = substr($k,0,-3);
+		$la = substr($k,-2);
+		
+		$v = str_replace('"','&quote;',$v);
+		$v = str_replace(PHP_EOL,'<br>',$v);
+		
+		$lines[] = '"'.$key.'","'.$la.'", "'.str_replace('"','\"',$v).'"';		
+	}	
 }
 
+$q = 'relation key, lang, data
+data
+'.join(PHP_EOL,$lines).'
+end data
+select lang regex "'.join('|',$swLanguages).'" 
+dup
+dup
+project key
+swap
+project lang
+join cross
+swap
+join left
+update data = "<nowiki>_MISSING</nowiki>" where data == ""
+'."extend link = \"<nowiki><a href='index.php?action=edit&name=system:\".key.\"/\".lang.\"'>\".key.\"/\".lang.\"</a></nowiki>\"".'
+project link, data
+order link
+print grid 50';
 
-$swParsedContent = "====Missing translations====\n$missing";
+//echo $q;
 
-
-$swParsedContent .= "\n====Pages====\n$pages";
-
-$swParsedContent .= "\n====Defaults====\n$defaults";
-
-
+$lh = new swRelationLineHandler;
+$swParsedContent .= $lh->run($q);
 $swParseSpecial = true;
+
+
+
 
 
 

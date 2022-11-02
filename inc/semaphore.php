@@ -19,17 +19,19 @@ We just need to protect the write operation
 
 */
 $swSempahore = false;
-$swSemaphoreTimeOut = 15;
+$swSemaphoreTimeOut = 5;
 
-function swSemaphoreSignal() 
+function swSemaphoreSignal($path='') 
 {
 	global $swSempahore;
 	global $swRoot;
 	global $swSemaphoreTimeOut;
 	
+	// echotime("signal ".$path);
 	
+	$md5path = md5($path);
 	
-	$file = $swRoot."/site/indexes/semaphore.txt";
+	$file = $swRoot.'/site/indexes/'.$md5path.'semaphore.txt';
 	
 	if ($swSempahore) return;
 	
@@ -42,11 +44,11 @@ function swSemaphoreSignal()
 			fclose($handle);
 			return;
 		}
-		echotime("semaphore wait");
+		echotime("semaphore wait ".$md5path);
 		sleep(1);
 		$i++;
 	}
-	echotime("semaphore overruled");
+	echotime("semaphore overruled ".$path);
 	global $username;
 	global $name;
 	global $action;
@@ -63,14 +65,19 @@ function swSemaphoreSignal()
 }
 
 
-function swSemaphoreRelease()
+function swSemaphoreRelease($path='')
 {
 	global $swSempahore;
 	global $swRoot;
 	
+	// echotime("release ".$path);
+	
+	$md5path = md5($path);
+	
+	$file = $swRoot.'/site/indexes/'.$md5path.'semaphore.txt';
+
 	
 	
-	$file = $swRoot."/site/indexes/semaphore.txt";
 	@unlink($file);
 	$swSempahore = false;
 }

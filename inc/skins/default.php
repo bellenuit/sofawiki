@@ -1,121 +1,67 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<?php 
 
-<?php
-echo '<meta http-equiv="content-language" content="'.$lang.'">';
-echo '<base href="'.$swBaseHrefFolder.'">';
-	
-$t = $swMainName;
-if (trim($swParsedName) != '') 
-	if (stristr($swParsedName, $swMainName))
-		$t = $swParsedName;
-	else
-		$t .= ' - '.$swParsedName;
-$t = trim(str_replace('"',"'",$t));
-if (isset($wiki->internalfields['_description'])) $d = array_pop($wiki->internalfields['_description']);
-else { $rf = new swResumeFunction; $d = trim($rf->dowork(array(0,$name, 140, true)));}
-$d = trim(str_replace('"',"'",$d));
+$skinstylesheet = ''; // default.css is always loaded. add the specific stylesheet	
+include 'header.php';
 
-echo '<meta name="title" content="'. $t. '">
-<meta name="description" content="'.$d.'">'.PHP_EOL;
-?>
-<title><?php echo $t ?></title>
-<link rel='stylesheet' href="inc/skins/default.css"/>
-<?php
-	if ($action=='view')
+
+
+
+
+echo PHP_EOL.'<div id="header">';
+echo PHP_EOL.swSystemMessage("skin-header",$lang, true);
+echo PHP_EOL.'</div><!-- header -->';
+
+echo PHP_EOL.'<div id="menu">';
+
+echo PHP_EOL.$swHomeMenu. '<br/>'; 
+foreach($swLangMenus as $item) {echo PHP_EOL.$item.'<br/>'; } 
+echo '<br/>'.PHP_EOL; 
+if (!$username) foreach($swLoginMenus as $item) {echo PHP_EOL.$item.'<br/>'; }
+echo PHP_EOL.swSystemMessage("skin-menu",$lang, true). '<br/>';
+echo PHP_EOL.$swSearchMenu; 
+echo PHP_EOL.'</div><!-- menu -->';
+
+if (!count($swEditMenus))
+{
+	echo PHP_EOL.'<div id="mobileappmenu">';
+	echo PHP_EOL.'<div id="mobilemenu" class="dropdownmobilemenu">';
+	echo PHP_EOL.$barHeaderHeader.'≡'.$barHeaderFooter;
+	echo PHP_EOL.$groupHeader;
+	echo PHP_EOL.$itemHeader.$swHomeMenu.$itemFooter; 
+	foreach($swLangMenus as $item) {echo PHP_EOL.$itemHeader.$item.$itemFooter;} 
+	$sms = swSystemMessage("skin-menu",$lang, true);
+	$sms = str_replace('<p>','',str_replace('<br>','',$sms));
+	$sm = explode(PHP_EOL,$sms);
+	foreach($sm as $item) {echo PHP_EOL.$itemHeader.$item.$itemFooter;} 
+	foreach($swLoginMenus as $item) 
 	{
-		foreach($swLanguages as $l)
+		if ($item == $username)
 		{
-			
-			if ($l!=$lang)
-			{
-				if ($swLangURL)
-				{
-					if (isset($wiki->interlanguageLinks[$l]))
-						echo '<link rel="alternate" hreflang="'.$l.'" href="'.$l.'/'.swNameURL($wiki->interlanguageLinks[$l]).'">'.PHP_EOL;
-					else
-						echo '<link rel="alternate" hreflang="'.$l.'" href="'.$wiki->link('view',$l).'">'.PHP_EOL;
-				}
-				else
-				{
-					if (isset($wiki->interlanguageLinks[$l]))
-						echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->interlanguageLinks[$l]).'">'.PHP_EOL;
-					else
-						echo '<link rel="alternate" hreflang="'.$l.'" href="'.swNameURL($wiki->name).'&lang='.$l.'">'.PHP_EOL;
-				}
-			}
-			else
-			{
-				if ($swLangURL)
-					echo '<link rel="canonical" hreflang="'.$l.'" href="'.$swBaseHrefFolder.$wiki->link('view',$l).'">'.PHP_EOL;
-			}
-			
+			echo PHP_EOL.$itemSilentHeader.$item.$itemFooter;
+		}
+		else
+		{
+			echo PHP_EOL.$itemHeader.$item.$itemFooter;
 		}
 	}
+	echo PHP_EOL.$groupFooter;
+	echo PHP_EOL.$barFooter;
+	echo PHP_EOL.$barHeader.$swSingleSearchMenu.$barFooter;
+	echo PHP_EOL.'</div><!-- mobileappmenu -->';
+}
 
-?>
-<style><?php echo $swParsedCSS ?></style>
-</head>
-<body>
+echo PHP_EOL.'<div id="content">';
+echo PHP_EOL.'<div id="title">';
+echo PHP_EOL.'<h1>'.$swParsedName.'</h1>';
+echo PHP_EOL.'</div><!-- title -->';
 
-<div id='header'>
-<?php
-	echo swSystemMessage("SkinHeader",$lang, true);
-?>
-</div>
+echo PHP_EOL.'<div id="parsedcontent">';
+echo $swParsedContent;
+echo PHP_EOL.'</div><!-- parsedcontent -->';
+echo PHP_EOL.'<div id="info">';
+echo PHP_EOL.$swFooter; 
+echo PHP_EOL.swSystemMessage('skin-footer"',$lang, true);	
+echo PHP_EOL.'</div><!-- info -->';
+echo PHP_EOL.'</div><!-- content -->';
 
-
-
-
-
-
-<div id='langmenu'>
-<?php 
-	foreach($swLangMenus as $item) {echo $item." " ; } 
-?>
-</div>
-
-
-<div id='menu'>
-<?php 
-	echo $swHomeMenu. "<br/>"; 
-	echo swSystemMessage("SkinMenu",$lang, true). "<br/>\r\n";
-	echo $swSearchMenu; 
-	
-	
-	if ($username != "")
-		echo "<div id='editmenu'>\r\n";
-	else
-		echo "<div id='editmenu0'>\r\n";
-		
-	foreach($swEditMenus as $item) {echo $item."<br/>\r\n"; }
-	echo "<br/>";
-	foreach($swLoginMenus as $item) {echo $item."<br/>\r\n" ; }
-	echo "<span class='error'>$swError</span>\r\n";
-	if ($user->hasright('modify','*')) echo "<br><span class='debug'>$swDebug</span>\r\n";
-?>
-</div><!-- editmenu -->
-</div><!-- menu -->
-
-
-<div id='title'>
-<h1><?php echo "$swParsedName" ?></h1>
-</div><!-- title -->
-
-<div id='content'><?php echo "
-
-$swParsedContent
-" ?>
-
-<div id="info">
-<?php echo "$swFooter"; echo swSystemMessage("SkinFooter",$lang, true);?>
-</div>
-
-</div><!-- content -->
-
-
-
-</body>
-</html>
+include 'footer.php';

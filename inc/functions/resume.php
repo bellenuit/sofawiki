@@ -35,59 +35,115 @@ class swResumeFunction extends swFunction
 		$wiki->revision = NULL;
 		$wiki->lookup();
 		$wiki->parsers = array();
-		$ip = new swImagesParser;
-		$ip->ignorelinks = true;
-		$lp = new swLinksParser;
-		$lp->ignorecategories = true;  
-		$lp->ignorelanguagelinks = true;
-		$wiki->parsers['tidy'] = $ip;
-		$wiki->parsers['image'] = $ip;
-		$wiki->parsers['link'] = $lp;
-		$wiki->parsers['nowiki'] = new swNoWikiParser;
-		$s = $wiki->parse();
 		
-		//remove links
-		$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
-
-
-		if (strlen($s)<$length) return $s;
-		
-		
-		$p = strpos($s."\n","\n",2);
-		
-		$s = substr($s,0,$p);
-		
-		if ($p<$length) return $s;
-		
-		$list = explode(". ",$s);
-	
-		$t = '';
-		
-		foreach ($list as $elem)
-		{
-			if (strlen($t)>$length) return $t.'.';
-			
-			if ($t != "")
-			{
-				$test = $t.'. '.$elem;
-				if (strlen($test)<=$length*1.5)
-					$t .= '. '.$elem;
-				else
-					return $t.".";
+		$s = $wiki->content;
 				
-			}
-			else
-			{
-				if (strlen($elem)>$length*1.5)
-					return substr($elem,0,$length)."...";
-				else
-					$t = $elem;
-			}
-		}
-		return $t;
+		return swResumeFromText($s,$length,$raw);
 	}
 
 }
+
+
+function swResumeFromText($s,$length,$raw)
+{
+	
+
+					
+	//remove nowiki tag
+	$s = str_replace('<nowiki>','',$s);
+	$s = str_replace('</nowiki>','',$s);
+	
+	//remove categories
+	$s = preg_replace('/\[Category:(.*)\]/u','',$s);
+	
+	$s = preg_replace('#<a (.*?)>(.*?)</a>#','$2',$s);
+	
+	$s = preg_replace("#<code>[\S\s]*?</code>#m", "", $s);
+	$s = preg_replace("#<script>[\S\s]*?</script>#m", "", $s);
+	$s = preg_replace('#<style>[\S\s]*?</style>#m','',$s);
+	$s = preg_replace('#{{[\S\s]*?<}}#m','',$s);
+
+	$s = preg_replace("/^\{\|.*/", "", $s);
+	$s = preg_replace("/^\|.*?|/", "", $s);
+	$s = preg_replace("/^!.*?!/", "", $s);
+	$s = preg_replace("/^\|\}.*/", "", $s);
+	
+	if ($raw)
+	{
+		$s = preg_replace('#\[\[(.*?)\]\]#m','$1',$s);
+	}
+
+	
+	// $s = str_replace('{{','',$s);
+	// $s = str_replace('}}','',$s);
+	
+	
+	// other text to clean
+	
+	
+	$wiki = new swWiki;
+	
+	$wiki->content = $s;
+	
+	$tp = new swTidyParser;
+	$ip = new swImagesParser;
+	$ip->ignorelinks = true;
+	$lp = new swLinksParser;
+	$lp->ignorecategories = true;  
+	$lp->ignorelanguagelinks = true;
+
+	
+	$wiki->parsers['tidy'] = $tp;
+	$wiki->parsers['image'] = $ip;
+	$wiki->parsers['link'] = $lp;
+	$wiki->parsers['nowiki'] = new swNoWikiParser;
+	$s = $wiki->parse(false);
+
+	
+	
+	$s = str_replace('|','',$s);
+	
+	
+	if (strlen($s)<$length) return trim($s);
+	
+	$p = @strpos($s."\n","\n",2);
+	
+	$s = substr($s,0,$p);
+	
+	if ($p<$length) return trim($s);
+			
+	$list = explode(". ",$s);
+
+	$t = '';
+	
+	foreach ($list as $elem)
+	{
+		if (strlen($t)>$length) return trim($t).'.';
+		
+		if ($t != "")
+		{
+			$test = $t.'. '.$elem;
+			if (strlen($test)<=$length*1.5)
+				$t .= '. '.$elem;
+			else
+				return trim($t).".";
+			
+		}
+		else
+		{
+			if (strlen($elem)>$length*1.5)
+				return substr($elem,0,$length)."...";
+			else
+				$t = $elem;
+		}
+	}
+	
+	
+	
+	return trim($t);
+}
+
+
 
 $swFunctions["resume"] = new swResumeFunction;
 

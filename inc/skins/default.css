@@ -1,44 +1,3 @@
-body
-{
-	
-}
-
-h1, h2, h3, h4, h5 { font-family: Helvetica, Arial, Sans-Serif; }
-
-del 
-{
-	color: red;
-}
-ins 
-{
-	color: green; text-decoration: none;
-}
-
-a.invalid
-{
-	color: red;
-}
-
-span.error 
-{
-	color: red;
-}
-span.found 
-{
-	color: green;
-}
-
-#info
-{
-	color: gray;
-	font-style: italic;
-} 
-
-#help
-{
-	background-color: lightgreen;
-} 
-
 #editmenu
 {
 	padding: 5px;
@@ -46,14 +5,40 @@ span.found
 	overflow: hidden;
 } 
 
+#appmenu
+{
+	width: 100%;
+	background-color: white;
+	border-bottom: 0.5px solid black;
+	color: black; 
+	font-size: 13px;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-weight: bold;
+	padding-top: 0px;
+	box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.2);
+	z-index: 200;
+	position: relative;
+} 
+
 #editmenu a
 {
 	color: black;
 } 
 
+#editor
+{
+	font-family: Courier New, monospace;
+}
+
+#editor p
+{
+	font-family: Courier New, monospace;
+}
+
+
 #editmenu0
 {
-	background-color: none;
+	background-color: transparent;
 } 
 
 #editmenu0 a
@@ -61,18 +46,31 @@ span.found
 	color: gray;
 } 
 
+#help
+{
+	background-color: lightgreen;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	padding: 10px;
+	font-size: 100%;	
+} 
+
+#info
+{
+	color: gray;
+	font-style: italic;
+} 
 
 #langmenu
 {
 	text-align: right;
-	width: 760px;
 	color: gray; 
 	font-size: 80%;
 	font-family: Helvetica, Arial, Sans-Serif;
 	
-	left: 10px;
+	position: relative;
+	padding-right: 10px;
 	top: 0px;
-	background-color: none;
+	background-color: transparent;
 } 
 
 #langmenu a
@@ -80,22 +78,53 @@ span.found
 	color: gray;
 } 
 
-
 #menu
 {
-	width: 120px;
 	color: gray; 
 	font-size: 80%;
 	font-family: Helvetica, Arial, Sans-Serif;
 	position: absolute;
-	left: 10px;
-	top: 120px;
-} 
+}
 
 #menu a
 {
 	color: gray;
 } 
+
+#mobileappmenu
+{  
+		width: 100%;
+		height: 40px;
+		background-color: white;
+		color: black; 
+		border-bottom: 0.5px solid black;
+		font-size: 140%;
+		font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+		font-weight: bold;
+		padding-top: 0px;
+} 
+
+#mobilemenu
+{
+	position: static;
+	background-color: white;
+	color: black; 
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-weight: bold;
+	padding-top: 0px; 
+} 
+
+#mobilesearch
+{
+	display:none;
+} 
+
+#page
+{
+	
+	position: relative;
+	background-color: white;
+}
 
 #search
 {
@@ -106,26 +135,360 @@ span.found
 	text-align: right;
 	position: absolute;
 	left: 600px;
-	top: 50px;
-	
+	top: 50px;	
 } 
 
-#title
+#searchfield
 {
-	width: 600px;
-	left: 160px;
-	top: 50px;
-	position: absolute;
+	width:120px;
 }
 
-#content
+#singlesearchmenu
 {
-	width: 600px;
-	left: 160px;
-	top: 120px;
-	position: absolute;
+	height: 26px;
+}
+ 
+#statusmenu
+{
+	width: 100%;
+	height: 32px;
+	padding: 4px;
+	background-color: black;
+	color: green; 
+	font-size: 80%;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+} 
+
+
+.dropdown
+{
+  height: 26px;
+  position: relative;
+  padding: 0px;
+  display: inline-block;
+   
 }
 
+.dropdownmobilemenu
+{
+  height: 18px;
+  position: relative;
+  padding: 0px;
+  display: none;
+   
+}
+
+.dropdown-content
+{
+  display: none;
+  position: absolute;
+  background-color: white;
+  border: 0.5px solid black;
+  color: black;
+  min-width: 240px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown-content a
+{
+	color: white;
+	text-decoration: none;
+}
+
+.dropdownvisible .dropdown-content
+{
+  display: block;
+}
+
+.dropdown-item
+{
+	height: 26px;
+	position: relative;
+}
+
+.dropdown-item a
+{
+	display: block;
+	width: calc(100% - 16px);
+	height: 26px;
+	padding-right: 8px;
+	padding-left: 8px;
+	color: black;
+	text-decoration: none;
+	position: absolute;
+	top: calc(50% - 8px);
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.dropdown-item-header
+{
+	display: block;
+	width: calc(100% - 16px);
+	height: 18px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	padding-right: 8px;
+	padding-left: 8px;
+	white-space: nowrap;
+}
+
+.dropdown-item-status
+{
+	display: block;
+	width: calc(100% - 16px);
+	height: 26px;
+	padding-top: 6px;
+	padding-bottom: 2px;
+	padding-right: 8px;
+	padding-left: 8px;
+	color: green;
+}
+
+.dropdown-item-header:hover
+{
+	cursor:pointer
+}
+
+.dropdown-item-silent
+{
+	color: gray;
+	padding: 0px;
+	padding-right: 8px;
+	padding-left: 8px;
+	padding-bottom: 8px;
+
+}
+
+.dropdown-item-silent a
+{
+  color: blue;
+  text-decoration: underline;
+}
+
+
+
+.dropdown a
+{
+  color: black;
+  text-decoration: none;
+}
+
+.dropdown-item:hover
+{
+  background-color: black;
+}
+
+.dropdown-item a:hover
+{
+  color: white;
+}
+
+.relation table.print,
+table.datatable
+{
+	border-collapse: collapse;
+	width: 100%;
+	margin-bottom: 5px;
+}
+
+.relation table.print td,
+.relation table.print th,
+table.datatable td,
+table.datatable th
+{
+	text-align: left;
+	border: 1px solid black;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	width: auto;
+}
+
+.relation table.print td.numberformat 
+{ 
+	text-align:right
+}
+
+.relation table.print th.numberformat 
+{
+	text-align:right
+}
+
+.relation textarea.tab,
+.relation textarea.csv,
+.relation textarea.json
+{
+	width:100%;height:200px;
+}
+
+.sortable th
+{
+    cursor: pointer;
+}
+
+.spacegrid tr
+{
+	display:inline;
+}
+
+body
+{
+	padding: 0px;
+	margin: 0px;
+}
+
+del 
+{
+	color: red;
+}
+
+
+div.editzone
+{
+	border: 1px solid black;
+	background-color: white;
+	width: 100%;
+	box-shadow: 4px 4px 4px 4px rgba(0,0,0,0.2);
+	margin-bottom: 40px;
+	resize: both;
+	position: relative;
+	z-index: 50;
+}
+
+div.editheader
+{
+	color: white;
+	background-color: black;
+	width: 100%;
+	margin: 0px;
+	padding: 4px;
+	border: 0px;
+	-webkit-border-horizontal-spacing: 0px;
+	-webkit-border-vertical-spacing: 0px;
+	border-collapse: collapse;
+	width: calc(100% - 8px);
+	position: relative;
+
+	/* border-bottom: 1px solid black;*/
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	text-align: center;	
+	font-weight: bold;
+	font-size: 16px;
+}
+
+div.editzone form
+{
+	
+	padding: 10px;
+	margin: 0px;
+	border: 0px;
+	width: calc(100% - 20px);
+	text-align: right;
+}
+
+div.editzone form p
+{
+	width: 100%;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	text-align: left;
+	margin-bottom: 2px;
+}
+
+div.editzone form pre
+{
+	width: 100%;
+	text-align: left;
+	font-size: 90%;
+	line-height: 100%;
+}
+
+
+div.editzone form textarea
+{
+	font-size: 13px;
+	resize: vertical;
+	margin-top: 4px;
+	margin-bottom: 4px;
+	border: 1px solid black;
+	padding: 5px;
+	width: calc(100% - 10px);
+	position: relative;
+	z-index: 0;
+}
+
+div.editzone form input[type="text"]
+{
+	margin-top: 4px;
+	margin-bottom: 4px;
+	width: 100%;
+}
+
+div.editzone form input[type="password"]
+{
+	margin-top: 4px;
+	margin-bottom: 4px;
+	width: 100%;
+}
+
+div.editzone form select
+{
+	
+	appearance: none;
+	background-color: white;
+	border: 1px solid black;
+	padding: 0 1em 0 0;
+	margin: 0;
+	
+	
+	
+	margin-top: 4px;
+	margin-bottom: 4px;
+	height: 26px;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-size: 13px;
+	width: 100%;
+}
+
+div.editzone form input[type="submit"]
+{
+	min-width: 100px;
+	margin-top: 4px;
+	margin-bottom: 4px;
+	margin-left: 10px;
+	margin-right: 0px;
+}
+
+div.editzone form table tr td
+{
+	padding: 4px;
+}
+
+div.editzone form table textarea
+{
+	width: calc(100% - 10px);
+	margin: 0px;
+}
+
+div.editfooter
+{
+	background-color: lightgreen;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	padding: 12px;
+	font-size: 13px;	
+} 
+
+
+h1, h2, h3, h4, h5
+{ 
+	font-family: Helvetica, Arial, Sans-Serif;
+}
+
+h1 
+{
+	margin-top: 0px;
+}
 
 iframe.youtube
 {
@@ -133,15 +496,190 @@ iframe.youtube
 	height: 385px;
 }
 
-video.yfrog
-{
-	width: 640px;
-	height: 360px;
-}
-
 img.yfrog
 {
 	width: 640px;
+}
+
+input[type="text"]
+{
+	display: block;
+	margin-bottom: 4px;
+	width: calc(100% - 2px);
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	border: 1px solid black;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+input[type="password"]
+{
+	display: block;
+	margin-bottom: 4px;
+	width: calc(100% - 2px);
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	border: 1px solid black;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+input[type="submit"] 
+{
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-weight: bold;
+	font-size: 13px;
+	background-color: white;
+	border: 1px solid black;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-right: 10px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+input[type="submit"]:hover
+{
+	cursor: pointer;
+}
+
+input[type="file"] 
+{
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-weight: normal;
+	font-size: 13px;
+	background-color: white;
+	border: 1px solid black;
+	padding-right: 10px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-right: 10px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	width: calc(100% - 10px);
+}
+
+input[type="file"]:hover
+{
+	cursor: pointer;
+}
+
+input.sortable
+{
+	width: calc(100% - 7px);
+	border: 1px solid black;
+	padding-left: 5px;
+	padding-right: 0px;
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+input.searchfield
+{
+	width:100%;
+	color: gray;
+}
+
+input.singlesearchfield
+{ 
+	height: 20px;
+	border: none; 
+	color: black; 
+}
+
+input.singlesearchfield:focus
+{
+	/* nothing */
+}
+
+ins 
+{
+	color: green; text-decoration: none;
+}
+
+
+progress
+{
+ 	width: 100%;
+ 	height: 20px;
+}
+
+a.invalid
+{
+	color: red;
+}
+
+
+
+span.error 
+{
+	color: red;
+}
+
+span.found 
+{
+	color: green;
+}
+
+span.ok 
+{
+	color: green;
+}
+
+
+table.fieldseditor
+{
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table.fieldseditor td,
+table.fieldseditor th
+{
+	text-align: left;
+	border: 1px dotted black;
+	padding: 0px;
+	width: auto;
+}
+
+table.fieldseditor th.key
+{
+	padding: 0px;
+	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+table.fieldseditor td.value
+{
+	padding: 0px;
+	font-size: 13px;
+}
+
+table.fieldseditor td.value input[type="text"]
+{
+	padding: 2px;
+	border: none;
+	width: calc(100% - 8px);
+	font-weight: normal;
+	font-size: 13px;
+}
+
+table.fieldseditor th.key input[type="text"]
+{
+	padding: 2px;
+	border: none;
+	width: calc(100% - 8px);
+	font-size: 13px;
+}
+
+table.matrixchart
+{
+	table-layout: fixed; 
+	width: 100%;
+	font-family: sans-serif;
+	font-size: 80%;
+	color: #666;
 }
 
 table.queryfunction
@@ -150,7 +688,8 @@ table.queryfunction
 	width: 100%;
 }
 
-table.queryfunction td, th
+table.queryfunction td,
+table.queryfunction th
 {
 	text-align: left;
 	border: 1px solid black;
@@ -160,25 +699,86 @@ table.queryfunction td, th
 	padding-bottom: 3px;
 }
 
-td { vertical-align: top;  width: 50% }
 
-table.fieldseditor
+td.matrixchartrowlabel
 {
-	border-collapse: collapse;
-	width: 100%;
+	text-align:right;
 }
 
-table.fieldseditor td, th
+td.matrixchartcolumnlabel
 {
-	text-align: left;
-	border: 1px solid black;
-	padding-left: 5px;
-	padding-right: 5px;
-	padding-top: 3px;
-	padding-bottom: 3px;
+	text-align:center;
 }
 
-table.fieldseditor td.key
+td.matrixchartcell
 {
-	font-weight: bold;
+	color:white;
+	text-align:center;
+}
+
+td
+{
+	vertical-align: top;
+}
+
+video.yfrog
+{
+	width: 640px;
+	height: 360px;
+}
+
+
+@media all and (min-width:641px)
+{
+	
+	#appmenu  					{ height: 26px; }
+	
+	#content  					{ position: absolute; top: 120px; left: 160px; width: 600px; }
+
+	#menu     					{ position: absolute; top: 120px; left: 10px; width: 120px; }
+
+	#mobileappmenu 				{ display: none; }
+
+	#title    					{  }
+
+	.dropdownmobilemenu 		{ display: none; }
+	
+	input.singlesearchfield 	{ width: 200px; }
+}
+
+@media all and (max-width:640px)
+{
+
+	#appmenu   					{ height: auto; padding-bottom: 8px; border-bottom: 0.8px solid black;}
+	
+	#content   					{ position: static;  width: calc(100% - 32px); padding-left: 16px; padding-right: 16px; }
+
+	#menu      					{ display: none; }
+	
+	#mobileappmenu 				{ display: block; height: auto; padding-bottom: 8px;}
+	
+	#mobilemenu 				{ display: inline-block; }
+	
+	#title     					{ width: calc(100% - 32px); padding-left: 16px; padding-right: 16px; }
+
+	.desktop   					{ display: none; }
+
+	.dropdownmobilemenu 		{ display: inline-block; }	
+	.dropdown-item-header 		{ height: 32px; padding-top: 7px; padding-bottom: 7px;  font-size: 22px;}
+	.dropdown-item-status 		{ height: 32px; padding-top: 7px; padding-bottom: 7px;  font-size: 22px;}
+	.dropdown-item 				{ height: 32px; padding-top: 7px; padding-bottom: 7px; min-width: 360px;  font-size: 22px;}
+	.dropdown-item-silent 		{ height: 32px; padding-top: 7px; padding-bottom: 7px; min-width: 360px;  font-size: 22px;}
+
+	body      					{ font-size: 120%; line-height: 140%;}
+
+	input[type="text"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px); font-size: 120%;}
+	
+	input[type="password"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px); font-size: 120%;}
+
+	input[type="submit"]    	{ border: 1px solid black; background-color: white; color: black; margin: 20px; min-width: calc(50% - 20px);} 
+	
+	input[type="submit"]:hover 	{ background-color: lightgray; cursor: pointer; }
+	
+	input.singlesearchfield 	{ width: 300px; font-size: 22px; margin-left: 8px; font-size: 22px;}
+	
 }

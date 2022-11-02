@@ -2,24 +2,25 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
-function echotime($s)
+function echotime($s, $direct=false)
 {
 	global $swStartTime;
 	$endtime = microtime(true);
 	global $swDebug;
 	$swDebug .=  sprintf('%04d',($endtime-$swStartTime)*1000).' '.$s.'<br>';
+	if ($direct) echo sprintf('%04d',($endtime-$swStartTime)*1000).' '.$s.'<br>';
 }
 
 function echomem($s,$direct=false)
 {
 	global $swDebug;
-	$k = sprintf('%0d',memory_get_usage()/1024);
+	$k = sprintf('%0d',memory_get_usage()/1024/1024);
 	if ($direct) echo '<p>'.$k.'k '.$s;
-	$swDebug .=  '____ '.$k.'k '.$s.'<br>';
+	$swDebug .=  '____ '.$k.' MB '.$s.'<br>';
 }
 
 
-function swNotify($action,$error,$label,$message,$receiver="")
+function swNotify($action,$error,$label,$message,$receiver="",$plain=true)
 {
 	global $username;
 	global $name;
@@ -32,15 +33,32 @@ function swNotify($action,$error,$label,$message,$receiver="")
 	global $swNotifyMail;
 	global $swNotifyMailBCC;
 	global $swNotifyMailCC;
+	global $swNotifyMailReplyTo;
 	global $swNotifyActions;
 	$actions = array_flip($swNotifyActions);
 	
 	if ($swNotifyMail)
 	{
-		$headers = "From: $swNotifyMail" . "\r\n" .
-   		"Reply-To: $swNotifyMail" . "\r\n" .
-   		'Content-type: text/plain; charset=UTF-8' . "\r\n" ;
-   		
+		$headers = "From: $swNotifyMail" . "\r\n";
+
+		if($swNotifyMailReplyTo != '')
+		{
+			$headers .= "Reply-To: $swNotifyMailReplyTo" . "\r\n";
+		}
+		else
+		{
+			$headers .= "Reply-To: $swNotifyMail" . "\r\n";
+		}
+
+   		if($plain)
+   		{
+   			$headers .= 'Content-type: text/plain; charset=UTF-8' . "\r\n" ;
+   		}
+   		else
+   		{
+   			$headers .= 'MIME-version: 1.0' . "\r\n" .
+   			'Content-type: text/html; charset=UTF-8' . "\r\n";	
+   		}
    		
    		
 		if (array_key_exists($action,$actions))
@@ -82,9 +100,26 @@ function swLog($user,$name,$action,$query,$lang,$referer,$time,$error,$label,$me
 	$daystamp = date("Y-m-d",time());
 	$memory = memory_get_usage();
 	global $ip;
-	if ($user=="")
-		$user = $ip;
 	
+	if ($user=='')
+	{
+		//echo "IP $ip";
+		$user = $ip;
+		
+		global $swEncryptionSalt ;
+		global $swLogAnonymizedIPNumber;
+		
+		if ($swLogAnonymizedIPNumber)
+		{
+			$fields = explode('.',$ip);
+			$last = array_pop($fields);
+			$last = hexdec(substr(md5($last.$ip.$swEncryptionSalt),0,2));
+			array_push($fields,$last);
+			$user = join('.',$fields);
+			//echo " $ip";
+		}
+		
+	}
 	
 	
 	$t = "[[timestamp::$timestamp]] [[user::$user]] [[name::$name]] [[action::$action]] ";
@@ -175,16 +210,18 @@ function swLogDeny($ip,$denyend='')
 		$t = '';
 	}
 	
-	$d0 = swGetValue($t,$ip);
-	$t = str_replace("[[$ip::$d0]]","",$t);
+	//$d0 = swGetValue($t,$ip);
+	//$t = str_replace("[[$ip::$d0]]","",$t);
+	if (strstr($t,"[[$ip::$denyend]]")) return;
+	
 	$t .= "[[$ip::$denyend]]";
 	if ($handle = fopen($file, 'w')) { fwrite($handle, $t); fclose($handle); }
 	else  echotime('error fopen w '.$file);
 
 	global $username, $name, $lang, $referer, $error, $message, $receiver;
 	$timestamp = date("Y-m-d H:i:s",time());
-	$label = "$ip $denyend";
-	swLog($username,$name,'deny','',$lang,$referer,$timestamp,$error,$label,$message,$receiver);
+	$label = "deny until $denyend";
+	swLog($ip,$name,'deny','',$lang,$referer,'',$error,$label,$message,$receiver);
 	
 
 }
@@ -219,6 +256,3 @@ function swGetDeny($ip)
 	}
 	
 }
-
-
-?>

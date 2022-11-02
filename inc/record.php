@@ -2,6 +2,8 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+$swCurrentRecords = array();
+
 
 class swRecord extends swPersistance
 {
@@ -15,6 +17,7 @@ class swRecord extends swPersistance
 	var $comment;
 	var $error;
 	var $encoding;
+	var $checksum;
 	var $originalName;
 	
 	var $internalfields=array();
@@ -63,7 +66,7 @@ class swRecord extends swPersistance
 			$this->name .= '/'.$lang;
 			//echotime($this->name);
 			$this->lookupName();
-			if (($this->persistance || $this->revision) && $this->status != 'deleted')
+			if (($this->status == 'ok' || $this->status == 'protected') && trim($this->content))  // 3.7.0 new rule: Empty subpages are ignored.
 				return $this->name;
 				
 			// didn't work
@@ -83,6 +86,8 @@ class swRecord extends swPersistance
 		$c = $this->currentPath();
 		if (file_exists($c) && (!isset($_GET['refresh']) || !$_GET['refresh']))
 		{
+			if (!filesize($c)) return;
+			
 			$this->persistance = $c;
 			$this->open();
 			
@@ -113,17 +118,17 @@ class swRecord extends swPersistance
 			// check revisions but only if this is the global name
 			// ressource limit else
 			// some namespaces however are priority
+			// 30.3.2022 move to check them all.
 			
 			global $name, $swMainName;
 			// suppressed empty needle
+			/*
 			if (@stristr($this->name,$swMainName) || @stristr($name,$this->name) 
 			|| !stristr($this->name,':') || (!stristr($this->name,'/') &&   (stristr($this->name,'template') || stristr($this->name,'image')) ) )
-			{
-					$revs = swGetAllRevisionsFromName($this->name);
-					sort($revs, SORT_NUMERIC); 
-					$this->revision = array_pop($revs);
-					echotime('revision '.$this->revision);
-			}
+			{*/
+			
+			$this->revision = swGetCurrentRevisionFromName($this->name);
+// 			echotime('revision '.$this->revision);
 			
 		}
 			
@@ -146,6 +151,7 @@ class swRecord extends swPersistance
 		$this->status = swGetValue($s,"_status");
 		$this->comment = swGetValue($s,"_comment");
 		$this->encoding = swGetValue($s,"_encoding");
+		$this->checksum = swGetValue($s,"_checksum");
 		
 		if (strlen($s) <= 512)
 		{
@@ -162,13 +168,16 @@ class swRecord extends swPersistance
 		
 		global $db;
 		global $lang;
+		global $swCurrentRecords;
 		$this->error = '';
 		
 		
 		if ($this->persistance && $this->revision) // allready open
 		{
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
-			$this->name =  swNameURL($this->name);
+			$this->name =  swNameURL($this->name); 
+			$swCurrentRecords[$this->revision] = $this;
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
 			return;
 		}
 		
@@ -179,78 +188,56 @@ class swRecord extends swPersistance
 			// check bit for what reason ever it was not set.
 			if ($this->revision > 0 && !$db->currentbitmap->getbit($this->revision))
 			{
-				$db->currentbitmap->setbit($this->revision);
+				$currentrev = swGetCurrentRevisionFromName($this->name);
+				if ($currentrev == $this->revision) 
+				{
+					$db->currentbitmap->setbit($this->revision);
+				}
+				else
+				{
+					// we have a problem
+					$this->persistance = NULL;
+					$this->revision = $currentrev;
+					$this->lookup();
+				}
 			}
 			
 			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			$this->name =  swNameURL($this->name);
-
-						
+			$swCurrentRecords[$this->revision] = $this;	
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
 			return;
 			
 		}
 		elseif ($this->revision)
 		{
-			// we have a serialized version that is faster to read
-			$s = '';
-			global $swShortIndex;
-			if ($swShortIndex && $db->shortbitmap->getbit($this->revision))
+			$file = swGetPath($this->revision);
+				
+			if (!file_exists($file)) 
 			{
-				@fseek($swShortIndex, 512*($this->revision-1));
-				$s = @fread($swShortIndex,512);
+				$pathlist = explode('/',$file);
+				$fname = array_pop($pathlist);
+				$this->error ='missing '.$fname;  
+				return;
 			}
-			
-			$hasshort = false;
-			if (strstr($s,'[[_ ]]'))
-			{
-				$hasshort = true;
-				$s = rtrim($s);
-				
-			}
-			else
-			{
-				
-				$file = swGetPath($this->revision,true);
-				if (file_exists($file))
-				{
-					$this->persistance = $file;
-					$this->open();
-					$this->error = '';
-					return;
-				}
-				
-				echotime('long '.$this->revision);
-				$file = swGetPath($this->revision);
-				
-				if (!file_exists($file)) 
-				{
-					$pathlist = explode('/',$file);
-					$fname = array_pop($pathlist);
-					$this->error ='missing '.$fname;  
-					return;
-				}
-				if ($this->name)
-						echotime('read '.$this->name);
-				$s = swFileGet($file);
-			}
-			
-			
-			
+
+			$s = swFileGet($file);
 			
 			$this->error = ''; 
 			
 			$this->revision = swGetValue($s,"_revision");
+			
 			$this->name = swGetValue($s,"_name");
 			$this->user = swGetValue($s,"_user");
 			$this->timestamp = swGetValue($s,"_timestamp");
 			$this->status = swGetValue($s,"_status");
 			$this->comment = swGetValue($s,"_comment");
 			$this->encoding = swGetValue($s,"_encoding");
+			$this->checksum = swGetValue($s,"_checksum");
 			
 			$pos = strpos($s,"[[_ ]]");
-			$this->content = substr($s,$pos+strlen("[[_ ]]"));
-			
-			
+
+			$this->content = substr($s,$pos+strlen("[[_ ]]"));			
 			
 			
 			if ($this->encoding != "UTF8")
@@ -281,24 +268,25 @@ class swRecord extends swPersistance
 			$this->name = str_replace($t156, "oe", $this->name);
 			$this->comment = str_replace($t156, "oe", $this->comment);
 			$this->content = str_replace($t156, "oe", $this->content);
-						
-			if (!preg_match('//u', $this->name))// check valid utf8 string
+			
+			$this->content = iconv("UTF-8","UTF-8//IGNORE",$this->content); // fix utf-8 encoding problems
+			
+			
+			if (!preg_match('//u', $this->name)) // check valid utf8 string
 			{
 				$this->name =  swNameURL($this->name);
 				echotime($s);
 			}
-
-			
 			
 			$this->internalfields = swGetAllFields($this->content, true);
-			
-			//echotime($this->content);
-			
-			if ($hasshort) return;
+
+			$swCurrentRecords[$this->revision] = $this;
 			
 			$db->updateIndexes($this->revision);
 			if ($db->currentbitmap->getbit($this->revision))
+			{
 				$this->writecurrent();
+			}
 			return;
 		}
 		else
@@ -320,7 +308,8 @@ class swRecord extends swPersistance
 			else
 			{
 				$this->content = '';
-				$this->error ='No record with this name'; 
+				//ignore system
+				if (!substr($this->name,0,7 != 'system:')) $this->error ='No record with this name';
 				/*
 				$this->revision = 0;
 				$this->persistance = $this->currentPath();
@@ -332,19 +321,18 @@ class swRecord extends swPersistance
 			
 		}
 		
-		$this->error ='No name, no revision'; 
+		if (!substr($this->name,0,7 != 'system:')) $this->error ='No name, no revision'; 
 		
 	}
 	
 	function writecurrent()
 	{
 		global $db;
-		swSemaphoreSignal();
 		
+				
 		// do not write invalid revisions with missing files
 		if ($this->status != '')
 		{
-			$db->updateIndexes($this->revision);
 			
 			$file = $this->currentPath();
 			$rec2 = new swRecord;
@@ -355,8 +343,10 @@ class swRecord extends swPersistance
 			}
 			if ($rec2->revision < $this->revision) // does not already exist
 			{
+				echotime('writecurrent '.$this->revision.'>'.$rec2->revision.' '.$this->name);
+				
 				// must be first to unset old revision if there is.
-				echotime('writec '. $this->name.' '.$this->revision);
+				//echotime('writec '. $this->name.' '.$this->revision);
 				$this->internalfields = swGetAllFields($this->content);
 				$this->persistance = $this->currentPath();
 				$this->save();
@@ -364,6 +354,7 @@ class swRecord extends swPersistance
 			}
 			$s = $this->source();
 			global $swRamdiskPath;
+			/*
 			if (strlen($s) <= 512 && $swRamdiskPath == '')
 			{
 				echotime('writeshort '. $this->name.' '.$this->revision);
@@ -371,27 +362,35 @@ class swRecord extends swPersistance
 				$s = substr($s,0,512);
 				$s = str_pad($s,512,' ');
 				$path = $swRoot.'/site/indexes/short.txt';
+				swSemaphoreSignal($path);
 				$fpt = fopen($path,'c');
 				@fseek($fpt, 512*($this->revision-1));
 				@fwrite($fpt, $s);
 				@fclose($fpt);
+				swSemaphoreRelease($path);
 				$db->shortbitmap->setbit($this->revision);
 			}
 			else
 			{
-				$cp = swGetPath($this->revision,true);
-				$this->persistance = $cp;
-				$this->save();
-				swFileGet($cp); // force cache
+				
+				$cp = swGetPath($this->revision,true); // save revision as object, to be reused
+				if (!file_exists($cp)) // is always the same
+				{
+					$this->persistance = $cp;
+					$this->save();
+				}
+			
 			}
-			
-			
+			*/
+			$db->updateIndexes($this->revision);
+			//$db->close(); // force save indexes	
+			//swIndexBloom(2);		
 		}
-		swSemaphoreRelease();
+		
 	}
 	
 	function source()
-	{
+	{		
 		return "[[_revision::$this->revision]]"
 		. "\n[[_name::$this->name]]"
 		. "\n[[_user::$this->user]]"
@@ -399,6 +398,7 @@ class swRecord extends swPersistance
 		. "\n[[_status::$this->status]]"
 		. "\n[[_comment::$this->comment]]"
 		. "\n[[_encoding::$this->encoding]]"
+		. "\n[[_checksum::$this->checksum]]"
 		. "\n[[_ ]]$this->content";
 	}
 	
@@ -409,12 +409,38 @@ class swRecord extends swPersistance
 		global $db;
 		$db->init();
 		echotime('writefile '. $this->name);
-		swSemaphoreSignal();
-		echotime('oldrev '. $this->revision);
+
+		//echotime('oldrev '. $this->revision);
 		if ($this->revision>0)
 			$db->currentbitmap->unsetbit($this->revision);
+			
 		
-		echotime('write '. $this->name);
+		// check valid names
+		if (trim($this->name)=='')
+		{ swException('Write error empty name'); $this->error = 'Write error empty name $this->revision';  return; }
+		
+		if (
+		strstr($this->name,'<') || 
+		strstr($this->name,'>') ||
+		strstr($this->name,'*') || 
+		strstr($this->name,'[') ||
+		strstr($this->name,']') ||
+		strstr($this->name,'{') ||
+		strstr($this->name,'}') ||
+		strstr($this->name,'|') ||
+		trim($this->name)=='')
+		{ swException('Write error invalid characters'); $this->error = 'Write error invalid characters ';  return; }	
+		
+		/* does not work
+		if (strstr($this->name,'/'))
+		{ 
+			$fs = explode('/',$this->name);
+			
+			if (strlen(array_pop($fs)) != 2)
+			swException('Write error wrong language'); $this->error = 'Write error wrong language';  return; }
+		*/
+		
+		//echotime('write '. $this->name);
 		
 		$this->revision = $db->GetLastRevisionFolderItem()+1;
 		
@@ -426,6 +452,9 @@ class swRecord extends swPersistance
 		
 		$this->timestamp = date("Y-m-d H:i:s",time());
 		$this->encoding = "UTF8";
+		$lastfile = swGetPath($this->revision-1);
+		if (file_exists($lastfile))
+			$this->checksum = md5_file($lastfile);
 		
 		$t = $this->source();
 		
@@ -434,11 +463,11 @@ class swRecord extends swPersistance
 		else { swException('Write error revision $this->revision'); $this->error = 'Write error revision $this->revision';  return; }
 				
 		
-		echotime('newrev '. $this->revision);
+		//echotime('newrev '. $this->revision);
 		
 		$this->internalfields = swGetAllFields($this->content);
 		$this->writecurrent();	
-		swSemaphoreRelease();
+
 
 	}
 	
@@ -529,13 +558,41 @@ class swRecord extends swPersistance
 		return false;
 	}
 
+	function integrity()
+	{
+		if ($this->revision == 0) return -1; // NA
+		$checkfile = swGetPath($this->revision+1);
+		if (!file_exists($checkfile)) return -1;
+		$thisfile = swGetPath($this->revision);
+		if (!file_exists($thisfile)) return -1;
+		$s = file_get_contents($checkfile);
+		$s = substr($s,0,strpos($s, '[[_ ]]'));
+		$check = swGetValue($s,'_checksum');
+		//echotime('integrity1'.$s);
+		if ($check=='') return -1;
+		//echotime('integrity2');
+		$checksum = md5_file($thisfile);
+		if ($checksum == $check)
+		{
+			return 1; // ok
+		}
+		else
+		{
+			echotime('checksum error');
+			echotime('expected ',$check);
+			echotime('got '. $checksum);
+			return 0; // not ok
+		}
+		
+	}
 
 } 
 
-$path = $swRoot.'/site/indexes/short.txt';
+/*
+	$path = $swRoot.'/site/indexes/short.txt';
 if (file_exists($path))
 	$swShortIndex = fopen($path,'r');
-
+*/
 
 /* This structure encodes the difference between ISO-8859-1 and Windows-1252,
    as a map from the UTF-8 encoding of some ISO-8859-1 control characters to

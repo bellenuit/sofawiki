@@ -94,7 +94,7 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 		if ( is_dir($f) )
 		{
 			@mkdir($newfile);
-			chmod($newfile, 0664);
+			chmod($newfile, 0775);
 			echo '<p>mkdir '.$newfile;
 		}
 		elseif (chmod($f,0664) && rename($f,$newfile))

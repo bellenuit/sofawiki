@@ -20,73 +20,153 @@ class swWiki extends swRecord
 		
 		global $lang;
 		$this->originalName = $this->name;
-		$this->parsedContent = $this->content;
+		$this->parsedContent = $this->content; 
 		$this->displayname = $this->localname($lang);
+		
+		echotime('parse '.$this->name);
 		
 		// do not parse special namespaces
 		switch ($this->wikinamespace())
 		{
-			case "User":
-			case "Template": $s = $this->content;
+			case 'Logs':
+			case 'User':     
+			case 'Template': $s = $this->content;
 							 $s = str_replace("&", "&amp;",$s);
 							 $s = str_replace("<", "&lt;",$s);
 							 $s = str_replace(">", "&gt;",$s);
 							 $this->parsedContent = "<pre>$s</pre>";
 							 break;
 			
-			default: foreach ($this->parsers as $parser)
-								{	
-										
-										//echo  $this->parsedContent;
-										//print_r($parser); 
-										
-										// get all <nowiki> tags and replace with magic word
-										$s = $this->parsedContent;
-										preg_match_all("/<nowiki>(.*)<\/nowiki>/Us", $s, $matches, PREG_SET_ORDER);
-										
-										$nowikis = array();
-										$i = 0;
-										foreach ($matches as $v)
-										{
-											$i++;
-											$k = "(NOWIKI$i)"; 
-											$nowikis[$k] = $v[0];
-											$s = str_replace($v[0],$k,$s);
-										}
-										
-										
-										
-										
-										$this->parsedContent = $s;
-										
-										
-										$parser->dowork($this); 
-										
-										// put nowiki tags back
-										
-										$s = $this->parsedContent;
-										foreach($nowikis as $k=>$v)
-										{
-											
-											$s = str_replace($k,$v,$s);
-										
-										}
-										$this->parsedContent = $s;
-										
-										
+			default:  		$docache = false; 
+							$nowikis = array();
+							foreach ($this->parsers as $key=>$parser)
+							{	
+								
+									
+								if (is_a($parser,'swCacheParser'))
+								{
+									$r = $parser->dowork($this); 
+									if ($r==2) break;
+									if ($r==1) $docache = true; 
+									continue;
 								}
 								
-								// clean nowiki
-								$s = $this->parsedContent;
-								$s = str_replace("<nowiki>","",$s);
-								$s = str_replace("</nowiki>","",$s);	
+								
+								
+								//echo  $this->parsedContent;
+								//print_r($parser); 
+								
+								// get all <nowiki> tags and replace with magic word
+								$s = $this->parsedContent; 
+								
+								if (strstr($s,'<nowiki>'))
+								{
+									
+									echotime('nowiki start '.strlen($s));
+									
+									
+									$offset = 0;
+									
+									$pos = strpos($s,'<nowiki>',$offset);
+									
+									$lines = array();
+									
+									
+									// offset-----pos<nowiki>----pos2</nowiki>
+									
+									while (true)
+									{
+										$pos2 = strpos($s,'</nowiki>',$pos);
+										if ($pos !== false && $pos2 !== false)
+										{
+											// before match
+											$lines[] = substr($s,$offset,$pos-$offset);
+											$v = substr($s,$pos+strlen('<nowiki>'),$pos2-$pos-strlen('<nowiki>'));
+											$k = 'NOWIKI('.md5($v).')'; 
+											$nowikis[$k] = $v;
+											// match
+											$lines[] = $k;
+											$offset = $pos2+strlen('</nowiki>');
+											$pos = strpos($s,'<nowiki>',$offset);
+										}
+										else
+										{
+											$lines[] = substr($s,$offset);
+											break;
+										}
+										
+									} 
+									
+									
+									if (count($lines)) $s = join('',$lines);
+								
+								}
+								
+								// print_r($lines);
+								
 								$this->parsedContent = $s;
+								
+								echotime('parse start '.$key.' '.strlen($s));
+								$parser->dowork($this); 
+								//echotime('parse done');
+								
+								//echo $key.' '.strlen($s);
+									
+							}
+							
+							
+							
+							// put nowiki tags back
+							
+							$s = $this->parsedContent; 
+							
+							if (strstr($s,'NOWIKI('))
+							{
+								$lines = [];
+								$offset = 0;
+								preg_match_all("/NOWIKI\([0-9a-f]{32}\)/Us", $s, $matches, PREG_SET_ORDER);
+								//print_r($matches);
+								foreach ($matches as $v)
+								{
+									$p = strpos($s,$v[0],$offset);
+									$lines[] = substr($s,$offset,$p-$offset);
+									$lines[] = $nowikis[$v[0]];
+									$offset = $p+40;
+								}
+								
+								$lines[] = substr($s,$offset);
+								
+								$s = join('',$lines);
+							}
+							
+							//echo $s;
+							
+							/*
+							foreach($nowikis as $k=>$v)
+							{
+								$s = str_replace($k,$v,$s); // lent!
+							}
+							*/
+							$this->parsedContent = $s;
+							
+							// clean nowiki
+							$s = $this->parsedContent;
+							//$s = str_replace("<nowiki>","",$s);
+							//$s = str_replace("</nowiki>","",$s);	
+							$this->parsedContent = $s;
+							
+							if ($docache)
+							{
+								$parser=new swPutCacheParser;
+								$parser->dowork($this); 
+								
+							}
 								
 		}
 		
 		
 		
-		//print_r($this->interlanguageLinks);
+		echotime('parse end');
 		
 		
 		return $this->parsedContent;
@@ -129,12 +209,30 @@ class swWiki extends swRecord
 		return $s;
 		
 	}
+	
+	function language()
+	{	
+		
+		$s= $this->name;
+		$i=strpos($s,"/");
+		if ($i>-1)
+		{	
+			$s= substr($this->name,$i+1);
+		}
+		else
+			$s= '--';
+				
+		return $s;
+		
+	}
 
 	function localname($lang)
 	{
-		$ns = swSystemMessage("Namespace".$this->wikinamespace(),$lang);
-		if ($ns == "Namespace".$this->wikinamespace())  // not found
+		$key="namespace".swNameURL($this->wikinamespace());
+		$ns = swSystemMessage($key,$lang);
+		if ($ns == $key)  // not found
 			$ns = $this->wikinamespace();
+		$ns = strtoupper(substr($ns,0,1)).substr($ns,1);
 		if ($ns)
 		{
 			$s = $ns.":".$this->nameshort();
@@ -203,10 +301,10 @@ class swWiki extends swRecord
 			
 		if ($subpagelang && $subpagelang!= "--")
 		{
-		if (substr($result,-3,1) == "/")
-			$result = substr($result,0,-3)."/".$subpagelang;
-		else
-			$result = $result."/".$subpagelang;
+			if (substr($result,-3,1) == "/")
+				$result = substr($result,0,-3)."/".$subpagelang;
+			else
+				$result = $result."/".$subpagelang;
 		}
 		
 		// 
@@ -215,18 +313,25 @@ class swWiki extends swRecord
 		global $swMainName; 
 		if ($swSimpleURL && ($action =="" || $action =="view") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt")
 		{
-			$result = swNameURL($this->name);
+			$result = swNameURL($this->namewithoutlanguage());
 			if (!$result) 
-				$result = $swMainName;			
+				$result = swNameURL($swMainName);			
 			if ($swLangURL)
-				$result = $subpagelang.'/'.$result;
+			{
+				if ($subpagelang && $subpagelang != '--')
+				{
+					$result = $subpagelang.'/'.swNameURL($this->namewithoutlanguage()); // don't double language
+				}
+				else
+				{
+					$result = swNameURL($this->namewithoutlanguage()); // don't double language
+				}
+			}
 			if (stristr($this->name,":"))
-				$result = './'.$result; // force relative link
+				$result = './'.$result.'&i'; // force relative link
 				
 		}
-		
-		
-		
+
 		return $result;
 	
 	}
