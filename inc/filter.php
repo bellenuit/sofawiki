@@ -810,7 +810,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		unset($goodrevisions);
 		$goodrevisions = $set;
 		unset($set);
-		echotime('cachefile '.floor($checkedlength/1024).' KB');
+		if (isset($checkedlength)) echotime('cachefile '.floor($checkedlength/1024).' KB');
 		echomem('filter');	
 		return $goodrevisions;
 	

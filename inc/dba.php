@@ -520,6 +520,7 @@ class swDba
 		$lines = array();
 		$lines[] = "PRAGMA synchronous=OFF; ";
 		
+		
 		foreach($this->journal as $k=>$v)
 		{
 			$k = $this->db->escapeString($k);
@@ -527,10 +528,28 @@ class swDba
 			if ($v === FALSE)
 				$lines[]= "DELETE FROM kv WHERE k = '$k' ;"; // use double quote because in sql it is single quote
 			else
-				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";			
+				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";		
+			
+			// memory: query should not be too long	
+				
+			if (count($lines)>1000)
+			{
+				$q = join(PHP_EOL,$lines);
+				$lines[] = "PRAGMA synchronous=FULL; ";
+				$this->db->exec($q);
+				
+				if ($this->db->lastErrorCode())
+				{
+					$this->db->exec('VACUUM');
+					throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
+				}
+				$lines = array();
+				$lines[] = "PRAGMA synchronous=OFF; ";	
+			}	
+						
 		}
-		$q = join(PHP_EOL,$lines);
 		$lines[] = "PRAGMA synchronous=FULL; ";
+		$q = join(PHP_EOL,$lines);
 		
 		$this->db->exec($q);
 

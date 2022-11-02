@@ -10,8 +10,8 @@ if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
 $l0 = '';
 
 
-if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(1000, true); $_REQUEST['index'] = 'bloom';}
-if ($_REQUEST['index'] == 'indexmonogram') {$l0 = swIndexMonogram(1000, true); $_REQUEST['index'] = 'monogram';}
+if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(10000, true); $_REQUEST['index'] = 'bloom';}
+if ($_REQUEST['index'] == 'indexmonogram') {$l0 = swIndexMonogram(10000, true); $_REQUEST['index'] = 'monogram';}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
 
@@ -37,7 +37,7 @@ $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloo
 <br>bloom = '. $db->bloombitmap->countbits().'
 <br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
+// $swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
  <a href="index.php?name=special:indexes&index=indexmonogram">Index Monogram</a> 
 <a href="index.php?name=special:indexes&index=indexnames">Index Names</a> 
@@ -55,7 +55,7 @@ $swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Rese
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Indexes, Index DB, Index Bloom, Index Monogram, ndex Names, Reset Bitmaps, Rebuild Index</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Names, Reset Bitmaps, Rebuild Index</i>";
 
 
 $done = '';
@@ -212,7 +212,7 @@ switch($_REQUEST['index'])
 						  $bm = $db->indexedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						  $missing = $bm->notop();
 						  $swParsedContent .= '<p>Missing<p>'.join(' ',$missing->toarray());
 						  
@@ -221,21 +221,21 @@ switch($_REQUEST['index'])
 						  $bm = $db->currentbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 	case 'deletedbitmap': $swParsedContent .= '<h3>deletedbitmap</h3>';
 						  $bm = $db->deletedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 	case 'protectedbitmap': $swParsedContent .= '<h3>protectedbitmap</h3>';
 						  $bm = $db->protectedbitmap;
 						  $swParsedContent .= '<p>length: '.$bm->length;
 						  $swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  $swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 
@@ -327,7 +327,7 @@ switch($_REQUEST['index'])
 
 							  $swParsedContent .= '<p>length: '.$counter;
 							  $swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/records.db')/1024/1024).' MB';
-							  $swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							  $swParsedContent .= '<p>'.bitmap2canvas($bm, 0,rand(0,1000));
 							  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 							  
 							 
@@ -351,7 +351,7 @@ switch($_REQUEST['index'])
 						  		$bm = $db->bloombitmap;
 						  		$swParsedContent .= '<p>length: '.$bm->length;
 						 		$swParsedContent .= '<br>countbits: '.$bm->countbits();
-						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						 		$swParsedContent .= '<p>';
 						 		
 						 		if ($l0)
@@ -383,7 +383,7 @@ switch($_REQUEST['index'])
 						 			
 						 			$c = $bm2->countbits();
 						 		
-									$swParsedContent .= '<p>'.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,2);
+									$swParsedContent .= '<p>'.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,rand(0,1000));
 									
 									$swParsedContent .= '<p>Term : '.join(' ',swGetHashesFromTerm($_REQUEST['term']));
 									
@@ -409,7 +409,7 @@ switch($_REQUEST['index'])
 							$swParsedContent .= '<p>length: '.$bm->length;
 						 	$swParsedContent .= '<br>countbits: '.$bm->countbits();
 						 	$swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/monogram.db')/1024/1024).' MB';
-						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0,2);
+						  	$swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
 						 	$swParsedContent .= '<p>';
 						 	
 						 	
@@ -434,7 +434,7 @@ switch($_REQUEST['index'])
 							 	$swParsedContent .= '<p>Field : '.$_REQUEST['field'];
 							 	$swParsedContent .= '<p>Term : '.$_REQUEST['term'];
 							 	$swParsedContent .= '<p>Count : '.count($arr);
-							 	$swParsedContent .= '<p>'.bitmap2canvas($bm,0);
+							 	$swParsedContent .= '<p>'.bitmap2canvas($bm, 0,rand(0,1000));
 
 							 	$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
 						 	}
@@ -594,9 +594,9 @@ switch($_REQUEST['index'])
 							 	$d = date('Y-m-d',$t);
 						        $swParsedContent .= '<br>modification: '.$d;
 						        if ($bm)
-								$swParsedContent .= '<p>Good: '.$bm->countbits().'/'.$bm->length.' <br>'.bitmap2canvas($bm, false);
+								$swParsedContent .= '<p>Good: '.$bm->countbits().'/'.$bm->length.' <br>'.bitmap2canvas($bm, false,rand(0,1000));
 								if ($bm2)
-								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, false,2);
+								$swParsedContent .= '<p>Checked: '.$bm2->countbits().'/'.$bm2->length.'<br>'.bitmap2canvas($bm2, 2,rand(0,1000));
 								
 								if (substr($_REQUEST['q'],-3) !== '.db')
 									$swParsedContent .= '<p><a href="index.php?name=special:indexes&index=queries&q='.$_REQUEST['q'].'&reset=1">reset '.$_REQUEST['q'].'</a> ';
@@ -783,7 +783,7 @@ function querylist()
 	 krsort($list);
 	 return $list;
 }
-function bitmap2canvas($bm,$listrevisions=1,$id='1')
+function bitmap2canvas($bm,$listrevisions=0,$id='1')
 {
 	$h = ceil($bm->length /512);
 	$result = '<canvas id="myCanvas'.$id.'" width="512" height="'.$h.'"></canvas>

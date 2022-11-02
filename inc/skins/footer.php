@@ -16,8 +16,9 @@ xmlhttp.onreadystatechange=function()
     {
     	s = xmlhttp.responseText;
 		overtime = s.substr(0,1);
-		t = s.substr(0);
-		document.getElementById("parsedcontent").innerHTML=t;
+		t = s.substr(1);
+		/* document.getElementById("parsedcontent").innerHTML=t;*/
+		setInnerHTML(document.getElementById("parsedcontent"),t);
 		if (overtime=="1")
 		{
 			setTimeout(function()
@@ -43,6 +44,18 @@ setTimeout(function()
 	document.title = document.title+"-"
 	document.getElementById("searchovertime").innerHTML +="...";
 }, 3000);
+
+/* https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml */
+var setInnerHTML = function(elm, html) {
+  elm.innerHTML = html;
+  Array.from(elm.querySelectorAll("script")).forEach( oldScript => {
+    const newScript = document.createElement("script");
+    Array.from(oldScript.attributes)
+      .forEach( attr => newScript.setAttribute(attr.name, attr.value) );
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+}
 </script>';
 }
 

@@ -46,15 +46,16 @@ function swClearBloom()
  *  Indexes 1000 revisions for the bloom index.
  */
 
-function swIndexBloom($numberofrevisions = 1000, $continue = false)
+function swIndexBloom($numberofrevisions = 20000, $continue = false)
 {
 	
-	echotime('indexbloom'); 
+	echotime('indexbloom '.$numberofrevisions); 
 	
 	global $swRoot;
 	global $db;
 	global $swBloomIndex;
 	global $swMaxSearchTime;
+	global $swOvertime ;
 	
 	$path = $swRoot.'/site/indexes/bloom.raw';
 	if (file_exists($path)) chmod($path,0777);
@@ -86,6 +87,16 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 	
 	while ($i < $numberofrevisions) 
 	{
+		$nowtime = microtime(true);	
+		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
+		if ($dur>$swMaxSearchTime) 
+		{ 
+			echotime('searchtime'); 
+			$swOvertime = true;
+			break;
+		}
+
+		
 		$rev--;
 		if ($rev < 1) break;
 		if ($rev > $db->lastrevision) break; // should not happen
@@ -132,13 +143,6 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 		}
 		//end check bloombitmap
 		
-		$nowtime = microtime(true);	
-		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-		if ($dur>3*$swMaxSearchTime) 
-		{ 
-			echotime('searchtime'); 
-			break;
-		}
 				
 		$text = swFileGet($revisionpath.$rev.'.txt');
 		
@@ -172,12 +176,13 @@ function swIndexBloom($numberofrevisions = 1000, $continue = false)
 		$i++;
 	}
 	
+	/*
 	if ($continue)
 	{
 		global $swOvertime;
 		if ($rev >= 1) ; $swOvertime = true;
 	}
-
+	*/
 	// new try read all to bitmap
 	
 	$minblock = floor($rev/65536);
