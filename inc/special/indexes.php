@@ -40,7 +40,7 @@ if (isset($swRamdiskPath) && $swRamdiskPath=='db')
 // $swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
  <a href="index.php?name=special:indexes&index=indexmonogram">Index Monogram</a> 
-<a href="index.php?name=special:indexes&index=indexnames">Index Names</a> 
+<a href="index.php?name=special:indexes&index=indexfields">Index Fields</a> 
 <a href="index.php?name=special:indexes&index=docron">Do Cron</a>';
 
 $swParsedContent .= "\n<form method='get' action='index.php'><p>";
@@ -55,7 +55,8 @@ $swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Rese
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Names, Reset Bitmaps, Rebuild Index</i>";
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Fields, Reset Bitmaps, Rebuild Index.
+You do not need bloom, monogram and fields indexes if you do not use filter or query. A full index takes about 1 minute per 1000 current revisions.</i>";
 
 
 $done = '';
@@ -468,6 +469,11 @@ switch($_REQUEST['index'])
 	case 'fields':			$swParsedContent .= '<h3>fields</h3><p>';
 	
 							$path = $swRoot.'/site/indexes/fields.db';
+							if (!file_exists($path)) 
+							{
+								$swParsedContent .= 'no index';
+								break;
+							}
 							$fielddb = new SQLite3($path);
 							$fielddb->exec("VACUUM");
 							$result = $fielddb->querySingle("SELECT COUNT(DISTINCT revision) FROM fields");
@@ -744,8 +750,8 @@ switch($_REQUEST['index'])
 							break;
 						
 
-	case "indexnames": 	$result = swRelationToTable('filter index _name'); 
-						$swParsedContent .= '<h3>Index Names</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
+	case "indexfields": 	$result = swRelationToTable('filter index _name'); 
+						$swParsedContent .= '<h3>Index Fields</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
 	
 	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;
 	

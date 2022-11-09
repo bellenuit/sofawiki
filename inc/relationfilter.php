@@ -1966,15 +1966,7 @@ function swRelationIndexSearch($filter, $globals = array())
 	
 	if (count($journal))
 	{
-		array_unshift($journal, "PRAGMA synchronous=OFF; ");
-		$journal[] = "PRAGMA synchronous=ON; ";
-		//$checkedbitmap->hexit();
-		//$v = serialize($checkedbitmap);
-		//echo $v;
-		// $v = $fielddb->escapeString($v);
-		// $journal[]= "REPLACE INTO aux (key,value) VALUES ('checkedbitmap','$v');"; 
-		$q = join(PHP_EOL,$journal);
-		// echo $q;
+		$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.'COMMIT;';
 		$fielddb->exec($q);
 		echotime('synced '.count($journal));
 	}

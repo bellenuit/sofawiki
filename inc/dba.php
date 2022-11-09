@@ -518,7 +518,7 @@ class swDba
 		echotime('sync '.$this->count().' + '.count($this->journal));
 		
 		$lines = array();
-		$lines[] = "PRAGMA synchronous=OFF; ";
+		
 		
 		
 		foreach($this->journal as $k=>$v)
@@ -534,29 +534,32 @@ class swDba
 				
 			if (count($lines)>1000)
 			{
-				$q = join(PHP_EOL,$lines);
-				$lines[] = "PRAGMA synchronous=FULL; ";
+				$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
 				$this->db->exec($q);
 				
 				if ($this->db->lastErrorCode())
 				{
+					echo $q;
 					$this->db->exec('VACUUM');
 					throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
 				}
 				$lines = array();
-				$lines[] = "PRAGMA synchronous=OFF; ";	
 			}	
 						
 		}
-		$lines[] = "PRAGMA synchronous=FULL; ";
-		$q = join(PHP_EOL,$lines);
 		
-		$this->db->exec($q);
+		if (count($lines))
+		{
+			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
+			$this->db->exec($q);
+		}
 
 		if ($this->db->lastErrorCode())
 		{
+			echo $q;
 			$this->db->exec('VACUUM');
 			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
+			
 		}		
 		$this->journal = array();
 		

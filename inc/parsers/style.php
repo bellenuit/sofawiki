@@ -254,6 +254,21 @@ class swStyleParser extends swParser
 					
 			switch (substr($line.' ',0,3))
 			{
+				case '<h2': 
+				case '<h3': 
+				case '<h4':
+				case '<ul': 
+				case '<ol': 
+				case '<bl':
+				case '<hr': 
+				case '<di': 
+				case '<no':
+				case '<pr':   if ($state == 'p') $s .= '</p>';
+							  $s .= $line;
+							  $state = '';
+							  break;
+				
+				
 				case '{| ':   $s.= '<table '.substr($line,3).'>'; $tablerow = ''; 
 							  break;
 				case '|+ ':   $s.= '<caption>'.substr($line,3).'</caption>'; 
