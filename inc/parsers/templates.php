@@ -157,11 +157,9 @@ class swTemplateParser extends swParser
 						$c = str_replace("{{{".$i."}}}",$vals[$i],$c);
 						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/",$vals[$i],$c);
 					}
-					// remove optional parameters
-					for ($i = 1; $i<10; $i++)
-					{
-						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/","$1",$c);
-					}
+					// remove missing parameters
+					// $c = preg_replace("/\{\{\{(\d+)}}}/","&#123;&#123;&#123;$1&#125;&#125;&#125;",$c);
+					$c = preg_replace("/\{\{\{(\d+)}}}/",'',$c);
 				
 				}
 				

@@ -116,11 +116,6 @@ select _category regexi "^'.$wn.'$"';
 				
 				
 				$separator = "\n";
-				$limit = 0;
-				// function can reorder list and apply custom templates for each name
-				if (function_exists('swInternalCategoryHook')) 
-				{
-				}
 				if ($limit==0) $limit = 50;
 				
 				if (isset($_REQUEST['start']))	
@@ -130,7 +125,7 @@ select _category regexi "^'.$wn.'$"';
 				$count = count($names);
 				global $lang;
 				global $name;
-				if (count($names)>$limit || true)
+				if (count($names)>$limit)
 				{
 					$navigation = '<div class="categorynavigation">';
 					if ($start>0)

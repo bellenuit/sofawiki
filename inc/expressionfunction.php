@@ -780,6 +780,17 @@ class xpLevenshtein extends swExpressionFunction
 	}
 }
 
+class xpLink extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':link' ;}
+	function run($args)
+	{
+		if(!count($args)) return '';
+		return '[['.join('|',$args).']]'; //echo $w->parsedContent;		
+	}
+}
+
+
 class xpLn extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':ln' ;}
@@ -958,7 +969,7 @@ class xpMul extends swExpressionFunction
 
 class XpNative extends swExpressionFunction
 {
-	var $nativefunction;
+	var $nativefunction; 
 	
 	function __construct() { $this->arity = 1; $this->label = ':native' ;}
 	function init($key, $fn) // swFunction
@@ -969,8 +980,7 @@ class XpNative extends swExpressionFunction
 	}
 	function run($args)
 	{
-		$args[] = mb_substr($this->label,1,null,'UTF-8');
-		// $args = array_reverse($args);
+		array_unshift($args, mb_substr($this->label,1,null,'UTF-8'));
 		
 		$result = $this->nativefunction->dowork($args);
 			
@@ -1030,7 +1040,7 @@ class xpNot extends swExpressionFunction
 	function __construct() { $this->arity = 1; $this->label = ':not' ; $this->isOperator = true ;}
 	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
+		if (count($args) < 1) throw new swExpressionError('Stack < 1',102);
 		$a = $args[0];
 		if ($a === '⦵') return '⦵';
 		if($a === '∞') return '0';
@@ -1361,6 +1371,19 @@ class xpSubstr extends swExpressionFunction
 	}
 }
 
+class xpTag extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':tag' ;}
+	function run($args)
+	{
+		if(!count($args)) return '';
+		if (count($args) == 1) return '<'.$args[0].'/>';
+		if (count($args) == 2) return '<'.$args[0].'>'.$args[1].'</'.$args[0].'>';    
+		if (count($args) == 3) return '<'.$args[0].' '.$args[1].'>'.$args[2].'</'.$args[0].'>';  
+		return '';  
+	}
+}
+
 
 class xpTan extends swExpressionFunction
 {
@@ -1375,13 +1398,12 @@ class xpTan extends swExpressionFunction
 
 class xpTemplate extends swExpressionFunction
 {
-	function __construct() { $this->arity = 1; $this->label = ':template' ;}
+	function __construct() { $this->arity = -1; $this->label = ':template' ;}
 	function run($args)
 	{
-		$a = $args[0];
-		
+		if(!count($args)) return '';
 		$w = new swWiki;
-		$w->parsedContent = '{{'.$a.'}}'; //echo $w->parsedContent;
+		$w->parsedContent = '{{'.join('|',$args).'}}'; //echo $w->parsedContent;
 		$p = new swTemplateParser;
 		$p->dowork($w);
 		$a = $w->parsedContent;
@@ -1596,6 +1618,8 @@ $swExpressionFunctions[':format'] = new XPFormat;
 
 $swExpressionFunctions[':resume'] = new XpResume;
 $swExpressionFunctions[':template'] = new XpTemplate;
+$swExpressionFunctions[':link'] = new XPLink;
+$swExpressionFunctions[':tag'] = new XPTag;
 
 $swExpressionFunctions[':fileexists'] = new xpFileExists;
 $swExpressionFunctions[':jaccarddistance'] = new xpJaccardDistance;

@@ -55,7 +55,7 @@ $swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Rese
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
-$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Fields, Reset Bitmaps, Rebuild Index.
+$swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Fields, Reset Bitmaps, Rebuild Index. 
 You do not need bloom, monogram and fields indexes if you do not use filter or query. A full index takes about 1 minute per 1000 current revisions.</i>";
 
 
@@ -118,7 +118,7 @@ $done = '';
 		$dir = opendir($path);
 		while($file = readdir($dir))
     	{
-			if($file != '..' && $file != '.')
+			if($file != '..' && $file != '.' && $file != '.htaccess')
 			{
 				swUnlink($swRoot.'/site/cache/'.$file);
 			}

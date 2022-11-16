@@ -904,7 +904,7 @@ if ($user->hasright('special','special') && $action != 'logout')
 	{
 		$linkwiki->name = 'Special:'.$k; 
 		$m = 'specialmenu-';
-		if (in_array($k, array('All Pages','Categories','Dead End Pages','Deleted Pages','Images','Long Pages','Most Linked Categories','Most Linked Pages', 'Orphaned Pages', 'Protected Pages', 'Redirects', 'Short Pages', 'System Messages ','Templates', 'Uncategorized Pages', 'Unused Categories', 'Unused Files', 'Unused Templates', 'Users' , 'Wanted Pages'))) $m = 'listmenu-';
+		if (in_array($k, array('All Pages','Categories','Dead End Pages','Deleted Pages','Images','Long Pages','Most Linked Categories','Most Linked Pages', 'Orphaned Pages', 'Protected Pages', 'Redirects', 'Short Pages', 'System Messages','Templates', 'Uncategorized Pages', 'Unused Categories', 'Unused Files', 'Unused Templates', 'Users' , 'Wanted Pages'))) $m = 'listmenu-';
 		$swEditMenus[$m.$k] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.$k.'</a>';
 
 	}

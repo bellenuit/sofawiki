@@ -109,7 +109,7 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 		}
 	}
 	
-	$files = array('api.php', 'crom.php', 'index.php');
+	$files = array('api.php', 'crom.php', 'index.php', 'imageapi.php');
 	foreach ($files as $file)
 	{
 		chmod($swRoot.'/install/sofawiki/'.$f, 0664);

@@ -1355,6 +1355,7 @@ class swRelationLineHandler
 										$pairs = explode(',',$body);								
 										foreach($pairs as $p)
 										{
+											if (!trim($p)) continue;
 											if (!in_array(trim($p),$walkrelation2->header))
 												$walkrelation2->addColumn(trim($p));
 										}

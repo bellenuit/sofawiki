@@ -125,6 +125,11 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 		echo '<p>rename cron.php'; }
 	else
 	{ echo '<p><b>error</b> rename cron.php'; }
+	if (rename($swRoot.'/install/sofawiki/imageapi.php',$swRoot.'/imageapi.php') )
+	{ chmod($swRoot.'/imageapi.php',0664);
+		echo '<p>rename imageapi.php'; }
+	else
+	{ echo '<p><b>error</b> rename imageapi.php'; }
 	
 	
 	$files = rglob($swRoot.'/install/*'); 
