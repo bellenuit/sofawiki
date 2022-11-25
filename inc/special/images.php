@@ -23,12 +23,10 @@ set namespace = "image"
 filter _namespace "image", _name
 order _name
 update _name = link(replace(_name,"Image:","Imagelazy:"),160,160,"auto").tag("br").link(":"._name,substr(_name,6,99)) where _name regexi "jpg$|jpeg$|gif$|png$"
-update _name = link(":"._name) where not ( _name regexi "jpg$|jpeg$|gif$|png$" )
+update _name = link(":"._name) where not ( _name regexi "]]" ) // has set link on line before
 project _name
 
-
 label _name ""
-
 
 print spacegrid 30
 

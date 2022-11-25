@@ -23,7 +23,7 @@ extend _name = "Template:"._template
 project _name
 difference
 order _name a
-update _name = "[["._name."]]"
+update _name = link(_name)
 ​label _name ""
 print grid 50
 ';

@@ -10,8 +10,8 @@ if (!isset($_REQUEST['index'])) $_REQUEST['index'] = '';
 $l0 = '';
 
 
-if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(10000, true); $_REQUEST['index'] = 'bloom';}
-if ($_REQUEST['index'] == 'indexmonogram') {$l0 = swIndexMonogram(10000, true); $_REQUEST['index'] = 'monogram';}
+if ($_REQUEST['index'] == 'indexbloom') {$l0 = swIndexBloom(50000, true); $_REQUEST['index'] = 'bloom';}
+if ($_REQUEST['index'] == 'indexmonogram') {$l0 = swIndexMonogram(50000, true); $_REQUEST['index'] = 'monogram';}
 if ($_REQUEST['index'] == 'rebuildindex') {$l0 = $db->indexedbitmap->countbits(); $db->init(true); /*$db->RebuildIndexes($l0);*/}
 
 
@@ -23,14 +23,16 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=currentbitmap">currentbitmap</a>
 <a href="index.php?name=special:indexes&index=deletedbitmap">deletedbitmap</a>
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
-<br><a href="index.php?name=special:indexes&index=urls">urls</a>
+<br><a href="index.php?name=special:indexes&index=urls">urls.db</a>
 ';
 if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=db">db</a>';
+$swParsedContent .= ' <a href="index.php?name=special:indexes&index=records">records.db</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloom</a>
-<a href="index.php?name=special:indexes&index=monogram">monogram</a>
-<a href="index.php?name=special:indexes&index=fields">fields</a>
+<a href="index.php?name=special:indexes&index=monogram">monogram.db</a>
+<a href="index.php?name=special:indexes&index=fields">fields.db</a>
+<a href="index.php?name=special:indexes&index=fulltext">fulltext.db</a>
 <a href="index.php?name=special:indexes&index=queries">queries</a>
+
 <br>GetLastRevisionFolderItem = '.$db->GetLastRevisionFolderItem().'
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
 <br>current = '. $db->currentbitmap->countbits().'
@@ -47,25 +49,37 @@ $swParsedContent .= "\n<form method='get' action='index.php'><p>";
 $swParsedContent .= "\n<input type='hidden' name='name' value='special:indexes'>";
 $swParsedContent .= "\n<input type='submit' name='submitresetbitmaps' value='Reset Bitmaps' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitreseturls' value='Reset URLs' style='color:red'/>";
-$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom and Monogram' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetbloom' value='Reset Bloom+Monogram' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetfields' value='Reset Fields' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetcurrent' value='Reset Current' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetqueries' value='Reset Queries' style='color:red'/>";
+$swParsedContent .= "\n<input type='submit' name='submitresetfulltext' value='Reset Fulltext' style='color:red'/>";
 $swParsedContent .= "\n<input type='submit' name='submitresetcaches' value='Reset Caches' style='color:red'/>";
 
 $swParsedContent .= "\n<input type='submit' name='submitreset' value='Reset ALL' style='color:red'/>";
 
 $swParsedContent .= "\n</p></form>";
 $swParsedContent .= "\n<p><i>To reliabily reset indexes: Reset All, Rebuild Index, Index Bloom, Index Monogram, Index Fields, Reset Bitmaps, Rebuild Index. 
-You do not need bloom, monogram and fields indexes if you do not use filter or query. A full index takes about 1 minute per 1000 current revisions.</i>";
+You do not need bloom, monogram if you do not use filter or query. You do not need index fields if you do not use filter index. A full index takes about 1 minute per 1000 current revisions.</i>";
 
 
 $done = '';
-	if (isset($_REQUEST['submitreset']))
+	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfields']))
 	{
 		swUnlink($swRoot.'/site/indexes/fields.db');
-		$swOvertime = true;
+		//$swOvertime = true;
 		
 	}
+if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
+	{
+		
+		
+		swUnlink($swRoot.'/site/indexes/fulltext.db');
+		
+		
+		
+	}
+
 
 
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetcurrent']))
@@ -240,7 +254,8 @@ switch($_REQUEST['index'])
 						  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
 						  break;
 
-	case 'urls': 		$swParsedContent .= '<h3>urls</h3>';
+	case 'urls': 		$swParsedContent .= '<h3>urls.db</h3>';
+						$swParsedContent .= '<p>Contains a list of the URL-name and status of each revision.';
 	
 						$key = swDbaFirstKey($db->urldb);	
 						$urlcount = 0;
@@ -296,7 +311,8 @@ switch($_REQUEST['index'])
 							// no break;	
 											
 
-	case 'db': 				$swParsedContent .= '<h3>DB</h3>';
+	case 'records': 		$swParsedContent .= '<h3>records.db</h3>';
+							$swParsedContent .= '<p>Contains a copy of each record in one file for faster access when scanning revisions with filter or query (1ms/revision vs 20ms/revision with file access).';
 							
 						 // swInitRamdisk();
 						  //swDBA_close($swRamDiskDB);
@@ -345,8 +361,9 @@ switch($_REQUEST['index'])
 								
 								
 								
-								$swParsedContent .= '<h3>bloombitmap</h3>';
-								
+								$swParsedContent .= '<h3>bloom filter</h3>';
+								$swParsedContent .= '<p>General purpose bloom filter. Used by query and relation filter.';
+							
 								swOpenBloom();
 
 						  		$bm = $db->bloombitmap;
@@ -364,8 +381,8 @@ switch($_REQUEST['index'])
 								$swParsedContent .= "</pre><input type='text' name='term' value='".@$_REQUEST['term']."'>";
 								$swParsedContent .= "<input type='submit' name='submitterm' value='Test Term' />";
 								$swParsedContent .= "</form>";
-						 		
-						 		if (isset($_REQUEST['term']))
+								
+								if (isset($_REQUEST['term']))
 						 		{
 						 			$swParsedContent .= '<p>Possible current revisions for '.$_REQUEST['term'].':<br>';
 						 			
@@ -393,14 +410,61 @@ switch($_REQUEST['index'])
 									$arr = $bm2->toarray(); /* IMPORTANT */ 
 									
 									$swParsedContent .=  "<p>Revisions:<br>".join(' ',$arr); 
-																	
-									
+						 		}
+
+						 		
+						 		
+							break;
+	case 'fulltext':			 
+
+								
+								
+								
+								$swParsedContent .= '<h3>fulltext.db</h3>';
+								$swParsedContent .= '<p>Fulltext filter based on output. This database can be reset, but not indexed here. It is indexed each time a page is fully rendered.';
+							
+								$bm = $db->fulltextbitmap;
+						  		$swParsedContent .= '<p>length: '.$bm->length;
+						 		$swParsedContent .= '<br>countbits: '.$bm->countbits();
+						  		$swParsedContent .= '<p>'.bitmap2canvas($bm,0,rand(0,1000));
+						 		$swParsedContent .= '<p>';
+
+						 	
+						 		
+						 		$swParsedContent .= "<form method='get' action='index.php'><p>";
+								$swParsedContent .= "<input type='hidden' name='name' value='special:indexes'>";
+								$swParsedContent .= "</pre><input type='hidden' name='index' value='fulltext'>";
+								$swParsedContent .= "</pre><input type='text' name='term' value='".@$_REQUEST['term']."'>";
+								$swParsedContent .= "<input type='submit' name='submitterm' value='Test Term' />";
+								$swParsedContent .= "</form>";
+								
+								if (isset($_REQUEST['term']))
+						 		{
+						 			$q = 'fulltext "'.$_REQUEST['term'].'"
+project revision';
+						 			
+						 			
+						 			$swParsedContent .= '<p>Possible current revisions for "'.$_REQUEST['term'].'":<br>';
+						 			
+						 			$list = swRelationToTable($q);
+						 			$bm2 =  new swBitmap($db->lastrevision);
+						 			$c=0;
+						 			$n=$db->lastrevision;
+						 			foreach($list as $row)
+						 			{
+							 			$bm2->setbit($row['revision']);
+							 			$c++;
+						 			}				 			
+									$swParsedContent .= '<p>'.$c .' / '.$n.' ' .sprintf("%0d", $c/$n*100).'%<p>'.bitmap2canvas($bm2,0,rand(0,1000));																	
 									
 						 		}
-						 		//$swParsedContent .= '<p>'.swGetBloomDensity();
+						 		
+						 		
 							break;
 
-	case 'monogram' :	   	$swParsedContent .= '<h3>monogrambitmap</h3>';
+	case 'monogram' :	   	$swParsedContent .= '<h3>monogram.db</h3>';
+							$swParsedContent .= '<p>Indexes field values with bigrams. Used by query and relation filter.';
+
 	
 	
 						 	if ($l0)
@@ -466,8 +530,9 @@ switch($_REQUEST['index'])
 						 	
 							
 							break;
-	case 'fields':			$swParsedContent .= '<h3>fields</h3><p>';
-	
+	case 'fields':			$swParsedContent .= '<h3>fields.db</h3><p>';
+							$swParsedContent .= '<p>Indexes field values completely. Used by relation filter index.';
+
 							$path = $swRoot.'/site/indexes/fields.db';
 							if (!file_exists($path)) 
 							{
@@ -510,7 +575,8 @@ switch($_REQUEST['index'])
 							
 	
 	case 'queries':			$swParsedContent .= '<h3>queries</h3><p>';
-	
+							$swParsedContent .= '<p>Recent queries in the /site/queries folder<p>';
+
 							$querypath = $swRoot.'/site/queries/';
 						
 							if (isset($_REQUEST['q']) && isset($_REQUEST['reset']) )
@@ -751,7 +817,7 @@ switch($_REQUEST['index'])
 						
 
 	case "indexfields": 	$result = swRelationToTable('filter index _name'); 
-						$swParsedContent .= '<h3>Index Fields</h3><p>'.sprintf('%0d',count($result) ). ' names'; break;
+						$swParsedContent .= '<h3>Index Fields</h3><p>'.sprintf('%0d',count($result) ). ' revisions'; break;
 	
 	case "rebuildindex": $swParsedContent .= '<h3>Index Rebuild Index</h3><p>'.sprintf('%0d',$db->indexedbitmap->countbits()-$l0).' revisions'; break;
 	

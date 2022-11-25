@@ -665,7 +665,7 @@ function drawHandles()
 			if ($width) $woption = ' width ="'.$width.'" '; else $woption = '';
 			if ($height) $hoption = ' height ="'.$height.'" '; else $hoption = '';
 			
-			$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'"'.$woption.$hoption.' loading="lazy">';			
+			$link = '<img class="embeddimage" alt="'.$alttag.'" srclazy="'.$path.'"'.$woption.$hoption.' loading="lazy">';			
 			
 			if ($this->ignorelinks) $link = '';
 			$s = str_replace($v[0], $link, $s); 

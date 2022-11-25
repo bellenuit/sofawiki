@@ -96,7 +96,7 @@ function tablefilter(id) {
 	    if (cell.innerHTML.match(regexfiler)) {
 		     if (maxgrid == '' || visiblerows < maxgrid) {
 	          tr[i].style.display = "";
-	          visiblerows++;
+	          visiblerows++;	          
 	          break;
 	        }
 	        else
@@ -106,6 +106,14 @@ function tablefilter(id) {
         } 
       }
     }
+    img = tr[i].getElementsByTagName("img");
+    for (var j = 0; j < img.length; j++) {
+		srclazy = img[j].getAttribute('srclazy'); 
+		if (srclazy) {
+			if ( tr[i].style.display == "") img[j].setAttribute('src',srclazy); else img[j].setAttribute('src','');
+		}
+	}
+    
   }
   
   plus = document.getElementById('plus'+theid);

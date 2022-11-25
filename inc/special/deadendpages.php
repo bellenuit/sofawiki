@@ -18,7 +18,7 @@ filter _namespace "main", _name, _link "*"
 project _namespace, _name
 difference
 project _name
-update _name = "[["._name."]]"
+update _name = link(_name)
 order _name
 ​label _name ""
 

@@ -54,7 +54,8 @@ class swDB extends swPersistance //extend may be obsolete
 	var $currentbitmap;  
 	var $deletedbitmap;  
 	var $protectedbitmap; 
-	var $bloombitmap; 
+	var $bloombitmap;  
+	var $fulltextbitmap;  
 	var $urldb;
 	var $touched = false;
 	
@@ -151,6 +152,14 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->bloombitmap->open();
 		}
+		
+		$this->fulltextbitmap = new swBitmap;
+		$this->fulltextbitmap->persistance = $this->pathbase.'indexes/fulltextbitmap.txt';
+		if (file_exists($this->fulltextbitmap->persistance))
+		{
+			$this->fulltextbitmap->open();
+		}
+
 					
 		$urldbpath = $this->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
@@ -228,6 +237,11 @@ class swDB extends swPersistance //extend may be obsolete
 		{
 			$this->bloombitmap->touched = false;
 			$this->bloombitmap->save();
+		}
+		if ($this->fulltextbitmap->touched)
+		{
+			$this->fulltextbitmap->touched = false;
+			$this->fulltextbitmap->save();
 		}
 		
 		global $swOvertime; 
@@ -441,6 +455,7 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->currentbitmap->init($this->lastrevision);  
 		$this->deletedbitmap->init($this->lastrevision); 
 		$this->protectedbitmap->init($this->lastrevision);
+		$this->fulltextbitmap->init($this->lastrevision);
 			
 		$key = swDbaFirstKey($this->urldb);		
 		do 

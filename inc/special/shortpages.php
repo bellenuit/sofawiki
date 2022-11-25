@@ -13,7 +13,7 @@ filter _namespace "main", _name, _length, _content "-redirect"
 select _content regex "#REDIRECT"
 project _name, _length
 difference
-update _name = "[["._name."]]"
+update _name = link(_name)
 order _length 1
 limit 1 100
 label _name "", _length ""

@@ -15,7 +15,7 @@ $q = '
 filter _name, _status "protected"
 extend mainname = regexreplace(_name,"/\w\w","")
 order _name a
-update _name = "[["._name."]]"
+update _name = link(_name)
 project mainname, _name concat
 update _name_concat = replace(_name_concat,"::",", ")
 project _name_concat

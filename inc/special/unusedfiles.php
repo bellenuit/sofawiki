@@ -20,7 +20,7 @@ extend _link = urltext(_name)
 filter _link
 update _link = replace(urltext(_link),"media:","image:")
 join leftanti
-update _name = "[[:"._name."]]"
+update _name = link(":"._name)
 project _name
 order _name a
 label _name ""

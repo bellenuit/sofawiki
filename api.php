@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.6e';   
+$swVersion = '3.8.6f';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;

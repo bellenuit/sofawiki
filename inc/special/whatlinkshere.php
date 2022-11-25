@@ -16,7 +16,7 @@ filter _name, _link "'.$name.'"
 select urltext(_link) ==  "'.$name.'"
 project _name
 order _name a
-update _name = "[["._name."]]"
+update _name = link(_name)
 label _name ""
 print grid
 ';

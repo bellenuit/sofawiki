@@ -377,8 +377,13 @@ class xpConcat extends swExpressionFunction
 	function __construct() { $this->arity = 2; $this->label = ':concat' ; $this->isOperator = true ;}
 	function run($args)
 	{
+		
 		$a = $args[0];
 		$b = $args[1];
+		
+		if (is_a($a,"swExpressionFunctionBoundary")) throw new swExpressionError('swExpressionFunctionBoundary',321);
+		if (is_a($b,"swExpressionFunctionBoundary")) throw new swExpressionError('swExpressionFunctionBoundary',321);
+		
 		return $a.$b;		
 	}
 }

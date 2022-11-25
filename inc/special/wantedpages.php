@@ -22,7 +22,7 @@ update _link = urltext(_link)
 project _name, _link
 join rightanti
 select _link not ( regex "media|special|system" ) and _link !== "" and _link !== "-" and not (_link regex ":")
-update _link = "[["._link."]] in [["._name."]]"
+update _link = link(_link)." in ".link(_name)
 project _link
 rename _link _name
 order _name a

@@ -78,9 +78,13 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	if (!$revision) return;
 	
 	// check if revision is already present
+	global $db;
+	if ($db->fulltextbitmap->getbit($revision)) return;
+	/*
 	$q = "SELECT revision FROM pages WHERE revision = $revision";
 	$result = $swFulltextIndex->querySingle($q);
 	if ($result) return;
+	*/
 	
 	// clean HTML
 	$html = preg_replace('/<script.*?\>.*?<\/script>/si', ' ', $html); 
@@ -96,11 +100,12 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
     $name = $swFulltextIndex->escapeString($name);
     if (substr($url,-3,1)=='/') $url = substr($url,0,-3);
     
-    $q = "INSERT INTO pages(url,lang,revision,title, body) VALUES('$url','$lang',$revision,'$name','$html')";
+    $q = "REPLACE INTO pages(url,lang,revision,title, body) VALUES('$url','$lang',$revision,'$name','$html')";
     if (!$swFulltextIndex->exec($q))
 	{
 		throw new swDbaError('swFulltextIndex create table error '.$swFulltextIndex->lastErrorMsg());
 	}
+	$db->fulltextbitmap->setbit($revision);
 }
 
 function swQueryFulltext($query)

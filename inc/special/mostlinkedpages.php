@@ -12,7 +12,7 @@ filter _name, _link "*"
 extend cat = urltext(_link)
 project cat, _link first, _name count
 order _name_count 9
-update _link_first = "<nowiki><a href=\'index.php?name="._link_first."\'>"._link_first."</a></nowiki>"
+update _link_first = tag("nowiki","<a href=\'index.php?name="._link_first."\'>"._link_first."</a>")
 project _link_first, _name_count 
 ​label _link_first "Page", _name_count "Link count"
 ​print 100
