@@ -27,8 +27,6 @@ class swStyleParser extends swParser
 		
 		echotime('parse style');
 		
-		//echo "<p>STYLE</p>$s";
-
 		// keep only \n
 		$s = str_replace("\r\n","\n",$s);
 		$s = str_replace("\n\r","\n",$s);
@@ -36,150 +34,6 @@ class swStyleParser extends swParser
 		$s = str_replace("\t","",$s);
 		
 		$s = "\n".$s."\n";
-		
-		// table parser
-		/*
-		//echo strlen($s);
-		// preg_match_all('/\n{\|(.*?)\n\|}/s', $s, $matches, PREG_SET_ORDER);
-		$tablestart = strpos($s,"\n{|");
-		$tableend = strpos($s,"\n|}",$tablestart);
-		
-		while(! ($tablestart === FALSE) && $tableend > 0)
-		{
-			$tablematch = substr($s,$tablestart,$tableend-$tablestart+strlen("\n|}"));
-			$lines = explode("\n",$tablematch);
-		
-		//foreach ($matches as $match)
-		//{
-			//echo "found";
-			
-			//echo $match[0].'<br>';
-			//$lines = explode("\n",$match[0]);
-			// discount first
-			unset($lines[0]);
-			
-			$rowcount = 0;
-			$tabletext= '';
-			$captiontext= '';
-			$tablestyle = '';
-			$currentrow = '';
-			$currentrowstyle = '';
-			$currentcell = '';
-			$currentcelltag = '';
-			$currentcellstyle = '';
-			$tablelines = array();
-						
-			foreach ($lines as $line)
-			{
-				$first = substr($line,0,1);
-				$second = substr($line,0,2);
-				
-				
-				switch ($second)
-				{
-					case '{|':  $tablestyle = substr($line,2); 
-								break;
-					case '|+':  $captiontext = '<caption>'.substr($line,3).'</caption>'; 
-								break;
-					case '|-': 	if ($currentcell !='')
-									$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
-								if ($currentrow !='')
-									$tablelines[]= '<tr'.$currentrowstyle.'>'.$currentrow.'</tr>';
-								$currentrow = '';
-								$currentcell = '';
-								$currentrowstyle = substr($line,2);
-								break;
-					
-					default:
-							switch	($first)
-							{
-								case '|':	
-											$cells = explode(' || ', substr($line,2));
-											foreach ($cells as $cell)
-											{
-												if ($currentcell !='')
-													$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
-												
-												$currentcelltag = 'td';
-												$t = strpos($cell,' | ');
-												if ($t>0)
-												{
-													$currentcellstyle = ' '.substr($cell,0,$t);
-													$currentcell = substr($cell,$t+3);
-												}
-												else
-												{
-													$currentcell = $cell;
-													$currentcellstyle = '';
-												}	
-											
-											}
-											
-											break;
-								case '!':									
-											$cells = explode(' !! ', substr($line,2));
-											foreach ($cells as $cell)
-											{
-												if ($currentcell !='')
-													$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
-												
-												$currentcelltag = 'th';
-												$t = strpos($cell,' | ');
-												if ($t>0)
-												{
-													$currentcellstyle = ' '.substr($cell,0,$t);
-													$currentcell = substr($cell,$t+3);
-												}
-												else
-												{
-													$currentcell = $cell;
-													$currentcellstyle = '';
-												}	
-											
-											}
-											
-											break;							 
-								default :  $currentcell .= '<br>'.$line;
-							
-							}
-				}
-				
-				
-			}
-			
-			
-			if ($currentcell != '')
-				$currentrow .= '<'.$currentcelltag.$currentcellstyle.'>'.$currentcell.'</'.$currentcelltag.'>';
-			if ($currentrow != '')
-				$tablelines[]= '<tr'.$currentrowstyle.'>'.$currentrow.'</tr>';
-			
-			$tabletext = '<table'.$tablestyle.'>'.$captiontext.join('',$tablelines).'</table>';			
-			
-			
-			//$s = str_replace($match[0],$tabletext,$s);
-			$s = str_replace($tablematch,$tabletext,$s);
-			$tablestart = strpos($s,"\n{|");
-			$tableend = strpos($s,"\n|}",$tablestart);
-			
-		}
-		*/	
-	
-		// headers     	
-		// id must use single token
-		/*
-		while (preg_match('/^====(.*)====/U', $s, $matches))
-		{
-			$s = str_replace($matches[0],"<h4><a id='".$matches[1]."'>".$matches[1]."</a></h4>",$s);
-		}
-		while (preg_match('/^===(.*)===/U', $s, $matches))
-		{
-			$s = str_replace($matches[0],"<h3><a id='".str_replace(" ","_",$matches[1])."'>".$matches[1]."</a></h3>",$s);
-		}
-		while (preg_match('/^==(.*)==/U', $s, $matches))
-		{
-			$s = str_replace($matches[0],"<h2><a id='".str_replace(" ","_",$matches[1])."'>".$matches[1]."</a></h2>",$s);
-		}
-		*/
 		
 		$s = preg_replace('/^====(.*)====/Um',"<h4><a id='$1'>$1</a></h4>",$s);
 		$s = preg_replace('/^===(.*)===/Um',"<h3><a id='$1'>$1</a></h3>",$s);
@@ -219,11 +73,11 @@ class swStyleParser extends swParser
 		// hr
 		$s = str_replace("\n----\n","\n<hr>\n",$s);	
 		
+		
+		
 		// preserve div
 		$s = str_replace('<div',"\n<div",$s);
 		$s = str_replace('</div>', "\n</div>", $s); // if div multiline
-
-		
 
 		$lines = explode("\n",$s);
 		$s = '';
@@ -264,9 +118,17 @@ class swStyleParser extends swParser
 				case '<di': 
 				case '<no':
 				case '<pr':   if ($state == 'p') $s .= '</p>';
-							  $s .= $line;
+							  if ($tablerow)
+							  {
+								  $tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
+							  }
+							  else
+							  {
+							 	 $s .= $line;
+							  }
 							  $state = '';
 							  break;
+				
 				
 				
 				case '{| ':   $s.= '<table '.substr($line,3).'>'; $tablerow = ''; 
@@ -323,9 +185,9 @@ class swStyleParser extends swParser
 							elseif ($tablerow)
 							{
 								// continue last cell
+								//echo 'tablerow '.$line;
 								if (substr($line,0,1) == '<')
-								{	
-									
+								{										
 									$tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
 
 								}
@@ -350,6 +212,7 @@ class swStyleParser extends swParser
 							}
 							elseif (substr($line,0,1) == '<') 
 							{
+								// echo 'tag '.$line;
 								if ($state == 'p')
 								{
 									$s .= '</p><p>'.$line;
@@ -375,6 +238,8 @@ class swStyleParser extends swParser
 			//$s.="(STATE $state)";
 			
 		}	
+		
+		//echo $s;
 		
 		// bugs
 		$s = str_replace("<p><div","<div",$s);

@@ -125,6 +125,7 @@ select _category regexi "^'.$wn.'$"';
 				$count = count($names);
 				global $lang;
 				global $name;
+				$navigation = '';
 				if (count($names)>$limit)
 				{
 					$navigation = '<div class="categorynavigation">';
