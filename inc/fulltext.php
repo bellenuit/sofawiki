@@ -43,7 +43,13 @@ function swOpenFulltext()
 	if (!$swFulltextIndex->exec('CREATE VIRTUAL TABLE IF NOT EXISTS pages USING fts3(url, lang, revision, title, body)'))
 	{
 		throw new swDbaError('swFulltextIndex create table error '.$swFulltextIndex->lastErrorMsg());
-	}	
+	}
+	
+	if (!$swFulltextIndex->exec('CREATE TABLE IF NOT EXISTS snippets (revision, query, snippet); CREATE INDEX IF NOT EXISTS snippetindex ON snippets (query);'))
+	{
+		throw new swDbaError('swFulltextIndex create table snippet error '.$swFulltextIndex->lastErrorMsg());
+	}
+
 	
 	$swFulltextIndex->createFunction('score', 'swFulltextScore');	
 	$swFulltextIndex->createFunction('byteoffsets', 'swFulltextByteOffsets');
@@ -87,12 +93,12 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	*/
 	
 	// clean HTML
+	$hasfulltext = false;
 	$html = preg_replace('/<script.*?\>.*?<\/script>/si', ' ', $html); 
     $html = preg_replace('/<style.*?\>.*?<\/style>/si', ' ', $html); 
     $html = preg_replace('/<.*?\>/si', ' ', $html); 
     $html = preg_replace('!\s+!', ' ', $html);
-    $html = html_entity_decode($html); 
-    
+    $html = htmlentities($html,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE);  // now we are single byte
     $html = swTrigramize($html);
     $html = $swFulltextIndex->escapeString($html);
     if (substr($name,-3,1)=='/') $name = substr($name,0,-3);
@@ -108,9 +114,9 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	$db->fulltextbitmap->setbit($revision);
 }
 
-function swQueryFulltext($query)
+function swQueryFulltext($query, $limit=500)
 {
-	echotime('queryfulltext');
+	echotime('queryfulltext "'.$query.'"');
 	swOpenFulltext();
 	global $swFulltextIndex;
 	if (!$swFulltextIndex) return;
@@ -122,32 +128,69 @@ function swQueryFulltext($query)
   WHERE pages MATCH '$query'
   ORDER BY score DESC";
 	
-	// echo '<p>'.$q;
+	//echo '<p>'.$q;
 	$result = $swFulltextIndex->query($q);
+	
+	$q2 = "SELECT revision, query, snippet FROM snippets 
+  WHERE query = '$query'";
+  
+  	$result2 = $swFulltextIndex->query($q2);
+  	
+  	$snippets = array();
+	
+	while ($d2 = $result2->fetchArray(SQLITE3_ASSOC)) 
+	{
+		$snippets[$d2['revision']] = $d2['snippet'];
+	}
+	
 	$r = new swRelation('score, url, lang, revision, title, body');
+	
+	echotime('loop');
+	
+	$foundnames = array();
+	
+	$qescape = $swFulltextIndex->escapeString($query);
+	
+	$swFulltextIndex->exec('BEGIN TRANSACTION');
+	
+	$counter = 0;
 	
 	while ($d = $result->fetchArray(SQLITE3_ASSOC)) 
 	{
+    	if ($limit && $counter>$limit) break;
+    	 
+    	if (isset($foundnames[$d['url']])) continue;
     	$rev = $d['revision'];
     	if ($db->currentbitmap->getbit($rev))
     	{
- 
-//     		$d['title']=detrigramize($d['title']);
-    		$d['title']=swFulltextSnippet($d['title'],'',$querylines);
+    		$d['title']=swDetrigramize($d['title']);
     		if (!$d['title']) $d['title'] ='...';
-    		$d['body']=swFulltextSnippet($d['body'],$d['byteoffsets'],$querylines);
+    		if (isset($snippets[$rev])) 
+    		{
+	    		$d['body'] = $snippets[$rev];
+    		}	
+    		else
+    		{
+    			$d['body']=swFulltextSnippet($d['body'],$d['byteoffsets'],$querylines);
+    			$url = $d['url'];
+    			$bescape = $swFulltextIndex->escapeString($d['body']);
+    			
+				$swFulltextIndex->exec("INSERT INTO snippets (revision, query, snippet) VALUES ($rev,'$qescape','$bescape')");
+    		}
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
+			$foundnames[$d['url']] = 1;
+			$counter--;
 		}
 		elseif ($db->indexedbitmap->getbit($rev))
 		{
-			$q = "DELETE FROM pages WHERE revision = $rev";
-			if (!$swFulltextIndex->exec($q))
-			{
-				throw new swDbaError('swFulltextIndex delete entry error '.$swFulltextIndex->lastErrorMsg());
-			}
+			$u = $d['url'];
+			$swFulltextIndex->exec("DELETE FROM pages WHERE revision = $rev; DELETE FROM snippets WHERE revision = $rev;");
 		}
 	}
+	
+	$swFulltextIndex->exec('COMMIT');
+	
 	echotime('queryfulltext end');
 	return $r;
 }
@@ -190,10 +233,10 @@ function swFulltextByteOffsets($s) {
 function swTrigramize($s)
 {
 	$lines = array();
-	$l = grapheme_strlen($s);
+	$l = strlen($s);
 	for($i=0;$i<$l-2;$i++)
 	{
-		$lines[] = grapheme_substr($s,$i,3);
+		$lines[] = substr($s,$i,3);
 	}
 	return join(' ',$lines);
 }
@@ -222,72 +265,37 @@ function swDetrigramize($s)
 {
 	if (!$s) return '';
 	
-	$lines = array();
-	$l = grapheme_strlen($s); 
-
-	for($i=0;$i<$l;$i+=4)
-	{
-		$lines[] = grapheme_substr($s,$i,1);
-	}
-// 	$lines[] = ':';
-	$lines[] = grapheme_substr($s,-2,2);
-// 	$lines[] = ' - '.$s;
-	return join('',$lines);
+	return preg_replace('/(.).{3}/','$1',$s);
+	
 }
 
 function swFulltextSnippet($s, $os,$querylines)
 {
-	$l = grapheme_strlen($s);
-	$half =360;
-	$offsets = explode(' ',$os);
-	if (!trim($os)) 
-	{
-		$start = 0;
-	}
-	else
-	{
-		$t = substr($s,0,$offsets[0]);
-		$start0 = grapheme_strlen($t);
-		if ($start0 < $half )
-		{
-			$start = 0;
-		}
-		else
-		{
-			for($i = $start0-$half; $i<$start0; $i+=4)
-			{
-				if (grapheme_substr($s,$i,1)== ' ')
-				{
-					$start = $i;
-					break;
-				}
-				
-			}
-			
-		} 		
-		if (!isset($start)) $start = $start0;
-	}
-	
-	$ende = $start+$half*2;
-	$s = grapheme_substr($s,$start,$ende-$start);
+	$half =400;
+	$p = max(0,(intval($os)-$half));
+	$s = substr($s,$p,2*$half);
 	$s = swDetrigramize($s);
-	rsort($querylines); // longer first
-	foreach($querylines as $q)
+	
+	if ($p)
 	{
-		switch ($q)
+		$space = strpos($s,' ');
+		if ($space>0)
 		{
-			case 'AND':
-			case 'OR': break;
-			default:
-			$v = str_replace('"','',$q);
-			$v=swDetrigramize($v);
-			$s = preg_replace('/('.$v.')/i', '<b>$1</b>', $s);
-
+			$s = substr($s,$space+1);
+		}	
+	}
+	if (substr($s,-1) != ' ')
+	{
+		$space = strrpos($s, ' ');
+		if ($space>0)
+		{
+			$s = substr($s,0,$space);
 		}
 	}
-	if ($start>0) $s = '...'.$s;
-	if ($ende<$l) $s .='...';
-	
+	if (substr($s,-1) != '.')
+	{
+		$s .= '...';
+	}
 	return $s;
 	
 }
