@@ -23,7 +23,7 @@ class swStyleParser extends swParser
 			return;
 		}
 		
-		$s = $wiki->parsedContent;
+		$s = $wiki->parsedContent; //echo $s;
 		
 		echotime('parse style');
 		
@@ -117,7 +117,9 @@ class swStyleParser extends swParser
 				case '<hr': 
 				case '<di': 
 				case '<no':
-				case '<pr':   if ($state == 'p') $s .= '</p>';
+				case '<pr': 
+				case '<::': 
+							  if ($state == 'p') $s .= '</p>';
 							  if ($tablerow)
 							  {
 								  $tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
@@ -250,7 +252,8 @@ class swStyleParser extends swParser
 		$s = str_replace('<br><div>',"<div>",$s);
 		$s = str_replace('<div><br>',"<div>",$s);
 
-	
+		// template block preserve
+		$s = str_replace('<::>','',$s);
 		
 		// bold and italics
 		$s = str_replace("''''''","",$s);
@@ -269,61 +272,58 @@ class swStyleParser extends swParser
 		if ($this->domakepretty)
 		{
 		
-        // make pretty
-       
-        
-        
-        $s = str_replace("<ol>","\n<ol>",$s);
-        $s = str_replace("</ul>","</ul>\n",$s);
-        $s = str_replace("</ol>","</ol>\n",$s);
-        $s = str_replace("<br>","<br>\n",$s);
-        $s = str_replace("<hr>","\n<hr>\n",$s);
-        $s = str_replace("<h1>","\n<h1>",$s);
-        $s = str_replace("<h2>","\n<h2>",$s);
-        $s = str_replace("<h3>","\n<h3>",$s);
-        $s = str_replace("<h4>","\n<h4>",$s);
-        $s = str_replace("</h1>","</h1>\n",$s);
-        $s = str_replace("</h2>","</h2>\n",$s);
-        $s = str_replace("</h3>","</h3>\n",$s);
-        $s = str_replace("</h4>","</h4>\n",$s);
-        
-        
-		$s = str_replace("<br>\n</pre>","</pre>\n",$s); 
-		$s = str_replace("</pre>\n<pre>","\n",$s);
-		$s = str_replace("</pre><pre>","\n",$s);
+       		 // make pretty
+	        $s = str_replace("<ol>","\n<ol>",$s);
+	        $s = str_replace("</ul>","</ul>\n",$s);
+	        $s = str_replace("</ol>","</ol>\n",$s);
+	        $s = str_replace("<br>","<br>\n",$s);
+	        $s = str_replace("<hr>","\n<hr>\n",$s);
+	        $s = str_replace("<h1>","\n<h1>",$s);
+	        $s = str_replace("<h2>","\n<h2>",$s);
+	        $s = str_replace("<h3>","\n<h3>",$s);
+	        $s = str_replace("<h4>","\n<h4>",$s);
+	        $s = str_replace("</h1>","</h1>\n",$s);
+	        $s = str_replace("</h2>","</h2>\n",$s);
+	        $s = str_replace("</h3>","</h3>\n",$s);
+	        $s = str_replace("</h4>","</h4>\n",$s);
+	        
+	        
+			$s = str_replace("<br>\n</pre>","</pre>\n",$s); 
+			$s = str_replace("</pre>\n<pre>","\n",$s);
+			$s = str_replace("</pre><pre>","\n",$s);
+			
+			$s = str_replace("</pre>","</pre>\n",$s);
+	        $s = str_replace("</p>","</p>\n",$s);
+	        
+	
+			$s = str_replace("<table","\n\n<table",$s);
+			$s = str_replace("</table>","</table>\n",$s);
 		
-		$s = str_replace("</pre>","</pre>\n",$s);
-        $s = str_replace("</p>","</p>\n",$s);
-        
-
-		$s = str_replace("<table","\n\n<table",$s);
-		$s = str_replace("</table>","</table>\n",$s);
-	
-		$s = str_replace("</ul>","\n</ul>",$s);
-        $s = str_replace("</ol>","\n</ol>",$s);
-        $s = str_replace("</li><ul>","</li>\n<ul>",$s);
-		$s = str_replace("</li><ol>","</li>\n<ol>",$s);
-        $s = str_replace("<li>","\n <li>",$s);
-		$s = str_replace("<caption>","\n <caption>",$s);
+			$s = str_replace("</ul>","\n</ul>",$s);
+	        $s = str_replace("</ol>","\n</ol>",$s);
+	        $s = str_replace("</li><ul>","</li>\n<ul>",$s);
+			$s = str_replace("</li><ol>","</li>\n<ol>",$s);
+	        $s = str_replace("<li>","\n <li>",$s);
+			$s = str_replace("<caption>","\n <caption>",$s);
+			
+			$s = str_replace('<blockquote>',"\n<blockquote>",$s);
 		
-		$s = str_replace('<blockquote>',"\n<blockquote>",$s);
-	
-	
-		$s = str_replace("<tr","\n  <tr",$s);
-		$s = str_replace("</tr>","\n  </tr>",$s);
-		$s = str_replace("<td","\n   <td",$s); // can be styled
-		$s = str_replace("<th","\n   <th",$s); // can be styled
-		$s = str_replace("<tbody","\n <tbody",$s); // can be styled
-    	$s = str_replace("</tbody>","\n </tbody>",$s); 
-    	$s = str_replace("</table>","\n</table>",$s);
-    	
-    	// auto close divs
-		$divopen = substr_count($s,'<div');
-		$divclose = substr_count($s,'</div>');
-		while ($divopen > $divclose)
-		{
-			$s .= '</div>'; $divclose++;
-		}
+		
+			$s = str_replace("<tr","\n  <tr",$s);
+			$s = str_replace("</tr>","\n  </tr>",$s);
+			$s = str_replace("<td","\n   <td",$s); // can be styled
+			$s = str_replace("<th","\n   <th",$s); // can be styled
+			$s = str_replace("<tbody","\n <tbody",$s); // can be styled
+	    	$s = str_replace("</tbody>","\n </tbody>",$s); 
+	    	$s = str_replace("</table>","\n</table>",$s);
+	    	
+	    	// auto close divs
+			$divopen = substr_count($s,'<div');
+			$divclose = substr_count($s,'</div>');
+			while ($divopen > $divclose)
+			{
+				$s .= '</div>'; $divclose++;
+			}
 
     	
     	}
@@ -503,6 +503,10 @@ class swStyleParser extends swParser
 		$s = str_replace("<br/><ol/>", "<ol>",$s);
 		$s = str_replace("</li></ol><ol><li>", "</li><li>",$s);
 		$s = str_replace("</li></ul><ul><li>", "</li><li>",$s);
+		
+		$s = preg_replace('#(<div.*?>)<br/>#', '$1', $s); // lines with only a div tag do not create BR.
+		$s = str_replace('</div><br/>', '</div>', $s);
+		
 		$s = str_replace("<b></b>","",$s);
 		//$s = str_replace("<br/> <a","<br/><br/> <a",$s);
 		

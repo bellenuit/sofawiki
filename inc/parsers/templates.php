@@ -77,6 +77,7 @@ class swTemplateParser extends swParser
 				{
 					$v = str_replace('&pipeprotected;','|',$v);
 					
+					
 					if (substr($v,0,2)== "::")
 					{
 						$v = substr($v,2); 
@@ -85,9 +86,11 @@ class swTemplateParser extends swParser
 						$p = new swStyleParser;
 						$p->domakepretty = false;
 						$w2 = new swWiki;
-						$w2->parsedContent = $v;
+						$w2->parsedContent = '<::>'.$v; // template block preserve
 						$p->doWork($w2);
 						$v = $w2->parsedContent;
+						
+						//echo '('.$v.')';
 					}
 					else
 						$v = trim($v);
@@ -157,9 +160,11 @@ class swTemplateParser extends swParser
 						$c = str_replace("{{{".$i."}}}",$vals[$i],$c);
 						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/",$vals[$i],$c);
 					}
-					// remove missing parameters
-					// $c = preg_replace("/\{\{\{(\d+)}}}/","&#123;&#123;&#123;$1&#125;&#125;&#125;",$c);
-					$c = preg_replace("/\{\{\{(\d+)}}}/",'',$c);
+					// remove optional parameters
+					for ($i = 1; $i<10; $i++)
+					{
+						$c = preg_replace("/\{\{\{".$i."\?([^}]*)}}}/","$1",$c);
+					}
 				
 				}
 				
