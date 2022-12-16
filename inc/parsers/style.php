@@ -154,7 +154,7 @@ class swStyleParser extends swParser
 									{
 										$c = substr($cell,$t+3);
 										if (!$c) $c = '&nbsp;';
-										$tablerow .= '<th '.substr($cell,0,3).'>'.$c.' </th>';
+										$tablerow .= '<th '.substr($cell,0,$t).'>'.$c.' </th>';
 									}
 									else
 									{
@@ -174,7 +174,7 @@ class swStyleParser extends swParser
 									{
 										$c = substr($cell,$t+3);
 										if (!$c) $c = '&nbsp;';
-										$tablerow .= '<td '.substr($cell,0,3).'>'.$c.' </td>';
+										$tablerow .= '<td '.substr($cell,0,$t).'>'.$c.' </td>';
 									}
 									else
 									{

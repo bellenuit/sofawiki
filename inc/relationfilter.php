@@ -1428,19 +1428,17 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$foundfile = false;
 		if (array_key_exists('file',$fields))
 		{
-			
 			if (!$fields['file'])
 			{
 				$foundfile = true;
 			}
 			else
-			{
-				
+			{			
 				$stack = array();
-				$stack[] = $shortfile;
+
 				$stack[] = $fields['file'];
-				$hintfunction->run($stack);
-				$foundfile = array_pop($stack);
+				$stack[] = $shortfile;
+				$foundfile = $hintfunction->run($stack);
 			}
 		}
 		else
@@ -1496,10 +1494,11 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 						if ($found && $v)
 						{
 							$stack = array();
-							$stack[] = $values[$k];
+
 							$stack[] = $v;
-							$hintfunction->run($stack);
-							$found = array_pop($stack) && $found;
+							$stack[] = $values[$k];
+							
+							$found = $hintfunction->run($stack);
 						}
 					}
 				}

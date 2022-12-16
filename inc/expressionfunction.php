@@ -654,8 +654,8 @@ class XpHint extends swExpressionFunction
 	function __construct() { $this->arity = 2; $this->label = ':hint' ;}
 	function run($args)
 	{
-		$b = $args[1];
-		$a = $args[0];
+		$a = $args[0];  // needle
+		$b = $args[1]; // haystack
 		$b = swNameURL($b);
 		
 		if ($a == "*") 
