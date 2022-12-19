@@ -975,25 +975,24 @@ $swSingleSearchMenu = '<div id="singlesearchmenu">
 
 flush();
 
-// do cron job
-
-//if ($action != 'indexerror' && rand(0,100)<2)
-if ($action != 'indexerror' && !isset($swOvertime))
+if (isset($swOvertime) && $swOvertime)
 {
-	swCron();
+	if (isset($_POST) || @$swPreventOvertimeSearchAgain)
+		$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang);
+	else
+		$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
+}
+else
+{
+	if ($action != 'indexerror')
+	{
+		swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
+		swCron();
+	}	
 }
 
 $db->close(); 
 session_write_close();
-
-if (isset($swOvertime) && $swOvertime)
-if (isset($_POST) || @$swPreventOvertimeSearchAgain)
-	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang);
-else
-	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
-
-swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
-
 
 echotime('skin');
 

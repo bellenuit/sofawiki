@@ -170,7 +170,7 @@ class swBitmap extends swPersistance
 		$bitmask = 128 >> $bit;
 
 		if ($this->map == '') $this->dehexit();	
-		$ch = @$this->map[$byte];
+		$ch = $this->map[$byte];
 		$ch = ord($ch);
 		$ch = $ch | $bitmask;
 		$ch = chr($ch);
@@ -255,7 +255,7 @@ class swBitmap extends swPersistance
 	{
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
-		$result->default = false;
+		$result->default = $this->default && $bitmap->default;
 		
 		$b1 = $this->duplicate(); 
 		$b1->redim($result->length,0);
@@ -277,6 +277,7 @@ class swBitmap extends swPersistance
 	{
 		$result = new swBitmap;
 		$result->length = max($this->length, $bitmap->length);
+		$result->default = $this->default || $bitmap->default;
 		
 		$b1 = $this->duplicate(); 
 		$b1->redim($result->length,0);
@@ -690,7 +691,9 @@ function bitmapUnitTest()
 		if ($b1->countbits()<>$c) echo "<p>setbit failed for ".$r;
 		$list = $b1->toarray();
 		if (count($list)<>$c) "<p>toarray failed for ".$r;
-		if($list[0] <> $r) "<p>toarray failed value for ".$r;
+		//print_r($list);
+		$t = array_shift($list);
+		if($t <> $r) "<p>toarray failed value for ".$r;
 	}
 	
 
@@ -700,7 +703,7 @@ function bitmapUnitTest()
 }
 
 
-// bitmapUnitTest();
+bitmapUnitTest();
 
 
 

@@ -1,13 +1,4 @@
-<?php if (isset($_REQUEST['ajax']))
-{
-	if ($swOvertime) echo '1'; else echo ' ';
-	
-	echo $swParsedContent;
-		
-	exit;
-
-}
-?><!DOCTYPE HTML>
+<?php include 'headerscript.php'; ?><!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
