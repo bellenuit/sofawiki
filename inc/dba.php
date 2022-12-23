@@ -458,12 +458,16 @@ class swDba
 		
 		$statement = $this->db->prepare('SELECT v FROM kv WHERE k = :key');
 		$statement->bindValue(':key', $key);
-		$result = $statement->execute();
-		
-		if ($this->db->lastErrorCode())
+		if (! $statement )
 		{
-			$this->db->exec('VACUUM');
-			throw new swDbaError('swDba fetch error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba statement error '.$key);
+		}
+		
+		$result = @$statement->execute();
+		
+		if (!$result || $this->db->lastErrorCode())
+		{
+			throw new swDbaError('swDba fetch error '.$this->path.' '.$this->db->lastErrorCode().' '.$this->db->lastErrorMsg());
 		}
 		else
 		{

@@ -249,6 +249,7 @@ class swBitmap extends swPersistance
 	}
 	
 	/**
+	/**
 	 * Returns a new bitmap with the value C = A AND B. 
 	 */		
 	function andop($bitmap)
@@ -258,9 +259,9 @@ class swBitmap extends swPersistance
 		$result->default = $this->default && $bitmap->default;
 		
 		$b1 = $this->duplicate(); 
-		$b1->redim($result->length,0);
+		$b1->redim($result->length,$this->default && $bitmap->default);
 		$b2 = $bitmap->duplicate(); 
-		$b2->redim($result->length,0);
+		$b2->redim($result->length,$this->default && $bitmap->default);
 
 				
 		$result->map = $b1->map & $b2->map;		
@@ -280,9 +281,9 @@ class swBitmap extends swPersistance
 		$result->default = $this->default || $bitmap->default;
 		
 		$b1 = $this->duplicate(); 
-		$b1->redim($result->length,0);
+		$b1->redim($result->length,$this->default || $bitmap->default);
 		$b2 = $bitmap->duplicate(); 
-		$b2->redim($result->length,0);
+		$b2->redim($result->length,$this->default || $bitmap->default);
 				
 		$result->map = $b1->map | $b2->map;		
 

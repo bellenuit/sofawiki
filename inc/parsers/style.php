@@ -106,7 +106,7 @@ class swStyleParser extends swParser
 			}
 			
 					
-			switch (substr($line.' ',0,3))
+			switch (substr($line,0,3))
 			{
 				case '<h2': 
 				case '<h3': 
@@ -131,111 +131,126 @@ class swStyleParser extends swParser
 							  $state = '';
 							  break;
 				
+				default: 	  switch (substr($line,0,2))
+							  {
 				
-				
-				case '{| ':   $s.= '<table '.substr($line,3).'>'; $tablerow = ''; 
-							  break;
-				case '|+ ':   $s.= '<caption>'.substr($line,3).'</caption>'; 
-							  break;
-				case '|} ':   if ($tablerow) $s.= $tablerow .'</tr>';
-							  $s.= '</table>';
-							  $tablerow = '';
-							  break;
-				case '|- ':   if ($tablerow) $s.= $tablerow .'</tr>'; 
-							  $tablerow = '<tr '.substr($line,3).'>';
-							  break;
+									case '{|':   $s.= '<table '.substr($line,2).'>'; $tablerow = ''; 
+												  break;
+									case '|+':   $s.= '<caption>'.substr($line,2).'</caption>'; 
+												  break;
+									case '|}':   if ($tablerow) $s.= $tablerow .'</tr>';
+												  $s.= '</table>';
+												  if (substr($line,2))
+												  {
+													  $s.='<p>'.substr($line,2);
+													  $state = 'p';
+												  }
+												  $tablerow = '';
+												  break;
+									case '|-':   if ($tablerow) $s.= $tablerow .'</tr>'; 
+												  $tablerow = '<tr '.substr($line,2).'>';
+												  break;
+													
+									default: 	switch (substr($line,0,1))
+												{
+												
+												case '!' :
+									
+															if (!$tablerow) $tablerow = '<tr>';
+															$cells = explode(' !! ', substr($line,2));
+															foreach($cells as $cell)
+															{
+																$t = strpos($cell,' | ');
+																if ($t>0) 
+																{
+																	$c = substr($cell,$t+3);
+																	if (!$c) $c = '&nbsp;';
+																	$tablerow .= '<th '.substr($cell,0,$t).'>'.$c.' </th>';
+																}
+																else
+																{
+																	if (!$cell) $cell = '&nbsp;';
+																	$tablerow .= '<th>'.$cell.' </th>';
+																}
+															}
+															break;					
+												
+												case '|' :
+												
+															if (!$tablerow) $tablerow = '<tr>';
+															$cells = explode(' || ', substr($line,2));
+															foreach($cells as $cell)
+															{
+																$t = strpos($cell,' | ');
+																if ($t>0) 
+																{
+																	$c = substr($cell,$t+3);
+																	if (!$c) $c = '&nbsp;';
+																	$tablerow .= '<td '.substr($cell,0,$t).'>'.$c.' </td>';
+																}
+																else
+																{
+																	$tablerow .= '<td>'.$cell.'</td>';
+																}
+															}
+															break;
+															
+												default: 	
+												
+															if ($tablerow)
+															{
+																// continue last cell
+																//echo 'tablerow '.$line;
+																if (substr($line,0,1) == '<')
+																{										
+																	$tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
 								
-				default: 	if (substr($line,0,1)=='!')
-							{
-								if (!$tablerow) $tablerow = '<tr>';
-								$cells = explode(' !! ', substr($line,2));
-								foreach($cells as $cell)
-								{
-									$t = strpos($cell,' | ');
-									if ($t>0) 
-									{
-										$c = substr($cell,$t+3);
-										if (!$c) $c = '&nbsp;';
-										$tablerow .= '<th '.substr($cell,0,$t).'>'.$c.' </th>';
-									}
-									else
-									{
-										if (!$cell) $cell = '&nbsp;';
-										$tablerow .= '<th>'.$cell.' </th>';
-									}
-								}					
-							}
-							elseif (substr($line,0,1)=='|')
-							{
-								if (!$tablerow) $tablerow = '<tr>';
-								$cells = explode(' || ', substr($line,2));
-								foreach($cells as $cell)
-								{
-									$t = strpos($cell,' | ');
-									if ($t>0) 
-									{
-										$c = substr($cell,$t+3);
-										if (!$c) $c = '&nbsp;';
-										$tablerow .= '<td '.substr($cell,0,$t).'>'.$c.' </td>';
-									}
-									else
-									{
-										$tablerow .= '<td>'.$cell.'</td>';
-									}
-								}	
-							}
-							elseif ($tablerow)
-							{
-								// continue last cell
-								//echo 'tablerow '.$line;
-								if (substr($line,0,1) == '<')
-								{										
-									$tablerow = substr($tablerow,0,-5).$line.substr($tablerow,-5); // </td>
-
+																}
+																else
+																{
+																	$tablerow = substr($tablerow,0,-5).'<br>'.$line.substr($tablerow,-5); // </td>
+																}
+															}
+															elseif (substr($line,0,1)==' ' && $swWikiTextPre)
+															{
+																if ($state == 'p')
+																{
+																	$s .= '</p>';
+																	$state = '';
+																} 
+																
+																$s .= '<pre>'.substr($line,1).'</pre>';
+															}
+															elseif ($state == 'p')
+															{
+																$s .= '<br>'.$line;
+															}
+															elseif (substr($line,0,1) == '<') 
+															{
+																// echo 'tag '.$line;
+																if ($state == 'p')
+																{
+																	$s .= '</p><p>'.$line;
+																	$state = '';
+																}
+																elseif(preg_replace('/<.*?>/', '', $line) =='') // only single tag on line
+																{
+																	$s .= $line;
+																}
+																else
+																{
+																	$s .= '<p>'.$line;
+																	$state = 'p';
+																}	
+															}
+															elseif (trim($line) != '') 
+															{
+																	$s .= '<p>'.$line;
+																	$state = 'p';	
+															}	
+															
+										}					
 								}
-								else
-								{
-									$tablerow = substr($tablerow,0,-5).'<br>'.$line.substr($tablerow,-5); // </td>
-								}
-							}
-							elseif (substr($line,0,1)==' ' && $swWikiTextPre)
-							{
-								if ($state == 'p')
-								{
-									$s .= '</p>';
-									$state = '';
-								} 
-								
-								$s .= '<pre>'.substr($line,1).'</pre>';
-							}
-							elseif ($state == 'p')
-							{
-								$s .= '<br>'.$line;
-							}
-							elseif (substr($line,0,1) == '<') 
-							{
-								// echo 'tag '.$line;
-								if ($state == 'p')
-								{
-									$s .= '</p><p>'.$line;
-									$state = '';
-								}
-								elseif(preg_replace('/<.*?>/', '', $line) =='') // only single tag on line
-								{
-									$s .= $line;
-								}
-								else
-								{
-									$s .= '<p>'.$line;
-									$state = 'p';
-								}	
-							}
-							elseif (trim($line) != '') 
-							{
-									$s .= '<p>'.$line;
-									$state = 'p';	
-							}						
-				
 			}
 			//$s.="(STATE $state)";
 			
