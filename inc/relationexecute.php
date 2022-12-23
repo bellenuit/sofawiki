@@ -303,6 +303,7 @@ function swRelationExecuteUpdate($r)
 	}
 	
 	$i=0;
+	$c = '';
 	
 	foreach($r->tuples as $t)
 	{
@@ -328,6 +329,9 @@ function swRelationExecuteUpdate($r)
 				
 									// get all fields
 									$fields = $t->fields();
+									// remove internal fields
+									$fields = array_filter($fields, function($k) {return substr($k,0,1) != '_'; },ARRAY_FILTER_USE_KEY);	
+									
 									$w->content = swReplaceFields($w->content,$fields);
 				
 									$w->comment = 'swRelationExecuteUpdate '.$w->revision;
