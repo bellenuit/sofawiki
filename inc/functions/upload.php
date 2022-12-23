@@ -157,21 +157,27 @@ function swHandleUploadFile($file, $filename, $content='',$deleteexisting=false)
 	   else
 	   {
 			$swStatus .=  'OK. ';
+			
+			$wiki= new swWiki;
+	$wiki->name ='Image:'.$filename;
+	$wiki->user = $user->name;
+	$wiki->content = str_replace("\\",'',$content)
+	.PHP_EOL.'[[imagechecksum::'.md5_file($newfile).']]';
+	if ($filename != "")
+			$wiki->insert();		
 	   }
+	   
+	   
+	   
+	
+	
+		return $filename;
 	}
 	else
 	{
 		$swError .=  'Error: File '.$filename.' not uploaded. ';
 	}
 	
-	
-	$wiki= new swWiki;
-	$wiki->name ='Image:'.$filename;
-	$wiki->user = $user->name;
-	$wiki->content = str_replace("\\",'',$content)
-	.PHP_EOL.'[[imagechecksum::'.md5_file($newfile).']]';
-	if ($filename != "")
-		$wiki->insert();
 	
 	
 	return $filename;

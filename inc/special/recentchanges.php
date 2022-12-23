@@ -21,28 +21,22 @@ for ($r = $last; $r > $last - 200 && $r>0; $r--)
 	$item = new swWiki;
 	$item->revision = $r;
 	$item->lookup(true);
+	$n = $item->name;
 	
 	$lastrevisiontime = $item->timestamp;
 	$i++;
 	
-	if ($item->wikinamespace()=="Image" || $item->wikinamespace()=="Category")
-	{
-		$swParsedContent .= "$item->timestamp <nowiki><a href='index.php?action=edit&revision=$r'>$r</a></nowiki> [[:$item->name]] $item->status $item->user <i><nowiki>$item->comment</nowiki></i>\n";
-	}
-	else
-	{
-		if ($item->status != '')
-			$swParsedContent .= "$item->timestamp <nowiki><a href='index.php?action=edit&revision=$r'>$r</a></nowiki> [[$item->name]] $item->status $item->user <i><nowiki>$item->comment</nowiki></i>\n";
+	if ($item->status != '')
+			$swParsedContent .= $item->timestamp. ' <a href="index.php?action=edit&revision='.$r.'">'.$r.'</a> <a href="index.php?action=edit&name='.$n.'"">'.$n.'</a> </nowiki> '.$item->status.' '.$item->user.'<i>'.$item->comment.'</i><br>';
 		else
-			$swParsedContent .= "Missing $r\n";
-	}
+			$swParsedContent .= 'Missing '.$r.'<br>';
 	
 	
 
 }
 unset($now);
 
-$swParseSpecial = true;
+$swParseSpecial = false;
 
 
 ?>

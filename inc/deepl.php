@@ -23,7 +23,7 @@ function swTranslate($text,$source,$target)
 {
 	global $swDeeplKey;
 	global $swDeeplFree;
-		
+	
 	if (!isset($swDeeplKey)) return 'Error: DeepL key missing';
 	
 	$ch = curl_init();
@@ -43,6 +43,8 @@ function swTranslate($text,$source,$target)
 	curl_setopt($ch, CURLOPT_POSTFIELDS,  $encoded);
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	$result = curl_exec($ch);
+	
+	echo $target;
 		
 	curl_close($ch);
 	

@@ -23,6 +23,8 @@ foreach ($swSystemDefaults as $k=>$v)
 	}	
 }
 
+//print_r($lines);
+
 $q = 'relation key, lang, data
 data
 '.join(PHP_EOL,$lines).'
@@ -36,7 +38,19 @@ project lang
 join cross
 swap
 join left
-update data = "<nowiki>_MISSING</nowiki>" where data == ""
+
+filter _namespace "system", _name, _content
+rename _content data2
+extend test = lower(replace(_name,"/","::"))
+select test regex "::"
+extend lang = regexreplace(test,"system:(.+)::(.+)","$2")
+extend key = urltext(regexreplace(test,"system:(.+)::(.+)","$1"))
+project key, lang, data2
+
+join left
+update data = data2 where data2 !== ""
+
+update data = "-" where data == ""
 '."extend link = \"<nowiki><a href='index.php?action=edit&name=system:\".key.\"/\".lang.\"'>\".key.\"/\".lang.\"</a></nowiki>\"".'
 project link, data
 order link

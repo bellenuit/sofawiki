@@ -585,11 +585,11 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" height ="'.$height.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
 				}
 			}
 			elseif ($height!= '' && $height > 0 && $width != '' && $width>0)
@@ -598,11 +598,11 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" height ="'.$height.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
 				}
 			}
 			elseif ($width != '' && $width>0)
@@ -611,11 +611,11 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" >';
 				}
 			
 			}
@@ -625,22 +625,64 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="'.$path.'"  height ="'.$height.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="site/files/'.$val.'"  height ="'.$height.'" >';
 				}
 				
 			}
 			else
 			{
-				$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'">';
+				$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'" >';
 			}
 			if ($this->ignorelinks) $link = '';
 			$s = str_replace($v[0], $link, $s); 
 		}
+		
+		//echotime('lazystart');
+		
+		// lazy images
+		
+		$list = explode('[[Imagelazy:',$s);
+		
+		for($i = 1; $i < count($list); $i++)
+		{
+		
+			$vp = strpos($list[$i],']]');
+			
+			if ($vp === FALSE) continue;
+			
+			$v = substr($list[$i],0,$vp);
+		
+			$options = explode('|',$v);
+			
+			$val = $options[0];
+			if (isset($options[1])) $width = intval($options[1]); else $width = 0;
+			if (isset($options[2])) $height = intval($options[2]); else $height = 0;
+			if (isset($options[3])) $crop = $options[3]; else $crop = '';
+			if (isset($options[4])) $alttag = $options[4]; else $alttag = '';
+			
+			$token = md5($val.date('Ymd',time())); 
+			$path = 'imageapi.php?w='.$width.'&h='.$height.'&crop='.$crop.'&token='.$token.'&name='.$val;
+			
+			if ($width) $woption = ' width ="'.$width.'" '; else $woption = '';
+			if ($height) $hoption = ' height ="'.$height.'" '; else $hoption = '';
+			
+			$link = '<img class="embeddimage" alt="'.$alttag.'" srclazy="'.$path.'"'.$woption.$hoption.' loading="lazy">';			
+			
+			if ($this->ignorelinks) $link = '';
+			
+			$list[$i] = $link.substr($list[$i],$vp+2);	
 
+		}
+		
+		$s = join('',$list);
+		
+		
+		
+		//echotime('lazyend');
 
 		// Image Links with dual size width and height
 		preg_match_all("/\[\[Image:([^\|\]]*)(\|+)([^\]]*)(\|+)([^\]]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
@@ -657,11 +699,11 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="" src="'.$path.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
 				}
 			}
 			elseif ($height!= '' && $height > 0)
@@ -670,17 +712,17 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="" src="'.$path.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'">';
+					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
 				}
 				
 			}
 			else
 			{
-				$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'">';
+				$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'" >';
 			}
 			if ($this->ignorelinks) $link = '';
 			$s = str_replace($v[0], $link, $s); 
@@ -700,11 +742,11 @@ function drawHandles()
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="" src="'.$path.'">';
+					$link = '<img class="embeddimage" alt="" src="'.$path.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'">';
+					$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'"  width ="'.$width.'" >';
 				}
 				
 			
@@ -720,7 +762,7 @@ function drawHandles()
 		foreach ($matches as $v)
 		{
 			$val = $v[1];
-			$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'">';
+			$link = '<img class="embeddimage" alt="" src="site/files/'.$val.'" >';
 			if ($this->ignorelinks) $link = '';
 			$s = str_replace($v[0], $link, $s); 
 		}
@@ -728,32 +770,36 @@ function drawHandles()
 		// Image Page Links
 		preg_match_all("/\[\[:Image:([^\|]*)\]\]/U", $s, $matches, PREG_SET_ORDER);
 		
-		foreach ($matches as $v)
+		$list = explode('[[:Image:',$s);
+		
+		for($i = 1; $i < count($list); $i++)
 		{
-			$val = $v[1];
-
-			$linkwiki = new swWiki;
-			$linkwiki->name = 'Image:'.$val;
-			$linkwiki->lookup();
-			if ($linkwiki->visible())
+		
+			$vp = strpos($list[$i],']]');
+			
+			if ($vp === FALSE) continue;
+			
+			$v = substr($list[$i],0,$vp);
+		
+			$options = explode('|',$v);
+			
+			$val = $options[0];
+			$label = @$options[1];
+			if (!$label) $label = $val;
+			$r = '';
+			$r = swGetCurrentRevisionFromName('Image:'.$val);
+			if ($r)
 				$link = '<a href="index.php?name=Image:'.$val.'">Image:'.$val.'</a>';
 			else	
 				$link = '<a href="index.php?name=Image:'.$val.'" class="invalid">Image:'.$val.'</a>';
 			if ($this->ignorelinks) $link = '';
-			$s = str_replace('[[:Image:'.$val.']]', $link, $s); 
+			
+			$list[$i] = $link.substr($list[$i],$vp+2);	
 		}
-
-		// Image Links with alt text
-		 preg_match_all("@\[\[:Image:([^\]\|]*)([\|]?)(.*?)\]\]@", $s, $matches, PREG_SET_ORDER); 
 		
-		foreach ($matches as $v)
-		{
-			$val = $v[1];
-			$label = $v[3];
-			$link = '<a href="index.php?name=Image:'.$val.'">'.$label.'</a>';
-			if ($this->ignorelinks) $link = '';
-			$s = str_replace('[[:Image:'.$val.'|'.$label.']]', $link, $s); 
-		}
+		$s = join('',$list);
+		
+		//echotime('imageend');
 		
 		// Media Links
 		preg_match_all("/\[\[Media:([^\|]*)\]\]/U", $s, $matches, PREG_SET_ORDER);

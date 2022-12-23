@@ -1428,19 +1428,17 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$foundfile = false;
 		if (array_key_exists('file',$fields))
 		{
-			
 			if (!$fields['file'])
 			{
 				$foundfile = true;
 			}
 			else
-			{
-				
+			{			
 				$stack = array();
-				$stack[] = $shortfile;
+
 				$stack[] = $fields['file'];
-				$hintfunction->run($stack);
-				$foundfile = array_pop($stack);
+				$stack[] = $shortfile;
+				$foundfile = $hintfunction->run($stack);
 			}
 		}
 		else
@@ -1496,10 +1494,11 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 						if ($found && $v)
 						{
 							$stack = array();
-							$stack[] = $values[$k];
+
 							$stack[] = $v;
-							$hintfunction->run($stack);
-							$found = array_pop($stack) && $found;
+							$stack[] = $values[$k];
+							
+							$found = $hintfunction->run($stack);
 						}
 					}
 				}
@@ -1604,7 +1603,7 @@ template "'.$template.'"';
 	else
 	{
 		$print = '
-update _name = "<br>[["._name."|"._displayname."]]<br>". _paragraph 
+update _name = link(_name,_displayname).tag("br")._paragraph 
 project _name
 
 label _name ""
@@ -1676,6 +1675,7 @@ update _paragraph = regexreplacemod(_paragraph,s,bold.s.unbold,"i")
 update _paragraph = replace(_paragraph,unbold,unbold2)
 end if
 set l = i + 1
+
 end if
 set i = i + 1
 end while
@@ -1688,8 +1688,7 @@ global $swUseFulltext;
 if ($swUseFulltext)
 {
 $q= 'fulltext "'.$term.'"
-update body = _lt."nowiki"._gt.body._lt."/nowiki"._gt
-extend t = _leftsquare._leftsquare.url._pipe.title._rightsquare._rightsquare._lt."br"._gt.body
+extend t = link(url,title).tag("br").tag("nowiki",body)
 project t
 label t ""
 print linegrid 50';
@@ -1896,11 +1895,19 @@ function swRelationIndexSearch($filter, $globals = array())
 		
 		$nowtime = microtime(true);	
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-		if ($dur>$swMaxSearchTime || count($journal)>10000) 
+		if ($dur>$swMaxSearchTime)
 		{ 
 			$swOvertime = true;
 			echotime('searchtime fields'); 
 			break;
+		}
+		
+		if (count($journal)>10000)
+		{
+			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.'COMMIT;';
+			$fielddb->exec($q);
+			echotime('synced '.count($journal));
+			$journal = array();
 		}
 
 		
@@ -1966,15 +1973,7 @@ function swRelationIndexSearch($filter, $globals = array())
 	
 	if (count($journal))
 	{
-		array_unshift($journal, "PRAGMA synchronous=OFF; ");
-		$journal[] = "PRAGMA synchronous=ON; ";
-		//$checkedbitmap->hexit();
-		//$v = serialize($checkedbitmap);
-		//echo $v;
-		// $v = $fielddb->escapeString($v);
-		// $journal[]= "REPLACE INTO aux (key,value) VALUES ('checkedbitmap','$v');"; 
-		$q = join(PHP_EOL,$journal);
-		// echo $q;
+		$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.'COMMIT;';
 		$fielddb->exec($q);
 		echotime('synced '.count($journal));
 	}

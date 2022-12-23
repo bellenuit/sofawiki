@@ -101,6 +101,9 @@ class swRelationLineHandler
 		$firstchart = true;
 		$consoleprogress;
 		$whilestack = array();
+		$repeatstack = array();
+		$repeatlabel = array();
+		$repeatvalue = array();
 		$ifstack = array();
 		$loopcounter;
 		$walkstart = 0;
@@ -401,6 +404,19 @@ class swRelationLineHandler
 									break; 	
 				case 'end':			if ($line == 'end while' && count($whilestack) > 0)
 										$i = array_pop($whilestack) - 1;
+									elseif ($line == 'end repeat' && count($repeatstack) > 0)
+									{
+										@$dict[end($repeatlabel)]--; 
+										
+										if ($dict[end($repeatlabel)] > 0)
+											$i = end($repeatstack);
+										else
+										{
+											unset($dict[end($repeatlabel)]);
+											array_pop($repeatstack);
+											array_pop($repeatlabel);
+										}
+									}
 									elseif($line == 'end if')
 									{
 										if (count($ifstack)>0)
@@ -1155,6 +1171,49 @@ class swRelationLineHandler
 										$this->stack[] = $r;
 									}
 									break;										
+				case 'repeat':		$repeatstack[] = $i;
+									$fields = explode(' ',$body);
+									if (count($fields)<2)
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Repeat missing parameters'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									elseif(array_key_exists($fields[0],$dict))
+									{
+										$this->result .= $ptag.$ptagerror.$ti.' Error : Repeat name '.$fields[0].' already used'.$ptagerrorend.$ptag2;
+										$this->errors[]=$il;
+									}
+									else
+									{
+										$repeatlabel[] = array_shift($fields);
+										$body = join(' ',$fields);
+										$xp = $this->GetCompiledExpression($body);
+										$v = $xp->evaluate($dict);
+										$dict[end($repeatlabel)] = $v;
+										
+										if ($v>0)
+										{
+											// do read following lines
+										}
+										else
+										{
+										$loopcounter = 1;
+											while($i<$c && $loopcounter >0)
+											{
+												$i++;
+												$mline = trim($lines[$i]);
+												if (strpos($mline,'// ')>-1)
+													$mline = trim(substr($mline,0,strpos($mline,'// ')));
+		
+												if (substr($mline,0,5)=='repeat')
+													$loopcounter++;
+												elseif (substr($mline,0,9)=='end repeat')
+													$loopcounter--;
+											}
+										}
+									}
+										
+									break; 	
 				case 'run':			// run pg(x) and run pg (x) are both valid
 									// so we split on paranthesis, not space
 									
@@ -1225,7 +1284,13 @@ class swRelationLineHandler
 										$key = array_shift($fields);
 									    $eq = array_shift($fields);
 										$body = join(' ',$fields);
-										if ($eq != '=')
+										if(in_array($key,$repeatlabel))
+										{
+											$this->result .= $ptag.$ptagerror.$ti.' Error : Set name '.$key .' already used'.$ptagerrorend.$ptag2;
+											$this->errors[]=$il;
+
+										}
+										elseif ($eq != '=')
 										{
 											$this->result .= $ptag.$ptagerror.$ti.' Error : Set missing ='.$ptagerrorend.$ptag2;
 											$this->errors[]=$il;
@@ -1355,6 +1420,7 @@ class swRelationLineHandler
 										$pairs = explode(',',$body);								
 										foreach($pairs as $p)
 										{
+											if (!trim($p)) continue;
 											if (!in_array(trim($p),$walkrelation2->header))
 												$walkrelation2->addColumn(trim($p));
 										}
@@ -3558,7 +3624,7 @@ class swRelation
 
 		}
 		if ($grid)
-			$lines[] = '<nowiki><div><script src="inc/skins/table.js"></script></div></nowiki>';
+			$lines[] = '<nowiki><script src="inc/skins/table.js"></script><script>tablefilter('.$id.')</script></nowiki>';
 		$result = PHP_EOL.join(PHP_EOL,$lines).PHP_EOL;
 		return $result;
 		
@@ -4014,7 +4080,7 @@ class swAccumulator
 			$acc += floatval($t);
 			$i++;
 		}
-		if (!$i) return 'a⦵'.count($this->list);
+		if (!$i) return '⦵';
 		$v = $acc / $i;
 		return swConvertText12($v);
 	}
@@ -4037,6 +4103,82 @@ class swAccumulator
 		return $xp->DoRunAggregator($this->list);
 	}
 	
+	private function pFirst()
+	{
+		return array_shift($this->list);
+	}
+	
+	private function pGeometricMean()
+	{
+		$acc = 1; $i=0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
+			if ($t < 0) return '⦵';
+			$acc *= floatval($t);
+			$i++;
+		}
+		if (!$i) return '⦵';
+		$v = pow($acc,1 / $i);
+		return swConvertText12($v);
+	}
+	private function pHarmonicMean()
+	{
+		$acc = 0; $i=0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
+			if ($t == 0) return '⦵';
+			$acc += 1/floatval($t);
+			$i++;
+		}
+		if (!$acc) return '⦵';
+		$v = $i / $acc;
+		return swConvertText12($v);
+	}
+	
+	private function pGiniSimpson()
+	{
+		$acc = 0; $i=0; $acc2= 0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
+			if ($t == 0) continue;
+			if ($t < 0) return '⦵';
+			$acc  += $t * $t;
+			$acc2 += $t;
+			$i++;
+		}
+		if (!$acc) return '0';
+		$v = 1 - $acc / ($acc2 * $acc2);
+		return swConvertText12($v);
+	}
+
+	
+	private function pHill()
+	{
+		$acc = 0; $i=0; $acc2= 0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
+			if ($t == 0) continue;
+			if ($t < 0) return '⦵';
+			$acc  += $t * log($t);
+			$acc2 += $t;
+			$i++;
+		}
+		if (!$acc) return '0';
+		$v = exp(log($acc2) - $acc / $acc2);
+		return swConvertText12($v);
+	}
+
+
+
+	private function pLast()
+	{
+		return array_pop($this->list);
+	}
+
 	private function pMax()
 	{
 		if (count($this->list)==0) return "";
@@ -4119,6 +4261,36 @@ class swAccumulator
 		return $acc;
 	}
 	
+	private function pProd()
+	{
+		if (count($this->list)==0) return "";
+		$acc = 1;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
+			$acc *= floatval($t);
+		}
+		return swConvertText12($acc);
+	}
+	
+	private function pShannon()
+	{
+		$acc = 0; $i=0; $acc2= 0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t === '∞' || $t === '-∞') continue;
+			if ($t == 0) continue;
+			if ($t < 0) return '⦵';
+			$acc  += $t * log($t);
+			$acc2 += $t;
+			$i++;
+		}
+		if (!$acc) return '0';
+		$v = log($acc2) - $acc / $acc2;
+		return swConvertText12($v);
+	}
+
+
 	private function pStdev()
 	{
 		$acc = 0;
@@ -4134,6 +4306,18 @@ class swAccumulator
 		if ($i == 0) return '⦵';
 		$v = sqrt($acc2/$i - $acc/$i*$acc/$i);
 		return swConvertText12($v);
+	}
+
+	private function pSum()
+	{
+		if (count($this->list)==0) return "";
+		$acc = 0;
+		foreach($this->list as $t)
+		{
+			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
+			$acc += floatval($t);
+		}
+		return swConvertText12($acc);
 	}
 
 	private function PVar()
@@ -4153,46 +4337,33 @@ class swAccumulator
 		return swConvertText12($v);
 	}
 	
-	private function pSum()
-	{
-		if (count($this->list)==0) return "";
-		$acc = 0;
-		foreach($this->list as $t)
-		{
-			if ($t === '⦵' || $t == '∞' || $t == '-∞') continue;
-			$acc += floatval($t);
-		}
-		return swConvertText12($acc);
-	}
 	
-	private function pFirst()
-	{
-		return array_shift($this->list);
-	}
 
-	private function pLast()
-	{
-		return array_pop($this->list);
-	}
 
 	function reduce()
 	{
 		switch ($this->method)
 		{
-			case 'count'	: 	return $this->pCount();
-			case 'sum'  	:	return $this->pSum();
 			case 'avg'  	:	return $this->pAvg();
-			case 'min'  	:	return $this->pMin();
-			case 'max'  	:	return $this->pMax();
-			case 'median'  	:	return $this->pMedian();
-			case 'mins'  	:	return $this->pMinS();
-			case 'maxs'  	:	return $this->pMaxs();
-			case 'medians'  :	return $this->pMedianS();
-			case 'stddev'  	:	return $this->pStdev();
-			case 'var'  	:	return $this->PVar();
 			case 'concat'  	:	return $this->pConcat();
+			case 'count'	: 	return $this->pCount();
 			case 'first'  	:	return $this->pFirst();
 			case 'last'  	:	return $this->pLast();
+			case 'max'  	:	return $this->pMax();
+			case 'maxs'  	:	return $this->pMaxs();
+			case 'gini' 	: 	return $this->pGiniSimpson();
+			case 'gm' 		: 	return $this->pGeometricMean();
+			case 'hill' 	: 	return $this->pHill();
+			case 'hm' 		: 	return $this->pHarmonicMean();
+			case 'median'  	:	return $this->pMedian();
+			case 'medians'  :	return $this->pMedianS();
+			case 'min'  	:	return $this->pMin();
+			case 'mins'  	:	return $this->pMinS();
+			case 'prod'  	:	return $this->pProd();
+			case 'shannon' 	: 	return $this->pShannon();
+			case 'stddev'  	:	return $this->pStdev();
+			case 'sum'  	:	return $this->pSum();
+			case 'var'  	:	return $this->PVar();
 			case 'custom'  	:	return $this->pCustom();
 		}
 	}

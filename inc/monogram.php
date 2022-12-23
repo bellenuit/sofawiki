@@ -64,15 +64,17 @@ function swClearMonogram()
  *  A value is indexed as bitmap of each character (monogram) in url syntax a-z0-9- (uncompressed 36bit per revision)
  *  The data is stored in a Sqlite3 database.
  */
-function swIndexMonogram($numberofrevisions = 1000, $continue = false)
+function swIndexMonogram($numberofrevisions = 10000, $continue = false)
 {
 	
-	echotime('indexmonogram');
+	echotime('indexmonogram '.$numberofrevisions);
 	
 	global $swMonogramIndex;
 	global $swMonogramIndexWritable;
 	global $swMaxSearchTime;
 	global $db;
+	global $swOvertime ;
+	global $swMemoryLimit;
 	
 	if (!$swMonogramIndex) swOpenMonogram();
 	
@@ -100,21 +102,30 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 	
 	$bitmaps = array();
 	
-	global $swMemoryLimit;
+	
 	
 	
 	
 	for($i = $l;$i>0;$i--)
 	{
-		if (memory_get_usage()>$swMemoryLimit) continue;
-		
 		$nowtime = microtime(true);	
 		$dur = sprintf("%04d",($nowtime-$starttime)*1000);
-		if ($dur>3*$swMaxSearchTime) 
+		if ($dur>$swMaxSearchTime) 
 		{ 
 			echotime('searchtime'); 
+			$overtime = true;
+			$swOvertime = true;
 			break;
 		}
+		if (memory_get_usage()>$swMemoryLimit)
+		{
+			echotime('overmemory '.memory_get_usage());
+			$overtime = true;
+			$swOvertime = true;
+			break;
+		}
+
+		
 		if ($checkedbitmap->getbit($i)) continue;
 		if (!$db->indexedbitmap->getbit($i)) continue;
 		$checkedbitmap->setbit($i);
@@ -197,12 +208,6 @@ function swIndexMonogram($numberofrevisions = 1000, $continue = false)
 		
 	swDbaSync($swMonogramIndex);
 // 	return;
-	
-	if ($counter)
-	{
-		global $swOvertime;
-		$swOvertime = true;
-	}
 	
 	return $counter;	 
 }

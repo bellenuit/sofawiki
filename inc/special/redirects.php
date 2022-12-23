@@ -9,7 +9,7 @@ $q = '
 filter _name, _short "#REDIRECT"
 select _short regex "^#REDIRECT"
 order _name a
-update _name = "[["._name."]]"
+update _name = link(_name)
 update _short = substr(_short,10,999)
 ​label _name "Name", _short "Redirect to"
 print 100

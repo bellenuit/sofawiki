@@ -35,6 +35,9 @@ elseif ($user->hasright('modify', $wiki->name))
 		{
 			$subname = $wiki->namewithoutlanguage();
 			if ($l != '--') $subname .= '/'.$l;
+			else {
+				if (strstr($name,'/') && count($l)==1 ) $subname = $wiki->name; // submitted single revision with language.
+			}
 			
 			
 			// check for editing conflict

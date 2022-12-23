@@ -345,6 +345,7 @@ function swSnapShot($username)
 	$files[] = 'index.php';
 	$files[] = 'api.php';
 	$files[] = 'cron.php';
+	$files[] = 'imageapi.php';
 	$files[] = 'inc/.htaccess';
 	$files[] = 'inc/skins/.htaccess';
 	$files[] = 'site/.htaccess';

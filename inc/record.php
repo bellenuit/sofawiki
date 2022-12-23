@@ -343,10 +343,9 @@ class swRecord extends swPersistance
 			}
 			if ($rec2->revision < $this->revision) // does not already exist
 			{
-				echotime('writecurrent '.$this->revision.'>'.$rec2->revision.' '.$this->name);
+				echotime('writecurrent '.$this->revision.'>'.intval($rec2->revision).' '.$this->name);
 				
 				// must be first to unset old revision if there is.
-				//echotime('writec '. $this->name.' '.$this->revision);
 				$this->internalfields = swGetAllFields($this->content);
 				$this->persistance = $this->currentPath();
 				$this->save();
@@ -354,37 +353,7 @@ class swRecord extends swPersistance
 			}
 			$s = $this->source();
 			global $swRamdiskPath;
-			/*
-			if (strlen($s) <= 512 && $swRamdiskPath == '')
-			{
-				echotime('writeshort '. $this->name.' '.$this->revision);
-				global $swRoot;
-				$s = substr($s,0,512);
-				$s = str_pad($s,512,' ');
-				$path = $swRoot.'/site/indexes/short.txt';
-				swSemaphoreSignal($path);
-				$fpt = fopen($path,'c');
-				@fseek($fpt, 512*($this->revision-1));
-				@fwrite($fpt, $s);
-				@fclose($fpt);
-				swSemaphoreRelease($path);
-				$db->shortbitmap->setbit($this->revision);
-			}
-			else
-			{
-				
-				$cp = swGetPath($this->revision,true); // save revision as object, to be reused
-				if (!file_exists($cp)) // is always the same
-				{
-					$this->persistance = $cp;
-					$this->save();
-				}
-			
-			}
-			*/
 			$db->updateIndexes($this->revision);
-			//$db->close(); // force save indexes	
-			//swIndexBloom(2);		
 		}
 		
 	}

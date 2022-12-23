@@ -1,11 +1,4 @@
-<?php if (isset($_REQUEST['ajax']))
-{
-	echo $swParsedContent;
-		
-	exit;
-
-}
-?><!DOCTYPE HTML>
+<?php include 'headerscript.php'; ?><!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">

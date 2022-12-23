@@ -7,7 +7,7 @@ $swParsedName = "Special:Templates";
 
 $q = '
 filter _namespace "template", _name
-update _name = "[["._name."]]"
+update _name = link(_name)
 project _name
 order _name a
 label _name "" 

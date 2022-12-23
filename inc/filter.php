@@ -810,7 +810,7 @@ function swFilter($filter,$namespace,$mode='query',$flags='',$checkhint = NULL)
 		unset($goodrevisions);
 		$goodrevisions = $set;
 		unset($set);
-		echotime('cachefile '.floor($checkedlength/1024).' KB');
+		if (isset($checkedlength)) echotime('cachefile '.floor($checkedlength/1024).' KB');
 		echomem('filter');	
 		return $goodrevisions;
 	
@@ -1149,23 +1149,23 @@ function swQueryTupleExpression($row, $term)
 					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error +');	}
 					  $a = array_pop($calcstack); 
 					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b+$a); break;
+					  array_push($calcstack,floatval($b)+floatval($a)); break;
 				case '-' : 
 					  if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty error -');	}
 					  $a = array_pop($calcstack); 
 					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b-$a); break;
+					  array_push($calcstack,floatval($b)-floatval($a)); break;
 				case '*' : 
 				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty *'); 	}
 					  $a = array_pop($calcstack); 
 					  $b= array_pop($calcstack); 
-					  array_push($calcstack,$b*$a); break;
+					  array_push($calcstack,floatval($b)*floatval($a)); break;
 				case '/' :
 				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty /'); 	}
 					  $a = array_pop($calcstack); 
 					  $b= array_pop($calcstack);
 					  if ($a == 0)  { return array('_error'=>'Expression division by zero'); 	}
-					  array_push($calcstack,$b/$a); break;
+					  array_push($calcstack,floatval($b)/floatval($a)); break;
 				case '.' : 
 				      if (count($calcstack)<2) { return array('_error'=>'Expression Stack empty .'); 	}
 					  $a = array_pop($calcstack); 

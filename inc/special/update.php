@@ -125,6 +125,11 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 		echo '<p>rename cron.php'; }
 	else
 	{ echo '<p><b>error</b> rename cron.php'; }
+	if (rename($swRoot.'/install/sofawiki/imageapi.php',$swRoot.'/imageapi.php') )
+	{ chmod($swRoot.'/imageapi.php',0664);
+		echo '<p>rename imageapi.php'; }
+	else
+	{ echo '<p><b>error</b> rename imageapi.php'; }
 	
 	
 	$files = rglob($swRoot.'/install/*'); 
@@ -171,7 +176,7 @@ $swParsedContent .= "\n<select name='file'>";
 arsort($filelist);
 foreach ($filelist as $f)
 {	
-	if ($f !=  "")
+	if ($f !=  "" && !preg_match("/[a-z]\.zip/",$f))
 	$swParsedContent .= "<option value='$f'>$f</option>";
 }
 $swParsedContent .= "\n</select>";
@@ -179,6 +184,28 @@ $swParsedContent .= "\n<input type='hidden' name='name' value='special:update'>"
 $swParsedContent .= "\n<input type='submit' name='submitdownload' value='Download' />";
 $swParsedContent .= "\n</p></form>";
 
+$swParsedContent .= '<p>Development versions</p>';
+
+$serverfile = "https://www.sofawiki.com/site/files/snapshot.txt";
+$localfile = $swRoot.'/snapshot.txt';
+
+wgets($serverfile,$localfile);
+
+
+$filelist = explode("\n",file_get_contents($swRoot.'/snapshot.txt'));
+
+$swParsedContent .= "\n<form method='get' action='index.php'><p>";
+$swParsedContent .= "\n<select name='file'>";
+arsort($filelist);
+foreach ($filelist as $f)
+{	
+	if ($f !=  "" && preg_match("/[a-z]\.zip/",$f))
+	$swParsedContent .= "<option value='$f'>$f</option>";
+}
+$swParsedContent .= "\n</select>";
+$swParsedContent .= "\n<input type='hidden' name='name' value='special:update'>";
+$swParsedContent .= "\n<input type='submit' name='submitdownload' value='Download' />";
+$swParsedContent .= "\n</p></form>";
 
 
 

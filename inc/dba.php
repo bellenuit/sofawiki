@@ -458,12 +458,16 @@ class swDba
 		
 		$statement = $this->db->prepare('SELECT v FROM kv WHERE k = :key');
 		$statement->bindValue(':key', $key);
-		$result = $statement->execute();
-		
-		if ($this->db->lastErrorCode())
+		if (! $statement )
 		{
-			$this->db->exec('VACUUM');
-			throw new swDbaError('swDba fetch error '.$this->db->lastErrorMsg());
+			throw new swDbaError('swDba statement error '.$key);
+		}
+		
+		$result = @$statement->execute();
+		
+		if (!$result || $this->db->lastErrorCode())
+		{
+			throw new swDbaError('swDba fetch error '.$this->path.' '.$this->db->lastErrorCode().' '.$this->db->lastErrorMsg());
 		}
 		else
 		{
@@ -518,7 +522,8 @@ class swDba
 		echotime('sync '.$this->count().' + '.count($this->journal));
 		
 		$lines = array();
-		$lines[] = "PRAGMA synchronous=OFF; ";
+		
+		
 		
 		foreach($this->journal as $k=>$v)
 		{
@@ -527,17 +532,38 @@ class swDba
 			if ($v === FALSE)
 				$lines[]= "DELETE FROM kv WHERE k = '$k' ;"; // use double quote because in sql it is single quote
 			else
-				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";			
+				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";		
+			
+			// memory: query should not be too long	
+				
+			if (count($lines)>1000)
+			{
+				$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
+				$this->db->exec($q);
+				
+				if ($this->db->lastErrorCode())
+				{
+					echo $q;
+					$this->db->exec('VACUUM');
+					throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
+				}
+				$lines = array();
+			}	
+						
 		}
-		$q = join(PHP_EOL,$lines);
-		$lines[] = "PRAGMA synchronous=FULL; ";
 		
-		$this->db->exec($q);
+		if (count($lines))
+		{
+			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
+			$this->db->exec($q);
+		}
 
 		if ($this->db->lastErrorCode())
 		{
+			echo $q;
 			$this->db->exec('VACUUM');
 			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
+			
 		}		
 		$this->journal = array();
 		

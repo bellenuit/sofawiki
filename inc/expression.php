@@ -46,7 +46,8 @@ class swExpression
 			if (isset($swFunctions))
 			foreach($swFunctions as $k=>$v)
 			{
-				if ($v->arity() < 0) continue;
+				// if ($v->arity() < 0) continue;
+				if (isset($swExpressionFunctions[':'.$k])) continue; // do not override
 				$fn  = new XpNative;
 				$fn->init($k,$v);
 				$swExpressionFunctions[':'.$k] = $fn;
@@ -411,22 +412,28 @@ class swExpression
 				case '$': 	$this->rpn[] = $t;
 							$negationpossible = false;
 							break;
-				case '@': 	$operatorstack[] = $t;
+				case '@': 	$this->rpn[] = ':fn';
+							$operatorstack[] = $t;
+							
 							$negationpossible = true;
 							break;
-				case '(': 	$operatorstack[] = '(';
+				case '(': 	
+							$operatorstack[] = '(';
 							$negationpossible = true;
 							break;
 				case ')': 	
 							do 
 							{
 								if (count($operatorstack) == 0)
-								throw new swExpressionError('Compile missing open paranthesis '. join(' ',$rpn),21);
+								{
+									throw new swExpressionError('Compile missing open paranthesis '. join(' ',$this->rpn),21);
+								}
 								$e = array_pop($operatorstack);
 								if (mb_substr($e,0,2,'UTF-8')=='@(')
 								{
 									$fn = ':'.mb_substr($e,2,null,'UTF-8');
 									$this->rpn[] = $fn;
+									
 								}
 								elseif($e != '(' && $e !='1' && floatval($e) == 0)
 								{
@@ -477,9 +484,10 @@ class swExpression
 									$this->rpn[] = ':orleft';
 									$operatorstack[] = ":orright#".$rvi;
 								}
-								else
+								elseif ($op->functionlabel)
 								{
 									$operatorstack[] = $op->functionlabel;
+ 									
 								}
 								$operatorstack[] = $op->precedence;
 								$negationpossible = true;
@@ -487,6 +495,7 @@ class swExpression
 							}
 							else
 							{
+								
 								$this->rpn[] = $t;
 								$negationpossible = false;
 							}
@@ -596,6 +605,9 @@ class swExpression
 													break;
 								case ':comma': 		//nop
 													break;	
+								case ':fn': 		// add functionargumentstopper to stack
+													$this->stack[] = new swExpressionFunctionBoundary;
+													break;	
 								case ':goto':		$jump = '#'.array_pop($this->stack);
 													$j = array_search($jump,$this->rpn);
 													if ($j !== false)
@@ -697,7 +709,31 @@ class swExpression
 								default:			if(isset($swExpressionFunctions[$e]))
 													{	
 														$f = $swExpressionFunctions[$e];
-														$f->run($this->stack);
+														
+														
+														
+														$args = array();
+														
+														if ($f->isOperator)
+														{
+															if (count($this->stack)< $f->arity) throw new swExpressionError('Empty stack for '.$f->label,31);
+															for ($opi = 0; $opi < $f->arity; $opi++) $args[] = array_pop($this->stack);
+														}
+														else
+														{		
+															do 	
+															{
+																$arg = array_pop($this->stack);
+																
+																if (!is_a($arg, 'swExpressionFunctionBoundary'))$args[] = $arg;
+															}
+															while(!is_a($arg, 'swExpressionFunctionBoundary') && count($this->stack));
+														}
+														
+														$args = array_reverse($args);  // normal functional order
+														
+														$this->stack[] = $f->run0($args);
+														
 													}
 													else
 													{
@@ -856,23 +892,23 @@ class swExpression
 		$results[] = 'asdfjklö';
 
 		$tests[] = 'sqrt(16)';
-		$comps[] = '16 :sqrt';
+		$comps[] = ':fn 16 :sqrt';
 		$results[] = '4';
 
 		$tests[] = 'pow(2,3)';
-		$comps[] = '2 3 :comma :pow';
+		$comps[] = ':fn 2 3 :comma :pow';
 		$results[] = '8';
 		
 		$tests[] = 'pow(3+1,3)';
-		$comps[] = '3 1 :add 3 :comma :pow';
+		$comps[] = ':fn 3 1 :add 3 :comma :pow';
 		$results[] = '64';
 
 		$tests[] = 'replace(d.e,"sd","sbb")';
-		$comps[] = 'd e :concat $sd :comma $sbb :comma :replace';
+		$comps[] = ':fn d e :concat $sd :comma $sbb :comma :replace';
 		$results[] = 'asbbfjklö';
 		
 		$tests[] = '100 * (5+pow(3+1,3)) / 10000';
-		$comps[] = '100 5 3 1 :add 3 :comma :pow :add :mul 10000 :div';
+		$comps[] = '100 5 :fn 3 1 :add 3 :comma :pow :add :mul 10000 :div';
 		$results[] = '0.69';
 
 		$tests[] = '"lorem ipsum" . "RRR"';
@@ -880,11 +916,11 @@ class swExpression
 		$results[] = 'lorem ipsumRRR';
 		
 		$tests[] = 'sqrt(5+4)';
-		$comps[] = '5 4 :add :sqrt';
+		$comps[] = ':fn 5 4 :add :sqrt';
 		$results[] = '3';
 
 		$tests[] = 'sqrt(5 + 4)';
-		$comps[] = '5 4 :add :sqrt';
+		$comps[] = ':fn 5 4 :add :sqrt';
 		$results[] = '3';
 
 		$tests[] = '2 * (3 + 4)';
@@ -893,14 +929,14 @@ class swExpression
 
 		$tests[] = '2 * 3 +';
 		$comps[] = '2 3 :mul :add';
-		$results[] = 'ERROR: Stack < 2';
+		$results[] = 'ERROR: Empty stack for :add';
 		
 		$tests[] = '"lorem ipsum';
 		$comps[] = 'ERROR: Tokenize open string "lorem ipsum"';
 		$results[] = '';
 		
 		$tests[] = 'pow(3+1,3)';
-		$comps[] = '3 1 :add 3 :comma :pow';
+		$comps[] = ':fn 3 1 :add 3 :comma :pow';
 		$results[] = '64';
 		
 		$tests[] = '(67 + 45 - 66 + 2)';
@@ -1006,6 +1042,16 @@ class swExpressionError extends Exception
 {
 	
 }
+
+/**
+ * Stub class
+ */
+
+class swExpressionFunctionBoundary	
+{
+	
+}
+
 
 /**
  * Converts a number of a string with 12 digit precision
@@ -1125,7 +1171,7 @@ function swmb_str_split($string, $split_length = 1, $encoding = 'UTF-8')
 }
 */
 
-/* Testin
+
 
 $exp = new swExpression();
 try 
@@ -1145,5 +1191,5 @@ catch (swExpressionError $err)
 	// print_r($exp->operators);
 }
 
-*/
+
 

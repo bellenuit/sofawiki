@@ -56,10 +56,11 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 		
 		$sourcew = ImagesX($img);
 		$sourceh = ImagesY($img);
-		if ($desth==0)
-		$desth = $destw *$sourceh / $sourcew; 
-		if ($destw==0)
-		$destw = $desth *$sourcew / $sourceh; 
+		if (!intval($desth)) $desth = $destw *$sourceh / $sourcew;  
+		if (!intval($destw)) $destw = $desth *$sourcew / $sourceh; 
+		
+		if (!intval($destw)) $destw = $sourcew;
+		if (!intval($desth)) $desth = $sourceh;
 		
 		// do not upscale!
 		if ($destw > $sourcew * 1.5)

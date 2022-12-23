@@ -328,7 +328,7 @@ class swWiki extends swRecord
 				}
 			}
 			if (stristr($this->name,":"))
-				$result = './'.$result.'&i'; // force relative link
+				$result = './'.$result; // force relative link
 				
 		}
 

@@ -21,10 +21,15 @@ class swExpressionFunction
 {
 	var $label;
 	var $arity;
+	var $isOperator;
 	
+	function run0($args)
+	{
+		if ($this->arity>-1 && count($args) != $this->arity) throw new swExpressionError('wrong number of arguments for '.$this->label.' is '.intval(count($args)).', should be '.intval($this->arity),102);
+		return $this->run($args);
+	}
 
-
-	function run(&$stack)
+	function run($args)
 	{
 		// stub
 	}
@@ -251,173 +256,105 @@ class swExpressionCompiledFunction extends swExpressionFunction
 	 	
  	}
  	
- 	function run(&$stack)
+ 	function run($args)
 	{
 		if ($this->xp == NULL) $this->xp = new swExpression();
 		$this->xp->rpn = $this->compiledlines;
 		$localvalues = array();
 		foreach($this->args as $arg)
 		{
-			$localvalues[$arg] = array_pop($stack);
+			$localvalues[$arg] = array_pop($args);
 		}
-		$t = $this->xp->evaluate($localvalues);
-		$stack[] = $t;
+		return $this->xp->evaluate($localvalues);
 	}
-	
-	function runAggregator($list)
-	{
-		if ($this->xp == NULL) $this->xp = new swExpression();
-		$this->xp->rpn = array();
-		while(count($list)>0)
-			$this->xp->rpn[] = array_pop($list);
-		foreach($this->compiledlines as $t)
-			$this->xp->rpn[] = $t;
-		$t = $this->xp->evaluate($localvalues);
-		$stack[] = $t;
-	}
-
 }
 
 class xpAbs extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':abs' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '⦵') 
-		{
-			$stack[] = $a; 
-			return;
-		}
-		if ($a === '-∞') 
-		{ 
-			$stack[] = '∞';
-			return;
-		}
+		$a = $args[0];
+		if ($a === '∞' || $a === '⦵') return $a;
+		if ($a === '-∞') return '∞';
 		$a = floatval($a);
-		$stack[] = swConvertText15(abs($a));		
+		return swConvertText15(abs($a));		
 	}
 }
 
 class xpAdd extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':add' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':add' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '-∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞' && $b === '∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' || $b === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '-∞' || $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '-∞') return '⦵';
+		if ($a === '-∞' && $b === '∞') return '⦵';
+		if ($a === '∞' || $b === '∞') return '∞';
+		if ($a === '-∞' || $b === '-∞') return '-∞';
 		$a = floatval($a);
 		$b = floatval($b);			
-		$stack[] = swConvertText15($b+$a);	
+		return swConvertText15($b+$a);	
 	}
 }
 
 class xpAnd extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':and' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':and' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-	if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-		}
-		else
-		{
-			if ($a === '∞') $a = '1';
-			if ($b === '∞') $b = '1';
-			if ($a === '-∞') $a = '1';
-			if ($b === '-∞') $b = '1';
-			$a = floatval($a);
-			$b = floatval($b);
-			if ($a && $b)
-			{
-				$stack[] = '1';
-			}
-			else
-			{
-				$stack[] = '0';
-			}	
-		}
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞') $a = '1';
+		if ($b === '∞') $b = '1';
+		if ($a === '-∞') $a = '1';
+		if ($b === '-∞') $b = '1';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($a && $b) return '1';
+		return '0';
 	}
 }
 
 class xpAndRight extends swExpressionFunction //?
 {
-	function __construct() { $this->arity = 2; $this->label = ':and' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':and' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		echo "ans"; if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '0';
-			return;
-		}
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '0';
 		if ($a === '∞' || $a === '-∞') $a = '1';
 		if ($b === '∞' || $b === '-∞') $b = '1';
 		$a = floatval($a);
 		$b = floatval($b);		
-		if ($a && $b) $stack[] = '1';
-		else $stack[] = '0';			
+		if ($a && $b) return '1';
+		return '0';			
 	}
 }
 
 class xpCeil extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':ceil' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵')
-		{
-			$stack[] = $a;
-			return;
-		}
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') return $a;
 		$a = floatval($a);
-		$stack[] = swConvertText15(ceil($a));		
+		return swConvertText15(ceil($a));		
 	}
 }
 
 class xpBigramStat extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':bigramstat' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = swBigramStat($a);		
+		$a = $args[0];
+		return swBigramStat($a);		
 	}
 }
 
@@ -429,1584 +366,37 @@ class xpBigramStat extends swExpressionFunction
 class xpComma extends swExpressionFunction 
 {
 	function __construct() { $this->arity = 2; $this->label = ':comma' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		//if (count($this->stack) < 2) throw new swExpressionError('Stack < 2',102);
-		// nop			
+		return '';		
 	}
 }
 
 class xpConcat extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':concat' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':concat' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);		
-		$stack[] = $b.$a;		
+		
+		$a = $args[0];
+		$b = $args[1];
+		
+		if (is_a($a,"swExpressionFunctionBoundary")) throw new swExpressionError('swExpressionFunctionBoundary',321);
+		if (is_a($b,"swExpressionFunctionBoundary")) throw new swExpressionError('swExpressionFunctionBoundary',321);
+		
+		return $a.$b;		
 	}
 }
 
 class xpCos extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':cos' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') return '⦵';
 		$a = floatval($a);
-		$stack[] = swConvertText15(cos($a));		
-	}
-}
-
-
-class xpDiv extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':div' ;}
-	function run(&$stack)
-	{
-		// print_r($stack);
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '-∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞')
-		{ 
-			$stack[] = '0';
-			return;
-		}
-		if (floatval($a)>0 && $b === '∞')
-		{ 
-			$stack[] = '∞';
-			return;
-		}
-		if (floatval($a)>0 && $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '∞')
-		{ 
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '-∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		
-		$a = floatval($a);
-		$b = floatval($b);	
-		if ($a == 0 && $b == 0)
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a == 0 && $b > 0)
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a == 0 && $b < 0)
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		$stack[] = swConvertText15($b/$a);		
-	}
-}
-
-class xpEqN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':eqn' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '∞' || $b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' || $b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b == $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpEqS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':eqs' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b == $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpFileExists extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':filexists' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		
-		$a = array_pop($stack);
-		$file1 = 'site/files/'.$a;
-		$file2 = 'site/cache/'.$a;	
-		$stack[] = (file_exists($file1) || file_exists($file2));	
-	}
-}
-
-
-class xpExp extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':exp' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '⦵')
-		{
-			$stack[] = $a;
-			return;
-		}
-		if ($a === '-∞')
-		{ 
-			$stack[] = '0';
-			return;
-		}
-		$a = floatval($a);
-		$stack[] = swConvertText15(exp($a));		
-	}
-}
-
-class xpFalse extends swExpressionFunction
-{
-	function __construct() { $this->arity = 0; $this->label = ':false' ;}
-	function run(&$stack)
-	{
-		$stack[] = '0';	
-	}
-}
-
-class xpFloor extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':floor' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '⦵')
-		{
-			$stack[] = $a;
-			return;
-		}
-		$a = floatval($a);
-		$stack[] = swConvertText15(floor($a));		
-	}
-}
-
-
-class xpFormat extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':format' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = floatval(array_pop($stack));	
-		$stack[] = swNumberformat($b,$a);		
-	}
-}
-
-
-class xpGeN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':gen' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b >= $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpGeS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':ges' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b >= $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpGtN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':gtn' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{ 
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b > $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpGtS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':gts' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b > $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-/**
- * Returns true if a text matches the hint pattern.
- *
- * A hint is a combination fof urltext, separated by spaces (AND) and by pipes (OR). 
- * "foo bar" foo AND bar
- * "foo|bar" foo OR bar
- * "alice bob/foo" (alice AND bob) OR foo
- * There can not be nested levels of space and pipes  
-*/ 
-
-
-class XpHint extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':hint' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$b = swNameURL($b);
-		
-		if ($a == "*") 
-		{
-			$stack[] = 1;
-			return;
-		}
-		
-		$hors = explode('|',$a);
-		$hors2 = array();
-		foreach ($hors as $hor)
-		{
-			$hands = explode(' ',$hor);
-			$hands2 = array();
-			
-			foreach($hands as $hand)
-			{
-				$hands2[] = swNameURL($hand);
-			}
-			$hors2[] = $hands2;
-		}
-		
-		$orfound = false;
-		foreach($hors2 as $hor)
-		{
-			$andfound = true;
-			foreach($hor as $hand)
-			{
-				if ($hand != '' && !strstr($b,$hand)) $andfound = false;
-			}
-			if ($andfound) $orfound = true;
-		}
-				
-		if ($orfound) 
-		{
-			$stack[] = 1;
-		}
-		else
-		{
-			$stack[] = 0;
-		}		
-	}
-}
-
-class xpIdiv extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':idiv' ;}
-	function run(&$stack)
-	{	
-		
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if (floatval($a)>0 && $b === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if (floatval($a)>0 && $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '-∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		
-		$a = floatval($a);
-		$b = floatval($b);	
-		if ($a == 0 && $b == 0)
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a == 0 && $b > 0)
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a == 0 && $b < 0)
-		{
-			$stack[] = '-∞';
-			return;
-		}
-
-		$v = ($b - ($b % $a)) / $a ; 
-		$stack[] = swConvertText15($v);
-	}
-}
-
-class xpLeN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':len' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack); 
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b <= $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpLength extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':length' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = swConvertText15(mb_strlen($a,'UTF-8'));		
-	}
-}
-
-
-class xpLeS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':les' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b <= $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpLevenshtein extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':levenshtein' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		
-		$stack[] = levenshtein($a,$b);	
-	}
-}
-
-class xpLn extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':ln' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		} 
-		$a = floatval($a);
-		if ($a <= 0)
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		$stack[] = swConvertText15(log($a));		
-	}
-}
-
-class xpLog extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':log' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		} 
-		$a = floatval($a);
-		if ($a <= 0)
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		$stack[] = swConvertText15(log10($a));		
-	}
-}
-
-class xpLower extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':lower' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = strtolower($a);		
-	}
-}
-
-class xpLtN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':ltn' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack); 
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b < $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpLtS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':lts' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b < $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpMax extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':max' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack); 
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' || $b === '∞' )
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = $b;
-			return;
-		}
-		if ($b === '-∞')
-		{
-			$stack[] = $a;
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);		
-		$stack[] = swConvertText15(max($b,$a));		
-	}
-}
-
-class xpMin extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':min' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack); 
-			if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞' || $b === '-∞' )
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = $b;
-			return;
-		}
-		if ($b === '∞')
-		{
-			$stack[] = $a;
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);		
-		$stack[] = swConvertText15(min($b,$a));		
-	}
-}
-
-class xpMod extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':mod' ;}
-	function run(&$stack)
-	{
-		// print_r($stack);
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞' && $b === '-∞')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{ 
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '∞')
-		{ 
-			$stack[] = '⦵'; 
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if (floatval($a)>0 && $b === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if (floatval($a)>0 && $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '∞')
-		{ 
-			$stack[] = '-∞';
-			return;
-		}
-		if (floatval($a)<0 && $b === '-∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		
-		$a = floatval($a);
-		$b = floatval($b);	
-		if ($a == 0 && $b == 0)
-		{
-			$stack[] = '⦵'; 
-			return; 
-		}
-		if ($a == 0 && $b > 0) 
-		{ 
-			$stack[] = '∞'; 
-			return; 
-		}
-		if ($a == 0 && $b < 0) 
-		{ 
-			$stack[] = '-∞'; 
-			return;
-		}		
-		$stack[] = swConvertText15($b%$a);		
-	}
-}
-
-
-class xpMul extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':mul' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-	
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}	
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '∞' && $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if ($a === '∞' && floatval($b) > 0)
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '∞' && floatval($b) < 0)
-		{ 
-			$stack[] = '-∞'; 
-			return; 
-		}
-		if ($a === '∞' && floatval($b) == 0) 
-		{ 
-			$stack[] = '⦵'; 
-			return;
-		}		
-		if ($a === '-∞' && $b === '∞')
-		{ 
-			$stack[] = '-∞'; 
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{ 
-			$stack[] = '∞'; 
-			return;
-		}
-		if ($a === '-∞' && floatval($b) > 0)
-		{ 
-			$stack[] = '∞';
-			return;
-		}
-		if ($a === '-∞' && floatval($b) < 0)
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if ($a === '-∞' && floatval($b) == 0)
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		
-		if (floatval($a) > 0 && $b === '∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		if (floatval($a) > 0 && $b === '-∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-
-		if (floatval($a) < 0 && $b === '∞')
-		{ 
-			$stack[] = '-∞'; 
-			return;
-		}
-		if (floatval($a) < 0 && $b === '-∞') 
-		{ 
-			$stack[] = '∞';
-			return;
-		}
-
-		if (floatval($a) == 0 && $b === '∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		if (floatval($a) == 0 && $b === '-∞')
-		{ 
-			$stack[] = '⦵';
-			return;
-		}
-		
-		$a = floatval($a);
-		$b = floatval($b);			
-		$stack[] = swConvertText15($b*$a);		
-	}
-}
-
-/**
- * Provides a class to access wiki functions.
- *
- * $nativefunction instance of wiki function class
- *
- * Only functions with a defined arity can be included
- * Native function do not handle infinity and undefined
- * Native function do not expression functions
- */
-
-class XpNative extends swExpressionFunction
-{
-	var $nativefunction;
-	
-	function __construct() { $this->arity = 1; $this->label = ':native' ;}
-	function init($key, $fn) // swFunction
-	{
-		$this->nativefunction = $fn;
-		$this->arity = $fn->arity();
-		$this->label = ':'.$key;
-	}
-	function run(&$stack)
-	{
-		if (count($stack) < $this->arity) throw new swExpressionError('Stack < '.$this->arity,101);
-		$args = array();
-		
-		for ($i = 0; $i < $this->arity ;$i++)
-		
-		$args[] = array_pop($stack);
-		$args[] = mb_substr($this->label,1,null,'UTF-8');
-		$args = array_reverse($args);
-		
-		$result = $this->nativefunction->dowork($args);
-			
-		$stack[] = $result;		
-	}
-}
-
-
-class xpNeN extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':nen' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '∞' && $b === '∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '-∞' && $b === '-∞')
-		{
-			$stack[] = '0';
-			return;
-		}
-		if ($a === '∞' || $b === '∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		if ($a === '-∞' || $b === '-∞')
-		{
-			$stack[] = '1';
-			return;
-		}
-		$a = floatval($a);
-		$b = floatval($b);
-		if ($b != $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpNeg extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':neg' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵')
-		{
-			$stack[] = '⦵';
-			return;
-		}
-		if ($a === '∞')
-		{
-			$stack[] = '-∞';
-			return;
-		}
-		if ($a === '-∞')
-		{
-			$stack[] = '∞';
-			return;
-		}
-		$a = floatval($a);
-
-		$stack[] = swConvertText15(-$a);		
-	}
-}
-
-class xpNeS extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':nes' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);	
-		if ($b != $a) $stack[] = '1';
-		else $stack[] = '0';		
-	}
-}
-
-class xpNot extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':not' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵') $stack[] = '⦵';
-		elseif($a === '∞') $stack[] = '0';
-		elseif($a === '-∞') $stack[] = '0'; 
-		elseif(floatval($a) != 0) $stack[] = '0';
-		else $stack[] = '1';
-	}
-}
-
-class xpOr extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':or' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵')
-		{
-			$stack[] = '⦵';
-		}
-		else
-		{
-			if ($a === '∞') $a = '1';
-			if ($b === '∞') $b = '1';
-			if ($a === '-∞') $a = '1';
-			if ($b === '-∞') $b = '1';
-			$a = floatval($a);
-			$b = floatval($b);
-			if ($a || $b)
-			{
-				$stack[] = '1';
-			}
-			else
-			{
-				$stack[] = '0';
-			}	
-		}
-	}
-}
-
-class xpNoWiki extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':nowiki' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',101);
-		$a = array_pop($stack);
-		
-		$w = new swWiki;
-		$w->parsedContent = $a;
-		$p = new swNoWikiParser;
-		$p->dowork($w);
-		$a = $w->parsedContent;
-			
-		$stack[] = $a;		
-	}
-}
-
-class xpPad extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':pad' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $a === '∞' || $a === '-∞')
-		{
-			$stack[] = $b;
-			return;
-		}		
-		$a = floatval($a);	
-		$stack[] = str_pad($b, $a,' ');
-	}
-}
-
-class xpPow extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':pow' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
-		elseif ($a === '∞' && $b === '-∞') $stack[] = '-∞';
-		elseif ($a === '∞' && $b === '∞') $stack[] = '∞';
-		elseif ($a === '-∞') $stack[] = '1';
-		elseif ($a == '0' && $b == '0') $stack[] = '1';
-		else
-		{
-			$a = floatval($a);
-			$b = floatval($b);			
-			$stack[] = swConvertText15(pow($b,$a));
-		}				
-	}
-}
-
-/**
- * Provides a class to handle case-sensitive regex search
- *
- * As an alternative for backslash \ the ∫ can be used
- */
-
-class xpRegex extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':regex' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$a = str_replace('/','\/',$a);  // does not 
-		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
-		if (preg_match('/'.$a.'/',$b)) $stack[] = '1';
-		else $stack[] = '0';
-	}
-}
-
-/**
- * Provides a class to handle case-insensitive regex search
- *
- * As an alternative for backslash \ the ∫ can be used
- */
-
-class xpRegexi extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':regexi' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$a = str_replace('/','\/',$a);  // does not 
-		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
-		if (preg_match('/'.$a.'/i',$b)) $stack[] = '1';
-		else $stack[] = '0';
-	}
-}
-
-/**
- * Provides a class to handle regex replace
- *
- * As an alternative for backslash \ the ∫ can be used
- */
-
-
-class xpRegexReplace extends swExpressionFunction
-{
-	function __construct() { $this->arity = 3; $this->label = ':regexreplace' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$c = array_pop($stack);	
-		$b = str_replace('/','\/',$b);  // does not 
-		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
-		$stack[] = preg_replace('/'.$b.'/',$a,$c);		
-	}
-}
-
-/**
- * Provides a class to handle regex replace with a modifier as argument
- *
- * As an alternative for backslash \ the ∫ can be used
- */
-
-class xpRegexReplaceMod extends swExpressionFunction
-{
-	function __construct() { $this->arity = 4; $this->label = ':regexreplacemod' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 4) throw new swExpressionError('Stack < 4',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$c = array_pop($stack);	
-		$d = array_pop($stack);	
-		$c = str_replace('/','\/',$c);  // does not 
-		$c = str_replace('∫','\\',$c);
-		$b = str_replace('/','\/',$b);  // does not 
-		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
-		$stack[] = preg_replace('/'.$c.'/'.$a,$b,$d);		
-	}
-}
-
-class xpReplace extends swExpressionFunction
-{
-	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$c = array_pop($stack);		
-		$stack[] = str_replace($b,$a,$c);		
-	}
-}
-
-class xpResume extends swExpressionFunction
-{
-	function __construct() { $this->arity = 3; $this->label = ':resume' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 3) throw new swExpressionError('Stack < 3',101);
-			
-		$raw = array_pop($stack);
-		$length = array_pop($stack);
-		$s = array_pop($stack);
-			
-		$stack[] = swResumeFromText($s,$length,$raw);		
-	}
-}
-
-/**
- * Returns a random number between 0 and 999999
- */
-
-class xpRnd extends swExpressionFunction
-{
-	function __construct() { $this->arity = 0; $this->label = ':rnd' ;}
-	function run(&$stack)
-	{
-		
-		$stack[] = swConvertText15(rand(0,1000000000)/1000000000);	
-	}
-}
-
-/**
- * Rounds to integer
- */
-
-
-class xpRound extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':round' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = $a;
-		else
-		{
-			$a = floatval($a);
-			$stack[] = swConvertText15(round($a));	
-		}	
-	}
-}
-
-/**
- * Converts unix seconds to SQL date-time string
- */
-
-class XPSecondsToSql extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':secondstosql' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵') $a = 0;
-		$a = floatval($a);
-		$stack[] = date('Y-m-d H:i:s',$a);		
-	}
-}
-
-class xpSign extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':sign' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵') $stack[] = '⦵';
-		elseif ($a === '∞') $stack[] = '1'; 
-		elseif ($a === '-∞') $stack[] = '-1'; 
-		else
-		{
-			$a = floatval($a);
-			if ($a > 0) $stack[] = '1';
-			elseif 	($a < 0) $stack[] = '-1';
-			else $stack[] = '0';
-		}
-	}
-}
-
-class xpSin extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':sin' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = '⦵';
-		else
-		{
-			$a = floatval($a);
-			$stack[] = swConvertText15(sin($a));
-		}		
-	}
-}
-
-/**
- * Converts  SQL date-time string to unix seconds
- */
-
-class xpSqlToSeconds extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':sqltoseconds' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = swConvertText15(strtotime($a));	
-	}
-}
-
-class xpSqrt extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':sqrt' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '⦵') $stack[] = '⦵';
-		elseif ($a === '∞') $stack[] = '∞';
-		elseif ($a === '-∞') $stack[] = '⦵';
-		else
-		{
-			$a = floatval($a);
-			if ($a < 0) $stack[] = '⦵'; 
-			else $stack[] = swConvertText15(sqrt($a));	
-		}	
-	}
-}
-
-class xpSub extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':sub' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
-		elseif ($a === '∞' && $b === '-∞') $stack[] = '-∞'; 
-		elseif ($a === '-∞' && $b === '∞') $stack[] = '∞';
-		elseif ($a === '∞' && $b === '∞') $stack[] = '⦵'; 
-		elseif ($a === '-∞' && $b === '-∞') $stack[] = '⦵'; 
-		elseif ($a === '∞') $stack[] = '-∞'; 
-		elseif ($a === '-∞') $stack[] = '∞'; 
-		elseif ($b === '∞') $stack[] = '∞'; 
-		elseif ($b === '-∞') $stack[] = '-∞'; 
-		else
-		{
-			$a = floatval($a);
-			$b = floatval($b);			
-			$stack[] = swConvertText15($b-$a);	
-		}	
-	}
-}
-
-
-class xpSubstr extends swExpressionFunction
-{
-	function __construct() { $this->arity = 3; $this->label = ':substr' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 3) throw new swExpressionError('Stack < 3',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$c = array_pop($stack);		
-		$stack[] = mb_substr($c,intval($b),intval($a),'UTF-8');		
-	}
-}
-
-
-class xpTan extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':tan' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		if ($a === '∞' || $a === '-∞' || $a === '⦵') $stack[] = '⦵';
-		else 
-		{
-			$stack[] = swConvertText15(tan(floatval($a)));		
-		}
-	}
-}
-
-class xpTemplate extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':template' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',101);
-		$a = array_pop($stack);
-		
-		$w = new swWiki;
-		$w->parsedContent = '{{'.$a.'}}'; //echo $w->parsedContent;
-		$p = new swTemplateParser;
-		$p->dowork($w);
-		$a = $w->parsedContent;
-		$stack[] = $a;		
-	}
-}
-
-
-class xpTrim extends swExpressionFunction
-{
-	function __construct() { $this->arity = 1; $this->label = ':trim' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = trim($a);		
-	}
-}
-
-class xpTrigramSimilarity extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':trigramsimilarity' ;}
-	function run(&$stack)
-	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		$alist = explode(' ',$a);
-		$blist = explode(' ',$b);
-		$u = array_unique(array_merge($alist,$blist));	
-		$i = array_intersect($alist,$blist);
-		$jaccard = 0;
-		if (count($u)>0) $jaccard = 1.0*count($i)/count($u); // /count($u);
-		$stack[] = $jaccard;	
+		return swConvertText15(cos($a));		
 	}
 }
 
@@ -2014,13 +404,10 @@ class xpCosineSimilarity extends swExpressionFunction
 {
 	function __construct() { $this->arity = 2; $this->label = ':cosinesimilarity' ;}
 	
-	// createfunction depreciated. should be replaced with anonymous function
-	
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
+		$a = $args[0];
+		$b = $args[1];
 		$alist = explode(' ',$a);
 		$blist = explode(' ',$b);
 		$alistw = array();
@@ -2061,18 +448,1011 @@ class xpCosineSimilarity extends swExpressionFunction
 			$dotyy += intval($v)*intval($v);
 		}
 		
-		$stack[] = $dotxy / sqrt($dotxx*$dotyy);	
+		return $dotxy / sqrt($dotxx*$dotyy);	
 	}}
 
 
-class xpTrigramWeightedSimilarity extends swExpressionFunction
+
+class xpDiv extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':trigramweightedsimilarity' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':div' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '∞') return '⦵';
+		if ($a === '∞' && $b === '-∞') return '⦵';
+		if ($a === '∞') return '0';
+		if ($a === '-∞' && $b === '∞') return '⦵';
+		if ($a === '-∞' && $b === '-∞') return '⦵';
+		if ($a === '-∞') return '0';
+		if (floatval($a)>0 && $b === '∞') return '∞';
+		if (floatval($a)>0 && $b === '-∞') return '-∞';
+		if (floatval($a)<0 && $b === '∞') return '-∞';
+		if (floatval($a)<0 && $b === '-∞') return '∞';
+		
+		$a = floatval($a);
+		$b = floatval($b);	
+		if ($a == 0 && $b == 0) return '⦵';
+		if ($a == 0 && $b > 0) return '∞';
+		if ($a == 0 && $b < 0) return '-∞';
+		return swConvertText15($b/$a);		
+	}
+}
+
+class xpEqN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':eqn' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '0';
+		if ($a === '∞' && $b === '∞') return '1';
+		if ($a === '-∞' && $b === '-∞') return '1';
+		if ($a === '∞' || $b === '∞') return '0';
+		if ($a === '-∞' || $b === '-∞') return '0';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b == $a) return '1';
+		return '0';		
+	}
+}
+
+class xpEqS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':eqs' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];	
+		if ($b == $a) return '1';
+		return '0';		
+	}
+}
+
+class xpFileExists extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':filexists' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$file1 = 'site/files/'.$a;
+		$file2 = 'site/cache/'.$a;	
+		return (file_exists($file1) || file_exists($file2));	
+	}
+}
+
+
+class xpExp extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':exp' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '⦵') return $a;
+		if ($a === '-∞') return '0';
+		$a = floatval($a);
+		return swConvertText15(exp($a));		
+	}
+}
+
+class xpFalse extends swExpressionFunction
+{
+	function __construct() { $this->arity = 0; $this->label = ':false' ; }
+	function run($args)
+	{
+		return '0';	
+	}
+}
+
+class xpFloor extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':floor' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' ||$a === '⦵') return $a;
+		$a = floatval($a);
+		return swConvertText15(floor($a));		
+	}
+}
+
+
+class xpFormat extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':format' ;}
+	function run($args)
+	{
+		$a = floatval($args[0]);	
+		$b = $args[1];
+		return swNumberformat($b,$a);		
+	}
+}
+
+
+class xpGeN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':gen' ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '0';
+		if ($a === '∞' && $b === '∞') return '1';
+		if ($a === '-∞' && $b === '-∞') return '1';
+		if ($a === '∞') return '0';
+		if ($b === '∞') return '1';
+		if ($a === '-∞')  return '1';
+		if ($b === '-∞')  return '0';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b >= $a) $stack[] = '1';
+		return '0';		
+	}
+}
+
+class xpGeS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':ges' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($b >= $a) return '1';
+		return '0';		
+	}
+}
+
+class xpGtN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':gtn' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '0';
+		if ($a === '∞' && $b === '∞') return '0';
+		if ($a === '-∞' && $b === '-∞') return '0';
+		if ($a === '∞') return '0';
+		if ($b === '∞') return '1';
+		if ($a === '-∞') return '1';
+		if ($b === '-∞') return '0';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b > $a) return '1';
+		return '0';		
+	}
+}
+
+class xpGtS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':gts' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];	
+		$a = $args[0];
+		if ($b > $a) return '1';
+		return '0';		
+	}
+}
+
+/**
+ * Returns true if a text matches the hint pattern.
+ *
+ * A hint is a combination fof urltext, separated by spaces (AND) and by pipes (OR). 
+ * "foo bar" foo AND bar
+ * "foo|bar" foo OR bar
+ * "alice bob/foo" (alice AND bob) OR foo
+ * There can not be nested levels of space and pipes  
+*/ 
+
+
+class XpHint extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':hint' ;}
+	function run($args)
+	{
+		$a = $args[0];  // needle
+		$b = $args[1]; // haystack
+		$b = swNameURL($b);
+		
+		if ($a == "*") 
+		{
+			return '1';
+		}
+		
+		$hors = explode('|',$a);
+		$hors2 = array();
+		foreach ($hors as $hor)
+		{
+			$hands = explode(' ',$hor);
+			$hands2 = array();
+			
+			foreach($hands as $hand)
+			{
+				$hands2[] = swNameURL($hand);
+			}
+			$hors2[] = $hands2;
+		}
+		
+		$orfound = false;
+		foreach($hors2 as $hor)
+		{
+			$andfound = true;
+			foreach($hor as $hand)
+			{
+				if ($hand != '' && !strstr($b,$hand)) $andfound = false;
+			}
+			if ($andfound) $orfound = true;
+		}
+				
+		if ($orfound) 
+		{
+			return '1';
+		}
+		else
+		{
+			return '0';
+		}		
+	}
+}
+
+class xpIdiv extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':idiv' ; $this->isOperator = true ;}
+	function run($args)
+	{	
+		
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '∞') return '⦵';
+		if ($a === '∞' && $b === '-∞') return '⦵';
+		if ($a === '∞') return '0';
+		if ($a === '-∞' && $b === '∞') return '⦵';
+		if ($a === '-∞' && $b === '-∞') return '⦵';
+		if ($a === '-∞') return '0';
+		if (floatval($a)>0 && $b === '∞') return '∞';
+		if (floatval($a)>0 && $b === '-∞') return '-∞';
+		if (floatval($a)<0 && $b === '∞') return '-∞';
+		if (floatval($a)<0 && $b === '-∞') return '∞';
+		
+		$a = floatval($a);
+		$b = floatval($b);	
+		if ($a == 0 && $b == 0) return '⦵';
+		if ($a == 0 && $b > 0) return '∞';
+		if ($a == 0 && $b < 0) return '-∞';
+
+		$v = ($b - ($b % $a)) / $a ; 
+		return swConvertText15($v);
+	}
+}
+
+class xpLeN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':len' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '0';
+		if ($a === '∞' && $b === '∞') return '1';
+		if ($a === '-∞' && $b === '-∞') return '1';
+		if ($a === '∞') return '1';
+		if ($b === '∞') return '0';
+		if ($a === '-∞') return '0';
+		if ($b === '-∞') return '1';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b <= $a) return '1';
+		return '0';		
+	}
+}
+
+class xpLength extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':length' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return swConvertText15(mb_strlen($a,'UTF-8'));		
+	}
+}
+
+
+class xpLeS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':les' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];	
+		if ($b <= $a) return '1';
+		return '0';		
+	}
+}
+
+class xpLevenshtein extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':levenshtein' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];		
+		return levenshtein($a,$b);	
+	}
+}
+
+class xpLink extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':link' ;}
+	function run($args)
+	{
+		if(!count($args)) return '';
+		return '[['.join('|',$args).']]'; //echo $w->parsedContent;		
+	}
+}
+
+
+class xpLn extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':ln' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if ($a === '∞') return '∞';
+		if ($a === '-∞') return '⦵';
+
+		$a = floatval($a);
+		if (!$a) return '-∞';
+		if ($a <= 0) return '⦵';
+		
+		return swConvertText15(log($a));		
+	}
+}
+
+class xpLog extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':log' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if ($a === '∞') return '∞';
+		if ($a === '-∞') return '⦵';
+		$a = floatval($a);
+		if (!$a) return '-∞';
+		if ($a <= 0) return '⦵';
+		return swConvertText15(log10($a));	
+	}
+}
+
+class xpLower extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':lower' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return strtolower($a);		
+	}
+}
+
+class xpLtN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':ltn' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '∞') return '⦵';
+		if ($a === '-∞' && $b === '-∞') return '0';
+		if ($a === '∞')  return '1';
+		if ($b === '∞') return '0';
+		if ($a === '-∞') return '0';
+		if ($b === '-∞')  return '1';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b < $a) return '1';
+		else return '0';		
+	}
+}
+
+class xpLtS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':lts' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($b < $a) return '1';
+		else return '0';		
+	}
+}
+
+class xpMax extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':max' ;}
+	function run($args)
+	{
+		foreach($args as $a) if ($a === '⦵') return '⦵';
+		foreach($args as $a) if ($a === '∞') return '∞';
+		$args = array_filter($args, function($v) { return $v !== '-∞' ;}, 0 );
+		$args = array_map(function($v) { return floatval($v) ;}, $args);		
+		if (! count($args))	return '⦵';
+		return swConvertText15(max($args));		
+	}
+}
+
+class xpMin extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':min' ;}
+	function run($args)
+	{
+		foreach($args as $a) if ($a === '⦵') return '⦵';
+		foreach($args as $a) if ($a === '-∞') return '-∞';
+		$args = array_filter($args, function($v) { return $v !== '∞' ;}, 0 );
+		$args = array_map(function($v) { return floatval($v) ;}, $args);		
+		if (! count($args))	return '⦵';
+		return swConvertText15(min($args));	
+	}
+}
+
+class xpMod extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':mod' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵')  return '⦵';
+		if ($a === '∞' && $b === '∞')  return '⦵';
+		if ($a === '∞' && $b === '-∞')  return '⦵';
+		if ($a === '∞')  return '0';
+		if ($a === '-∞' && $b === '∞')  return '⦵';
+		if ($a === '-∞' && $b === '-∞')  return '⦵';
+		if ($a === '-∞') return '0';
+		if (floatval($a)>0 && $b === '∞') return '∞';
+		if (floatval($a)>0 && $b === '-∞') return '-∞';
+		if (floatval($a)<0 && $b === '∞') return '-∞';
+		if (floatval($a)<0 && $b === '-∞') return '∞';
+		
+		$a = floatval($a);
+		$b = floatval($b);	
+		if ($a == 0 && $b == 0) return '⦵';
+		if ($a == 0 && $b > 0) return '∞';
+		if ($a == 0 && $b < 0) return '-∞';
+		return swConvertText15($b%$a);		
+	}
+}
+
+
+class xpMul extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':mul' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+	
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '∞') return '∞';
+		if ($a === '∞' && $b === '-∞') return '-∞';
+		if ($a === '∞' && floatval($b) > 0) return '∞';
+		if ($a === '∞' && floatval($b) < 0) return '-∞';
+		if ($a === '∞' && floatval($b) == 0) return '⦵';
+		if ($a === '-∞' && $b === '∞') return '-∞';
+		if ($a === '-∞' && $b === '-∞') return '∞';
+		if ($a === '-∞' && floatval($b) > 0) return '∞';
+		if ($a === '-∞' && floatval($b) < 0) return '-∞';
+		if ($a === '-∞' && floatval($b) == 0) return '⦵';
+		if (floatval($a) > 0 && $b === '∞') return '∞';
+		if (floatval($a) > 0 && $b === '-∞') return '-∞';
+		if (floatval($a) < 0 && $b === '∞') return '-∞';
+		if (floatval($a) < 0 && $b === '-∞') return '∞';
+		if (floatval($a) == 0 && $b === '∞') return '⦵';
+		if (floatval($a) == 0 && $b === '-∞') return '⦵';
+		
+		$a = floatval($a);
+		$b = floatval($b);			
+		return swConvertText15($b*$a);		
+	}
+}
+
+/**
+ * Provides a class to access wiki functions.
+ *
+ * $nativefunction instance of wiki function class
+ *
+ * Only functions with a defined arity can be included
+ * Native function do not handle infinity and undefined
+ * Native function do not expression functions
+ */
+
+class XpNative extends swExpressionFunction
+{
+	var $nativefunction; 
+	
+	function __construct() { $this->arity = 1; $this->label = ':native' ;}
+	function init($key, $fn) // swFunction
+	{
+		$this->nativefunction = $fn;
+		$this->arity = $fn->arity();
+		$this->label = ':'.$key;
+	}
+	function run($args)
+	{
+		array_unshift($args, mb_substr($this->label,1,null,'UTF-8'));
+		
+		$result = $this->nativefunction->dowork($args);
+			
+		return $result;		
+	}
+}
+
+
+class xpNeN extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':nen' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '1';
+		if ($a === '∞' && $b === '∞') return '0';
+		if ($a === '-∞' && $b === '-∞')  return '0';
+		if ($a === '∞' || $b === '∞') return '1';
+		if ($a === '-∞' || $b === '-∞') return '1';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($b != $a) return '1';
+		return '0';	
+	}
+}
+
+class xpNeg extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':neg' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if ($a === '∞')  return  '-∞';
+		if ($a === '-∞')  return  '∞';
+		$a = floatval($a);
+
+		return swConvertText15(-$a);		
+	}
+}
+
+class xpNeS extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':nes' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		if ($b != $a) return '1';
+		return '0';		
+	}
+}
+
+class xpNot extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':not' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		if (count($args) < 1) throw new swExpressionError('Stack < 1',102);
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if($a === '∞') return '0';
+		if($a === '-∞') return '0'; 
+		if(floatval($a) != 0) return '0';
+		return '1';
+	}
+}
+
+
+
+class xpOr extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':or' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return  '⦵';
+		if ($a === '∞') $a = '1';
+		if ($b === '∞') $b = '1';
+		if ($a === '-∞') $a = '1';
+		if ($b === '-∞') $b = '1';
+		$a = floatval($a);
+		$b = floatval($b);
+		if ($a || $b) return '1';
+		return '0';
+	}
+}
+
+
+class xpPad extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':pad' ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $a === '∞' || $a === '-∞') return $b;
+		$a = floatval($a);	
+		return str_pad($b, $a,' ');
+	}
+}
+
+class xpPow extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':pow' ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '-∞') return '-∞';
+		if ($a === '∞' && $b === '∞')return '∞';
+		if ($a === '-∞') return '1';
+		if ($a == '0' && $b == '0') return '1';
+		$a = floatval($a);
+		$b = floatval($b);			
+		return swConvertText15(pow($b,$a));
+	}
+}
+
+/**
+ * Provides a class to handle case-sensitive regex search
+ *
+ * As an alternative for backslash \ the ∫ can be used
+ */
+
+class xpRegex extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':regex' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		$a = str_replace('/','\/',$a);  // does not 
+		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
+		if (preg_match('/'.$a.'/',$b)) return '1';
+		else return '0';
+	}
+}
+
+/**
+ * Provides a class to handle case-insensitive regex search
+ *
+ * As an alternative for backslash \ the ∫ can be used
+ */
+
+class xpRegexi extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':regexi' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		$a = str_replace('/','\/',$a);  // does not 
+		$a = str_replace('∫','\\',$a);	// Backslash does not always work well, so we allow ∫
+		if (preg_match('/'.$a.'/i',$b)) return '1';
+		return '0';
+	}
+}
+
+/**
+ * Provides a class to handle regex replace
+ *
+ * As an alternative for backslash \ the ∫ can be used
+ */
+
+
+class xpRegexReplace extends swExpressionFunction
+{
+	function __construct() { $this->arity = 3; $this->label = ':regexreplace' ;}
+	function run($args)
+	{
+		$c = $args[0];
+		$b = $args[1];
+		$a = $args[2];
+		$b = str_replace('/','\/',$b);  // does not 
+		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
+		return preg_replace('/'.$b.'/',$a,$c);		
+	}
+}
+
+/**
+ * Provides a class to handle regex replace with a modifier as argument
+ *
+ * As an alternative for backslash \ the ∫ can be used
+ */
+
+class xpRegexReplaceMod extends swExpressionFunction
+{
+	function __construct() { $this->arity = 4; $this->label = ':regexreplacemod' ;}
+	function run($args)
+	{
+		$d = $args[0];
+		$c = $args[1];
+		$b = $args[2];
+		$a = $args[3];
+		$c = str_replace('/','\/',$c);  // does not 
+		$c = str_replace('∫','\\',$c);
+		$b = str_replace('/','\/',$b);  // does not 
+		$b = str_replace('∫','\\',$b);	// Backslash does not always work well, so we allow ∫
+		return preg_replace('/'.$c.'/'.$a,$b,$d);		
+	}
+}
+
+class xpReplace extends swExpressionFunction
+{
+	function __construct() { $this->arity = 3; $this->label = ':replace' ;}
+	function run($args)
+	{
+		$c = $args[0];
+		$b = $args[1];
+		$a = $args[2];
+		return str_replace($b,$a,$c);		
+	}
+}
+
+class xpResume extends swExpressionFunction
+{
+	function __construct() { $this->arity = 3; $this->label = ':resume' ;}
+	function run($args)
+	{
+		$s = $args[0];
+		$length = $args[1];
+		$raw = $args[2];
+		
+		return swResumeFromText($s,$length,$raw);		
+	}
+}
+
+/**
+ * Returns a random number between 0 and 999999
+ */
+
+class xpRnd extends swExpressionFunction
+{
+	function __construct() { $this->arity = 0; $this->label = ':rnd' ;}
+	function run($agrs)
+	{
+		
+		return swConvertText15(rand(0,1000000000)/1000000000);	
+	}
+}
+
+/**
+ * Rounds to integer
+ */
+
+
+class xpRound extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':round' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') return $a;
+		$a = floatval($a);
+		return swConvertText15(round($a));	
+	}
+}
+
+/**
+ * Converts unix seconds to SQL date-time string
+ */
+
+class XPSecondsToSql extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':secondstosql' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') $a = 0;
+		$a = floatval($a);
+		return date('Y-m-d H:i:s',$a);		
+	}
+}
+
+class xpSign extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':sign' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if ($a === '∞') return '1'; 
+		if ($a === '-∞') return '-1'; 
+		$a = floatval($a);
+		if ($a > 0) return '1';
+		if ($a < 0) return '-1';
+		return '0';
+	}
+}
+
+class xpSin extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':sin' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') return '⦵';
+		$a = floatval($a);
+		return swConvertText15(sin($a));
+	}
+}
+
+/**
+ * Converts  SQL date-time string to unix seconds
+ */
+
+class xpSqlToSeconds extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':sqltoseconds' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return swConvertText15(strtotime($a));	
+	}
+}
+
+class xpSqrt extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':sqrt' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '⦵') return '⦵';
+		if ($a === '∞') return '∞';
+		if ($a === '-∞') return '⦵';
+		$a = floatval($a);
+		if ($a < 0) return '⦵'; 
+		return swConvertText15(sqrt($a));	
+	}
+}
+
+class xpStrip extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':strip' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		
+		$a = swResumeFromText($a,999999999,true);
+		return $a;		
+	}
+}
+
+
+class xpSub extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':sub' ; $this->isOperator = true ;}
+	function run($args)
+	{
+		$b = $args[0];
+		$a = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞' && $b === '-∞') return '-∞'; 
+		if ($a === '-∞' && $b === '∞') return '∞';
+		if ($a === '∞' && $b === '∞') return '⦵'; 
+		if ($a === '-∞' && $b === '-∞') return '⦵'; 
+		if ($a === '∞') return '-∞'; 
+		if ($a === '-∞') return '∞'; 
+		if ($b === '∞') return '∞'; 
+		if ($b === '-∞') return '-∞'; 
+		$a = floatval($a);
+		$b = floatval($b);			
+		return swConvertText15($b-$a);	
+	}
+}
+
+
+class xpSubstr extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':substr' ;}
+	function run($args)
+	{
+		if (count($args)<1) return '';
+		if (count($args)<2) return $args[0];
+		
+		$a = $args[0];
+		$b = $args[1];
+		
+		if (count($args)<3) return mb_substr($a,intval($b));
+		
+		$c = $args[2];
+		
+		return mb_substr($a,intval($b),intval($c),'UTF-8');		
+	}
+}
+
+class xpTag extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':tag' ;}
+	function run($args)
+	{
+		if(!count($args)) return '';
+		if (count($args) == 1) return '<'.$args[0].'/>';
+		if (count($args) == 2) return '<'.$args[0].'>'.$args[1].'</'.$args[0].'>';    
+		if (count($args) == 3) return '<'.$args[0].' '.$args[1].'>'.$args[2].'</'.$args[0].'>';  
+		return '';  
+	}
+}
+
+
+class xpTan extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':tan' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		if ($a === '∞' || $a === '-∞' || $a === '⦵') return '⦵';
+		return swConvertText15(tan(floatval($a)));		
+	}
+}
+
+class xpTemplate extends swExpressionFunction
+{
+	function __construct() { $this->arity = -1; $this->label = ':template' ;}
+	function run($args)
+	{
+		if(!count($args)) return '';
+		$w = new swWiki;
+		$w->parsedContent = '{{'.join('|',$args).'}}'; //echo $w->parsedContent;
+		$p = new swTemplateParser;
+		$p->dowork($w);
+		$a = $w->parsedContent;
+		return $a;		
+	}
+}
+
+
+class xpTrim extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':trim' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return trim($a);		
+	}
+}
+
+class xpJaccardDistance extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':jaccarddistance' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		$alist = explode(' ',$a);
+		$blist = explode(' ',$b);
+		$u = array_unique(array_merge($alist,$blist));	
+		$i = array_intersect($alist,$blist);
+		$jaccard = 0;
+		if (count($u)>0) $jaccard = 1.0*count($i)/count($u); // /count($u);
+		return $jaccard;	
+	}
+}
+
+
+
+class xpWeightedJaccardDistance extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':weightedjaccarddistance' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
 		$alist = explode(' ',$a);
 		$blist = explode(' ',$b);
 		$alistw = array();
@@ -2109,28 +1489,27 @@ class xpTrigramWeightedSimilarity extends swExpressionFunction
 		
 		
 		
-		$stack[] = $score;	
+		return $score;	
 	}
 }
 
 
 class xpTrue extends swExpressionFunction
 {
-	function __construct() { $this->arity = 0; $this->label = ':true' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 0; $this->label = ':true' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		$stack[] = '1';	
+		return '1';	
 	}
 }
 
 class xpUpper extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':upper' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = strtoupper($a);		
+		$a = $args[0];
+		return strtoupper($a);		
 	}
 }
 
@@ -2141,35 +1520,30 @@ class xpUpper extends swExpressionFunction
 class xpUrlText extends swExpressionFunction
 {
 	function __construct() { $this->arity = 1; $this->label = ':urltext' ;}
-	function run(&$stack)
+	function run($args)
 	{
-		if (count($stack) < 1) throw new swExpressionError('Stack < 1',102);
-		$a = array_pop($stack);
-		$stack[] = swNameURL($a);		
+		$a = $args[0];
+		return swNameURL($a);		
 	}
 }
 
 class xpXor extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':xor' ;}
-	function run(&$stack)
+	function __construct() { $this->arity = 2; $this->label = ':xor' ; $this->isOperator = true ;}
+	function run($args)
 	{
-		if (count($stack) < 2) throw new swExpressionError('Stack < 2',102);
-		$a = array_pop($stack);
-		$b = array_pop($stack);
-		if ($a === '⦵' || $b === '⦵') $stack[] = '⦵';
-		else
-		{
-			if ($a === '∞') $a = '1';
-			if ($b === '∞') $b = '1';
-			if ($a === '-∞') $a = '1';
-			if ($b === '-∞') $b = '1';
-			$a = floatval($a);
-			$b = floatval($b);		
-			if (!$b && $a) $stack[] = '1';
-			elseif ($b && !$a) $stack[] = '1';
-			else $stack[] = '0';
-		}			
+		$a = $args[0];
+		$b = $args[1];
+		if ($a === '⦵' || $b === '⦵') return '⦵';
+		if ($a === '∞') $a = '1';
+		if ($b === '∞') $b = '1';
+		if ($a === '-∞') $a = '1';
+		if ($b === '-∞') $b = '1';
+		$a = floatval($a);
+		$b = floatval($b);		
+		if (!$b && $a) return '1';
+		if ($b && !$a) return '1';
+		return '0';
 	}
 }
 
@@ -2223,7 +1597,7 @@ $swExpressionFunctions[':round'] = new XPRound;
 $swExpressionFunctions[':sin'] = new XPSin;
 $swExpressionFunctions[':sign'] = new XPSign;
 $swExpressionFunctions[':sqrt'] = new XPSqrt;
-$swExpressionFunctions[':xptan'] = new XPTan;
+$swExpressionFunctions[':tan'] = new XPTan;
 
 $swExpressionFunctions[':length'] = new XPLength;
 $swExpressionFunctions[':lower'] = new XPLower;
@@ -2235,8 +1609,9 @@ $swExpressionFunctions[':replace'] = new XPReplace;
 $swExpressionFunctions[':substr'] = new XPSubstr;
 $swExpressionFunctions[':upper'] = new XPUpper;
 $swExpressionFunctions[':urltext'] = new XPurltext;
-$swExpressionFunctions[':pad'] = new XPpad;
-$swExpressionFunctions[':trim'] = new XPtrim;
+$swExpressionFunctions[':pad'] = new XPPad;
+$swExpressionFunctions[':trim'] = new XPTrim;
+$swExpressionFunctions[':strip'] = new XPStrip;
 
 $swExpressionFunctions[':max'] = new XPMax;
 $swExpressionFunctions[':min'] = new XPMin;
@@ -2248,10 +1623,12 @@ $swExpressionFunctions[':format'] = new XPFormat;
 
 $swExpressionFunctions[':resume'] = new XpResume;
 $swExpressionFunctions[':template'] = new XpTemplate;
+$swExpressionFunctions[':link'] = new XPLink;
+$swExpressionFunctions[':tag'] = new XPTag;
 
 $swExpressionFunctions[':fileexists'] = new xpFileExists;
-$swExpressionFunctions[':trigramsimilarity'] = new xpTrigramSimilarity;
-$swExpressionFunctions[':trigramweightedsimilarity'] = new xpTrigramWeightedSimilarity;
+$swExpressionFunctions[':jaccarddistance'] = new xpJaccardDistance;
+$swExpressionFunctions[':weightedjaccarddistance'] = new xpWeightedJaccardDistance;
 $swExpressionFunctions[':cosinesimilarity'] = new xpCosineSimilarity;
 $swExpressionFunctions[':levenshtein'] = new xpLevenshtein;
 $swExpressionFunctions[':bigramstat'] = new xpBigramStat;

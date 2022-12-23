@@ -71,8 +71,11 @@ echo PHP_EOL.'<div id="content">';
 echo PHP_EOL.'<div id="titl">';
 echo PHP_EOL.'<h1>'.$swParsedName.'</h1>';
 echo PHP_EOL.'</div><!-- title -->';
-echo PHP_EOL.$swParsedContent;
+echo PHP_EOL.'<div id="parsedcontent">';
+echo $swParsedContent;
+echo PHP_EOL.'</div><!-- parsedcontent -->';
 echo PHP_EOL.'</div><!-- content -->';
+
 echo PHP_EOL.'<div id="info">';
 echo $swFooter; 
 echo swSystemMessage("skin-footer",$lang, true);

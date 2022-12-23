@@ -790,18 +790,25 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	$editwiki->lookup();
 	
 	// view
-	if ($user->hasright('view', $editwiki->name) && $editwiki->revision)
+	if ($user->hasright('view', $editwiki->name) )
 	{
-		$swEditMenus['viewmenu-article'] = '<a href="'.$editwiki->link('view','--').'" rel="nofollow" accesskey="v">'.swSystemMessage('view',$lang).'</a>';
-		$swEditMenus['viewmenu-history'] = '<a href="'.$editwiki->link('history','--').'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
+		if ($editwiki->revision)
+		{
+			$swEditMenus['viewmenu-article'] = '<a href="'.$editwiki->link('view','--').'" rel="nofollow" accesskey="v">'.swSystemMessage('view',$lang).'</a>';
+			$swEditMenus['viewmenu-history'] = '<a href="'.$editwiki->link('history','--').'" rel="nofollow">'.swSystemMessage('history',$lang).'</a>';
+		}
 		
 		foreach ($swLanguages as $l)
 		{
 			$wiki2 = new swWiki;
 			$wiki2->name = $n.'/'.$l; 
 			$wiki2->lookup();
+			
 			if ($wiki2->revision) 
 			{
+				if (!$editwiki->revision)
+					$swEditMenus['viewmenu-article-'.$l] = '<a href="'.$editwiki->link('view',$l).'" rel="nofollow">'.swSystemMessage('view',$lang).' '.$l.'</a>';
+				
 				$swEditMenus['viewmenu-history-'.$l] = '<a href="'.$editwiki->link('history',$l).'" rel="nofollow">'.swSystemMessage('history',$lang).' '.$l.'</a>';
 			}		
 		}
@@ -820,10 +827,12 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	}
 	foreach ($swLanguages as $l)
 	{
+		$editwiki = new swWiki;
 		$editwiki->name = $n.'/'.$l; 
 		$editwiki->lookup();
 		if ($user->hasright('modify', $editwiki->name) && $editwiki->status == 'ok') 
 		{
+			//print_r($editwiki);
 			$swEditMenus['editmenu-edit-'.$l] = '<a href="'.$editwiki->link('edit',$l).'" rel="nofollow">'.swSystemMessage('edit',$lang).' '.$l.'</a>';
 		}		
 	}	
@@ -831,7 +840,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	$el = $wiki->language();
 	if ($el == '--') $el = '';
 	
-	if ($wiki->status == 'ok')
+	if ($editwiki->status == 'ok')
 	{
 		if ($user->hasright('fields', $wiki->name))
 		{
@@ -854,6 +863,19 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	{
 		$swEditMenus['editmenu-unprotect'] = '<a href="'.$wiki->link('unprotect','--').'" rel="nofollow">'.swSystemMessage('unprotect',$lang).'</a>';
 	}
+	if ($editwiki->status != 'ok' && $wiki->status == 'ok')
+	{
+		if ($user->hasright('rename', $editwiki->name))
+		{
+			$swEditMenus['editmenu-rename'] = '<a href="'.$wiki->link('rename','--').'" rel="nofollow">'.swSystemMessage('rename',$lang).' </a>';
+		}
+		if ($user->hasright('delete', $editwiki->name))
+		{
+			$swEditMenus['editmenu-delete'] = '<a href="'.$wiki->link('delete','--').'" rel="nofollow">'.swSystemMessage('delete',$lang).'</a>';
+		}
+		
+	}
+	
 	
 	
 }	
@@ -953,25 +975,24 @@ $swSingleSearchMenu = '<div id="singlesearchmenu">
 
 flush();
 
-// do cron job
-
-//if ($action != 'indexerror' && rand(0,100)<2)
-if ($action != 'indexerror' && !isset($swOvertime))
+if (isset($swOvertime) && $swOvertime)
 {
-	swCron();
+	if (isset($_POST) || @$swPreventOvertimeSearchAgain)
+		$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang);
+	else
+		$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
+}
+else
+{
+	if ($action != 'indexerror')
+	{
+		swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
+		swCron();
+	}	
 }
 
 $db->close(); 
 session_write_close();
-
-if (isset($swOvertime) && $swOvertime)
-if (isset($_POST) || @$swPreventOvertimeSearchAgain)
-	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang);
-else
-	$swParsedContent .= '<div id="searchovertime">'.swSystemMessage('search-limited-by-timeout.',$lang).' <a href="index.php?action='.$action.'&name='.$name.'&query='.$query.'">'.swSystemMessage('search-again',$lang).'</a></div>';
-
-swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
-
 
 echotime('skin');
 

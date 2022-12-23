@@ -27,7 +27,7 @@ filter _link "*"
 update _link = urltext(_link)
 join leftanti 
 project _name
-update _name = "[["._name."]]"
+update _name = link(_name)
 order _name a
 label _name ""
 
