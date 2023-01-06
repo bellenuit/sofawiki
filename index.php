@@ -429,7 +429,10 @@ $swFooter = '';
 
 echotime('action '.$action);
 
-if ($swIndexError && 100*$db->indexedbitmap->countbits()/$db->GetLastRevisionFolderItem() < 99) $action = 'indexerror';
+if ($swIndexError 
+	&& 100*$db->indexedbitmap->countbits()/max(1,$db->GetLastRevisionFolderItem()) < 99 
+	&& $db->GetLastRevisionFolderItem() > 100 )
+		$action = 'indexerror';
 	
 if ($action == 'logout')
 {

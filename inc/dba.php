@@ -517,7 +517,7 @@ class swDba
 			throw new swDbaError('swDba sync db not exist '.$this->db->lastErrorMsg().' path'.$path);
 		}
 		
-		if (!count($this->journal)) return;
+		if (!count($this->journal)) return true;
 		
 		echotime('sync '.$this->count().' + '.count($this->journal));
 		
