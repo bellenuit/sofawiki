@@ -84,7 +84,10 @@ switch ($wiki->status)
 						// no break
 	
 	
-	default:			$swParsedContent = '<div id="editzone" class="editzone actionedit">';
+	default:			if ($action=='new')
+							$swParsedContent = '<div id="editzone" class="editzone actionnew">';
+						else
+							$swParsedContent = '<div id="editzone" class="editzone actionedit">';
 						$swParsedContent .= '<div class="editheader">'.$headertext.'</div>';
 
 						
