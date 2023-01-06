@@ -122,7 +122,6 @@ class swStyleParser extends swParser
 				case '<bl':
 				case '<hr': 
 				case '<di': 
-				case '<no':
 				case '<pr':
 				case '<ta':
 				case '<tr':
