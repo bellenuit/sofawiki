@@ -246,6 +246,12 @@ class swStyleParser extends swParser
 																	$s .= '</p><p>'.$line;
 																	$state = '';
 																}
+																elseif($state == 'waitp')
+																{
+																	$s .= '<p>'.$line;
+																	$state = 'p';
+
+																}
 																elseif(trim(preg_replace('/<.*?>/', '', $line)) =='') // only single tag on line
 																{
 																	$s .= $line;
