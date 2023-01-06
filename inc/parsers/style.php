@@ -77,11 +77,10 @@ class swStyleParser extends swParser
 		
 		// preserve div
 		$s = str_replace('<div',"\n<div",$s);
-		$s = str_replace('</div>', "\n</div>", $s); // if div multiline
-		
+		$s = str_replace('</div>', "\n</div>\n", $s); // if div multiline
+
 		// preserve <:s>
-		$s = str_replace('<nop>',"\n<nop>",$s);
-		
+		$s = str_replace('<nop>',"\n<nop>",$s);		
 
 		$lines = explode("\n",$s);
 		$s = '';
@@ -110,6 +109,7 @@ class swStyleParser extends swParser
 				}
 				continue;
 			}
+			
 			
 					
 			switch (substr($line,0,3))
