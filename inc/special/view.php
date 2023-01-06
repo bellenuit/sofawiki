@@ -15,7 +15,7 @@ if ($user->hasright("view", $wiki->name))
 	}
 	//else
 	//	$swError = '';
-	if ($wiki->status == "deleted" || $wiki->status == "delete")
+	if ($wiki->status == "deleted" || $wiki->status == "delete" || !$wiki->revision)
 	{
 		header('HTTP/1.0 404 Not Found');
 		$swParsedContent = 'HTTP/1.0 404 Not Found';

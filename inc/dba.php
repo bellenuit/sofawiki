@@ -371,7 +371,7 @@ class swDba
 		}
 		
 		
-		$this->sync();
+		//$this->sync();
 		
 		$statement = $this->db->prepare('SELECT k FROM kv ORDER BY k');
 		$this->rows = $statement->execute();
@@ -538,13 +538,17 @@ class swDba
 				
 			if (count($lines)>1000)
 			{
+				
+				if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
+				{
+					throw new swDbaError('swdba is busy');
+				}
+
 				$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
-				$this->db->exec($q);
+				@$this->db->exec($q); // warning locked will be error code
 				
 				if ($this->db->lastErrorCode())
 				{
-					echo $q;
-					$this->db->exec('VACUUM');
 					throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
 				}
 				$lines = array();
@@ -554,20 +558,23 @@ class swDba
 		
 		if (count($lines))
 		{
+			if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
+			{
+				throw new swDbaError('swdba is busy');
+			}
+			
 			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
-			$this->db->exec($q);
+			@$this->db->exec($q); // warning locked will be error code
 		}
 
 		if ($this->db->lastErrorCode())
 		{
-			echo $q;
-			$this->db->exec('VACUUM');
-			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
-			
+			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());			
 		}		
 		$this->journal = array();
 		
-		//echotime('sync end '.count($this->journal));
+		
+		return true;
 		
 	}
 	

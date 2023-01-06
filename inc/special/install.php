@@ -121,7 +121,7 @@ if ($sitefolderrights < 0755 || $sitefolderrightslogs < 0755)
 
 	$swParsedContent .= PHP_EOL.'</ul>';
 
-	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone specialinstall">';
 	$swParsedContent .= PHP_EOL.'<div class="editheader">Set folder rights</div>';
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
 	$swParsedContent .= PHP_EOL.'<p>Set the folder rights to 755 for the site folder and its subfolders</p>';
@@ -148,7 +148,7 @@ else
 	$swParsedContent .= PHP_EOL.'<li>Create the basic configuration</li>';
 	$swParsedContent .= PHP_EOL.'</ul>';
 	$swParsedContent .= PHP_EOL.'<p>Here are the basic settings to get you running. You can change these and other settings later manually the site/configuration.php file.';
-	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone specialinstall">';
 	$swParsedContent .= PHP_EOL.'<div class="editheader">Create the basic configuration</div>';
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitconfiguration" value="Install" />';

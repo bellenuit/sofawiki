@@ -117,7 +117,7 @@ else
 	}
 	
 	
-	$swParsedContent  = PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent  = PHP_EOL.'<div id="editzone" class="editzone specialpassword">';
 	$swParsedContent .= PHP_EOL.'<div class="editheader">Password Encryptor</div>';
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php?name=special:passwords">';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="submit" value="Encrypt" />';

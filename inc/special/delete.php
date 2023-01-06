@@ -64,15 +64,18 @@ if (swGetArrayValue($_REQUEST,'submitdelete',false) || swGetArrayValue($_REQUEST
 
 elseif ($name)
 {
-		
-	$swParsedName = $wiki->name;
+	$name = $wiki->namewithoutlanguage();
+	$wiki = new swWiki;	
+	$wiki->name = $name;
+	$wiki->lookup();
+	$swParsedName = $name;
 	
-	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone actiondelete">';
 	$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("delete",$lang).'</div>';
 
 	
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php">';
-	$swParsedContent .= PHP_EOL.'<input type="hidden" name="name" value="'.$wiki->name.'" />';
+	$swParsedContent .= PHP_EOL.'<input type="hidden" name="name" value="'.$name.'" />';
 	$swParsedContent .= PHP_EOL.'<input type="hidden" name="action" value="delete" />';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitcancel" value="'.swSystemMessage('cancel',$lang).'" />';
 	$swParsedContent .= PHP_EOL.'<input type="submit" name="submitdelete" value="'.swSystemMessage('delete',$lang).'" style="color:red" />';

@@ -38,6 +38,7 @@ session_name('PHPSESSION_'.@$swCookiePrefix);
 session_start();
 
 
+
 //swCookieTest('index41');
 
 
@@ -45,8 +46,9 @@ session_start();
 
 // general
 
-$name = swGetArrayValue($_REQUEST,'name',$swMainName);
+$name = swGetArrayValue($_REQUEST,'name',$swMainName); 
 $name = swSimpleSanitize($name); // XSS
+if (!$name) $name = $swMainName;
 $name2 = swGetArrayValue($_REQUEST,'name2',$name);
 $action = swGetArrayValue($_REQUEST,'action');
 if (!$action) $action = 'view';
@@ -78,7 +80,13 @@ if (swGetArrayValue($_REQUEST,'submiteditor',false))
 	$action = 'modifyeditor';
 if (swGetArrayValue($_REQUEST,'submitcancel',false))	
 	$action = 'view';
-	
+
+if (substr($name,0,strlen('rest/api'))=='rest/api') 
+{
+	$action = 'rest';
+	$_REQUEST['q'] = substr($name,strlen('rest/api'));
+}
+
 
 // fix trailing and leading spaces
 $name = trim($name);
@@ -558,6 +566,8 @@ switch ($action)
 
 	case 'resetpassword':    		include 'inc/special/resetpassword.php';
 				 	 				break;
+	case 'rest':    				include 'inc/special/rest.php';
+				 	 				break;
 	case 'revert':					if ($user->hasright('modify', $wiki->name))
 									{
 										
@@ -618,6 +628,7 @@ switch ($action)
 													/* SOFADOC_INCLUDE inc/special/recent-changes.php */
 													/* SOFADOC_INCLUDE inc/special/regex.php */
 													/* SOFADOC_INCLUDE inc/special/relation.php */
+													/* SOFADOC_INCLUDE inc/special/rest.php */
 													/* SOFADOC_INCLUDE inc/special/snapshot.php */
 													/* SOFADOC_INCLUDE inc/special/special-pages.php */
 													/* SOFADOC_INCLUDE inc/special/system-messages.php */
@@ -803,7 +814,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 			$wiki2 = new swWiki;
 			$wiki2->name = $n.'/'.$l; 
 			$wiki2->lookup();
-			
+						
 			if ($wiki2->revision) 
 			{
 				if (!$editwiki->revision)

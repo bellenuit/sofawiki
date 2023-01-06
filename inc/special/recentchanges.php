@@ -27,7 +27,7 @@ for ($r = $last; $r > $last - 200 && $r>0; $r--)
 	$i++;
 	
 	if ($item->status != '')
-			$swParsedContent .= $item->timestamp. ' <a href="index.php?action=edit&revision='.$r.'">'.$r.'</a> <a href="index.php?action=edit&name='.$n.'"">'.$n.'</a> </nowiki> '.$item->status.' '.$item->user.'<i>'.$item->comment.'</i><br>';
+			$swParsedContent .= $item->timestamp. ' <a href="index.php?action=edit&revision='.$r.'">'.$r.'</a> <a href="index.php?action=view&name='.$n.'"">'.$n.'</a> </nowiki> '.$item->status.' '.$item->user.'<i>'.$item->comment.'</i><br>';
 		else
 			$swParsedContent .= 'Missing '.$r.'<br>';
 	

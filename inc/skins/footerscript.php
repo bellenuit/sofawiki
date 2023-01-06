@@ -5,6 +5,7 @@ xmlhttp.onreadystatechange=function()
   if (xmlhttp.readyState==4 && xmlhttp.status==200)
     {
     	s = xmlhttp.responseText;
+		s = s.trim();
 		overtime = s.substr(0,1);
 		t = s.substr(1);
 		/* document.getElementById("parsedcontent").innerHTML=t;*/

@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.7';   
+$swVersion = '3.8.7a';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -37,7 +37,7 @@ $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
 $swRamdiskPath = 'db';
 $swDbaHandler = 'sqlite3'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
-$swWikiTextPre = 'true';
+$swWikiTextPre = false;
 
 
 /*
@@ -192,6 +192,7 @@ $swSpecials['Update'] = 'update.php';
 //$swSpecials['Fields'] = 'fields.php';
 $swSpecials['Query'] = 'query.php';
 $swSpecials['Relation'] = 'relation.php';
+$swSpecials['Rest'] = 'rest.php';
 $swSpecials['Orphaned Pages'] = 'orphanedpages.php';
 $swSpecials['Dead End Pages'] = 'deadendpages.php';
 $swSpecials['Redirects'] = 'redirects.php';
@@ -210,6 +211,7 @@ $swSpecials['Wanted Pages'] = 'wantedpages.php';
 $swSpecials['Field Search'] = 'fieldsearch.php';
 $swSpecials['Upload Big'] = 'uploadbig.php';
 $swSpecials['Active Users'] = 'activeusers.php';
+$swSpecials['Rest'] = 'rest.php';
 
 /*
 	initialize variables

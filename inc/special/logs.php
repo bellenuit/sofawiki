@@ -9,7 +9,7 @@ $root = "$swRoot/site/logs/";
 $files = glob($root."*.txt");
 arsort($files);
 
-$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone speciallogs">';
 $swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("logs",$lang).'</div>';
 $swParsedContent .= "\n<form method='get' action='index.php'>";
 // $swParsedContent .= "\n<select name='file'>";

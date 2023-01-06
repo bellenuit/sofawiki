@@ -39,7 +39,10 @@ class swRedirectionParser extends swParser
  				$link = $linkwiki->link('');
  				global $swBaseHrefFolder;
  				if (isset($swBaseHrefFolder))
- 				$link = $swBaseHrefFolder.$link;
+ 				{
+ 					if (substr($link,0,2)=='./') $link = substr($link,1); // may be relative link
+ 					$link = $swBaseHrefFolder.$link;
+ 				}
  				
  				header ('Location: '.str_replace("&amp;","&",$link));
  			

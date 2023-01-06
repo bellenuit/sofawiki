@@ -1040,13 +1040,13 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 							for($fi=0;$fi<count($v);$fi++)
 							{
-								$fieldlist2[$fi][$key] = $v[$fi];
+								$fieldlist2[$fi][$key] = swUnescape($v[$fi]);
 																
 							}
 							for ($fi=count($v);$fi<$maxcount;$fi++)
 							{	
 								if (count($v) > 0)
-									$fieldlist2[$fi][$key] = $v[count($v)-1];
+									$fieldlist2[$fi][$key] = swUnescape($v[count($v)-1]);
 							}
 							
 							
@@ -1119,7 +1119,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 						if ($found)
 						{
-							$rows[$revision.'-'.$fi] = swEscape($fieldlist2[$fi]);
+							$rows[$revision.'-'.$fi] = $fieldlist2[$fi];
 						}
 						
 
@@ -1229,7 +1229,11 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 	//echotime('sync');
 	
 	
-	swDbaSync($bdb);
+	if (!swDbaSync($bdb))
+	{
+		
+		// roll back?
+	}
 	
 	$d = array();	
 	
@@ -1512,7 +1516,11 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	
 	echotime(str_replace($root,'',$file));
 	
-	swDbaSync($bdb);
+	if (! swDbaSync($bdb))
+	{
+		echotime('dbasync failed');
+		// roll back?
+	}
 	
 	$result = new swRelation('');
 	$key = swDbaFirstKey($bdb);
@@ -1552,37 +1560,18 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 function swRelationToTable($q)
 {
 	$lh = new swRelationLineHandler;
-	$s = $lh->run($q.PHP_EOL.'print raw','','',false); 
-	
-	// '<div class="relation">'.
-	// '</div>'
-	
-	//$s = substr($s,strlen('<div class="relation">'.PHP_EOL));
-	//$s = substr($s,0,-strlen('</div>'));
-	
-	//echo PHP_EOL."swRelationToTable".PHP_EOL;
-	//echo '('.$s.')';
-	//echo PHP_EOL;
-
-	$lines = explode(PHP_EOL,$s); // $lines
-
-	$header = array_shift($lines);
-	
-	// print_r($header);
-	
-	$fields = explode("\t",$header);
-	
-	
+	$s = $lh->run($q); 
 	$result = array();
-	$i = 0;
-	foreach($lines as $line)
+	if (count($lh->errors)) { $result[] = array('error'=>trim(strip_tags($s))); return $result; }
+	if (!count($lh->stack)) return array();
+	$r = array_pop($lh->stack);
+	
+	
+	foreach($r->tuples as $t)
 	{
-		$linefields = explode("\t",$line);
-		// print_r($linefields);
-		foreach($fields as $field)
-			$result[$i][$field] = array_shift($linefields);
-		$i++;
+		$result[] = $t->pfields;
 	}
+	
 	return $result;
 }
 

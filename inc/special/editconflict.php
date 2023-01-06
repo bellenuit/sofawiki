@@ -9,7 +9,7 @@ if ($revision0 > 0)
 else
 	$helptext = swSystemMessage("editing-new-conflict-help",$lang);
 	
-$swParsedContent .= '<div id="editzone">';
+$swParsedContent .= '<div id="editzone" class="editzone actioneditconflict">';
 $swParsedContent .= '<div class="editheader">'.swSystemMessage('editing-conflict',$lang).'</div>';
 
 $swParsedContent .= '<table class="blanktable"><tr>';

@@ -50,7 +50,7 @@ class swUploadZoneFunction extends swFunction
 		// Check if all chunks are on the server.
 		// Ask the server to compose the file
 	
-		$result = '<nowiki><div id="editzone" class="editzone">
+		$result = '<nowiki><div id="editzone" class="editzone specialuploadbig">
 		<div class="editheader">'.swSystemMessage("upload-big",$lang).'</div>
 		<form action="#" method="post" enctype="multipart/form-data" onsubmit="event.stopPropagation(); event.preventDefault(); parseFile(thefile,thename,\''.$prefix.'\',thecomment); return false;">
 		<input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxBigFileSize.'" />

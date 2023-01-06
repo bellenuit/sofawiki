@@ -4,7 +4,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 
 $swParsedName = 'Upload';
-$swParsedContent = '<div id="editzone" class="editzone">
+$swParsedContent = '<div id="editzone" class="editzone specialupload">
 <div class="editheader">'.swSystemMessage("upload",$lang).'</div>
 <form action="index.php" method="post" enctype="multipart/form-data">
 <input type="hidden" name="action" value="uploadfile" />

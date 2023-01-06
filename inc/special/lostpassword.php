@@ -114,7 +114,7 @@ if ($submitted)
 else
 {
 
-	$swParsedContent = '<div id="editzone" class="editzone">
+	$swParsedContent = '<div id="editzone" class="editzone actionlostpassword">
 		<div class="editheader">'.swSystemMessage("lost-password-header",$lang).'</div>
 		<form method="post" action="index.php">
 		<input type="submit" name="submitlostpassword" value="'.swSystemMessage("lost-password-submit",$lang).'" />

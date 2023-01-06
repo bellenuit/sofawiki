@@ -567,7 +567,7 @@ class xpFormat extends swExpressionFunction
 	{
 		$a = floatval($args[0]);	
 		$b = $args[1];
-		return swNumberformat($b,$a);		
+		return swNumberformat($a,$b);		
 	}
 }
 

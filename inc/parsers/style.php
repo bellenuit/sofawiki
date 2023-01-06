@@ -78,6 +78,10 @@ class swStyleParser extends swParser
 		// preserve div
 		$s = str_replace('<div',"\n<div",$s);
 		$s = str_replace('</div>', "\n</div>", $s); // if div multiline
+		
+		// preserve <:s>
+		$s = str_replace('<nop>',"\n<nop>",$s);
+		
 
 		$lines = explode("\n",$s);
 		$s = '';
@@ -92,15 +96,17 @@ class swStyleParser extends swParser
 		
 		foreach ($lines as $line)
 		{
-			//echo '(<p>'.$tablerow.') '.$line; 
-			
-			
+						
 			if (trim($line) == '') 
 			{  
 				if ($state == 'p')
 				{
 					$s .= '</p>';
-					$state = '';
+					$state = 'waitp';
+				}
+				else
+				{
+					$state = 'waitp';
 				}
 				continue;
 			}
@@ -117,8 +123,11 @@ class swStyleParser extends swParser
 				case '<hr': 
 				case '<di': 
 				case '<no':
-				case '<pr': 
-				case '<::': 
+				case '<pr':
+				case '<ta':
+				case '<tr':
+				case '<th':
+				case '<td': 
 							  if ($state == 'p') $s .= '</p>';
 							  if ($tablerow)
 							  {
@@ -130,6 +139,12 @@ class swStyleParser extends swParser
 							  }
 							  $state = '';
 							  break;
+				
+				case '<no':   $s .= '<p>'.$line;
+							  $state = 'p';	
+							  break;
+				
+				
 				
 				default: 	  switch (substr($line,0,2))
 							  {
@@ -227,15 +242,15 @@ class swStyleParser extends swParser
 															}
 															elseif (substr($line,0,1) == '<') 
 															{
-																// echo 'tag '.$line;
 																if ($state == 'p')
 																{
 																	$s .= '</p><p>'.$line;
 																	$state = '';
 																}
-																elseif(preg_replace('/<.*?>/', '', $line) =='') // only single tag on line
+																elseif(trim(preg_replace('/<.*?>/', '', $line)) =='') // only single tag on line
 																{
 																	$s .= $line;
+																	$state = '';
 																}
 																else
 																{
@@ -245,8 +260,16 @@ class swStyleParser extends swParser
 															}
 															elseif (trim($line) != '') 
 															{
-																	$s .= '<p>'.$line;
-																	$state = 'p';	
+																	if ($state == 'waitp')
+																	{
+																		$s .= '<p>'.$line;
+																		$state = 'p';
+																	}
+																	else
+																	{
+																		$s .= '<br>'.$line;
+																		$state = '';
+																	}
 															}	
 															
 										}					
@@ -267,8 +290,11 @@ class swStyleParser extends swParser
 		$s = str_replace('<br><div>',"<div>",$s);
 		$s = str_replace('<div><br>',"<div>",$s);
 
+				
 		// template block preserve
-		$s = str_replace('<::>','',$s);
+		$s = str_replace('<nop>','',$s);
+		$s = str_replace('</nop>','',$s);
+
 		
 		// bold and italics
 		$s = str_replace("''''''","",$s);
@@ -291,7 +317,7 @@ class swStyleParser extends swParser
 	        $s = str_replace("<ol>","\n<ol>",$s);
 	        $s = str_replace("</ul>","</ul>\n",$s);
 	        $s = str_replace("</ol>","</ol>\n",$s);
-	        $s = str_replace("<br>","<br>\n",$s);
+	       // $s = str_replace("<br>","<br>\n",$s);
 	        $s = str_replace("<hr>","\n<hr>\n",$s);
 	        $s = str_replace("<h1>","\n<h1>",$s);
 	        $s = str_replace("<h2>","\n<h2>",$s);
@@ -308,6 +334,7 @@ class swStyleParser extends swParser
 			$s = str_replace("</pre><pre>","\n",$s);
 			
 			$s = str_replace("</pre>","</pre>\n",$s);
+						
 	        $s = str_replace("</p>","</p>\n",$s);
 	        
 	
@@ -536,6 +563,9 @@ class swStyleParser extends swParser
 		$s = str_replace("</div><br/>","</div>",$s);
 		$s = str_replace("</div><br>","</div>",$s);
 		
+		// template block preserve
+		$s = str_replace('<nop>','',$s);
+		$s = str_replace('</nop>','',$s);
 		
 		
 		// bold and italics

@@ -124,6 +124,10 @@ function swQueryFulltext($query, $limit=500)
 	$querylines = swTrigramizeQuery($query);
 	$query =  join(' ',$querylines);
 	
+	$r = new swRelation('score, url, lang, revision, title, body');
+	
+	if (!trim($query)) return $r; // empty
+	
 	$q = "SELECT score(offsets(pages)) as score, url, lang, revision, title, body, byteoffsets(offsets(pages)) as byteoffsets FROM pages 
   WHERE pages MATCH '$query'
   ORDER BY score DESC";
@@ -143,7 +147,7 @@ function swQueryFulltext($query, $limit=500)
 		$snippets[$d2['revision']] = $d2['snippet'];
 	}
 	
-	$r = new swRelation('score, url, lang, revision, title, body');
+	
 	
 	echotime('loop');
 	
@@ -151,7 +155,8 @@ function swQueryFulltext($query, $limit=500)
 	
 	$qescape = $swFulltextIndex->escapeString($query);
 	
-	$swFulltextIndex->exec('BEGIN TRANSACTION');
+	$journal = array();
+	$journal []= 'BEGIN TRANSACTION; ';
 	
 	$counter = 0;
 	
@@ -175,7 +180,7 @@ function swQueryFulltext($query, $limit=500)
     			$url = $d['url'];
     			$bescape = $swFulltextIndex->escapeString($d['body']);
     			
-				$swFulltextIndex->exec("INSERT INTO snippets (revision, query, snippet) VALUES ($rev,'$qescape','$bescape')");
+				$journal []=  "INSERT INTO snippets (revision, query, snippet) VALUES ($rev,'$qescape','$bescape'); ";
     		}
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
@@ -185,11 +190,13 @@ function swQueryFulltext($query, $limit=500)
 		elseif ($db->indexedbitmap->getbit($rev))
 		{
 			$u = $d['url'];
-			$swFulltextIndex->exec("DELETE FROM pages WHERE revision = $rev; DELETE FROM snippets WHERE revision = $rev;");
+			$journal []= "DELETE FROM pages WHERE revision = $rev; DELETE FROM snippets WHERE revision = $rev; ";
 		}
 	}
 	
-	$swFulltextIndex->exec('COMMIT');
+	$journal []= 'COMMIT; ';
+	
+	@$swFulltextIndex->exec(join(' ',$journal));
 	
 	echotime('queryfulltext end');
 	return $r;
@@ -251,6 +258,8 @@ function swTrigramizeQuery($s)
 
 	foreach($tokens as $t)
 	{
+		if (strlen($t)<3) continue;
+		
 		switch ($t)
 		{
 			case ' ': $lines[]='AND'; break;

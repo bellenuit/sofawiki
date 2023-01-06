@@ -345,7 +345,7 @@ if (isset($_POST['submitclose']))
 if ($ticketaction == 'new')
 {
 
-	$swParsedContent .= '<nowiki><div id="editzone" class="editzone">
+	$swParsedContent .= '<nowiki><div id="editzone" class="editzone specialtickets">
 		<div class="editheader">New ticket</div>';
 	$swParsedContent .= "\n".'<nowiki><form method="post" action="index.php?name=special:tickets" enctype="multipart/form-data">
 <input type="submit" name="submitopen" value="Open Ticket">
