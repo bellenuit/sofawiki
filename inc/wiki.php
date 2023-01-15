@@ -63,7 +63,7 @@ class swWiki extends swRecord
 								if (strstr($s,'<nowiki>'))
 								{
 									
-									echotime('nowiki start '.strlen($s));
+									echotime('parse nowiki');
 									
 									
 									$offset = 0;
@@ -107,7 +107,7 @@ class swWiki extends swRecord
 								
 								$this->parsedContent = $s;
 								
-								echotime('parse start '.$key.' '.strlen($s));
+								echotime('parse '.$key);
 								$parser->dowork($this); 
 								//echotime('parse done');
 								

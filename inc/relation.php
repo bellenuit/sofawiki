@@ -43,7 +43,7 @@ class swRelationLineHandler
 		
 		
 		
-		echotime('relation '.strlen($t));
+		echotime('relation code:'.strlen($t));
 		try 
 		{
 			$result = $this->run2($t, $internal, $internalbody);
@@ -154,6 +154,19 @@ class swRelationLineHandler
 		for ($i=0; $i < $c; $i++)
 		{
 			
+		    global $swMemoryLimit;
+			if (memory_get_usage()>$swMemoryLimit)
+			{
+					echotime('overmemory '.memory_get_usage().' '.$line);
+					$this->result .= $ptag.$ptagerror.$ti.' Error: out of memory'.$ptagerrorend.$ptag2;
+					$this->errors[]=$il;
+					break;
+			}
+			elseif (memory_get_usage()>$swMemoryLimit/2)
+			{
+				echomem($line);
+			}
+
 			
 			if ($internal) 
 			{
