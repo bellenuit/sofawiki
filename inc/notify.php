@@ -11,12 +11,12 @@ function echotime($s, $direct=false)
 	if ($direct) echo sprintf('%04d',($endtime-$swStartTime)*1000).' '.$s.'<br>';
 }
 
-function echomem($s,$direct=false)
+function echomem($s,$peak=false)
 {
 	global $swDebug;
 	$k = sprintf('%0d',memory_get_usage()/1024/1024);
-	if ($direct) echo '<p>'.$k.'k '.$s;
-	$swDebug .=  '____ '.$k.' MB '.$s.'<br>';
+	if ($peak) $k = sprintf('%0d',memory_get_peak_usage()/1024/1024);
+	$swDebug .=  '_ '.$k.' MB '.$s.'<br>';
 }
 
 

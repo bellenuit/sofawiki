@@ -366,8 +366,11 @@ class swRelationLineHandler
 										{
 											$tp = current($r->tuples);
 											if ($tp)
-												foreach($tp->pfields as $k=>$v)
+											{
+												$tpfields = $tp->fields();
+												foreach($tpfields as $k=>$v)
 													$dict[$k] = $v;
+											}
 										}
 									}
 									
@@ -489,7 +492,8 @@ class swRelationLineHandler
 											if (count($walkrelation1->tuples)>0)
 											{
 												$tp = current($walkrelation1->tuples);
-												foreach($tp->pfields as $k=>$v)
+												$tpfields = $tp->fields();
+												foreach($tpfields as $k=>$v)
 												{
 													$dict[$k] =$v;
 												}
@@ -1318,7 +1322,8 @@ class swRelationLineHandler
 													
 													if($tp)
 													{
-														foreach($tp->pfields as $k=>$v)
+														$tpfields = $tp->fields();
+														foreach($tpfields as $k=>$v)
 														{
 															$dict[$k] =$v;
 														}
@@ -1440,7 +1445,8 @@ class swRelationLineHandler
 										if (count($walkrelation1->tuples)>0)
 										{
 											$tp = current($walkrelation1->tuples);
-											foreach($tp->pfields as $k=>$v)
+											$tpfields = $tp->fields();
+											foreach($tpfields as $k=>$v)
 											{
 												$dict[$k] =$v;
 											}
@@ -3891,75 +3897,7 @@ class swRelation
 	}
 }
 
-class swTuple
-{
-	var $pfields = array();
-	var $phash;
-	
-	function __construct($list)
-	{
-		$keys = array();
-		$values = array();
-		$this->pfields = array_clone($list);
-		if (is_array($list))
-			$keys = array_keys($list);
-		sort($keys);
-		foreach($keys as $k)
-		{
-			$values[$k] = $list[$k]; 
-		}
-		$this->phash = md5(join(PHP_EOL,$values));
-	}
-	
-	function arity()
-	{
-		return count($this->pfields);
-	}
-	
-	function fields()
-	{
-		return array_clone($this->pfields);
-	}
-	
-	function hash()
-	{
-		return $this->phash;
-	}
-	
-	function hasKey($k)
-	{
-		return array_key_exists($k, $this->pfields);
-	}
 
-	function hasValues()
-	{
-		foreach ($this->pfields as $k=>$v)
-		{
-			if ($v != "") return true;
-		}
-	}
-
-	
-	function sameFamily($t)
-	{
-		if ($this->arity() != $t->arity()) {  return false; }
-		foreach($this->pfields as $k=>$e)
-		{
-			if (!array_key_exists($k, $t->pfields)) 
-			{
-				//echo $k;	
-				return false;
-			}
-		}
-		return true;
-	}
-	function value($s)
-	{
-		$result = @$this->pfields[$s];
-		return $result;
-	}
-	
-}
 
 class swOrderedDictionary
 {

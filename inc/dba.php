@@ -457,11 +457,12 @@ class swDba
 		} 
 		
 		$statement = $this->db->prepare('SELECT v FROM kv WHERE k = :key');
-		$statement->bindValue(':key', $key);
+		
 		if (! $statement )
 		{
 			throw new swDbaError('swDba statement error '.$key);
 		}
+		$statement->bindValue(':key', $key);
 		
 		$result = @$statement->execute();
 		
@@ -471,7 +472,12 @@ class swDba
 		}
 		else
 		{
-			$row = $result->fetchArray();
+			$row = @$result->fetchArray();
+			
+			if (! is_array($row))
+			{
+				throw new swDbaError('swDba fetch error empty result for key '.$key.' - '.$this->db->lastErrorCode().' '.$this->db->lastErrorMsg());
+			}
 		}
 		return $row['v'];
 	}
@@ -499,7 +505,7 @@ class swDba
 		}
 		
 		$test = $this->fetch($key);
-	 	if ($test == $value) return;
+	 	if ($test == $value) return true;
 	 	
 	 	$this->journal[$key] = $value;
 	 	

@@ -1235,7 +1235,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		// roll back?
 	}
 	
-	$d = array();	
+	$d = array();
+	
+	$keycount = swDbaCount($bdb);	
 	
 	$key = swDbaFirstKey($bdb);
 
@@ -1708,14 +1710,14 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		foreach($globalrows['visited_pages'] as $k=>$v)
 		{
 			$d = array('file'=>$dd, 'category'=>'name','key'=>$k,'value'=>$v);
-			$tp = new swTuple($d);
+			$tp = new swTuple($d, true);
 			$result->tuples[$tp->hash()] = $tp;
 		}
 		uasort($globalrows['unique_users'], function($a, $b) {return $b-$a;});
 		foreach($globalrows['unique_users'] as $k=>$v)
 		{
 			$d = array('file'=>$dd, 'category'=>'user','key'=>$k,'value'=>$v);
-			$tp = new swTuple($d);
+			$tp = new swTuple($d, true);
 			$result->tuples[$tp->hash()] = $tp;
 		}	
 		
@@ -2213,7 +2215,7 @@ function swRelationIndexSearch($filter, $globals = array())
 		}
 		if (!array_key_exists('_name',$fields)) unset($row['_name']);
 		
-		$tp = new swTuple($row);
+		$tp = new swTuple($row, true);
 		$relation->tuples[$tp->hash()] = $tp;
 	}
 		

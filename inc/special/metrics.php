@@ -5,8 +5,8 @@
  *
  * special:metrics
  * names and user are limit to 1000 each per month
- * metrics for one month saves 3 files to cache: logs-YYYY-MM.csv with the numbers, logs-pages-YYYY-MM.csv with 1000 pages, logs-users-YYYY-MM.csv with 1000 users
- * metrics for one year and 10 years use the cache files. 
+ * metrics for one month saves 3 files to cache: logs-YYYY-MM.csv with the numbers, logs-names-YYYY-MM.csv with 1000 pages, logs-users-YYYY-MM.csv with 1000 users
+ * metrics for one year use the cache files. 
  * cron updates any arbitrary month cache of the last 10 years. 
  */
 
@@ -40,7 +40,6 @@ if ($m)
 	
 	logs file
 	update file = substr(file,0,4)
-	insert \"*\"
 	order file z
 	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
 	project file concat

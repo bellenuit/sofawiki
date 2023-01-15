@@ -1009,6 +1009,7 @@ $db->close();
 session_write_close();
 
 echotime('skin');
+echomem('peak', true);
 
 /* SOFADOC_INCLUDE inc/skins/default.php */
 /* SOFADOC_INCLUDE inc/skins/diary.php */
