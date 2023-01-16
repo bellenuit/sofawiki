@@ -120,7 +120,6 @@ elseif ($y)
 	
 	logs file
 	update file = substr(file,0,4)
-	insert \"*\"
 	order file z
 	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
 	project file concat
@@ -221,7 +220,6 @@ else
 	
 	logs file
 	update file = substr(file,0,4)
-	insert \"*\"
 	order file z
 	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
 	project file concat

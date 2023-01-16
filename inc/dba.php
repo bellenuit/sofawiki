@@ -446,7 +446,6 @@ class swDba
 	
 	function fetch($key)
 	{
-		
 		if (! $this->db)
 		{
 			throw new swDbaError('swDba fetch db not exist '.$this->db->lastErrorMsg().' path'.$path);
@@ -455,7 +454,6 @@ class swDba
 		{
 			return $this->journal[$key];
 		} 
-		
 		$statement = $this->db->prepare('SELECT v FROM kv WHERE k = :key');
 		
 		if (! $statement )
@@ -463,7 +461,6 @@ class swDba
 			throw new swDbaError('swDba statement error '.$key);
 		}
 		$statement->bindValue(':key', $key);
-		
 		$result = @$statement->execute();
 		
 		if (!$result || $this->db->lastErrorCode())
@@ -474,12 +471,16 @@ class swDba
 		{
 			$row = @$result->fetchArray();
 			
-			if (! is_array($row))
+			if (!$row) return false;
+			
+			if (!is_array($row))
 			{
+
 				throw new swDbaError('swDba fetch error empty result for key '.$key.' - '.$this->db->lastErrorCode().' '.$this->db->lastErrorMsg());
 			}
+			return $row['v'];
 		}
-		return $row['v'];
+		
 	}
 
 	function delete($key)
@@ -499,12 +500,13 @@ class swDba
 	
 	function replace($key, $value)
 	{
+	 	
 	 	if (! $this->db)
 		{
 			throw new swDbaError('swDba replace db not exist '.$this->db->lastErrorMsg().' path'.$path);
 		}
-		
 		$test = $this->fetch($key);
+		
 	 	if ($test == $value) return true;
 	 	
 	 	$this->journal[$key] = $value;

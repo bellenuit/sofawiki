@@ -1331,6 +1331,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	global $swStartTime;
 	global $swOvertime;
 	
+	
 	if (!$filter)
 		throw new swExpressionError('Logs filter empty',88);
 		
@@ -1375,6 +1376,8 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$bdbfile = $cachefilebase.'.db';
 	
+	
+	
 	if ($refresh)
 	{
 		echotime('refresh');
@@ -1399,6 +1402,8 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$bdbrwritable = false;
 		echotime("bdb readonly");
 	}
+	
+	echotime('<a href="index.php?name=special:indexes&index=queries&q='.md5($mdfilter).'.db" target="_blank">'.md5($mdfilter).'.db</a> ');
 
 	$tdodayfile = $root.date('Y-m-d',time()).'.txt';
 	
@@ -1413,6 +1418,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	
 	foreach($files as $file)
 	{
+		
 		$shortfile = str_replace($root,'',$file);
 		
 		if (memory_get_usage()>$swMemoryLimit)
@@ -1470,8 +1476,10 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$rows = array();
 		if ($foundfile)
 		{
+			
 			if ($filter == 'file') // only filelist
 			{
+				
 				$rows = array();
 				$values = array();
 				$values['file'] = $shortfile;
@@ -1591,9 +1599,12 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				
 				
 			}
+			
+			swDbaReplace($file,serialize($rows),$bdb);
+			if (rand(0,1000)>990) swDbaSync($bdb);
 		}
 		
-		swDbaReplace($file,serialize($rows),$bdb);
+		
 		
 		
 		
@@ -1601,7 +1612,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		
 	}
 	
-	
+	echotime('logs sync');
 	
 	
 	if (! swDbaSync($bdb))
@@ -1609,6 +1620,8 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		echotime('dbasync failed');
 		// roll back?
 	}
+	
+	echotime('logs build');
 	
 	$result = new swRelation('');
 	$key = swDbaFirstKey($bdb);
@@ -1687,9 +1700,13 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		
 	}
 	
+	;
+	
 	if (substr($filter, 0, 5) == 'stats')
 	{
 
+		echotime('logs stats');
+		
 		$d = array('file'=>$dd, 'category'=>'stat','key'=>'day','value'=>$dd);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
@@ -1706,16 +1723,33 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
 		
+		// echotime('visited_pages sort');
+		
 		uasort($globalrows['visited_pages'], function($a, $b) {return $b-$a;});
+		
+		// echotime('visited_pages tuples '.count($globalrows['visited_pages']));
+		
+		$i = 0;
 		foreach($globalrows['visited_pages'] as $k=>$v)
 		{
+			$i++; 
+			if ($i>1000) break;
 			$d = array('file'=>$dd, 'category'=>'name','key'=>$k,'value'=>$v);
 			$tp = new swTuple($d, true);
 			$result->tuples[$tp->hash()] = $tp;
 		}
+		
+		// echotime('unique_users sort ');
+		
 		uasort($globalrows['unique_users'], function($a, $b) {return $b-$a;});
+		
+		// echotime('unique_users tuples'.count($globalrows['unique_users']));
+		
+		$i = 0;
 		foreach($globalrows['unique_users'] as $k=>$v)
 		{
+			$i++; 
+			if ($i>1000) break;
 			$d = array('file'=>$dd, 'category'=>'user','key'=>$k,'value'=>$v);
 			$tp = new swTuple($d, true);
 			$result->tuples[$tp->hash()] = $tp;
@@ -1723,7 +1757,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		
 		
 	}
-	
+	echotime('logs done');
 	
 	if (memory_get_usage()>$swMemoryLimit/10) echomem('relationfilter');
 	return $result;
@@ -1743,7 +1777,7 @@ function swRelationToTable($q)
 	
 	foreach($r->tuples as $t)
 	{
-		$result[] = $t->pfields;
+		$result[] = $t->fields();
 	}
 	
 	return $result;
