@@ -603,6 +603,12 @@ class swRelationLineHandler
 									$r = swQueryFulltext($b);
 									$this->stack[] = $r;
 									break;
+				case 'fulltexturl':	$xp = new swExpression();
+									$xp->compile($body);
+									$b = $xp->evaluate($dict);
+									$r = swQueryFulltextUrl($b);
+									$this->stack[] = $r;
+									break;
 				case 'function':	$line = str_replace('(',' (',$line);
 			 						$fields = explode(' ',$line);
 			 						$command = array_shift($fields);

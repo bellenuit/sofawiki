@@ -130,26 +130,13 @@ function swQueryFulltext($query, $limit=500)
 	
 	$q = "SELECT score(offsets(pages)) as score, url, lang, revision, title, body, byteoffsets(offsets(pages)) as byteoffsets FROM pages 
   WHERE pages MATCH '$query'
-  ORDER BY score DESC";
+  ORDER BY score DESC
+  LIMIT $limit";
 	
 	//echo '<p>'.$q;
 	$result = $swFulltextIndex->query($q);
-	
-	$q2 = "SELECT revision, query, snippet FROM snippets 
-  WHERE query = '$query'";
-  
-  	$result2 = $swFulltextIndex->query($q2);
-  	
-  	$snippets = array();
-	
-	while ($d2 = $result2->fetchArray(SQLITE3_ASSOC)) 
-	{
-		$snippets[$d2['revision']] = $d2['snippet'];
-	}
-	
-	
-	
-	echotime('loop');
+	  	
+ 	echotime('loop');
 	
 	$foundnames = array();
 	
@@ -160,32 +147,36 @@ function swQueryFulltext($query, $limit=500)
 	
 	$counter = 0;
 	
+	global $swMaxSearchTime;
+	global $swMaxOverallSearchTime;
+	global $swStartTime;
+	global $swOvertime;
+	global $swMemoryLimit;
+
+	
 	while ($d = $result->fetchArray(SQLITE3_ASSOC)) 
 	{
-    	if ($limit && $counter>$limit) break;
+    	if (memory_get_usage()>$swMemoryLimit)
+		{
+			echotime('overmemory '.memory_get_usage());
+			$overtime = true;
+			$swOvertime = true;
+			break;
+		}
     	 
     	if (isset($foundnames[$d['url']])) continue;
     	$rev = $d['revision'];
+    	
     	if ($db->currentbitmap->getbit($rev))
     	{
     		$d['title']=swDetrigramize($d['title']);
     		if (!$d['title']) $d['title'] ='...';
-    		if (isset($snippets[$rev])) 
-    		{
-	    		$d['body'] = $snippets[$rev];
-    		}	
-    		else
-    		{
-    			$d['body']=swFulltextSnippet($d['body'],$d['byteoffsets'],$querylines);
-    			$url = $d['url'];
-    			$bescape = $swFulltextIndex->escapeString($d['body']);
-    			
-				$journal []=  "INSERT INTO snippets (revision, query, snippet) VALUES ($rev,'$qescape','$bescape'); ";
-    		}
+    		$d['body']=swFulltextSnippet($d['body'],$d['byteoffsets'],$querylines);
+    		$url = $d['url'];
+    		
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
 			$foundnames[$d['url']] = 1;
-			$counter--;
 		}
 		elseif ($db->indexedbitmap->getbit($rev))
 		{
@@ -199,6 +190,48 @@ function swQueryFulltext($query, $limit=500)
 	@$swFulltextIndex->exec(join(' ',$journal));
 	
 	echotime('queryfulltext end');
+	return $r;
+}
+
+function swQueryFulltextURL($query, $limit=500)
+{
+	echotime('queryfulltexturl "'.$query.'"');
+	swOpenFulltext();
+	global $swFulltextIndex;
+	if (!$swFulltextIndex) return;
+	global $db;
+	$querylines = swTrigramizeQuery($query);
+	$query =  join(' ',$querylines);
+	
+	$r = new swRelation('url');
+	
+	if (!trim($query)) return $r; // empty
+	
+	$q = "SELECT score(offsets(pages)) as score, url FROM pages 
+  WHERE pages MATCH '$query'
+  ORDER BY score DESC
+  LIMIT $limit";
+	
+	//echo '<p>'.$q;
+	$result = $swFulltextIndex->query($q);
+	  	
+ 	echotime('loop');
+	
+	$foundnames = array();
+	
+	$qescape = $swFulltextIndex->escapeString($query);
+	
+	$journal = array();
+	
+	
+	while ($d = $result->fetchArray(SQLITE3_ASSOC)) 
+	{ 		
+    	unset($d['score']);
+    	$tp = new swTuple($d);
+		$r->tuples[$tp->hash()] = $tp;
+		
+	}	
+	echotime('queryfulltexturl end');
 	return $r;
 }
 
