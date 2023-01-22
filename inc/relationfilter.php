@@ -1494,8 +1494,12 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			$hits = 0;
 			$totaltime = 0;
 			
-			while($handle && ($line = fgets($handle, 4096)) !== false)
+			// how to deal with log files that are 500MB +?? We read only the first million lines
+			
+			
+			while($hits < 1000000 && $handle && ($line = fgets($handle, 4096)) !== false)
 			{
+				
 				
 				$values0 = swGetAllFields($line);
 				foreach($values0 as $k=>$v)
@@ -1774,6 +1778,7 @@ function swRelationToTable($q)
 	$r = array_pop($lh->stack);
 	
 	unset($lh); // we do not need the entire stack any more
+	
 	
 	foreach($r->tuples as $t)
 	{
