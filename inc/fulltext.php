@@ -114,7 +114,7 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	$db->fulltextbitmap->setbit($revision);
 }
 
-function swQueryFulltext($query, $limit=500)
+function swQueryFulltext($query, $limit=1000)
 {
 	echotime('queryfulltext "'.$query.'"');
 	swOpenFulltext();
