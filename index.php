@@ -1062,6 +1062,10 @@ if (!isset($swOvertime))
 	swUpdateRamDiskDB();
 
 swLog($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
+
+if ($swError && !$username && (rand(0,100) < $swStrongDeny)) swLogWrongPassword($_SERVER['REMOTE_ADDR']); // block anonymous users producing a lot of errors
+
+
 swSemaphoreRelease();
 
 
