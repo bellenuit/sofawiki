@@ -1000,7 +1000,7 @@ else
 {
 	if ($action != 'indexerror')
 	{
-		swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
+		if (!$swError) swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
 		echotime('cron');
 		swAsyncCron();
 	}	
