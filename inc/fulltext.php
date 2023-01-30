@@ -187,9 +187,9 @@ function swQueryFulltext($query, $limit=1000)
 	
 	$journal []= 'COMMIT; ';
 	
-	@$swFulltextIndex->exec(join(' ',$journal));
+	if (count($journal)>2) @$swFulltextIndex->exec(join(' ',$journal));
 	
-	echotime('queryfulltext end');
+	echotime('queryfulltext end '.(count($r->tuples)));
 	return $r;
 }
 

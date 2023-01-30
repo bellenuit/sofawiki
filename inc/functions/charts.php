@@ -78,18 +78,18 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 		}
 	}
 	
-	/*
+	
 	if ($low) 
 	{
-		$opts['ticks']['suggestedMin'] = $low;
-		$opts['ticks']['min'] = $low;
+		$opts['scales']['y']['suggestedMin'] = $low;
+		$opts['scales']['y']['min'] = $low;
 	}
 	if ($high) 
 	{
 		$opts['ticks']['suggestedMax'] = $high;
 		$opts['ticks']['max'] = $high;
 	}
-	*/
+	
 	
 	$datasets = array();
 	

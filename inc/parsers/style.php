@@ -25,8 +25,6 @@ class swStyleParser extends swParser
 		
 		$s = $wiki->parsedContent; //echo $s;
 		
-		echotime('parse style');
-		
 		// keep only \n
 		$s = str_replace("\r\n","\n",$s);
 		$s = str_replace("\n\r","\n",$s);

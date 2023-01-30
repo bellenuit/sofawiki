@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.7f';   
+$swVersion = '3.8.7g';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -102,6 +102,7 @@ include_once $swRoot.'/inc/relationexecute.php';
 
 include_once $swRoot.'/inc/editortemplate.php';
 include_once $swRoot.'/inc/mail.php';
+include_once $swRoot.'/inc/async.php';
 
 // external code
 include_once $swRoot.'/inc/diff.php';

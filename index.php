@@ -1001,7 +1001,8 @@ else
 	if ($action != 'indexerror')
 	{
 		swIndexFulltext(swNameURL($name),$lang,$wiki->revision,$swParsedName,$swParsedContent);
-		swCron();
+		echotime('cron');
+		swAsyncCron();
 	}	
 }
 
@@ -1038,7 +1039,6 @@ if (file_exists($templatefile))
 }
 else
 	die('missing page template '.$templatefile);
-
 
 flush();
 
