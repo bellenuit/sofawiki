@@ -99,7 +99,7 @@ if (!isset($powerusers))
 
 // create user
 $knownuser = false;
-$username = swHandleCookie('username','',$swUserCookieExpiration);
+$username = swHandleCookie('username','',$swUserCookieExpiration); 
 if ($action == 'logout') 
 {
 	unset($_SESSION[$swMainName.'-username']);
@@ -142,9 +142,9 @@ if (isset($_REQUEST['submitlogin'])) $knownuser = false;
 //echo ' ('.$knownuser.')';
 
 
-if($knownuser)
+if($knownuser && substr($username,0,3) != 'ip.')
 {
-    //echo " known ";
+    //echo " known "; 
     $found=false;
    	foreach($powerusers as $p)
     {
@@ -230,11 +230,14 @@ else
 		if ($user->revision) $found = true;
 	}
 	
-	if (!$found)
+	
+	
+	if (!$found && $action != 'login')
 	{
 		// check for ip-users
+		
 		$username = 'ip.'.$ip;
-			
+				
 		$user = new swUser;
 		$user->username = $username;
 		$user->name = 'User:'.$username;
@@ -243,10 +246,55 @@ else
 		$user->pass = $pass;
 		
 		if ($user->visible())
+		{
 			$user->ipuser = true;
+		}
 		else
-			$username = ''; // failed
+		{
+			// check for ip-ranges
+			
+			$q = 'filter _namespace "user", _name "user:ip."
+select _name regex "-"
+project _name';
+			
+			$list = swRelationToTable($q);
+			
+			//print_r($list);
+			
+			foreach($list as $elem)
+			{
+				$n = $elem['_name'];
+				$n = substr($n,strlen('User:ip.'));
+				$ips = explode('-',$n);
+				$ip1 = $ips[0];
+				$ip2 = $ips[1];
+				$fields1 = explode('.',$ip1);
+				$fields2 = explode('.',$ip2);
+				$fieldsip = explode('.',$ip);
+				$hex1 = trim(sprintf('%02x%02x%02x%02x', $fields1[0], $fields1[1], $fields1[2], $fields1[3]));
+				$hex2 = trim(sprintf('%02x%02x%02x%02x', $fields2[0], $fields2[1], $fields2[2], $fields2[3]));
+				$hexip = trim(sprintf('%02x%02x%02x%02x', $fieldsip[0], $fieldsip[1], $fieldsip[2], $fieldsip[3]));
+								
+				if (hexdec($hexip) >= hexdec($hex1) && hexdec($hexip) <= hexdec($hex2) )
+				{
+					$found = true; 
+					$user->name = 'User:ip.'.$n;
+					$user->lookup();
+					$user->pass = $pass;
+					$user->ipuser = true;
+					$username = 'ip.'.$ip;
+					break;
+				}
+				
+			}
+			
+		}
+		
 	
+	}
+	if (!$found)
+	{
+		$username = ''; // failed
 	}
 	
 	
@@ -756,7 +804,6 @@ if ($user->username != "" || isset($realuser))
 			}
 		}
 
-		
 		$swLoginMenus['login-user'] = $user->nameshort();
 		if ($user->ipuser)
 		$swLoginMenus['login'] = '<a href="index.php?action=login&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
@@ -1068,10 +1115,9 @@ if ($swError && !$username && (rand(0,100) < $swStrongDeny)) swLogWrongPassword(
 
 swSemaphoreRelease();
 
-
-/*print_r($_COOKIE);
+/*
+print_r($_COOKIE);
 echo $username;
-print_r($user);*/
-
-
+print_r($user);
+*/
 ?>
