@@ -1890,6 +1890,11 @@ global $swUseFulltext;
 if ($swUseFulltext)
 {
 $q= 'fulltext "'.$term.'"
+dup
+set f = found
+if f < 1
+  echo "No direct results for ""'.$term.'"". Similar results shown."
+end if
 extend t = link(url,title).tag("br").tag("nowiki",body)
 project t
 label t ""
