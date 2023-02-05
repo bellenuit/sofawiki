@@ -90,6 +90,7 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
     $html = htmlentities($html,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE);  // now we are single byte
     $html = $swFulltextIndex->escapeString($html);
     if (substr($name,-3,1)=='/') $name = substr($name,0,-3);
+    $name = htmlentities($name,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE);  // now we are single byte
     $name = $swFulltextIndex->escapeString($name);
     if (substr($url,-3,1)=='/') $url = substr($url,0,-3);
     
