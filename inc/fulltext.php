@@ -103,6 +103,7 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 		throw new swDbaError('swFulltextIndex create table error '.$swFulltextIndex->lastErrorMsg());
 	}
 	$db->fulltextbitmap->setbit($revision);
+	$db->touched = true;
 }
 
 function swQueryFulltext($query, $limit=1000, $star = true)
