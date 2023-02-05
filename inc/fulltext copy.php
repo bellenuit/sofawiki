@@ -40,12 +40,19 @@ function swOpenFulltext()
 		throw new swDbaError('swFulltextIndex is busy');
 	}
 	
-	if (!$swFulltextIndex->exec('CREATE VIRTUAL TABLE IF NOT EXISTS pages USING fts3(url, lang, revision, title, body, soundex)'))
+	if (!$swFulltextIndex->exec('CREATE VIRTUAL TABLE IF NOT EXISTS pages USING fts3(url, lang, revision, title, body)'))
 	{
 		throw new swDbaError('swFulltextIndex create table error '.$swFulltextIndex->lastErrorMsg());
 	}
-		
+	
+	if (!$swFulltextIndex->exec('CREATE TABLE IF NOT EXISTS snippets (revision, query, snippet); CREATE INDEX IF NOT EXISTS snippetindex ON snippets (query);'))
+	{
+		throw new swDbaError('swFulltextIndex create table snippet error '.$swFulltextIndex->lastErrorMsg());
+	}
+
+	
 	$swFulltextIndex->createFunction('score', 'swFulltextScore');	
+	$swFulltextIndex->createFunction('byteoffsets', 'swFulltextByteOffsets');
 }
 
 function swClearFulltext()
@@ -76,10 +83,14 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	if (strpos($html,'<!-- nofulltext -->')) return;
 	if (!$revision) return;
 	
-	// check if revision is already present and current
+	// check if revision is already present
 	global $db;
 	if ($db->fulltextbitmap->getbit($revision)) return;
-	if (!$db->currentbitmap->getbit($revision)) return;
+	/*
+	$q = "SELECT revision FROM pages WHERE revision = $revision";
+	$result = $swFulltextIndex->querySingle($q);
+	if ($result) return;
+	*/
 	
 	// clean HTML
 	$hasfulltext = false;
@@ -88,16 +99,14 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
     $html = preg_replace('/<.*?\>/si', ' ', $html); 
     $html = preg_replace('!\s+!', ' ', $html);
     $html = htmlentities($html,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE);  // now we are single byte
+    $html = swTrigramize($html);
     $html = $swFulltextIndex->escapeString($html);
     if (substr($name,-3,1)=='/') $name = substr($name,0,-3);
+    $name = swTrigramize($name);
     $name = $swFulltextIndex->escapeString($name);
     if (substr($url,-3,1)=='/') $url = substr($url,0,-3);
     
-    $soundex = $name.' '.$html;
-    $fn = new xpSoundexLong;
-    $soundex = $fn->run(array($soundex)); 
-    
-    $q = "REPLACE INTO pages(url,lang,revision,title, body, soundex) VALUES('$url','$lang',$revision,'$name','$html','.$soundex.')";
+    $q = "REPLACE INTO pages(url,lang,revision,title, body) VALUES('$url','$lang',$revision,'$name','$html')";
     if (!$swFulltextIndex->exec($q))
 	{
 		throw new swDbaError('swFulltextIndex create table error '.$swFulltextIndex->lastErrorMsg());
@@ -105,45 +114,27 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 	$db->fulltextbitmap->setbit($revision);
 }
 
-function swQueryFulltext($query, $limit=1000, $star = true)
+function swQueryFulltext($query, $limit=1000)
 {
-	$query0 = $query;
-	if ($star) $query = swQueryStar($query);
 	echotime('queryfulltext "'.$query.'"');
 	swOpenFulltext();
 	global $swFulltextIndex;
 	if (!$swFulltextIndex) return;
 	global $db;
+	$querylines = swTrigramizeQuery($query);
+	$query =  join(' ',$querylines);
 	
-	$r = new swRelation('found, score, url, lang, revision, title, body');
+	$r = new swRelation('score, url, lang, revision, title, body');
 	
 	if (!trim($query)) return $r; // empty
 	
-	$q = "SELECT '1' as found, score(offsets(pages)) as score, url, lang, revision, title, snippet(pages) as body FROM pages 
+	$q = "SELECT score(offsets(pages)) as score, url, lang, revision, title, body, byteoffsets(offsets(pages)) as byteoffsets FROM pages 
   WHERE pages MATCH '$query'
   ORDER BY score DESC
   LIMIT $limit";
 	
 	//echo '<p>'.$q;
 	$result = $swFulltextIndex->query($q);
-	
-	if (NULL == $result->fetchArray(SQLITE3_ASSOC)) 
-	{
-		$query = swQuerySoundex($query0);
-		
-		echotime('soundex '.$query );
-
-		
-		$q = "SELECT '0' as found, score(offsets(pages)) as score, url, lang, revision, title, snippet(pages,'<b>','</b>','...',4) as body FROM pages 
-  WHERE soundex MATCH '$query'
-  ORDER BY score DESC
-  LIMIT $limit";
-  		$result = $swFulltextIndex->query($q);
-	}
-	else
-	{
-		$result->reset();
-	}
 	  	
  	echotime('loop');
 	
@@ -177,8 +168,11 @@ function swQueryFulltext($query, $limit=1000, $star = true)
     	$rev = $d['revision'];
     	
     	if ($db->currentbitmap->getbit($rev))
-    	{	
+    	{
+    		$d['title']=swDetrigramize($d['title']);
     		if (!$d['title']) $d['title'] ='...';
+    		$d['body']=swFulltextSnippet($d['body'],$d['byteoffsets'],$querylines);
+    		$url = $d['url'];
     		
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
@@ -187,7 +181,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 		elseif ($db->indexedbitmap->getbit($rev))
 		{
 			$u = $d['url'];
-			$journal []= "DELETE FROM pages WHERE revision = $rev; ";
+			$journal []= "DELETE FROM pages WHERE revision = $rev; DELETE FROM snippets WHERE revision = $rev; ";
 		}
 	}
 	
@@ -199,47 +193,27 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 	return $r;
 }
 
-function swQueryFulltextURL($query, $limit=500, $star = true)
+function swQueryFulltextURL($query, $limit=500)
 {
-	$query0 = $query;
-	if ($star) $query = swQueryStar($query);
 	echotime('queryfulltexturl "'.$query.'"');
 	swOpenFulltext();
 	global $swFulltextIndex;
 	if (!$swFulltextIndex) return;
 	global $db;
+	$querylines = swTrigramizeQuery($query);
+	$query =  join(' ',$querylines);
 	
-	$r = new swRelation('found, score, url');
+	$r = new swRelation('url');
 	
 	if (!trim($query)) return $r; // empty
 	
-	$q = "SELECT '1' as found, score(offsets(pages)) as score, url FROM pages 
+	$q = "SELECT score(offsets(pages)) as score, url FROM pages 
   WHERE pages MATCH '$query'
   ORDER BY score DESC
   LIMIT $limit";
 	
 	//echo '<p>'.$q;
 	$result = $swFulltextIndex->query($q);
-	
-	if (NULL == $result->fetchArray(SQLITE3_ASSOC)) 
-	{
-		
-
-		$query = swQuerySoundex($query0);
-		
-		echotime('soundex '.$query );
-		
-		$q = "SELECT '0' as found, score(offsets(pages)) as score, url FROM pages 
-  WHERE soundex MATCH '$query'
-  ORDER BY score DESC
-  LIMIT $limit";
-  		$result = $swFulltextIndex->query($q);
-	}
-	else
-	{
-		$result->reset();
-	}
-	
 	  	
  	echotime('loop');
 	
@@ -252,7 +226,7 @@ function swQueryFulltextURL($query, $limit=500, $star = true)
 	
 	while ($d = $result->fetchArray(SQLITE3_ASSOC)) 
 	{ 		
-    	
+    	unset($d['score']);
     	$tp = new swTuple($d);
 		$r->tuples[$tp->hash()] = $tp;
 		
@@ -277,50 +251,93 @@ function swFulltextScore($s) {
    return $r;
 }
 
-function swQueryStar($q)
-{
-	$list = array();
-	$q = str_replace('(',' ( ',$q);
-	$q = str_replace(')',' ) ',$q);
-	foreach(explode(' ',$q) as $w)
-	{
-		switch(strtolower($w))
-		{
-			case 'and':
-			case 'or':
-			case 'not':
-			case 'near':
-			case '(';
-			case ')': $list[] = $w; break;
-			case '': break;
-			default: if (substr($w,-1) == '*') $list[] = $w; else $list[] = $w.'*';
-		}
-	}
-	return join(' ',$list);
+function swFulltextByteOffsets($s) {
+   $offsets = explode(' ',$s);
+   $lines = array();
+   $r = 0;
+   $minoffset = -1;
+   for ($i=0;$i<count($offsets);$i+=4)
+   {
+   	 $o = $offsets[$i+2];
+   	 $l = $offsets[$i+3];
+   	 $c = $offsets[$i];
+   	 if ($c < 4) continue;
+   	 if ($minoffset < 0) $minoffset = $o;
+   	 if ($o - $minoffset > 255) break;
+   	 $lines[] = $o;
+   	 $lines[] = $l;
+   }
+   return join(' ',$lines);
 }
 
-function swQuerySoundex($q)
+function swTrigramize($s)
 {
-	$list = array();
-	$q = str_replace('(',' ( ',$q);
-	$q = str_replace(')',' ) ',$q);
-	foreach(explode(' ',$q) as $w)
+	$lines = array();
+	$l = strlen($s);
+	for($i=0;$i<$l-2;$i++)
 	{
-		switch(strtolower($w))
-		{
-			case 'and':
-			case 'or':
-			case 'not':
-			case 'near':
-			case '(';
-			case ')': $list[] = $w; break;
-			case '': break;
-			default: $list[] = soundex(str_replace('*','',$w));
-		}
+		$lines[] = substr($s,$i,3);
 	}
-	return join(' ',$list);
+	return join(' ',$lines);
 }
 
+function swTrigramizeQuery($s)
+{
+	$s = trim($s);
+	$tokens = preg_split('/([ |])/',$s,-1,PREG_SPLIT_DELIM_CAPTURE);
+	$lines = array();
+	
+	// NB: does not handle mutiple operators following (like multiple spaces)
 
+	foreach($tokens as $t)
+	{
+		if (strlen($t)<3) continue;
+		
+		switch ($t)
+		{
+			case ' ': $lines[]='AND'; break;
+			case '|': $lines[]='OR'; break;
+			default: $lines[] = '"'.swTrigramize($t).'"';
+		}
+	}
+	return $lines;
+}
 
+function swDetrigramize($s)
+{
+	if (!$s) return '';
+	
+	return preg_replace('/(.).{3}/','$1',$s);
+	
+}
 
+function swFulltextSnippet($s, $os,$querylines)
+{
+	$half =400;
+	$p = max(0,(intval($os)-$half));
+	$s = substr($s,$p,2*$half);
+	$s = swDetrigramize($s);
+	
+	if ($p)
+	{
+		$space = strpos($s,' ');
+		if ($space>0)
+		{
+			$s = substr($s,$space+1);
+		}	
+	}
+	if (substr($s,-1) != ' ')
+	{
+		$space = strrpos($s, ' ');
+		if ($space>0)
+		{
+			$s = substr($s,0,$space);
+		}
+	}
+	if (substr($s,-1) != '.')
+	{
+		$s .= '...';
+	}
+	return $s;
+	
+}

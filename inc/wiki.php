@@ -25,6 +25,7 @@ class swWiki extends swRecord
 		
 		echotime('parse '.$this->name);
 		
+		
 		// do not parse special namespaces
 		switch ($this->wikinamespace())
 		{
@@ -112,6 +113,8 @@ class swWiki extends swRecord
 								//echotime('parse done');
 								
 								//echo $key.' '.strlen($s);
+								
+								 //echo '<p>'.$key.': '.$this->parsedContent ;
 									
 							}
 							

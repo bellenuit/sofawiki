@@ -730,6 +730,24 @@ class xpIdiv extends swExpressionFunction
 	}
 }
 
+class xpJaccardDistance extends swExpressionFunction
+{
+	function __construct() { $this->arity = 2; $this->label = ':jaccarddistance' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$b = $args[1];
+		$alist = explode(' ',$a);
+		$blist = explode(' ',$b);
+		$u = array_unique(array_merge($alist,$blist));	
+		$i = array_intersect($alist,$blist);
+		$jaccard = 0;
+		if (count($u)>0) $jaccard = 1.0*count($i)/count($u); // /count($u);
+		return $jaccard;	
+	}
+}
+
+
 class xpLeN extends swExpressionFunction
 {
 	function __construct() { $this->arity = 2; $this->label = ':len' ; $this->isOperator = true ;}
@@ -1292,6 +1310,33 @@ class xpSin extends swExpressionFunction
 	}
 }
 
+class xpSoundex extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':soundex' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return soundex($a);		
+	}
+}
+
+class xpSoundexLong extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':soundexlong' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		$a = preg_replace('/[^a-zA-Z&0-9 ]/','',$a);
+		$list = array();
+		foreach(explode(' ',$a) as $w)
+		{
+			$list[] = soundex($w);
+		}
+		return join(' ',$list);	
+		}
+}
+
+
 /**
  * Converts  SQL date-time string to unix seconds
  */
@@ -1427,22 +1472,6 @@ class xpTrim extends swExpressionFunction
 	}
 }
 
-class xpJaccardDistance extends swExpressionFunction
-{
-	function __construct() { $this->arity = 2; $this->label = ':jaccarddistance' ;}
-	function run($args)
-	{
-		$a = $args[0];
-		$b = $args[1];
-		$alist = explode(' ',$a);
-		$blist = explode(' ',$b);
-		$u = array_unique(array_merge($alist,$blist));	
-		$i = array_intersect($alist,$blist);
-		$jaccard = 0;
-		if (count($u)>0) $jaccard = 1.0*count($i)/count($u); // /count($u);
-		return $jaccard;	
-	}
-}
 
 
 
@@ -1606,6 +1635,8 @@ $swExpressionFunctions[':regexi'] = new XPRegexi;
 $swExpressionFunctions[':regexreplace'] = new XPRegexReplace;
 $swExpressionFunctions[':regexreplacemod'] = new XPRegexReplaceMod;
 $swExpressionFunctions[':replace'] = new XPReplace;
+$swExpressionFunctions[':soundex'] = new XPSoundex;
+$swExpressionFunctions[':soundexlong'] = new XPSoundexLong;
 $swExpressionFunctions[':substr'] = new XPSubstr;
 $swExpressionFunctions[':upper'] = new XPUpper;
 $swExpressionFunctions[':urltext'] = new XPurltext;
