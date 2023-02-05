@@ -1894,6 +1894,7 @@ dup
 set f = found
 if f < 1
   echo "No direct results for ""'.$term.'"". Similar results shown."
+  limit 1 10
 end if
 extend t = link(url,title).tag("br").tag("nowiki",body)
 project t

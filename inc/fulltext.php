@@ -108,6 +108,7 @@ function swIndexFulltext($url,$lang,$revision,$name,$html)
 
 function swQueryFulltext($query, $limit=1000, $star = true)
 {
+	$query = htmlentities($query,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE); 
 	$query0 = $query;
 	if ($star) $query = swQueryStar($query);
 	echotime('queryfulltext "'.$query.'"');
@@ -238,6 +239,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 
 function swQueryFulltextURL($query, $limit=500, $star = true)
 {
+	$query = htmlentities($query,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE); 
 	$query0 = $query;
 	if ($star) $query = swQueryStar($query);
 	echotime('queryfulltexturl "'.$query.'"');
