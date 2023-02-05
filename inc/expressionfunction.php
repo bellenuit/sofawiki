@@ -1326,7 +1326,7 @@ class xpSoundexLong extends swExpressionFunction
 	function run($args)
 	{
 		$a = $args[0];
-		$a = preg_replace('/[^a-zA-Z&0-9 ]/','',$a);
+		$a = preg_replace('/[^a-zA-Z&;0-9 ]/','',$a);
 		$list = array();
 		foreach(explode(' ',$a) as $w)
 		{

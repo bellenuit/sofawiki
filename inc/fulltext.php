@@ -115,6 +115,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 	global $swFulltextIndex;
 	if (!$swFulltextIndex) return;
 	global $db;
+	$useSoundex = false;
 	
 	$r = new swRelation('found, score, url, lang, revision, title, body');
 	
@@ -130,12 +131,13 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 	
 	if (NULL == $result->fetchArray(SQLITE3_ASSOC)) 
 	{
+		$useSoundex = true;
 		$query = swQuerySoundex($query0);
 		
 		echotime('soundex '.$query );
 
 		
-		$q = "SELECT '0' as found, score(offsets(pages)) as score, url, lang, revision, title, snippet(pages,'<b>','</b>','...',4) as body FROM pages 
+		$q = "SELECT '0' as found, score(offsets(pages)) as score, url, lang, revision, title, body FROM pages 
   WHERE soundex MATCH '$query'
   ORDER BY score DESC
   LIMIT $limit";
@@ -180,6 +182,40 @@ function swQueryFulltext($query, $limit=1000, $star = true)
     	if ($db->currentbitmap->getbit($rev))
     	{	
     		if (!$d['title']) $d['title'] ='...';
+    		
+    		if ($useSoundex)
+    		{
+	    		$qlist = explode(' ',$query);
+	    		$body = $d['body'];
+	    		$a = preg_replace('/[^a-zA-Z&;0-9 ]/','',$body);
+				foreach(explode(' ',$a) as $w)
+				{
+					if (in_array(soundex($w),$qlist))
+						$body = str_replace($w,'<b>'.$w.'</b>',$body);
+						
+					// but not duplicate
+					$body = str_replace('<b><b>'.$w.'</b></b>','<b>'.$w.'</b>',$body);
+		 	    }
+		 	    $p = strpos($body,'<b>');
+	    		if ($p === NULL) $p = 0;
+	    		$p = strpos($body,' ',$p-40);
+	    		if ($p<0) $p = 0;
+	    		$p2 = strpos($body,' ',min($p+100,strlen($body)));
+	    		if ($p2 === NULL) $p2 = $p+64;
+	    		$body = substr($body,$p,max($p2-$p,32));
+	    		
+	    		// check open <b>
+	    		$br1 = explode('<br>',$body);
+	    		$br2 = explode('</br>',$body);
+	    		if (count($br1)>count($br2)) $body .= '</b>';
+	    		
+	    		if (strpos($body,'<b>'))
+	    			$d['body'] = '...'.$body.'...';
+	    		else
+	    			$d['body'] = '';
+    		}
+    		
+
     		
     		$tp = new swTuple($d);
 			$r->tuples[$tp->hash()] = $tp;
