@@ -1068,7 +1068,8 @@ function swGetFilterCacheHeader($filter,$namespace,$mode='query')
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$cachefile = $cachefilebase.'.txt';
 	
-	if (rand(0,100) < 1 || !file_exists($cachefile)) swFilter($filter,$namespace,$mode);
+	// if (rand(0,100) < 1 || !file_exists($cachefile)) 
+	swFilter($filter,$namespace,$mode);
 		
 	if (file_exists($cachefile)) 
 	{

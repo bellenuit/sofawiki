@@ -25,7 +25,7 @@ if (!@$urldb)
 }
 else
 {
-	$rel = new swRelation('_name, timestamp, user');
+	$rel = new swRelation('_name');
 	$key = swDbaFirstKey($urldb);
 	$dw = new swWiki;
 	do 
@@ -37,21 +37,17 @@ else
 		  if (!$value) continue;
 		  if (substr($value,0,1) == 'd')
 		  {
-			 $dw->name = $key;
-			 $list= $dw->history();
-			 $top = array_pop($list);
-			 $top->lookup(true);
 			 
-			 $rel->insert('"'.swEscape($key).'", "'.print_r($top->timestamp,true).'", "'.$top->user.'"');
+			 $rel->insert('"'.swEscape($key).'"');
 		  }
 	  }
 		
 	} while ($key = swDbaNextKey($urldb));
 	
-	$rel->label('_name "", timestamp "", user ""');
+	$rel->label('_name ""');
 	$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');
 
-	$swParsedContent = '<p>'.$rel->toHtml('grid');
+	$swParsedContent = '<p>'.$rel->toHtml('grid 50');
 
 }
 

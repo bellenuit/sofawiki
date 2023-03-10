@@ -25,8 +25,6 @@ class swStyleParser extends swParser
 		
 		$s = $wiki->parsedContent; //echo $s;
 		
-		echotime('parse style');
-		
 		// keep only \n
 		$s = str_replace("\r\n","\n",$s);
 		$s = str_replace("\n\r","\n",$s);
@@ -77,11 +75,10 @@ class swStyleParser extends swParser
 		
 		// preserve div
 		$s = str_replace('<div',"\n<div",$s);
-		$s = str_replace('</div>', "\n</div>", $s); // if div multiline
-		
+		$s = str_replace('</div>', "\n</div>\n", $s); // if div multiline
+
 		// preserve <:s>
-		$s = str_replace('<nop>',"\n<nop>",$s);
-		
+		$s = str_replace('<nop>',"\n<nop>",$s);		
 
 		$lines = explode("\n",$s);
 		$s = '';
@@ -111,6 +108,7 @@ class swStyleParser extends swParser
 				continue;
 			}
 			
+			
 					
 			switch (substr($line,0,3))
 			{
@@ -122,7 +120,6 @@ class swStyleParser extends swParser
 				case '<bl':
 				case '<hr': 
 				case '<di': 
-				case '<no':
 				case '<pr':
 				case '<ta':
 				case '<tr':
@@ -246,6 +243,12 @@ class swStyleParser extends swParser
 																{
 																	$s .= '</p><p>'.$line;
 																	$state = '';
+																}
+																elseif($state == 'waitp')
+																{
+																	$s .= '<p>'.$line;
+																	$state = 'p';
+
 																}
 																elseif(trim(preg_replace('/<.*?>/', '', $line)) =='') // only single tag on line
 																{

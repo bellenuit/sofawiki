@@ -43,7 +43,7 @@ class swRelationLineHandler
 		
 		
 		
-		echotime('relation '.strlen($t));
+		echotime('relation code:'.strlen($t));
 		try 
 		{
 			$result = $this->run2($t, $internal, $internalbody);
@@ -112,7 +112,9 @@ class swRelationLineHandler
 		$walkrelation2;
 		$au;
 		$tp;
+		$currentdatabase = null;
 		$ptag; $ptagerror; $ptag2;
+		
 		
 		$ptag = '';
 		$ptagerror = '<span class="error">';
@@ -154,6 +156,19 @@ class swRelationLineHandler
 		for ($i=0; $i < $c; $i++)
 		{
 			
+		    global $swMemoryLimit;
+			if (memory_get_usage()>$swMemoryLimit)
+			{
+					echotime('overmemory '.memory_get_usage().' '.$line);
+					$this->result .= $ptag.$ptagerror.$ti.' Error: out of memory'.$ptagerrorend.$ptag2;
+					$this->errors[]=$il;
+					break;
+			}
+			elseif (memory_get_usage()>$swMemoryLimit/2)
+			{
+				echomem($line);
+			}
+
 			
 			if ($internal) 
 			{
@@ -193,43 +208,24 @@ class swRelationLineHandler
 			p_open($command);$lastcommand = $command;
 			switch($command)
 			{
-				case 'analyze' : 	if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										$r->analyze($body);
-										$this->stack[]=$r;
-
-									}
+				case 'analyze' : 	if (!$this->assert(count($this->stack),'Analyze Stack empty',$il)) break;
+										
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->analyze($body);
+									$this->stack[]=$r;
+										
 									break;  
-				case 'assert' : 	if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Assert Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										//$r->locals = $locals;
-										if (! $r->assert($body))
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error: Assertion error '.$body.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
-										}
-										$this->stack[]=$r;
-
-									}
-									break; case 'beep' : 		{
-										$this->result .= $ptag.$ptagerror.$ti.' Beep is not supported'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									break; // TO DO 
+				case 'assert' : 	if (!$this->assert(count($this->stack),'Assert Stack empty',$il)) break;
+										
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									
+									if (!$this->assert($r->assert($body),'Assertion error '.$body,$il)) break;
+									
+									break; 
+				case 'beep' : 		if (!$this->assert(false,'Beep is not supported',$il)) break;
+									break; 
 				
 				case 'compile':		$xp = new swExpression();
 									$xp->compile($body);
@@ -237,62 +233,78 @@ class swRelationLineHandler
 									$xp = null;
 									break;
 				
-				case 'data':		if (count($this->stack)<1)
+				case 'data':		if (!$this->assert(count($this->stack),'Data Stack empty',$il)) break;
+										
+									$r = array_pop($this->stack);
+									
+									echotime('data start');
+									// if we know there is no expressionm, then we can read 50% faster a CSV file
+									if (trim($body) == "csv") 
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Data Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										$found = false;
+										
+										$csvlines = array( join(',',$r->header) );
+										while($i<$c && !$found)
+										{
+											$i++;
+											$il++;
+											$ti = $il;
+											$line = trim($lines[$i]);
+											if ($line != 'end data')
+												$csvlines[] = $line;
+											else
+												$found = true;
+										}
+										$r->setCSV($csvlines);
 									}
 									else
 									{
-										$r = array_pop($this->stack);
+										$found = false;
 										
-										echotime('data start');
-										// if we know there is no expressionm, then we can read 50% faster a CSV file
-										if (trim($body) == "csv") 
+										$r->globals = $dict;
+										
+										while($i<$c && !$found)
 										{
-											$found = false;
-											
-											$csvlines = array( join(',',$r->header) );
-											while($i<$c && !$found)
-											{
-												$i++;
-												$il++;
-												$ti = $il;
-												$line = trim($lines[$i]);
-												if ($line != 'end data')
-													$csvlines[] = $line;
-												else
-													$found = true;
-											}
-											$r->setCSV($csvlines);
+											$i++;
+											$il++;
+											$ti = $il;
+											$line = trim($lines[$i]);
+											if ($line != 'end data')
+												$r->insert($line);
+											else
+												$found = true;
+										}
+									}
+									echotime('data end '.$r->cardinality());
+									$this->stack[]=$r;
+									break;
+				case 'database':    if ($currentdatabase) $currentdatabase->close();
+									$xp = new swExpression();
+									$xp->compile($body);
+									$tx = $xp->evaluate($dict);
+									if ($tx) $file = 'site/files/'.$tx; else  $file = ':memory:';
+									
+									try { 
+										if (stristr($tx,'/'))
+										{
+											$file = $tx; 
+											$currentdatabase = new SQLite3($file,SQLITE3_OPEN_READONLY);
 										}
 										else
-										{
-											$found = false;
-											
-											$r->globals = $dict;
-											
-											while($i<$c && !$found)
-											{
-												$i++;
-												$il++;
-												$ti = $il;
-												$line = trim($lines[$i]);
-												if ($line != 'end data')
-													$r->insert($line);
-												else
-													$found = true;
-											}
-										}
-										echotime('data end '.$r->cardinality());
-										$this->stack[]=$r;
+											$currentdatabase = new SQLite3($file);
 									}
-									break;
-				case 'delegate':	if (count($this->stack)<1)
+									catch (Exception $err)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										if (!$this->assert(false,'Database open '.$err->getMessage(),$il)) break;
 									}
+									
+									if (!$this->assert($currentdatabase->busyTimeout(5000),'Database busy',$il)) break;
+									
+									$currentdatabase->enableExceptions(true);
+									break;
+				
+				case 'delegate':	if (!$this->assert(count($this->stack),'Print Stack empty',$il)) break;
+									
 									
 									$xp = new swExpression();
 									$xp->compile($body);
@@ -306,55 +318,41 @@ class swRelationLineHandler
 									$this->result .= '|'.$tx.' }}';
 									$this->stack[]=$r;
 									break;
-				case 'deserialize': if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Deserialize Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->deserialize();
-										$this->stack[] = $r;
-									}
-									break;
-				case 'difference':	if (count($this->stack)<2)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Difference Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r2 = array_pop($this->stack);
-										$r2->difference($r);
-										$this->stack[] = $r2;
-									}
-									break;
-				case 'dup':			if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Dup Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$this->stack[] = $r;
-										$this->stack[] = $r->doClone();
-									}
-									break;						
-				case 'echo' :		//$locals = array();
-					
 									
-									if (count($this->stack)>0)
+				case 'deserialize': if (!$this->assert(count($this->stack),'Deserialize Stack empty',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->deserialize();
+									$this->stack[] = $r;
+									break;
+									
+				case 'difference':	if (!$this->assert(count($this->stack)>1,'Difference Stack empty',$il)) break;
+			
+									$r = array_pop($this->stack);
+									$r2 = array_pop($this->stack);
+									$r2->difference($r);
+									$this->stack[] = $r2;
+									break;
+									
+				case 'dup':			if (!$this->assert(count($this->stack),'Dup Stack empty',$il)) break;
+
+									$r = array_pop($this->stack);
+									$this->stack[] = $r;
+									$this->stack[] = $r->doClone();
+									break;	
+														
+				case 'echo' :		if (count($this->stack)>0)
 									{
 										$r = $this->stack[count($this->stack)-1];
 										if (count($r->tuples) > 0)
 										{
 											$tp = current($r->tuples);
 											if ($tp)
-												foreach($tp->pfields as $k=>$v)
+											{
+												$tpfields = $tp->fields();
+												foreach($tpfields as $k=>$v)
 													$dict[$k] = $v;
+											}
 										}
 									}
 									
@@ -371,6 +369,7 @@ class swRelationLineHandler
 									}
 									$xp = null;
 									break;
+									
 				case 'else':		$loopcounter = 1;
 									if (count($ifstack)>0)
 									{
@@ -400,7 +399,8 @@ class swRelationLineHandler
 										$this->errors[]=$il;
 
 									}
-									break; 	
+									break; 
+										
 				case 'end':			if ($line == 'end while' && count($whilestack) > 0)
 										$i = array_pop($whilestack) - 1;
 									elseif ($line == 'end repeat' && count($repeatstack) > 0)
@@ -418,40 +418,27 @@ class swRelationLineHandler
 									}
 									elseif($line == 'end if')
 									{
-										if (count($ifstack)>0)
-											array_pop($ifstack);
-										else
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Endif not possible here'.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
-										}
+										if (!$this->assert(count($ifstack),'Endif not possible here',$il)) break;
+										
+										array_pop($ifstack);
+										
 									}
 									elseif($line == 'end transaction')
 									{
-										if ($this->transactionerror != '')
+										if (!$this->assert(!$this->transactionerror,'Transaction error',$il)) 
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Transaction error '.$this->transactionerror.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
-											foreach($this->transactiondict as $p)
-											{
-												unlink($p);
-											}
+											foreach($this->transactiondict as $p) unlink($p);
+											break;
 										}
-										else
+										foreach($this->transactiondict as $k=>$p)
 										{
-											foreach($this->transactiondict as $k=>$p)
+											if (!$this->assert(!file_exists($p),'Transaction errror: missing file '.$p,$il))
 											{
-												if (file_exists($p))
-												{
-													unlink($k);
-													rename($p,$k);
-													$this->result .= $ptag.$ptagerror.$ti.' Error : Transaction errror: missing file  '.$p.$ptagerrorend.$ptag2;
-													$this->errors[]=$il;
-												}
-												
-											}
+												unlink($k);
+												rename($p,$k);
+											}											
+										}
 
-										}
 										$this->transactiondict = array();
 										$this->transactionprefix = '';
 										$this->transactionerror = '';
@@ -476,7 +463,8 @@ class swRelationLineHandler
 											if (count($walkrelation1->tuples)>0)
 											{
 												$tp = current($walkrelation1->tuples);
-												foreach($tp->pfields as $k=>$v)
+												$tpfields = $tp->fields();
+												foreach($tpfields as $k=>$v)
 												{
 													$dict[$k] =$v;
 												}
@@ -493,111 +481,87 @@ class swRelationLineHandler
 									}
 									else
 									{
-										//print_r($lines);echo $line;
-										$this->result .= $ptag.$ptagerror.$ti.' Error : End not possible here'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									
+										if (!$this->assert(false,'End not possible here',$il)) break;
+									}								
 									break; 	
 
-				case 'execute':		if(!isset($_REQUEST['submitexecute']) && !isset($_REQUEST['confirmexecute']))
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Ignore execute without submit run execute '.$ptagerrorend.$ptag2;	
-										$this->errors[]=$il;
-									}
-									elseif (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Execute Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$this->stack[] = swRelationExecute($r,$body);
-										
-										if (!isset($_REQUEST['confirmexecute']))
-										{										
-											$this->result .='<nowiki><form method="post" action="index.php"></nowiki>';
-											global $name;
-											$this->result .=  '<nowiki><input type="hidden" name="name" value="'.$name.'"></nowiki>';
-		
-											$this->result .=  '<nowiki><input type="submit" name="confirmexecute" value="Confirm" style="color:red"></nowiki>';
-											$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
-											$this->result .='<nowiki></form></nowiki>';
-										}
+				case 'execute':		if (!$this->assert(isset($_REQUEST['submitexecute']) || isset($_REQUEST['confirmexecute']),'Ignore execute without submit run execute',$il)) break;
+									if (!$this->assert(count($this->stack),'Execute stack empty',$il)) break;
+									
 
+									$r = array_pop($this->stack);
+									$this->stack[] = swRelationExecute($r,$body);
+									
+									if (!isset($_REQUEST['confirmexecute']))
+									{										
+										$this->result .='<nowiki><form method="post" action="index.php"></nowiki>';
+										global $name;
+										$this->result .=  '<nowiki><input type="hidden" name="name" value="'.$name.'"></nowiki>';
+	
+										$this->result .=  '<nowiki><input type="submit" name="confirmexecute" value="Confirm" style="color:red"></nowiki>';
+										$this->result .= '<nowiki><textarea style="display:none" name="q">'.$_REQUEST['q'].'</textarea></nowiki>';
+										$this->result .='<nowiki></form></nowiki>';
 									}
 									break;				
 
-				case 'extend':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Extend Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										//$r->locals = $locals;
-										$r->extend($body);
-										$this->stack[] = $r;
-									}
-									break;	
+				case 'extend':		if (!$this->assert(count($this->stack),'Extend stack empty',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->extend($body);
+									$this->stack[] = $r;
+									break;
+										
 				case 'filter':		$gl = array_merge($dict, $this->globals,$locals);
 									
 									global $swDebugRefresh;
 									
 									$r = swRelationFilter($body,$gl,$swDebugRefresh);
 									$this->stack[] = $r;
-									break;				
-				case 'format':		if (count($this->stack)<1)
+									break;
+													
+				case 'format':		if (!$this->assert(count($this->stack),'Format stack empty',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->format1($body);
+									$this->stack[] = $r;									
+									break;
+													
+				case 'formatdump':	if (!$this->assert(count($this->stack),'Formatdump stack empty',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$vlist = array_keys($r->formats);
+									$tlist = array();
+									foreach($vlist as $velem)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Format Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										$tlist[] = $velem.' '.$r->formats[$velem];
 									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->format1($body);
-										$this->stack[] = $r;
-									}
-									break;				
-				case 'formatdump':	if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Formatdump Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$vlist = array_keys($r->formats);
-										$tlist = array();
-										foreach($vlist as $velem)
-										{
-											$tlist[] = $velem.' '.$r->formats[$velem];
-										}
-										$this->result.= $ptag.'Formats: '.join(', ',$tlist).$ptag2;
-										$this->stack[] = $r;
-									}
+									$this->result.= $ptag.'Formats: '.join(', ',$tlist).$ptag2;
+									$this->stack[] = $r;
 									break;	
+									
 				case 'fulltext':	$xp = new swExpression();
 									$xp->compile($body);
 									$b = $xp->evaluate($dict);
 									$r = swQueryFulltext($b);
 									$this->stack[] = $r;
 									break;
+									
+				case 'fulltexturl':	$xp = new swExpression();
+									$xp->compile($body);
+									$b = $xp->evaluate($dict);
+									$r = swQueryFulltextUrl($b);
+									$this->stack[] = $r;
+									break;
+									
 				case 'function':	$line = str_replace('(',' (',$line);
 			 						$fields = explode(' ',$line);
 			 						$command = array_shift($fields);
 			 						$body = join(' ',$fields);
 									$plines = array();
 									$plines[] = $line;
-									if (array_key_exists(trim($body), $this->offsets))
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-
-									}
+									
+									$this->assert(!array_key_exists(trim($body), $this->offsets),'Warning : Symbol overwritten',$il);
 									$this->offsets[trim($body)] = $i;
 									$found = false;
 									while($i<$c && !$found)
@@ -608,18 +572,13 @@ class swRelationLineHandler
 										if ($line == 'end function')
 										$found = true;
 									}
-									if ($found)
-									{
-										$fn = new swExpressionCompiledFunction(trim($fields[0]),join(PHP_EOL,$plines),false);
-										$this->functions[':'.trim($fields[0])] = $fn;
+									if (!$this->assert($found,'Function missing end',$il)) break;
 
-									}
-									else
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Function missing end'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
+									$fn = new swExpressionCompiledFunction(trim($fields[0]),join(PHP_EOL,$plines),false);
+									$this->functions[':'.trim($fields[0])] = $fn;
+
 									break; 
+									
 				case 'if':			$xp = new swExpression();
 									$xp->compile($body);
 									$ifstack[] = $i;
@@ -649,11 +608,7 @@ class swRelationLineHandler
 										}
 									}
 									break; 	
-				/*case 'import':		{
-										$this->result .= $ptag.$ptagerror.$ti.' Import is not supported'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									break;	*/
+									
 				case 'import':		$xp = new swExpression();
 									$xp->compile($body);
 									$te = $xp->evaluate($this->globals,$dict);
@@ -665,20 +620,14 @@ class swRelationLineHandler
 				case 'include':		$xp = new swExpression();
 									$xp->compile($body);
 									$tn = $xp->evaluate($dict);
-									if (!$this>validFileName($tn))
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$tmp = swRelationInclude($tn);
-										$this->offsets[$tn] = -$i; // give only fixed number on error include
-										$this->result .= $this->run($tmp,$tn,"");									
-									}
-				
-
+									if (!$this->assert($this>validFileName($tn),'Invalid name ',$il)) break;
+									
+									$tmp = swRelationInclude($tn);
+									$this->offsets[$tn] = -$i; // give only fixed number on error include
+									$this->result .= $this->run($tmp,$tn,"");									
 									break;
+									
+									
 				case 'input': 		$fieldgroup = explode(',',$body);
 									$this->result .=  $ptag.'<nowiki><div class="editzone relationinput">';
 									$this->result .= '<div class="editheader">Input</div>';
@@ -767,76 +716,46 @@ class swRelationLineHandler
 									}
 									
 									break;
-				case 'insert':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Insert Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										$r->insert($body);
-										$this->stack[] = $r;
-									}
+				case 'insert':		if (!$this->assert(count($this->stack),'Insert stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->insert($body);
+									$this->stack[] = $r;
 									break;	
-				case 'intersection':	if (count($this->stack)<2)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Intersection Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r2 = array_pop($this->stack);
-										$r2->intersection($r);
-										$this->stack[] = $r2;
-									}
+									
+				case 'intersection':if (!$this->assert(count($this->stack)>1,'Intersection stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r2 = array_pop($this->stack);
+									$r2->intersection($r);
+									$this->stack[] = $r2;
 									break;	
-				case 'join':	if (count($this->stack)<2)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Join Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										//$r->locals = $locals;
-										$r2 = array_pop($this->stack);
-										$r2->join($r,$body);
-										$this->stack[] = $r2;
-									}
-									break;									
-				case 'label':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Label Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->label($body);
-										$this->stack[] = $r;
-									}
-									break;				
-				case 'limit':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Limit Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										
-										
-										
-										//$r->locals = $locals;
-										$r->limit($body);
-										$this->stack[] = $r;
-									}
+									
+				case 'join':		if (!$this->assert(count($this->stack)>1,'Join stack empty ',$il)) break;
+
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r2 = array_pop($this->stack);
+									$r2->join($r,$body);
+									$this->stack[] = $r2;
+									break;	
+																	
+				case 'label':		if (!$this->assert(count($this->stack),'Label stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->label($body);
+									$this->stack[] = $r;
 									break;
+													
+				case 'limit':		if (!$this->assert(count($this->stack),'Limit stack empty ',$il)) break;
+
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->limit($body);
+									$this->stack[] = $r;
+									break;
+
 				case 'logs':		$gl = array_merge($dict, $this->globals,$locals);
 									
 									global $swDebugRefresh;
@@ -845,101 +764,62 @@ class swRelationLineHandler
 									$this->stack[] = $r;
 									break;					
 				case 'memory':	    break; 	
-				case 'order':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Order Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->order($body);
-										$this->stack[] = $r;
-									}
-									break;	
-				case 'parameter':	if (count($internals)==0)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Parameter stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$tx = trim(array_shift($internals));
-										$xp = $this->GetCompiledExpression($tx);
-										$dict[trim($body)] = $xp->evaluate($dict);
-										$parameteroffset++;
-									}
-									break;
+				case 'order':		if (!$this->assert(count($this->stack),'Order stack empty ',$il)) break;
 									
-				
-				case 'parse':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Parse Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->parse($body);
-										$this->stack[] = $r;
-									}
+									$r = array_pop($this->stack);
+									$r->order($body);
+									$this->stack[] = $r;
 									break;	
 									
-				case 'pivot':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Pivot Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->pivot($body);
-										$this->stack[] = $r;
-									}
-									break;	
+				case 'parameter':	if (!$this->assert(count($internals),'Parameter stack empty ',$il)) break;
+									
+									$tx = trim(array_shift($internals));
+									$xp = $this->GetCompiledExpression($tx);
+									$dict[trim($body)] = $xp->evaluate($dict);
+									$parameteroffset++;
+									break;									
 				
-				case 'pop':			if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Pop Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r = null;
-									}
+				case 'parse':		if (!$this->assert(count($this->stack),'Parse stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->parse($body);
+									$this->stack[] = $r;
 									break;	
-				case 'print':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Print Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										
-										// nowiki seems not to break on newlines.
-										
-										
-										
-										switch(trim($body))
-										{
-											case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
-											case 'fields':	$this->result .= $r->toFields(); break;
-											case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
-											case 'space':	$this->result .= $r->getSpace(); break;
+									
+				case 'pivot':		if (!$this->assert(count($this->stack),'Pivot stack empty ',$il)) break;
 
-											case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
-											case 'raw':		$this->result .= $r->getTab(); break;
-											
-											default: 		// pass limit as parameter
-															$this->result .= $r->toHTML($body); break;
-										}
+									$r = array_pop($this->stack);
+									$r->pivot($body);
+									$this->stack[] = $r;
+									break;	
+				
+				case 'pop':			if (!$this->assert(count($this->stack),'Pivot stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r = null;
+									break;
 										
+				case 'print':		if (!$this->assert(count($this->stack),'Print stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+
+									switch(trim($body))
+									{
+										case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
+										case 'fields':	$this->result .= $r->toFields(); break;
+										case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
+										case 'space':	$this->result .= $r->getSpace(); break;
+
+										case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
+										case 'raw':		$this->result .= $r->getTab(); break;
 										
-										$this->stack[] = $r;
+										default: 		// pass limit as parameter
+														$this->result .= $r->toHTML($body); break;
 									}
-									break;		
+																		
+									$this->stack[] = $r;
+									break;	
+										
 				case 'program':		$line = str_replace('(',' (',$line);
 			 						$fields = explode(' ',$line);
 			 						$command = array_shift($fields);
@@ -948,73 +828,48 @@ class swRelationLineHandler
 									$fields = explode(' ',$body);
 									$key = array_shift($fields);
 									$body = trim(join(' ',$fields));
-									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-
-									}
-									else
-									{
-										$body = substr($body,1,-1);
 									
-									
-										if ($body != '')
+									if (!$this->assert(substr($body,0,1) == '(' && substr($body,-1,1) == ')','Missing paranthesis '.$key,$il)) break;
+									$body = substr($body,1,-1);
+								
+									if ($body != '')
+									{
+										$commafields = explode(',',$body);
+										$k = count($commafields);
+										for($j=0;$j<$k;$j++)
 										{
-											$commafields = explode(',',$body);
-											$k = count($commafields);
-											for($j=0;$j<$k;$j++)
-											{
-												$plines[] = 'parameter '.trim($commafields[$j]);
-											}
-											if (array_key_exists($key, $this->offsets))
-											{
-												$this->result .= $ptag.$ptagerror.$ti.' Warning : Symbol overwritten'.$ptagerrorend.$ptag2;
-												$this->errors[]=$il;
-											}
-											
-											$this->offsets[$key] = $i+1;
-											$found = false;
-											while($i<$c && !$found)
-											{
-												$i++;
-												$line = trim($lines[$i]); 
-												if ($line != 'end program')
-													$plines[] = $line;
-												else
-													$found = true;											
-											}
-											//print_r($plines);
-											if ($found)
-												$this->programs[$key] = join(PHP_EOL,$plines);
-											else
-											{
-												$this->result .= $ptag.$ptagerror.$ti.' Error : Program missing end'.$ptagerrorend.$ptag2;
-												$this->errors[]=$il;
-											}										
+											$plines[] = 'parameter '.trim($commafields[$j]);
 										}
-									}									
-									break; 				
-				case 'project':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Project Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										
+										$this->assert(!array_key_exists($key, $this->offsets),'Warning : Symbol overwritten',$il);
+										
+										$this->offsets[$key] = $i+1;
+										$found = false;
+										while($i<$c && !$found)
+										{
+											$i++;
+											$line = trim($lines[$i]); 
+											if ($line != 'end program')
+												$plines[] = $line;
+											else
+												$found = true;											
+										}
+										if (!$this->assert($found,'Missing Program missing end '.$key,$il)) break;
+
+
+										$this->programs[$key] = join(PHP_EOL,$plines);
 									}
-									else
-									{
-										$r = array_pop($this->stack); //print_r($r);
-										$r->aggregators = $this->aggregators;
-										$r->globals = $dict;
-										//$r->locals = $locals;
-										
-										
-										
-										$r->project($body);
-										$this->stack[] = $r;
-										
-										//echo "project"; print_r($r);
-									}
+									break; 
+													
+				case 'project':		if (!$this->assert(count($this->stack),'Project stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack); //print_r($r);
+									$r->aggregators = $this->aggregators;
+									$r->globals = $dict;
+									$r->project($body);
+									$this->stack[] = $r;
 									break;	
+									
 				case 'read':		$r = new swRelation('',$locals,$dict);
 									$enc = 'utf8';
 									if (substr(trim($body),0,8)=='encoding')
@@ -1022,14 +877,8 @@ class swRelationLineHandler
 										$body = trim(substr(trim($body),8));
 										$fields = explode(' ',$body);
 										$enc = array_shift($fields);
-										if (count($fields)==0)
-										{
-											$this->result .= $ptagerror.$ti.' Error : Missing filename'.$ptagerrorend.$ptag2;
-											$this->errors[] = $il;
-											$body = '';
-										}
-										else
-											$body = join(' ',$fields);
+										if (!$this->assert(count($fields),'Missing filename ',$il)) $body = '';
+										else $body = join(' ',$fields);
 									}
 									$xp = new swExpression();
 									$xp->compile($body);
@@ -1044,281 +893,202 @@ class swRelationLineHandler
 
 										$file = $hooklink;
 									}
-									if (!$hooklink && !$this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',str_replace('.xml',' ',str_replace('.html',' ',$tn)))))))
-									{	
-										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
-										$this->errors[] = $il;
-										}
-									else
+									if (!$this->assert($hooklink || $this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',str_replace('.xml',' ',str_replace('.html',' ',$tn)))))),'Invalid filename ',$il)) break ;
+									if (!$this->assert($tn,'Empty filename',$il)) break;
+									if (!$this->assert(strpos($tn,'.') || array_key_exists($tn, $this->globalrelations),'Warning: Relation does not exist',$il)) $this->stack[] = $r->doClone();
+									
+									if (isset($this->transactiondict[$tn]))
+										$tn = $this->transactiondict[$tn];
+									
+									if($hooklink && !$this->assert($tip = $s = swFileGetContents($hooklink),'Invalid URL '.$hooklink,$il)) break;
+									
+									$file1 = 'site/files/'.$tn;
+									$file2 = 'site/cache/'.$tn;
+									
+									if(!$this->assert(file_exists($file1)|| file_exists($file2),'File does not exist',$il))
 									{
-										if ($tn=='')
-										{
-											$this->result .= $ptagerror.$ti.' Error : Empty filename'.$ptagerrorend.$ptag2;
-											$this->errors[] = $il;
-										}
-										
-										elseif(strpos($tn,'.') === FALSE)
-										{
-											if (array_key_exists($tn, $this->globalrelations))
-												$r = $this->globalrelations[$tn];
-											else
-											{
-												$this->result .= $ptagerror.$ti.' Error : Relation does not exist'.$ptagerrorend.$ptag2;
-												$this->errors[] = $il;
-												$r = new swRelation('',$dict);
-											}
-											$this->stack[] = $r->doClone();
-											//print_r($stack);
-												
-										}
-										elseif(true)  // true $currentpath files are in site
-										{
-											if (isset($this->transactiondict[$tn]))
-												$tn = $this->transactiondict[$tn];
-											
-											if ($hooklink) 
-											{  			
-										  		//echo $hooklink;
-										  		if (!$s = swFileGetContents($hooklink)) 
-										  		{
-											  		throw new swRelationError('Invalid URL '.$hooklink,87);		
-											  	}	
-										        $tip = $s; //echo $tip;
-											}
-											else
-											{
-												$file1 = 'site/files/'.$tn;
-												$file2 = 'site/cache/'.$tn;
-												if (!file_exists($file1) and !file_exists($file2))
-												{
-													$this->result .= $ptagerror.$ti.' Error : File does not exist '.$tn.$ptagerrorend.$ptag2;
-													$this->errors[] = $il;
-													$tip = '';
-													$stack[] = new swRelation('');
-												}
-												else
-												{
-													if (file_exists($file1) and file_exists($file2))
-													{
-														 if (filemtime($file1) >= filemtime($file2)) 
-														 	$file = $file1;
-														 else
-														 	$file = $file2;
-													}
-													elseif (file_exists($file1)) $file = $file1;
-													else $file = $file2;
-													
-													
-													$tip = file_get_contents($file);
-												}
-											}
-											switch($enc)
-											{
-												case 'macroman': $tip = iconv('macinstosh', 'UTF-8', $tip); break;
-												case 'windowslatin1': $tip = mb_convert_encoding($tip, 'UTF-8', 'Windows-1252', $tip); break;
-												case 'latin1': $tip = utf8_encode($tip); break;
-												case 'utd-8': break;
-											}
-											if (strlen($tip)>0)
-											{
-												$r = new swRelation('',$dict);
-												switch(substr($file,-4))
-												{
-													case '.csv': 	$r->setCSV(explode(PHP_EOL,$tip));
-																	break;
-													case '.txt': 	$r->setTab(explode(PHP_EOL,$tip));
-																	break;
-													case 'json':	$r->setJSON($tip);
-																	break;
-													case '.xml':		$r->setXML($tip);
-																	break;
-													case 'html':		$r->setHtml($tip);
-																	break;
-													default:		$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
-																	$this->errors[] = $il;
-																	break;
-												}
-												$this->stack[] = $r;
-											}
-											else
-											{
-												$this->result .= $ptagerror.$ti.' Error : Empty file'.$ptagerrorend.$ptag2;
-												$this->errors[] = $il;
-											}
-
-										}
+										$stack[] = new swRelation('');
+										break;
 									}
-									break;
+									
+									if (file_exists($file1) and file_exists($file2))
+									{
+										 if (filemtime($file1) >= filemtime($file2)) 
+										 	$file = $file1;
+										 else
+										 	$file = $file2;
+									}
+									elseif (file_exists($file1)) $file = $file1;
+									else $file = $file2;
+									
+									
+									$tip = file_get_contents($file);
 
-										
-										
-										
+									switch($enc)
+									{
+										case 'macroman': $tip = iconv('macinstosh', 'UTF-8', $tip); break;
+										case 'windowslatin1': $tip = mb_convert_encoding($tip, 'UTF-8', 'Windows-1252', $tip); break;
+										case 'latin1': $tip = utf8_encode($tip); break;
+										case 'utd-8': break;
+									}
+									
+									if(!$this->assert(strlen($tip),'Empty fil',$il)) break;
+
+									$r = new swRelation('',$dict);
+									switch(substr($file,-4))
+									{
+										case '.csv': 	$r->setCSV(explode(PHP_EOL,$tip));
+														break;
+										case '.txt': 	$r->setTab(explode(PHP_EOL,$tip));
+														break;
+										case 'json':	$r->setJSON($tip);
+														break;
+										case '.xml':		$r->setXML($tip);
+														break;
+										case 'html':		$r->setHtml($tip);
+														break;
+										default:		$this->assert(false,'Invalid filename',$il);																				break;
+									}
+									$this->stack[] = $r;
 									break;
+										
 				case 'relation':	$r = new swRelation($body, $dict);
 									$this->stack[] = $r;
+									break;
+										
+				case 'rename':		if (!$this->assert(count($this->stack),'Rename stack empty ',$il)) break;
+									
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->rename1($body);
+									$this->stack[] = $r;
 									break;	
-				case 'rename':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Rename Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										$r->rename1($body);
-										$this->stack[] = $r;
-									}
-									break;										
+																		
 				case 'repeat':		$repeatstack[] = $i;
 									$fields = explode(' ',$body);
-									if (count($fields)<2)
+									
+									if(!$this->assert(count($fields)>1,'Repeat missing parameters',$il)) break;
+									if(!$this->assert(!array_key_exists($fields[0],$dict),'Repeat name '.$fields[0].' already used',$il)) break;
+									$repeatlabel[] = array_shift($fields);
+									$body = join(' ',$fields);
+									$xp = $this->GetCompiledExpression($body);
+									$v = $xp->evaluate($dict);
+									$dict[end($repeatlabel)] = $v;
+									
+									if ($v>0)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Repeat missing parameters'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									elseif(array_key_exists($fields[0],$dict))
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Repeat name '.$fields[0].' already used'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										// do read following lines
 									}
 									else
 									{
-										$repeatlabel[] = array_shift($fields);
-										$body = join(' ',$fields);
-										$xp = $this->GetCompiledExpression($body);
-										$v = $xp->evaluate($dict);
-										$dict[end($repeatlabel)] = $v;
-										
-										if ($v>0)
+									$loopcounter = 1;
+										while($i<$c && $loopcounter >0)
 										{
-											// do read following lines
+											$i++;
+											$mline = trim($lines[$i]);
+											if (strpos($mline,'// ')>-1)
+												$mline = trim(substr($mline,0,strpos($mline,'// ')));
+	
+											if (substr($mline,0,5)=='repeat')
+												$loopcounter++;
+											elseif (substr($mline,0,9)=='end repeat')
+												$loopcounter--;
 										}
-										else
-										{
-										$loopcounter = 1;
-											while($i<$c && $loopcounter >0)
-											{
-												$i++;
-												$mline = trim($lines[$i]);
-												if (strpos($mline,'// ')>-1)
-													$mline = trim(substr($mline,0,strpos($mline,'// ')));
-		
-												if (substr($mline,0,5)=='repeat')
-													$loopcounter++;
-												elseif (substr($mline,0,9)=='end repeat')
-													$loopcounter--;
-											}
-										}
-									}
+									}	
+									break; 
 										
-									break; 	
 				case 'run':			// run pg(x) and run pg (x) are both valid
 									// so we split on paranthesis, not space
 									
 									$fields = explode('(',$body);
 									$key = trim(array_shift($fields));
 									$body = '('.trim(join(' ',$fields));
-									if ( substr($body,0,1) != '(' || substr($body,-1,1) != ')')
+									
+									if(!$this->assert(substr($body,0,1) == '(' && substr($body,-1,1) == ')','Missing paranthesis',$il)) break;
+									if(!$this->assert(array_key_exists($key, $this->programs),'Program not defined '.$key,$il)) break;
+									$tx = $this->programs[$key];	
+									$dict2 = array();
+									$dict0 = array();
+									foreach($dict as $k=>$v)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Missing paranthesis '.$key.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-
+										$dict2[$k] = $v;
 									}
-									elseif (array_key_exists($key, $this->programs))
-									{
-										$tx = $this->programs[$key];
-										
-										
-										$dict2 = array();
-										$dict0 = array();
-										foreach($dict as $k=>$v)
-										{
-											$dict2[$k] = $v;
-										}
-										$dict0 = $dict;
-										$body = substr($body,1,-1);
-										$this->result = $this->run2($tx,$key,$body,$dict); 
-										$dict = $dict0; 
-									}
-									else
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Program not defined '.$key.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}	
+									$dict0 = $dict;
+									$body = substr($body,1,-1);
+									$this->result = $this->run2($tx,$key,$body,$dict); 
+									$dict = $dict0; 
 									break; 
-				case 'select':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Select Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										// $r->locals = $locals;
-										$r->select1($body);
-										$this->stack[] = $r;
-									}
-									break;	
-				case 'serialize':	if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Serialize Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->serialize1();
-										$this->stack[] = $r;
-									}
-									break;	
-				case 'set':			if (count($fields)<3)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Set too short'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$key = array_shift($fields);
-									    $eq = array_shift($fields);
-										$body = join(' ',$fields);
-										if(in_array($key,$repeatlabel))
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Set name '.$key .' already used'.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
+									
+				case 'select':		if (!$this->assert(count($this->stack),'Select stack empty ',$il)) break;
 
-										}
-										elseif ($eq != '=')
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									// $r->locals = $locals;
+									$r->select1($body);
+									$this->stack[] = $r;
+									break;	
+									
+				case 'serialize':	if (!$this->assert(count($this->stack),'Serialize stack empty ',$il)) break;
+				
+									$r = array_pop($this->stack);
+									$r->serialize1();
+									$this->stack[] = $r;
+									break;
+										
+				case 'set':			if (!$this->assert(count($fields)>2,'Set too short',$il)) break;
+
+									$key = array_shift($fields);
+								    $eq = array_shift($fields);
+									$body = join(' ',$fields);
+									if (!$this->assert(!in_array($key,$repeatlabel),'Set name '.$key .' already used',$il)) break;
+									if (!$this->assert($eq == '=','Set missing =',$il)) break;
+									
+									if (count($this->stack)>0)
+									{
+										$r = current($this->stack);
+										if (count($r->tuples)>0 && !$walkstart)
 										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Set missing ='.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
-										}
-										else
-										{
-											if (count($this->stack)>0)
+											$tp = current($r->tuples);
+											
+											if($tp)
 											{
-												$r = current($this->stack);
-												if (count($r->tuples)>0 && !$walkstart)
+												$tpfields = $tp->fields();
+												foreach($tpfields as $k=>$v)
 												{
-													$tp = current($r->tuples);
-													
-													if($tp)
-													{
-														foreach($tp->pfields as $k=>$v)
-														{
-															$dict[$k] =$v;
-														}
-													}
+													$dict[$k] =$v;
 												}
 											}
-											$xp = $this->GetCompiledExpression($body);
-											$dict[$key] = $xp->evaluate($dict);
-											
-										}	
+										}
 									}
-
+									$xp = $this->GetCompiledExpression($body);
+									$dict[$key] = $xp->evaluate($dict);
 									break; 
+									
+				case 'sql':			if (!$this->assert($currentdatabase,'No database',$il)) break;
+
+									$xp = new swExpression();
+									$xp->compile($body);
+									$q = $xp->evaluate($dict);
+									$q = SQLite3::escapeString($q);
+									try	{ $query = $currentdatabase->query($q); }
+									catch (Exception $err)
+									{
+										$this->assert(false,$currentdatabase->lastErrorMsg(),$il); break;
+									}
+									if (!$this->assert($query,$currentdatabase->lastErrorMsg(),$il)) break;
+									
+									$r = new swRelation('',$dict);
+									while($fields = @$query->fetchArray(SQLITE3_ASSOC))
+									{
+										if (!$r->arity())
+										{
+											foreach($fields as $k=>$v) $r->addColumn($k);							
+										}
+										$r->insert2(array_values($fields));
+									}	
+								    if ($r->arity() || substr($q,0,strlen('SELECT'))=='SELECT') $this->stack[] = $r;		
+									break;
+				
 				case 'stack':		$r = new swRelation('stack, cardinality, column', $dict);
 									$sti = 0;
 									foreach($this->stack as $r2)
@@ -1331,109 +1101,78 @@ class swRelationLineHandler
 									}
 									$this->stack[] = $r;
 									break;
+									
 				case 'stop':		$i=$c; break;
-				case 'swap':		if (count($this->stack)<2)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Swap Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r2 = array_pop($this->stack);
-										$this->stack[] = $r;
-										$this->stack[] = $r2;
-									}
+				
+				case 'swap':		if (!$this->assert(count($this->stack)>1,'Swap stack empty ',$il)) break;
+
+									$r = array_pop($this->stack);
+									$r2 = array_pop($this->stack);
+									$this->stack[] = $r;
+									$this->stack[] = $r2;
 									break;	
-				case 'template':	if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Template Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$xp = $this->GetCompiledExpression($body);
-										$tn = $xp->evaluate($dict);
-										if (!$this->validFileName($tn))
-										{
-											$this->result .= $ptag.$ptagerror.$ti.' Error : Invalid name '.$tn.$ptagerrorend.$ptag2;
-											$this->errors[]=$il;
-										}
-										else
-										{
-											$tmp = swRelationTemplate($tn);
-											$this->result .= $r->toTemplate($tmp);											
-										}
-										$this->stack[] = $r;
-									}
+									
+				case 'template':	if (!$this->assert(count($this->stack),'Template stack empty ',$il)) break;
+				
+									$r = array_pop($this->stack);
+									$xp = $this->GetCompiledExpression($body);
+									$tn = $xp->evaluate($dict);
+									if (!$this->assert($this->validFileName($tn),'Invalid name '.$tn,$il)) break;
+									
+									$tmp = swRelationTemplate($tn);
+									$this->result .= $r->toTemplate($tmp);											
+									$this->stack[] = $r;									
 									break;
+									
 				case 'transaction' :$this->transactionprefix = 'tmp-';
 									$this->transactionerror = '';
 									$this->transactiondict = array();
 									break;
-				case 'union':		if (count($this->stack)<2)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r2 = array_pop($this->stack);
-										$r2->union($r);
-										$this->stack[] = $r2;
-									}
+									
+				case 'union':		if (!$this->assert(count($this->stack)>1,'Union stack empty ',$il)) break;
+				
+									$r = array_pop($this->stack);
+									$r2 = array_pop($this->stack);
+									$r2->union($r);
+									$this->stack[] = $r2;
 									break;
+									
 								
-				case 'update':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Update Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$r->globals = $dict;
-										// $r->locals = $locals;
-										$r->update($body);
-										$this->stack[] = $r;
-									}
+				case 'update':		if (!$this->assert(count($this->stack),'Update stack empty ',$il)) break;
+
+									$r = array_pop($this->stack);
+									$r->globals = $dict;
+									$r->update($body);
+									$this->stack[] = $r;
 									break;	
+									
 				case 'virtual':		$xp = $this->GetCompiledExpression($body);
 									$te = $xp->evaluate($this->globals,$dict);
 									$r = swRelationVirtual($te);
 									$this->stack[] = $r;
 									break;
-				case 'walk' :		
-									if (count($this->stack)<1)
+				case 'walk' :		if (!$this->assert(count($this->stack),'Walk stack empty ',$il)) break;
+
+									$walkstart = $i;
+									$walkrelation1 = array_pop($this->stack);			
+									$walkrelation2 = new swRelation($walkrelation1->header);
+									$pairs = explode(',',$body);								
+									foreach($pairs as $p)
 									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Walk Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
+										if (!trim($p)) continue;
+										if (!in_array(trim($p),$walkrelation2->header))
+											$walkrelation2->addColumn(trim($p));
 									}
-									else
-									{	
-										$walkstart = $i;
-										$walkrelation1 = array_pop($this->stack);			
-										$walkrelation2 = new swRelation($walkrelation1->header);
-										$pairs = explode(',',$body);								
-										foreach($pairs as $p)
+									if (count($walkrelation1->tuples)>0)
+									{
+										$tp = current($walkrelation1->tuples);
+										$tpfields = $tp->fields();
+										foreach($tpfields as $k=>$v)
 										{
-											if (!trim($p)) continue;
-											if (!in_array(trim($p),$walkrelation2->header))
-												$walkrelation2->addColumn(trim($p));
+											$dict[$k] =$v;
 										}
-										// $r = array_pop($this->stack); //??
-										if (count($walkrelation1->tuples)>0)
-										{
-											$tp = current($walkrelation1->tuples);
-											foreach($tp->pfields as $k=>$v)
-											{
-												$dict[$k] =$v;
-											}
-										}
-										$this->stack[] = $walkrelation1;
 									}
+									$this->stack[] = $walkrelation1;
 									break;
 									
 												
@@ -1458,99 +1197,86 @@ class swRelationLineHandler
 												$loopcounter--;
 										}
 									}
-										
 									break; 	
-				case 'write':		if (count($this->stack)<1)
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Write Stack empty'.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
-									else
-									{
-										$r = array_pop($this->stack);
-										$xp = $this->GetCompiledExpression($body);
-										$tn = $xp->evaluate($dict);
-										if ($this->transactionprefix != '')
-										{
-											$this->transactiondict[$tn]=$this->transactionprefix.$tn;
-											$tn = $this->transactionprefix.$tn;
-										}
-										if (!$this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',str_replace('.xml','',$tn))))))
-										{	
-										$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
-										$this->errors[] = $il;
-										}
-										else
-										{
-											$file = 'site/cache/'.$tn;
-											$written = 0;
-											switch(substr($file,-4))
-											{
-												case '.csv': 	$written = file_put_contents($file,$r->getCSV()); 
-																break;
-												case '.txt': 	$written = file_put_contents($file,$r->getTab()); 
-																	break;
-												case 'json':	$written = file_put_contents($file,$r->getJSON()); 
-																	break;
-												default:		if (strpos($tn,'.') === FALSE)
-																	$this->globalrelations[$tn] = $r->doClone();
-																else
-																{
-																	$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
-																	$this->errors[] = $il;
-																}
-																	break;
-											}
-											//print_r($this->globalrelations[$tn]);
-											if ($written === FALSE)
-											{
-												$this->result .= $ptagerror.$ti.' Error : File not written '.$tn.$ptagerrorend.$ptag2;
-												$this->errors[] = $il;
-											}
+									
+				case 'write':		if (!$this->assert(count($this->stack),'Write stack empty ',$il)) break;
 
-										}	
-										$this->stack[] = $r;
+									$r = end($this->stack);
+									
+									$xp = $this->GetCompiledExpression($body);
+									$tn = $xp->evaluate($dict);
+									
+									if (substr($tn,0,strlen('database')) == 'database')
+									{
+										if (!$this->assert($currentdatabase,'No database ',$il)) break;
+										$table = trim(substr($tn,strlen('database')));
+										if (!$this->assert($r->validname($table),'Invalid table name '.$table,$il)) break;
+										
+										
+										$header = ' ('.join(', ',$r->header).') ';
+										$currentdatabase->query('DROP TABLE IF EXISTS '.$table.'; CREATE  TABLE '.$table.$header.';'); 
+										$currentdatabase->query('BEGIN TRANSACTION; ');
+										foreach($r->tuples as $tuple)
+										{
+											$fields = $tuple->fields();
+											$values  = array();
+											foreach($fields as $v)
+											{
+												$values [] = "'".SQLite3::escapeString($v)."'";												}
+											$q = 'INSERT INTO '.$table.' '.$header.
+											' VALUES ('.join(',',$values).');';
+											// echo $q;
+											$currentdatabase->query($q); 
+										}
+										$currentdatabase->query('COMMIT; '); 
+										break;
 									}
+									
+									
+									if ($this->transactionprefix != '')
+									{
+										$this->transactiondict[$tn]=$this->transactionprefix.$tn;
+										$tn = $this->transactionprefix.$tn;
+									}
+									if (!$this->assert($this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',str_replace('.xml','',$tn))))),'Invalid filename '.$tn,$il)) break;
+									
+									$file = 'site/cache/'.$tn;
+									$written = 0;
+									switch(substr($file,-4))
+									{
+										case '.csv': 	$written = file_put_contents($file,$r->getCSV()); 
+														break;
+										case '.txt': 	$written = file_put_contents($file,$r->getTab()); 
+															break;
+										case 'json':	$written = file_put_contents($file,$r->getJSON()); 
+															break;
+										default:		if (strpos($tn,'.') === FALSE)
+															$this->globalrelations[$tn] = $r->doClone();
+														else
+														{
+															$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
+															$this->errors[] = $il;
+														}
+															break;
+									}
+									$this->assert($written,'Warning: File not written '.$tn,$il);
 									break;
-				default: 			{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : '.$line.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
-									}
+									
+				default: 			$this->assert($written,'Unhandled line '.$line,$il);
 			}
 			
 			
 			if (count($this->stack) > 0)
 			{
-				$top = $this->stack[count($this->stack)-1];
-				if (! is_object($top))
-				{
-					$this->result .= $ptag.$ptagerror.$ti.' Error : top stack not object '.$line.$ptagerrorend.$ptag2;
-					$this->errors[]=$il;
-					//print_r($top);
-					break;
-				}
-				elseif (! is_a($top,'swRelation'))
-				{
-					$this->result .= $ptag.$ptagerror.$ti.' Error : top stack not relation '.$line.$ptagerrorend.$ptag2;
-					$this->errors[]=$il;
-					//print_r($top);
-					break;
-				}
+				$top = end($this->stack);
+				if (!$this->assert(is_object($top),'Top stack not object at line '.$line,$il)) break;
+				if (!$this->assert(is_a($top,'swRelation'),'Top stack not relation at line '.$line,$il)) break;
 			}		
 		}
 		if (isset($lastcommand)) p_close($lastcommand); 
-			
-		/*
-		global $swOvertime; 
-		global $lang;		
-		$overtimetext = '';
-		if ($swOvertime)
-			$overtimetext .= '<nowiki><div class="overtime">'.swSystemMessage('there-may-be-more-results',$lang).'</div></nowiki>'; 
-		if (!$internal)
-			return $this->result.$overtimetext; 
-		else
 		
-		*/
+		if ($currentdatabase) $currentdatabase->close();
+			
 		return $this->result;
 			
 			  
@@ -1597,6 +1323,24 @@ class swRelationLineHandler
 		foreach($this->functions as $k=>$v)
 			$swExpressionFunctions[$k] = $v;
 		return $xp;
+	}
+	
+	function assert($condition,$error,$il)
+	{
+		$ptag; $ptagerror; $ptag2;
+		$ptag = '';
+		$ptagerror = '<span class="error">';
+		$ptagerrorend = '</span>';
+		$ptag2 = PHP_EOL;
+		$ti = ($il+1).''; // to text
+		
+		if (!$condition)
+		{
+			$this->result .= $ptag.$ptagerror.$ti.' Error: '.$error.$ptagerrorend.$ptag2;
+			$this->errors[]=$il;
+			return false;
+		}
+		return true;
 	}
 		
 	
@@ -3878,75 +3622,7 @@ class swRelation
 	}
 }
 
-class swTuple
-{
-	var $pfields = array();
-	var $phash;
-	
-	function __construct($list)
-	{
-		$keys = array();
-		$values = array();
-		$this->pfields = array_clone($list);
-		if (is_array($list))
-			$keys = array_keys($list);
-		sort($keys);
-		foreach($keys as $k)
-		{
-			$values[$k] = $list[$k]; 
-		}
-		$this->phash = md5(join(PHP_EOL,$values));
-	}
-	
-	function arity()
-	{
-		return count($this->pfields);
-	}
-	
-	function fields()
-	{
-		return array_clone($this->pfields);
-	}
-	
-	function hash()
-	{
-		return $this->phash;
-	}
-	
-	function hasKey($k)
-	{
-		return array_key_exists($k, $this->pfields);
-	}
 
-	function hasValues()
-	{
-		foreach ($this->pfields as $k=>$v)
-		{
-			if ($v != "") return true;
-		}
-	}
-
-	
-	function sameFamily($t)
-	{
-		if ($this->arity() != $t->arity()) {  return false; }
-		foreach($this->pfields as $k=>$e)
-		{
-			if (!array_key_exists($k, $t->pfields)) 
-			{
-				//echo $k;	
-				return false;
-			}
-		}
-		return true;
-	}
-	function value($s)
-	{
-		$result = @$this->pfields[$s];
-		return $result;
-	}
-	
-}
 
 class swOrderedDictionary
 {

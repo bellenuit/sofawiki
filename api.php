@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.7a';   
+$swVersion = '3.8.8';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -96,11 +96,13 @@ include_once $swRoot.'/inc/user.php';
 include_once $swRoot.'/inc/wiki.php';
 
 include_once $swRoot.'/inc/relation.php';
+include_once $swRoot.'/inc/relationtuple.php';
 include_once $swRoot.'/inc/relationfilter.php';
 include_once $swRoot.'/inc/relationexecute.php';
 
 include_once $swRoot.'/inc/editortemplate.php';
 include_once $swRoot.'/inc/mail.php';
+include_once $swRoot.'/inc/async.php';
 
 // external code
 include_once $swRoot.'/inc/diff.php';
