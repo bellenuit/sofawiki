@@ -91,7 +91,7 @@ if ($submitted)
 elseif($token != '')
 {
 	$swParsedContent = $err.'
-	<div id="editzone">
+	<div id="editzone" class="editzone actionresetpassword">
 	<form method="post" action="index.php">
 		<input type="hidden" name="action" value="resetpassword" />
 		<input type="hidden" name="email" value="'.$email.'" />

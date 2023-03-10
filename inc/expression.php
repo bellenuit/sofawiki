@@ -149,7 +149,7 @@ class swExpression
 												break;
 				case 'string1': 				switch($ch)
 												{
-													case '"':	$state = 'string1';
+													case '"':	$state = 'string';
 													            $acc .= '"';
 													            break;
 													default:	$state = 'start';

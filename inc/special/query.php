@@ -13,7 +13,7 @@ if ($submitrefresh)
 	$swDebugRefresh = true;
 
 
-$swParsedContent = '<div id="editzone" class="editzone">
+$swParsedContent = '<div id="editzone" class="editzone specialquery">
 <div class="editheader">Query</div>
 <form method="post" action="index.php">
 <input type="hidden" name="name" value="special:query" />

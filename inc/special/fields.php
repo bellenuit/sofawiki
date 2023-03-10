@@ -108,7 +108,7 @@ else
 	
 	$minwidth = ($maxcols+$addcolumns) * 100;
 	
-	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone" style="min-width: '.$minwidth.'px">';
+	$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone actionfields" style="min-width: '.$minwidth.'px">';
 	$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("fields",$lang).'</div>';
 	
 	$swParsedContent .= PHP_EOL.'<form method="post" action="index.php?action=fields">';

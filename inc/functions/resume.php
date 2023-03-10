@@ -70,6 +70,8 @@ function swResumeFromText($s,$length,$raw)
 	
 	if ($raw)
 	{
+		$s = preg_replace('#\[\[(.*?)::(.*?)\]\]#m','',$s);
+		$s = preg_replace('#\[\[\w\w:(.*?)\]\]#m','',$s);
 		$s = preg_replace('#\[\[(.*?)\]\]#m','$1',$s);
 		$s = strip_tags($s);
 	}

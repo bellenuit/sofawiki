@@ -72,7 +72,7 @@ else
 			
 		$swParsedName = $wiki->name;
 		
-		$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone">';
+		$swParsedContent .= PHP_EOL.'<div id="editzone" class="editzone actionrename">';
 		$swParsedContent .= PHP_EOL.'<div class="editheader">'.swSystemMessage("rename",$lang).'</div>';
 		
 		$swParsedContent .= PHP_EOL.'<form method="post" action="'.$wiki->link('rename').'">';

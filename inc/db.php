@@ -325,7 +325,15 @@ class swDB extends swPersistance //extend may be obsolete
 			 $swIndexError = false;
 			 echotime('indexes built '.$c);
 		}
-		swDbaSync($this->urldb);
+		
+		
+		if (!swDbaSync($this->urldb))
+		{
+			echotime('overtime INDEX sync errror');
+			$swOvertime = true;
+			$swError = 'Index incomplete. Please reload ';
+			$swIndexError = true;
+		}
 	}
 	
 	
@@ -517,7 +525,7 @@ function swGetLastRevision()
 }
 
 /**
- * Returns all revisions for a name to build a history
+ * Returns current revision for a name
  *
  * @param name
  */
@@ -525,7 +533,7 @@ function swGetLastRevision()
 
 function swGetCurrentRevisionFromName($name)
 {	
-// 	echotime('getcurrentrevision '.$name);
+ 	//echotime('getcurrentrevision '.$name);
 	
 	global $swCurrentRevisionCache;
 	if (isset($swCurrentRevisionCache[$name]))
@@ -533,6 +541,8 @@ function swGetCurrentRevisionFromName($name)
 	global $db;	
 	
 	$url= swNameURL($name);
+	
+	
 	
 	global $db;
 	
@@ -549,6 +559,44 @@ function swGetCurrentRevisionFromName($name)
 			return $current;
 		}
 	}
+	
+	
+	
+}	
+
+/**
+ * Returns most recent revision for a name
+ *
+ * @param name
+ */
+
+
+function swGetLastRevisionFromName($name)
+{	
+ 	//echotime('getcurrentrevision '.$name);
+	
+	global $swLastRevisionCache;
+	if (isset($swLastRevisionCache[$name]))
+		return $swLastRevisionCache[$name];
+	global $db;	
+	
+	$url= swNameURL($name);
+	
+	global $db;
+	
+	if (swDbaExists($url,$db->urldb))
+	{
+		$s = swDbaFetch($url,$db->urldb);
+		$revs = explode(' ',$s);
+		$status = $revs[0];
+		$current = $revs[1];
+		
+		$swLastRevisionCache[$name] = $current;
+		return $current;
+		
+	}
+	
+	
 	
 }	
 

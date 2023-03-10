@@ -36,9 +36,10 @@ class swRelationLineHandler
 	function run($t, $internal = '', $internalbody = '', $usedivider = true)
 	{
 		
+		
 		$this->functions = array();
 		$this->compiledexpressions = array();
-		
+		$this->errors = array();
 		
 		
 		
@@ -167,8 +168,6 @@ class swRelationLineHandler
 			}
 			else
 			{
-				$this->results = '';
-				$this->errors = array();
 				$il = $i;	
 			}
 			$ti = ($il+1).''; // to text
@@ -681,7 +680,7 @@ class swRelationLineHandler
 
 									break;
 				case 'input': 		$fieldgroup = explode(',',$body);
-									$this->result .=  $ptag.'<nowiki><div class="editzone">';
+									$this->result .=  $ptag.'<nowiki><div class="editzone relationinput">';
 									$this->result .= '<div class="editheader">Input</div>';
 									
 									$this->result .='<form method="post" action="index.php?name=</nowiki>{{nameurl |{{currentname}} }}<nowiki>"></nowiki>';

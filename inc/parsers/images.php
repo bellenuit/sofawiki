@@ -665,7 +665,8 @@ function drawHandles()
 			if (isset($options[4])) $alttag = $options[4]; else $alttag = '';
 			
 			$token = md5($val.date('Ymd',time())); 
-			$path = 'imageapi.php?w='.$width.'&h='.$height.'&crop='.$crop.'&token='.$token.'&name='.$val;
+			//$path = 'imageapi.php?w='.$width.'&h='.$height.'&crop='.$crop.'&token='.$token.'&name='.$val;
+			$path = 'index.php?action=rest&q=/images/'.$val.'/'.$width.'-'.$height.'-'.$crop.'&token='.$token;
 			
 			if ($width) $woption = ' width ="'.$width.'" '; else $woption = '';
 			if ($height) $hoption = ' height ="'.$height.'" '; else $hoption = '';

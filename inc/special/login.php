@@ -16,7 +16,7 @@ if (isset($swBlockLoginAutocomplete) && $swBlockLoginAutocomplete)
 
 $swParsedName = swSystemMessage("login",$lang);
 $swParsedContent = '
-<div id="editzone" class="editzone">
+<div id="editzone" class="editzone actionlogin">
 	<div class="editheader">'.swSystemMessage("login",$lang).'</div>
 	<form method="post" action="index.php" '.$formatttribute.'>
 	<input type="submit" name="submitlogin" value="'.swSystemMessage('login',$lang).'" />

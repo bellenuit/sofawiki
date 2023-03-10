@@ -142,7 +142,7 @@ foreach ($revisions as $k=>$v)
 if(!$query) $query="";
 if(!$namespace) $namespace="*";
 
-$swParsedContent .= '<div id="editzone"><form method="post" action="index.php">
+$swParsedContent .= '<div id="editzone" class="editzone specialregex"><form method="post" action="index.php">
 		<p>
 		Regex <input type="hidden" name="name" value="special:regex" />
 		<input type="text" size=40 name="query" value="'.$query.'" />

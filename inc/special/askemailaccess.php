@@ -91,7 +91,7 @@ if ($submitted)
 else
 {
 
-	$swParsedContent = $err.'<div id="editzone" class="editzone">
+	$swParsedContent = $err.'<div id="editzone" class="editzone actionaskemailaccess">
 		<div class="editheader">'.swSystemMessage("email-access",$lang).'</div>
 		<form method="post" action="index.php">
 		<input type="submit" name="submitemailaccess" value="'.swSystemMessage("email-access-submit",$lang).'" />

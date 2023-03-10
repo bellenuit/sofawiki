@@ -84,7 +84,7 @@ switch ($wiki->status)
 						// no break
 	
 	
-	default:			$swParsedContent = '<div id="editzone" class="editzone">';
+	default:			$swParsedContent = '<div id="editzone" class="editzone actionedit">';
 						$swParsedContent .= '<div class="editheader">'.$headertext.'</div>';
 
 						
@@ -121,7 +121,6 @@ switch ($wiki->status)
 						$swParsedContent .= PHP_EOL.$submitbutton;
 						
 						if ($namefieldtype=='text') $swParsedContent .= PHP_EOL.'<p>'.swSystemMessage('name',$lang).'</p>';
-						
 						
 						if ($action=='new')
 						{

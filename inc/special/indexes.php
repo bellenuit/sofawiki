@@ -280,7 +280,7 @@ switch($_REQUEST['index'])
 						
 						if (@$_REQUEST['url'])
 						{
-							$line = swDbaFetch($_REQUEST['url'],$db->urldb);
+							$line = swDbaFetch(swNameURL($_REQUEST['url']),$db->urldb);
 							$swParsedContent .= '<p>'.$line.'<p>';
 							
 							$revs = explode(' ',$line);

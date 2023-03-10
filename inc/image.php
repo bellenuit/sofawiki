@@ -63,7 +63,7 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 		if (!intval($desth)) $desth = $sourceh;
 		
 		// do not upscale!
-		if ($destw > $sourcew * 1.5)
+		if ($destw > $sourcew * 3)
 		{
 			$desth = $sourceh;
 			$destw = $sourcew;

@@ -14,7 +14,7 @@ if ($submitrefresh)
 	$swDebugRefresh = true;
 
 $swParsedContent = '<nowiki>
-<div id="editzone" class="editzone">
+<div id="editzone" class="editzone specialrelation">
 <div class="editheader">Relation</div>
 <form method="post" action="index.php">
 <input type="submit" name="submit" value="Run ^R" accesskey="r"/>

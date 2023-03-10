@@ -9,7 +9,7 @@ $q = '
 filter _name, _short "#REDIRECT"
 select _short regex "^#REDIRECT"
 order _name a
-update _name = link(_name)
+update _name = "<nowiki><a href=""index.php?name="._name."&action=edit"">"._name."</a></nowiki>"
 update _short = substr(_short,10,999)
 ​label _name "Name", _short "Redirect to"
 print 100

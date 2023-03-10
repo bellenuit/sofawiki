@@ -206,7 +206,11 @@ function swIndexMonogram($numberofrevisions = 10000, $continue = false)
 	$checkedbitmap->hexit(); // save for db
 	swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$swMonogramIndex);
 		
-	swDbaSync($swMonogramIndex);
+	if (! swDbaSync($swMonogramIndex))
+	{
+		echotime('dbasync failed');
+		// rollback
+	}
 // 	return;
 	
 	return $counter;	 
