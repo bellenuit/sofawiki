@@ -413,6 +413,7 @@ $wiki->name = $name;
 $wiki->comment = $comment;
 $wiki->parsers = $swParsers;
 $swRedirectedFrom = '';
+if(isset($_GET['redirectedfrom'])) $swRedirectedFrom  = $_GET['redirectedfrom'];
 
 
 if (substr($name,0,8) == 'special:' && $action != 'login')
@@ -879,6 +880,13 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	if ($user->hasright('modify', $editwiki->name) && $editwiki->status == 'ok') 
 	{
 		$swEditMenus['editmenu-edit'] = '<a href="'.$editwiki->link('edit','--').'" rel="nofollow" accesskey="e">'.swSystemMessage('edit',$lang).'</a>';
+		if ($swRedirectedFrom)
+		{
+			$swEditMenus['editmenu-edit-redirected'] = '<a href="index.php?action=edit&lang='.$lang.'&name='.$swRedirectedFrom.'" rel="nofollow" >'.swSystemMessage('edit',$lang).' Redirection</a>';
+
+		}
+		
+		
 		if (isset($editwiki->internalfields['editortemplate']))
 		{
 			$swEditMenus['editmenu-source'] = '<a href="'.$editwiki->link('editsource','--').'" rel="nofollow">'.swSystemMessage('edit-source',$lang).'</a>';

@@ -14,6 +14,7 @@ class swRedirectionParser extends swParser
 	function dowork(&$wiki)
 	{
 		global $action;
+		global $lang;
 		if (in_array($action,array('delete','edit','editmulti','protect','rename','unprotect'))) return;
 	
 		$s = $wiki->parsedContent;
@@ -36,11 +37,13 @@ class swRedirectionParser extends swParser
  			
  				header ('HTTP/1.1 301 Moved Permanently');
  				
- 				$link = $linkwiki->link('');
+ 				$link = $linkwiki->link('',$lang);
+ 				if (!stristr($link,'?')) $link .= '?';
+ 				$link .= '&redirectedfrom='.swNameURL($name);
  				global $swBaseHrefFolder;
  				if (isset($swBaseHrefFolder))
  				{
- 					if (substr($link,0,2)=='./') $link = substr($link,1); // may be relative link
+ 					if (substr($link,0,2)=='./') $link = substr($link,2); // may be relative link
  					$link = $swBaseHrefFolder.$link;
  				}
  				

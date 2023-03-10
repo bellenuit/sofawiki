@@ -574,22 +574,22 @@ class xpFormat extends swExpressionFunction
 
 class xpGeN extends swExpressionFunction
 {
-	function __construct() { $this->arity = 2; $this->label = ':gen' ;}
+	function __construct() { $this->arity = 2; $this->label = ':gen' ; $this->isOperator = true ;}
 	function run($args)
 	{
 		$b = $args[0];
 		$a = $args[1];
 		if ($a === '⦵' || $b === '⦵') return '0';
-		if ($a === '∞' && $b === '∞') return '1';
-		if ($a === '-∞' && $b === '-∞') return '1';
+		if ($a === '∞' && $b === '∞') return '0';
+		if ($a === '-∞' && $b === '-∞') return '0';
 		if ($a === '∞') return '0';
 		if ($b === '∞') return '1';
-		if ($a === '-∞')  return '1';
-		if ($b === '-∞')  return '0';
+		if ($a === '-∞') return '1';
+		if ($b === '-∞') return '0';
 		$a = floatval($a);
 		$b = floatval($b);
-		if ($b >= $a) $stack[] = '1';
-		return '0';		
+		if ($b >= $a) return '1';
+		return '0';			
 	}
 }
 

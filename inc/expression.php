@@ -303,7 +303,7 @@ class swExpression
 												break;	
 				case 'greater': 				switch($ch)
 												{
-													case '=':  	$state = 'greaterequal';
+													case '=':  	$state = 'greaterequal'; 
 																break;
 													case '>':  	$state = 'start';
 																$this->tokens[] = '>>';
