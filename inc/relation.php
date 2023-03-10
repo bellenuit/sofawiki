@@ -50,11 +50,11 @@ class swRelationLineHandler
 		}
 		catch (swExpressionError $err)
 		{
-			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
+			$result = $this->result.PHP_EOL.'<span class="error">Expression error: '.$this->currentline.' '.$err->getMessage().'</span>';
 		}
 		catch (swRelationError $err)
 		{
-			$result = $this->result.PHP_EOL.'<span class="error">'.$this->currentline.' '.$err->getMessage().'</span>';
+			$result = $this->result.PHP_EOL.'<span class="error">Relation error: '.$this->currentline.' '.$err->getMessage().'</span>';
 		}
 		
 		
@@ -282,7 +282,7 @@ class swRelationLineHandler
 									$xp = new swExpression();
 									$xp->compile($body);
 									$tx = $xp->evaluate($dict);
-									if ($tx) $file = 'site/files/'.$tx; else  $file = ':memory:';
+									if ($tx) $file = 'site/cache/'.$tx; else  $file = ':memory:';
 									
 									try { 
 										if (stristr($tx,'/'))
@@ -620,7 +620,7 @@ class swRelationLineHandler
 				case 'include':		$xp = new swExpression();
 									$xp->compile($body);
 									$tn = $xp->evaluate($dict);
-									if (!$this->assert($this>validFileName($tn),'Invalid name ',$il)) break;
+									if (!$this->assert($this>validFileName($tn),'Invalid name '.$tn,$il)) break;
 									
 									$tmp = swRelationInclude($tn);
 									$this->offsets[$tn] = -$i; // give only fixed number on error include
@@ -1069,13 +1069,13 @@ class swRelationLineHandler
 									$xp = new swExpression();
 									$xp->compile($body);
 									$q = $xp->evaluate($dict);
-									$q = SQLite3::escapeString($q);
+									//$q = SQLite3::escapeString($q);
 									try	{ $query = $currentdatabase->query($q); }
 									catch (Exception $err)
 									{
-										$this->assert(false,$currentdatabase->lastErrorMsg(),$il); break;
+										$this->assert(false,$currentdatabase->lastErrorMsg().': '.$q,$il); break;
 									}
-									if (!$this->assert($query,$currentdatabase->lastErrorMsg(),$il)) break;
+									if (!$this->assert($query,$currentdatabase->lastErrorMsg().': '.$q,$il)) break;
 									
 									$r = new swRelation('',$dict);
 									while($fields = @$query->fetchArray(SQLITE3_ASSOC))
@@ -1117,7 +1117,7 @@ class swRelationLineHandler
 									$r = array_pop($this->stack);
 									$xp = $this->GetCompiledExpression($body);
 									$tn = $xp->evaluate($dict);
-									if (!$this->assert($this->validFileName($tn),'Invalid name '.$tn,$il)) break;
+									if (!$this->assert($this->validFileName($tn),'Invalid template name '.$tn,$il)) break;
 									
 									$tmp = swRelationTemplate($tn);
 									$this->result .= $r->toTemplate($tmp);											
@@ -1372,8 +1372,9 @@ class swRelation
 	
 	function addColumn($s)
 	{
+		$s0 = $s;
 		$s = $this->validName(trim($s));
-		if ($s == '') throw new swRelationError('Invalid name '.$s,102);
+		if ($s == '') throw new swRelationError('Invalid name '.$s0,102);
 		if (! in_array($s,$this->header)) $this->header[] = $s;
 	}
 	

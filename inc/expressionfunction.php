@@ -1340,6 +1340,16 @@ class xpSoundexLong extends swExpressionFunction
 /**
  * Converts  SQL date-time string to unix seconds
  */
+ 
+class xpSqlEscape extends swExpressionFunction
+{
+	function __construct() { $this->arity = 1; $this->label = ':sqlescape' ;}
+	function run($args)
+	{
+		$a = $args[0];
+		return SQLite3::escapeString($a);	
+	}
+}
 
 class xpSqlToSeconds extends swExpressionFunction
 {
@@ -1648,6 +1658,7 @@ $swExpressionFunctions[':max'] = new XPMax;
 $swExpressionFunctions[':min'] = new XPMin;
 
 $swExpressionFunctions[':secondstosql'] = new XPSecondsToSQL;
+$swExpressionFunctions[':sqlescape'] = new xpSqlEscape;
 $swExpressionFunctions[':sqltoseconds'] = new XPSQLtoSeconds;
 
 $swExpressionFunctions[':format'] = new XPFormat;
