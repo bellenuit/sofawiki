@@ -485,7 +485,7 @@ class swRelationLineHandler
 									}								
 									break; 	
 
-				case 'execute':		if (!$this->assert(isset($_REQUEST['submitexecute']) || isset($_REQUEST['confirmexecute']),'Ignore execute without submit run execute',$il)) break;
+				case 'execute':		if (!$this->assert(isset($_REQUEST['submitexecute']) || isset($_REQUEST['confirmexecute']),'Ignore execute without submit run execute',$il)) break;
 									if (!$this->assert(count($this->stack),'Execute stack empty',$il)) break;
 									
 
@@ -892,10 +892,17 @@ class swRelationLineHandler
 										// note that the last characters of the url must be .csv or .txt or .json or .xml
 
 										$file = $hooklink;
-									}
+									} 
 									if (!$this->assert($hooklink || $this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',str_replace('.xml',' ',str_replace('.html',' ',$tn)))))),'Invalid filename ',$il)) break ;
 									if (!$this->assert($tn,'Empty filename',$il)) break;
-									if (!$this->assert(strpos($tn,'.') || array_key_exists($tn, $this->globalrelations),'Warning: Relation does not exist',$il)) $this->stack[] = $r->doClone();
+									if (strpos($tn,'.')=== false)
+									{
+										if (!$this->assert(array_key_exists($tn, $this->globalrelations),'Warning: Saved relation does not exist',$il)) break;
+										
+										$r = $this->globalrelations[$tn];
+										$this->stack[] = $r->doClone();
+										break;
+									}
 									
 									if (isset($this->transactiondict[$tn]))
 										$tn = $this->transactiondict[$tn];
@@ -1250,8 +1257,11 @@ class swRelationLineHandler
 															break;
 										case 'json':	$written = file_put_contents($file,$r->getJSON()); 
 															break;
-										default:		if (strpos($tn,'.') === FALSE)
+										default:		if (strpos($tn,'.') === false)
+														{
 															$this->globalrelations[$tn] = $r->doClone();
+															break;
+														}
 														else
 														{
 															$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
@@ -1259,7 +1269,6 @@ class swRelationLineHandler
 														}
 															break;
 									}
-									$this->assert($written,'Warning: File not written '.$tn,$il);
 									break;
 									
 				default: 			$this->assert($written,'Unhandled line '.$line,$il);

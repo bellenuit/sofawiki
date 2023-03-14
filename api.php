@@ -135,6 +135,7 @@ include_once $swRoot.'/inc/functions/charts.php';
 include_once $swRoot.'/inc/functions/translate.php';
 include_once $swRoot.'/inc/functions/preventovertimesearchagain.php';
 include_once $swRoot.'/inc/functions/upload.php';
+include_once $swRoot.'/inc/functions/textrank.php';
 
 
 
