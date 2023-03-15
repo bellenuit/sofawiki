@@ -7,10 +7,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 function swSimpleSanitize($s)
 {
-	// filters out XSS input to be used on variables that should not habe html code or exec code
-	$s = str_replace("<","",$s);
-	$s = str_replace(">","",$s);
-	return $s;
+	return filter_var($s, FILTER_SANITIZE_STRING);
 }
 
 
