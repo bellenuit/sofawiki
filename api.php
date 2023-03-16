@@ -103,6 +103,7 @@ include_once $swRoot.'/inc/relationexecute.php';
 include_once $swRoot.'/inc/editortemplate.php';
 include_once $swRoot.'/inc/mail.php';
 include_once $swRoot.'/inc/async.php';
+include_once $swRoot.'/inc/token.php';
 
 // external code
 include_once $swRoot.'/inc/diff.php';

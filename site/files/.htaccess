@@ -3,3 +3,7 @@ Allow from all
 Order allow,deny
 Allow from all
 </Files>
+<Files ~ ".php$">
+Order Deny,Allow
+Deny from all
+</Files>

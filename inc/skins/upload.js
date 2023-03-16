@@ -1,10 +1,12 @@
-function parseFile(file, name="", prefix="", comment="") {
+function parseFile(file, name="", prefix="", comment="", pepper, token) {
     var theFile    = file;
     var fileSize   = file.size;
     var fileName   = file.name
     var serverName = name;
     var prefix     = prefix;
     var theComment = comment;
+    var thePepper  = pepper;
+    var theToken   = token;
     var theUploadTime = 0;
     var chunkSize  = 1024 * 1024; // bytes
     var offset     = 0;
@@ -95,10 +97,15 @@ function parseFile(file, name="", prefix="", comment="") {
 	async function checkChunks() {
 	    let formData = new FormData();
 		checkchunks = jobarray.join(",");
+		gaveup = false;
 		formData.append("checkchunks",checkchunks);
+		
 
-		formData.append("filename", file.name);        
-	    fetch("index.php?action=uploadbigfile", { method: "POST",  body: formData }) 
+		formData.append("filename", file.name);
+		formData.append("pepper", thePepper);   
+		formData.append("token", theToken);  
+		formData.append("action", "uploadbigfile");          
+	    fetch("index.php", { method: "POST",  body: formData }) 
 		.then((response) =>
 		{
 		   if (response.ok)
@@ -120,10 +127,10 @@ function parseFile(file, name="", prefix="", comment="") {
 							}
 					    	
 					   	}
-				    	catch(error) { alert(text); }
+				    	catch(error) { showStatus("No server response. Gave up. "+text); gaveup = true; }
 				    }
 		    
-					uploadJob();
+					if (!gaveup) uploadJob();
 					
 				});
 			}
@@ -171,7 +178,10 @@ function parseFile(file, name="", prefix="", comment="") {
 			
 		let formData = new FormData();           
 		formData.append("uploadedfile", blob, key);
-		fetch("index.php?action=uploadbigfile", { method: "POST",  body: formData }) 
+		formData.append("pepper", thePepper);   
+		formData.append("token", theToken);  
+		formData.append("action", "uploadbigfile");
+		fetch("index.php", { method: "POST",  body: formData , timeout: 6000}) 
 		.then((response) =>
 		{
 		   if (response.ok)
@@ -213,10 +223,10 @@ function parseFile(file, name="", prefix="", comment="") {
 				// there may have been a timeout
 				// we try again to contact the server, but let some time (the server may be busy)
 				showStatus("Recontacting server")
-				setTimeout(function() { uploadJob(); } , 10000);
+				setTimeout(function() { uploadJob(); } , 5000);
 			}
 		})
-		.catch(err =>  { showStatus(err); setTimeout(function() { uploadJob(); } , 10000) } );
+		.catch(err =>  { showStatus(err + " Recontacting server"); setTimeout(function() { uploadJob(); } , 5000) } );
 	}
    
 /**
@@ -238,8 +248,11 @@ function parseFile(file, name="", prefix="", comment="") {
 		formData.append("filename", prefix+name); 
 		formData.append("comment", theComment); 
 		formData.append("uploadtime", theUploadTime); 
-		formData.append("start", start);          
-	    fetch("index.php?action=uploadbigfile", { method: "POST",  body: formData })  
+		formData.append("start", start);  
+		formData.append("pepper", thePepper);   
+		formData.append("token", theToken);  
+		formData.append("action", "uploadbigfile");          
+	    fetch("index.php", { method: "POST",  body: formData })  
 		.then((response) =>
 		{
 		   if (response.ok)

@@ -742,13 +742,17 @@ switch ($action)
 									}
 								 	break;
 	
-	case 'uploadbigfile':   		if ($user->hasright('upload', '') || stristr($swBaseHrefFolder,$referer))
+	case 'uploadbigfile':   		if ($user->hasright('upload', ''))
 									{
 									 	include 'inc/special/uploadbigfile.php';
 									}
+									elseif (@$_POST['pepper'] && @$_POST['token'] && swCheckToken($_POST['pepper'],$_POST['token']))
+									{
+										include 'inc/special/uploadbigfile.php';
+									}
 									else
 									{
-										$swError = swSystemMessage('no-access-error',$lang);
+										die('no access '.print_r($_POST,true));
 									}
 								 	break;
 

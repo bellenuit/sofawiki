@@ -49,12 +49,14 @@ class swUploadZoneFunction extends swFunction
 		// Upload all other chunks.
 		// Check if all chunks are on the server.
 		// Ask the server to compose the file
-	
+		$pepper = substr(md5(rand()),0,8);
 		$result = '<nowiki><div id="editzone" class="editzone specialuploadbig">
 		<div class="editheader">'.swSystemMessage("upload-big",$lang).'</div>
-		<form action="#" method="post" enctype="multipart/form-data" onsubmit="event.stopPropagation(); event.preventDefault(); parseFile(thefile,thename,\''.$prefix.'\',thecomment); return false;">
+		<form action="#" method="post" enctype="multipart/form-data" onsubmit="event.stopPropagation(); event.preventDefault(); pepper = document.getElementById(\'pepper\').value; token = document.getElementById(\'token\').value;  parseFile(thefile,thename,\''.$prefix.'\',thecomment,pepper,token); return false;">
 		<input type="hidden" name="MAX_FILE_SIZE" value="'.$swMaxBigFileSize.'" />
 		<input type="hidden" name="action" value="uploadbigfile" />
+		<input type="hidden" name="pepper" value="'.$pepper.'" id="pepper" />
+		<input type="hidden" name="token" value="'.swGetToken($pepper).'" id="token" />
 		<input type="submit" value="Upload" disabled="disabled"  />
 		<input type="file" name="uploadedfile" onchange="thefile = event.target.files[0]; 
 if (thefile.size > '.$swMaxBigFileSize.') alert(\'file too big: \' + thefile.size); else
