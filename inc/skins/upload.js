@@ -226,7 +226,7 @@ function parseFile(file, name="", prefix="", comment="", pepper, token) {
 				setTimeout(function() { uploadJob(); } , 5000);
 			}
 		})
-		.catch(err =>  { showStatus(err + " Recontacting server"); setTimeout(function() { uploadJob(); } , 5000) } );
+		.catch(err =>  { showStatus(err + " Recontacting server"); setTimeout(function() { uploadJob(); } , 5000) } );
 	}
    
 /**
