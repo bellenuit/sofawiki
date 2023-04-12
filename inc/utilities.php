@@ -550,4 +550,181 @@ function swReadField($handle)
 
 }
 
+function swNumberformat($d,$f)
+{		
+	
+	if (substr($f,-1,1)=='s') 
+	{
+		// we must handle unicode manually
+		preg_match("/%(-)?(\d+)(.\d+)?s/",$f,$matches);
+		
+		//print_r($matches);
+		
+		$cmax = substr(@$matches[3],1);  
+		
+		if ($cmax) $d = mb_substr($d,0,$cmax,'UTF-8');
+		
+		$c = @$matches[2];
+		$pad = str_repeat(' ',max(0,abs($c) - mb_strlen($d,'UTF-8')));
+		
+		if (@$matches[1] == '-') return $d.$pad;
+		return $pad.$d;
+	}
+	elseif (substr($f,-1,1)=='w')  // wrap to multiple lines
+	{
+		// we must handle unicode manually
+		preg_match("/%(-)?(\d+)(.\d+)?w/",$f,$matches);
+		
+		$cmax = substr(@$matches[3],1); 
+		$c = @$matches[2]; 
 
+		$lines = array();
+		$line = '';
+		$d = preg_replace('~\R~u', PHP_EOL, $d); // unify line endings
+		foreach(explode(' ',$d) as $word)
+		{
+			if ($line) $test = $line.' '.$word;
+			else $test = $word;
+			
+			if (mb_strlen($test,'UTF-8') <= $cmax)
+			{
+				$line = $test;
+			}
+			else
+			{
+				if ($line)
+				{
+					$lines2 = explode(PHP_EOL,$line);  // can have PHP_EOL in d
+					foreach($lines2 as $line2)
+					{					
+						$pad = str_repeat(' ',max(0,abs($cmax) - mb_strlen($line2,'UTF-8')));
+						if (@$matches[1] == '-') 
+								$lines[] = $line2.$pad; 
+						else
+								$lines[] = $pad.$line2; 
+					}
+					
+					$line = '';
+				}
+				$rest = $word;
+				while (mb_strlen($rest,'UTF-8') > $cmax)
+				{
+					$lines[] = mb_substr($word,0,$cmax,'UTF-8');
+					$rest = mb_substr($word,$cmax,NULL,'UTF-8');
+					$rest = '';
+				}
+				$line = $rest;	
+			}
+		}
+		if ($line || !count($lines))
+		{
+			$lines2 = explode(PHP_EOL,$line);  // can have PHP_EOL in d
+			foreach($lines2 as $line2)
+			{					
+				$pad = str_repeat(' ',max(0,abs($cmax) - mb_strlen($line2,'UTF-8')));
+				if (@$matches[1] == '-') 
+						$lines[] = $line2.$pad; 
+				else
+						$lines[] = $pad.$line2; 
+			}
+
+
+		}
+		return join(PHP_EOL,$lines);
+
+	}
+	elseif ($d === '∞' || $d === '-∞' || $d === '⦵')
+	{
+		return $d;
+	}
+	else
+	{
+		switch(substr($f,-1,1))
+		{
+			case 'n' :  $f = substr($f,0,-1).'f';
+						$s = sprintf($f,floatval($d));
+						$sign='';
+						if (substr($s,0,1)=='-')
+						{
+							$s = substr($s,1);
+							$sign='-';
+						}
+						if (stristr($s,'.'))
+						{
+							$prefix = substr($s,0,strpos($s,'.'));
+							$postfix = substr($s,strpos($s,'.'));
+						}
+						else
+						{
+							$prefix = $s;
+							$postfix = '';
+						}
+						
+						$prefix = strrev($prefix);
+						$prefix = chunk_split($prefix,3,' ');
+						$prefix = trim(strrev($prefix));
+						return $sign.$prefix.$postfix;
+			case 'N' :	$f = substr($f,0,-1).'f';
+						$s = sprintf($f,floatval($d));
+						$sign='';
+						if (substr($s,0,1)=='-')
+						{
+							$s = substr($s,1);
+							$sign="-";
+						}
+						if (stristr($s,'.'))
+						{
+							$prefix = substr($s,0,strpos($s,'.'));
+							$postfix = substr($s,strpos($s,'.'));
+						}
+						else
+						{
+							$prefix = $s;
+							$postfix = '';
+						}
+						
+						$prefix = strrev($prefix);
+						$prefix = chunk_split($prefix,3,"'");
+						$prefix = trim(strrev($prefix));
+						$s = $sign.$prefix.$postfix;
+						return str_replace("-'","-",$s); // strange bug
+			case 'p' :	return sprintf(substr($f,0,-1).'f',floatval($d)*100).'%';
+			case 'P' :	return sprintf(substr($f,0,-1).'f',floatval($d)*100).' %';
+			default  :	return sprintf($f,floatval($d)); 
+											
+		}
+	
+	}
+	
+}
+
+
+function swFileStreamLineGenerator($file, $encoding = 'utf-8')
+{
+	$handle = fopen($file, "r");
+	if ($handle) 
+	{
+		while (($line = fgets($handle)) !== false) 
+		{
+			switch($encoding)
+			{
+				case 'macroman': $line = iconv('macinstosh', 'UTF-8', $line); break;
+				case 'windowslatin1': $line = mb_convert_encoding($line, 'UTF-8', 'Windows-1252', $line); break;
+				case 'latin1': $line = utf8_encode($line); break;
+				default: break;
+			}
+			yield $line;
+		}
+		
+		
+		fclose($handle);
+	}
+		
+}
+
+function swString2File($s)
+{
+	$tmpfname = tempnam('/tmp', '');
+	file_put_contents($tmpfname,$s);		
+	return $tmpfname;
+}

@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.8.9';   
+$swVersion = '3.8.9a';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -48,6 +48,7 @@ $swWikiTextPre = false;
 // core
 /* SOFADOC_IGNORE $swRoot/ */
 $swRoot = dirname(__FILE__); // must be first
+//if (defined('SOFAWIKICLI')) $swRoot = '.';
 
 // inis
 ini_set('pcre.jit',0); // prevent preg_match to be limited to 2700 characters error 503

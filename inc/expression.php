@@ -587,7 +587,7 @@ class swExpression
 														}
 														else
 														{
-															throw new swExpressionError('Goto not defined '.$currentindex,31);
+															throw new swExpressionError('Goto not defined andleft '.$jump.' '.$currentindex,31);
 														}
 													}
 													break;
@@ -616,7 +616,7 @@ class swExpression
 													}
 													else
 													{
-														throw new swExpressionError('Goto not defined '.$currentindex,31);
+														throw new swExpressionError('Goto not defined goto '.$jump.' '.$currentindex,31);
 													}
 													break;	
 								case ':gotoifn':	$jump = '#'.array_pop($this->stack);
@@ -632,7 +632,7 @@ class swExpression
 														}
 														else
 														{
-															throw new swExpressionError('Goto not defined '.$currentindex,31);
+															throw new swExpressionError('Goto not defined gotoifn '.$jump.' '.print_r($this->rpn,true).' '.$currentindex,31);
 														}
 													}
 													break;	
@@ -649,7 +649,7 @@ class swExpression
 														}
 														else
 														{
-															throw new swExpressionError('Goto not defined '.$currentindex,31);
+															throw new swExpressionError('Goto not defined gotoif '.' '.$jump.' '.$currentindex,31);
 														}
 													}
 													break;	
@@ -684,7 +684,7 @@ class swExpression
 														}
 														else
 														{
-															throw new swExpressionError('Goto not defined '.$currentindex,31);
+															throw new swExpressionError('Goto not defined orleft '.$$jump.' '.$currentindex,31);
 														}
 													}
 													break;

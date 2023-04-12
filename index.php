@@ -134,13 +134,14 @@ elseif($username && swHandleCookie('passwordtoken') == md5(swNameURL($username).
 $altuser = swHandleCookie('altuser','',$swUserCookieExpiration);
 
 
+
+
 if (isset($_REQUEST['submitlogin'])) $knownuser = false;
 
 
 //echo $username; echo ' '.swGetCookie('passwordtoken'); echo ' '.md5(swNameURL($username).date('Ymd',time()).$swEncryptionSalt); 
 //echo '<p>'.swNameURL($username).date('Ymd',time()).$swEncryptionSalt;
 //echo ' ('.$knownuser.')';
-
 
 if($knownuser && substr($username,0,3) != 'ip.')
 {
@@ -168,9 +169,9 @@ if($knownuser && substr($username,0,3) != 'ip.')
 		$user->name = 'User:'.$username;
 		$user->lookup();
 		$user->username = $username;
-		
+		//echo 'username '.$username;
 		if (substr($username,0,3) == 'ip.')
-			$user->ipuser = true;
+			{ $user->ipuser = true; }
 		
 		if (!$user->visible())
 		{
@@ -236,7 +237,7 @@ else
 	{
 		// check for ip-users
 		
-		$username = 'ip.'.$ip;
+		$username = 'ip.'.$ip; 
 				
 		$user = new swUser;
 		$user->username = $username;
@@ -247,7 +248,7 @@ else
 		
 		if ($user->visible())
 		{
-			$user->ipuser = true;
+			$user->ipuser = true; 
 		}
 		else
 		{
@@ -278,11 +279,12 @@ project _name';
 				if (hexdec($hexip) >= hexdec($hex1) && hexdec($hexip) <= hexdec($hex2) )
 				{
 					$found = true; 
-					$user->name = 'User:ip.'.$n;
+					$user->name = 'User:ip.'.$ip;
 					$user->lookup();
 					$user->pass = $pass;
 					$user->ipuser = true;
 					$username = 'ip.'.$ip;
+					echo $ip;
 					break;
 				}
 				
@@ -742,17 +744,13 @@ switch ($action)
 									}
 								 	break;
 	
-	case 'uploadbigfile':   		if ($user->hasright('upload', ''))
+	case 'uploadbigfile':   		if ($user->hasright('upload', '') || stristr($swBaseHrefFolder,$referer))
 									{
 									 	include 'inc/special/uploadbigfile.php';
 									}
-									elseif (@$_POST['pepper'] && @$_POST['token'] && swCheckToken($_POST['pepper'],$_POST['token']))
-									{
-										include 'inc/special/uploadbigfile.php';
-									}
 									else
 									{
-										die('no access '.print_r($_POST,true));
+										$swError = swSystemMessage('no-access-error',$lang);
 									}
 								 	break;
 
@@ -834,7 +832,11 @@ if ($user->username != "" || isset($realuser))
 		}
 		
 }
-else
+elseif ($user->ipuser)
+{
+	$swLoginMenus['login-user'] = '<a>'.$ip.'</a>';
+	$swLoginMenus['login-login'] = '<a href="index.php?action=login&amp;name='.$name.'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
+}
 {
 	$swLoginMenus['login-login'] = '<a href="index.php?action=login&amp;name='.$name.'&lang='.$lang.'" rel="nofollow">'.swSystemMessage('login',$lang).'</a>';
 }		

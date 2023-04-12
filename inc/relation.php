@@ -25,6 +25,27 @@ class swRelationLineHandler
 	var $transactionerror;
 	var $transactionprefix;
 	var $compiledexpressions = array();
+	var $currentdatabase = null;
+	var $history = array();
+	var $dict = array();
+	var $state;
+	var $statedict = array();
+	var	$walking;
+	
+	
+	var $decoration = array(
+		'ptag'=>'',
+		'ptagerror'=>'<span class="error">',
+		'ptagerrorend'=>'</span>',
+		'ptag2'=>PHP_EOL,
+		'csv'=>'<nowiki><textarea class="csv">',
+		'csvend'=>'</textarea></nowiki>',
+		'json'=>'<nowiki><textarea class="json">',
+		'jsonend'=>'</textarea></nowiki>',
+		'tab'=>'<nowiki><textarea class="tab">',
+		'tabend'=>'</textarea></nowiki>',
+		
+		);
 	
 	function __construct($m = 'HTML')
 	{
@@ -33,28 +54,39 @@ class swRelationLineHandler
 		
 	}
 	
+	function __destruct()
+	{
+		if ($this->currentdatabase) $this->currentdatabase->close();
+	}
+	
 	function run($t, $internal = '', $internalbody = '', $usedivider = true)
 	{
 		
-		
-		$this->functions = array();
-		$this->compiledexpressions = array();
-		$this->errors = array();
-		
+		if ($internal == '')
+		{
+			$this->functions = array();
+			$this->compiledexpressions = array();
+			$this->errors = array();
+			$this->dict = array();
+			$this->state = '';
+			$this->statedict = array();
+		}
 		
 		
 		echotime('relation code:'.strlen($t));
 		try 
 		{
-			$result = $this->run2($t, $internal, $internalbody);
+			$this->result = $this->run2($t, $internal, $internalbody);
 		}
 		catch (swExpressionError $err)
 		{
-			$result = $this->result.PHP_EOL.'<span class="error">Expression error: '.$this->currentline.' '.$err->getMessage().'</span>';
+		    $this->result  = '';
+			$this->assert(false,'Expression error: '.$this->currentline.' '.$err->getMessage(),$internal);
 		}
 		catch (swRelationError $err)
 		{
-			$result = $this->result.PHP_EOL.'<span class="error">Relation error: '.$this->currentline.' '.$err->getMessage().'</span>';
+			$this->result  = '';
+			$this->assert(false,'Relation error: '.$this->currentline.' '.$err->getMessage(),$internal);
 		}
 		
 		
@@ -71,16 +103,16 @@ class swRelationLineHandler
 		
 		if ($usedivider)
 		
-			return PHP_EOL.'<div class="relation">'.PHP_EOL.$result.PHP_EOL.'</div>'.PHP_EOL;
+			return PHP_EOL.'<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'</div>'.PHP_EOL;
 		
 		else
 		
-			return $result;
+			return $this->result;
 		
 	}
 	
 	
-	function run2($t, $internal = '', $internalbody = '', $d = array())
+	function run2($t, $internal = '', $internalbody = '')
 	{
 		$lines = array();
 		$readlines = array();
@@ -107,19 +139,12 @@ class swRelationLineHandler
 		$repeatvalue = array();
 		$ifstack = array();
 		$loopcounter;
-		$walkstart = 0;
-		$walkrelation1;
-		$walkrelation2;
+		
 		$au;
 		$tp;
-		$currentdatabase = null;
-		$ptag; $ptagerror; $ptag2;
 		
 		
-		$ptag = '';
-		$ptagerror = '<span class="error">';
-		$ptagerrorend = '</span>';
-		$ptag2 = PHP_EOL;
+		
 		if (!$internal)
 		{
 			 $result = '';
@@ -133,7 +158,7 @@ class swRelationLineHandler
 		
 		if ($internalbody) $internals = explode(',',$internalbody);
 		
-		$dict = $d;
+		
 		
 		$t = str_replace("\r\n", PHP_EOL, $t);
 		$t = str_replace("\r", PHP_EOL, $t);
@@ -155,13 +180,12 @@ class swRelationLineHandler
 		
 		for ($i=0; $i < $c; $i++)
 		{
-			
+			$line = trim($lines[$i]);
 		    global $swMemoryLimit;
 			if (memory_get_usage()>$swMemoryLimit)
 			{
 					echotime('overmemory '.memory_get_usage().' '.$line);
-					$this->result .= $ptag.$ptagerror.$ti.' Error: out of memory'.$ptagerrorend.$ptag2;
-					$this->errors[]=$il;
+					$this->assert(false,'Out of memory '.memory_get_usage().'>'.$swMemoryLimit,$i);
 					break;
 			}
 			elseif (memory_get_usage()>$swMemoryLimit/2)
@@ -174,10 +198,10 @@ class swRelationLineHandler
 			{
 				//echo 'internal'. $this->offsets[$internal].' ';;
 				
-				if ($this->offsets[$internal] >0)
+				if (@$this->offsets[$internal] >0)
 					$il = $i + $this->offsets[$internal]+1-$parameteroffset;
 				else
-					$il = $i - $this->offsets[$internal]-$parameteroffset;
+					$il = $i - @$this->offsets[$internal]-$parameteroffset;
 					
 				//echo $il;
 			}
@@ -187,7 +211,7 @@ class swRelationLineHandler
 			}
 			$ti = ($il+1).''; // to text
 			$this->currentline = $ti;
-			$line = trim($lines[$i]); 
+	
 			$line = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $line);
 			$line = str_replace(html_entity_decode("&#x200B;"),'',$line); // editor ZERO WIDTH SPACE
 		
@@ -198,7 +222,7 @@ class swRelationLineHandler
 			// quote
 			if (substr($line,0,1)=="'")
 			{
-				$this->result .= substr($line,2).$ptag2;
+				$this->result .= substr($line,2).$this->decoration['ptag2'];
 				continue;
 			}
 			$fields = explode(' ',$line);
@@ -206,20 +230,200 @@ class swRelationLineHandler
 			$body = join(' ',$fields);
 			if (isset($lastcommand)) p_close($lastcommand); 
 			p_open($command);$lastcommand = $command;
+			
+			$statefound = false;
+			if (count($this->statedict))
+			{
+				$top = array_pop($this->statedict);
+				
+				switch($top['type'])
+				{
+					case 'data'		:   if ($line == 'end data')
+										{
+											if ($top['mode'] == 'csv')
+											{
+
+												$r = end($this->stack);
+
+												array_unshift($top['lines'],join(',',$r->header));
+
+												$fn = swString2File(join(PHP_EOL,$top['lines']));
+
+												$r->setCSV($fn,true,true);
+
+											}
+											else
+											{
+												// done
+											}
+											$statefound = true;
+										}
+										else
+										{
+											if ($top['mode'] == 'csv')
+											{
+												$top['lines'][] = $line;
+												array_push($this->statedict,$top);
+											}
+											else
+											{
+												$r = end($this->stack);
+												$r->insert($line);
+												array_push($this->statedict,$top);
+											}
+											$statefound = true;
+										}
+										break;
+					case 'function' :	if ($line == 'end function')
+										{
+											$top['lines'][] = $line;
+											$fn = new swExpressionCompiledFunction($top['name'],join(PHP_EOL,$top['lines']),false);
+											$this->functions[':'.$top['name']] = $fn;
+										}
+										else
+										{
+											$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+										}
+										$statefound = true;
+										break;
+										
+					case 'if' :	    if ($line == 'end if')
+										{
+											if ($top['else'])
+												$top['elselines'][] = $line;
+											else
+												$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+											$xp = $this->GetCompiledExpression($top['expression']);
+											
+											if($xp->evaluate($this->dict) != '0')
+											{
+												$tx = join(PHP_EOL,$top['lines']);
+												$this->run2($tx,$top['offset']);
+												$statefound = true;
+											}
+											else
+											{
+												$tx = join(PHP_EOL,$top['elselines']);
+												$this->run2($tx,$top['offset']);
+											}
+											$statefound = true;
+										}
+										elseif($line == 'else')
+										{
+											$top['else'] = 1;
+											array_push($this->statedict,$top);
+											$statefound = true;
+										}
+										else
+										{
+											if ($top['else'])
+												$top['elselines'][] = $line;
+											else
+												$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+											$statefound = true;
+										}
+										break;
+					case 'program' :	if ($line == 'end program')
+										{
+											$top['lines'][] = $line;
+											$this->programs[$top['name']] = join(PHP_EOL,$top['lines']);
+										}
+										else
+										{
+											$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+										}
+										$statefound = true;
+										break;
+
+					case 'repeat' :	    if ($line == 'end repeat')
+										{
+											$top['lines'][] = $line;
+											$tx = join(PHP_EOL,$top['lines']);
+											while($top['counter']>0)
+											{
+												$this->dict[$top['name']] = $top['counter'];
+												$this->run2($tx,$top['offset']);
+												
+												$top['counter']--;
+												$statefound = true;
+											}
+											unset($this->dict[$top['name']]);
+										}
+										else
+										{
+											$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+											$statefound = true;
+										}
+										break;
+					case 'walk'	 :		if ($line == 'end walk')
+										{
+											$this->walking = true;
+											$tx = join(PHP_EOL,$top['lines']);
+											$r = array_pop($this->stack);
+											$r3 = new swRelation($r->header);
+											foreach($r->tuples as $tp)
+											{
+												$r2 = new swRelation($r->header);
+												$r2->tuples[$tp->hash()] = $tp;
+												array_push($this->stack,$r2);
+												$this->run2($tx,$top['offset']);
+												$r2 = array_pop($this->stack);
+												$tp2 = current($r2->tuples);
+												$r3->tuples[$tp2->hash()] = $tp2;
+											}
+											array_push($this->stack,$r3);
+											$this->walking = false;
+											$statefound = true;
+										}
+										else
+										{
+											$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+											$statefound = true;
+										}
+										break;
+					case 'while' :	    if ($line == 'end while')
+										{
+											$top['lines'][] = $line;
+											$tx = join(PHP_EOL,$top['lines']);
+											$xp = $this->GetCompiledExpression($top['expression']);
+											
+											while($xp->evaluate($this->dict) != '0')
+											{
+												$this->run2($tx,$top['offset']);
+												$statefound = true;
+											}
+										}
+										else
+										{
+											$top['lines'][] = $line;
+											array_push($this->statedict,$top);
+											$statefound = true;
+										}
+										break;
+					
+					default: 			break;
+				}
+			}
+			if (!$statefound)
 			switch($command)
 			{
 				case 'analyze' : 	if (!$this->assert(count($this->stack),'Analyze Stack empty',$il)) break;
 										
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->analyze($body);
-									$this->stack[]=$r;
 										
 									break;  
 				case 'assert' : 	if (!$this->assert(count($this->stack),'Assert Stack empty',$il)) break;
 										
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									
 									if (!$this->assert($r->assert($body),'Assertion error '.$body,$il)) break;
 									
@@ -229,78 +433,50 @@ class swRelationLineHandler
 				
 				case 'compile':		$xp = new swExpression();
 									$xp->compile($body);
-									$this->result .= join(' ',$xp->rpn).$ptag2;
+									$this->result .= join(' ',$xp->rpn).$this->ptag2;
 									$xp = null;
 									break;
 				
 				case 'data':		if (!$this->assert(count($this->stack),'Data Stack empty',$il)) break;
-										
-									$r = array_pop($this->stack);
-									
-									echotime('data start');
-									// if we know there is no expressionm, then we can read 50% faster a CSV file
-									if (trim($body) == "csv") 
-									{
-										$found = false;
-										
-										$csvlines = array( join(',',$r->header) );
-										while($i<$c && !$found)
-										{
-											$i++;
-											$il++;
-											$ti = $il;
-											$line = trim($lines[$i]);
-											if ($line != 'end data')
-												$csvlines[] = $line;
-											else
-												$found = true;
-										}
-										$r->setCSV($csvlines);
-									}
-									else
-									{
-										$found = false;
-										
-										$r->globals = $dict;
-										
-										while($i<$c && !$found)
-										{
-											$i++;
-											$il++;
-											$ti = $il;
-											$line = trim($lines[$i]);
-											if ($line != 'end data')
-												$r->insert($line);
-											else
-												$found = true;
-										}
-									}
-									echotime('data end '.$r->cardinality());
-									$this->stack[]=$r;
+				
+									$top = array();
+									$top['type'] = 'data';
+									$top['offset'] = $i+1;
+									$top['mode'] = trim($body);
+									$top['lines'] = array();
+									array_push($this->statedict,$top);
 									break;
-				case 'database':    if ($currentdatabase) $currentdatabase->close();
+				case 'database':    if ($this->currentdatabase) $this->currentdatabase->close();
 									$xp = new swExpression();
 									$xp->compile($body);
-									$tx = $xp->evaluate($dict);
-									if ($tx) $file = 'site/cache/'.$tx; else  $file = ':memory:';
+									$tx = $xp->evaluate($this->dict);
+									if ($tx) 
+									{	
+											$file = 'site/cache/'.$tx; 
+											if (defined('SOFAWIKICLI')) $file = getcwd().'/'.$tx;
+									}
+									else 
+									{
+										$file = ':memory:';
+									}
 									
 									try { 
 										if (stristr($tx,'/'))
 										{
 											$file = $tx; 
-											$currentdatabase = new SQLite3($file,SQLITE3_OPEN_READONLY);
+											$this->currentdatabase = new SQLite3($file,SQLITE3_OPEN_READONLY);
 										}
 										else
-											$currentdatabase = new SQLite3($file);
+											$this->currentdatabase = new SQLite3($file);
 									}
 									catch (Exception $err)
 									{
 										if (!$this->assert(false,'Database open '.$err->getMessage(),$il)) break;
 									}
 									
-									if (!$this->assert($currentdatabase->busyTimeout(5000),'Database busy',$il)) break;
+									if (!$this->assert($this->currentdatabase->busyTimeout(5000),'Database busy',$il)) break;
 									
-									$currentdatabase->enableExceptions(true);
+									$this->currentdatabase->enableExceptions(true);
 									break;
 				
 				case 'delegate':	if (!$this->assert(count($this->stack),'Print Stack empty',$il)) break;
@@ -308,22 +484,20 @@ class swRelationLineHandler
 									
 									$xp = new swExpression();
 									$xp->compile($body);
-									$tx = $xp->evaluate($dict);
+									$tx = $xp->evaluate($this->dict);
 									$txs = explode(' ',$tx);
 									$tx0 = array_shift($txs);
 									$tx = join(' ',$txs);
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$this->result .= '{{'.$tx0.'|';
 									$this->result .= $r->getCSVFormatted();
 									$this->result .= '|'.$tx.' }}';
-									$this->stack[]=$r;
 									break;
 									
 				case 'deserialize': if (!$this->assert(count($this->stack),'Deserialize Stack empty',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->deserialize();
-									$this->stack[] = $r;
 									break;
 									
 				case 'difference':	if (!$this->assert(count($this->stack)>1,'Difference Stack empty',$il)) break;
@@ -336,8 +510,7 @@ class swRelationLineHandler
 									
 				case 'dup':			if (!$this->assert(count($this->stack),'Dup Stack empty',$il)) break;
 
-									$r = array_pop($this->stack);
-									$this->stack[] = $r;
+									$r = end($this->stack);
 									$this->stack[] = $r->doClone();
 									break;	
 														
@@ -351,13 +524,13 @@ class swRelationLineHandler
 											{
 												$tpfields = $tp->fields();
 												foreach($tpfields as $k=>$v)
-													$dict[$k] = $v;
+													$this->dict[$k] = $v;
 											}
 										}
 									}
 									
 									$xp = $this->GetCompiledExpression($body);
-									$tx = $xp->evaluate($dict,$this->globals);
+									$tx = $xp->evaluate($this->dict,$this->globals);
 									$this->result .= $tx.PHP_EOL; // . $ptag2; // ???
 									switch (substr($tx,1))
 									{
@@ -365,65 +538,17 @@ class swRelationLineHandler
 										case '*':
 										case '{':
 										case '|': break;
-										default: $this->result .= $ptag2 ;// ???
+										default: $this->result .= $this->decoration['ptag2'] ;// ???
 									}
 									$xp = null;
 									break;
 									
-				case 'else':		$loopcounter = 1;
-									if (count($ifstack)>0)
-									{
-										while($i<$c && $loopcounter>0)
-										{
-											$i++;
-											$mline = trim(@$lines[$i]);
-											if (strpos($mline,'// ')>-1)
-												$mline = trim(substr($mline,0,strpos($mline,'// ')));
-											if (substr($mline,0,2) == 'if')
-											{
-												$loopcounter++;
-											}
-											elseif (substr($mline,0,4) == 'else')
-											{
-												if ($loopcounter == 1) $loopcounter--;
-											}
-											elseif (substr($mline,0,6) == 'end if')
-											{
-												$loopcounter--;
-											}
-										}
-									}
-									else
-									{
-										$this->result .= $ptag.$ptagerror.$ti.' Error : Else is not possible here '.$ptagerrorend.$ptag2;
-										$this->errors[]=$il;
 
-									}
+				
+				case 'else':		$this->assert(false,'Else not possible here',$il);
 									break; 
 										
-				case 'end':			if ($line == 'end while' && count($whilestack) > 0)
-										$i = array_pop($whilestack) - 1;
-									elseif ($line == 'end repeat' && count($repeatstack) > 0)
-									{
-										@$dict[end($repeatlabel)]--; 
-										
-										if ($dict[end($repeatlabel)] > 0)
-											$i = end($repeatstack);
-										else
-										{
-											unset($dict[end($repeatlabel)]);
-											array_pop($repeatstack);
-											array_pop($repeatlabel);
-										}
-									}
-									elseif($line == 'end if')
-									{
-										if (!$this->assert(count($ifstack),'Endif not possible here',$il)) break;
-										
-										array_pop($ifstack);
-										
-									}
-									elseif($line == 'end transaction')
+				case 'end':	     	if($line == 'end transaction')
 									{
 										if (!$this->assert(!$this->transactionerror,'Transaction error',$il)) 
 										{
@@ -443,45 +568,9 @@ class swRelationLineHandler
 										$this->transactionprefix = '';
 										$this->transactionerror = '';
 									}
-									elseif($line == 'end walk')
-									{
-										
-										if (count($walkrelation1->tuples))
-										{
-											$tp = array_shift($walkrelation1->tuples);
-											$d = $tp->fields();
-											foreach($dict as $k=>$v)
-											{
-												if (in_array($k, $walkrelation2->header))
-													$d[$k] = $v;
-											}
-											// print_r($d);
-											$tp2 = new swTuple($d);
-											$walkrelation2->tuples[$tp2->hash()] = $tp2;
-											$i = $walkstart;
-											
-											if (count($walkrelation1->tuples)>0)
-											{
-												$tp = current($walkrelation1->tuples);
-												$tpfields = $tp->fields();
-												foreach($tpfields as $k=>$v)
-												{
-													$dict[$k] =$v;
-												}
-											}
-
-										}
-										else
-										{
-											array_pop($this->stack);
-											$this->stack[] = $walkrelation2;
-											$walkstart = 0;
-										}
-										
-									}
 									else
 									{
-										if (!$this->assert(false,'End not possible here',$il)) break;
+										// ignore if (!$this->assert(false,'End not possible here '.$line,$il)) break;
 									}								
 									break; 	
 
@@ -506,13 +595,12 @@ class swRelationLineHandler
 
 				case 'extend':		if (!$this->assert(count($this->stack),'Extend stack empty',$il)) break;
 									
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->extend($body);
-									$this->stack[] = $r;
 									break;
 										
-				case 'filter':		$gl = array_merge($dict, $this->globals,$locals);
+				case 'filter':		$gl = array_merge($this->dict, $this->globals,$locals);
 									
 									global $swDebugRefresh;
 									
@@ -522,34 +610,32 @@ class swRelationLineHandler
 													
 				case 'format':		if (!$this->assert(count($this->stack),'Format stack empty',$il)) break;
 									
-									$r = array_pop($this->stack);
-									$r->format1($body);
-									$this->stack[] = $r;									
+									$r = end($this->stack);
+									$r->format1($body);									
 									break;
 													
 				case 'formatdump':	if (!$this->assert(count($this->stack),'Formatdump stack empty',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$vlist = array_keys($r->formats);
 									$tlist = array();
 									foreach($vlist as $velem)
 									{
 										$tlist[] = $velem.' '.$r->formats[$velem];
 									}
-									$this->result.= $ptag.'Formats: '.join(', ',$tlist).$ptag2;
-									$this->stack[] = $r;
+									$this->result.= $ptag.'Formats: '.join(', ',$tlist).$this->decoration['ptag2'];
 									break;	
 									
 				case 'fulltext':	$xp = new swExpression();
 									$xp->compile($body);
-									$b = $xp->evaluate($dict);
+									$b = $xp->evaluate($this->dict);
 									$r = swQueryFulltext($b);
 									$this->stack[] = $r;
 									break;
 									
 				case 'fulltexturl':	$xp = new swExpression();
 									$xp->compile($body);
-									$b = $xp->evaluate($dict);
+									$b = $xp->evaluate($this->dict);
 									$r = swQueryFulltextUrl($b);
 									$this->stack[] = $r;
 									break;
@@ -561,57 +647,29 @@ class swRelationLineHandler
 									$plines = array();
 									$plines[] = $line;
 									
-									$this->assert(!array_key_exists(trim($body), $this->offsets),'Warning : Symbol overwritten',$il);
+									$this->assert(!array_key_exists(trim($body), $this->offsets),'Warning : Symbol "function '.$fields[0].'" overwritten',$il);
 									$this->offsets[trim($body)] = $i;
-									$found = false;
-									while($i<$c && !$found)
-									{
-										$i++;
-										$line = trim($lines[$i]);
-										$plines[] = $line;
-										if ($line == 'end function')
-										$found = true;
-									}
-									if (!$this->assert($found,'Function missing end',$il)) break;
-
-									$fn = new swExpressionCompiledFunction(trim($fields[0]),join(PHP_EOL,$plines),false);
-									$this->functions[':'.trim($fields[0])] = $fn;
-
+									
+									$top = array();
+									$top['type'] = 'function';
+									$top['name'] = $fields[0];
+									$top['lines'] = array($line);
+									array_push($this->statedict,$top);
 									break; 
 									
-				case 'if':			$xp = new swExpression();
-									$xp->compile($body);
-									$ifstack[] = $i;
-									if ($xp->evaluate($dict) != '0')
-									{}
-									else
-									{
-										$loopcounter = 1;
-										while($i<$c && $loopcounter>0)
-										{
-											$i++;
-											$mline = @trim($lines[$i]);
-											if (strpos($mline,'// ')>-1)
-												$mline = trim(substr($mline,0,strpos($mline,'// ')));
-											if (substr($mline,0,2) == 'if')
-											{
-												$loopcounter++;
-											}
-											elseif (substr($mline,0,4) == 'else')
-											{
-												if ($loopcounter == 1) $loopcounter--;
-											}
-											elseif (substr($mline,0,6) == 'end if')
-											{
-												$loopcounter--;
-											}
-										}
-									}
-									break; 	
+				case 'if':			$top = array();
+									$top['type'] = 'if';
+									$top['offset'] = $i+1;
+									$top['expression'] = $body;
+									$top['lines'] = array();
+									$top['elselines'] = array();
+									$top['else'] = 0;				
+									array_push($this->statedict,$top);
+									break;
 									
 				case 'import':		$xp = new swExpression();
 									$xp->compile($body);
-									$te = $xp->evaluate($this->globals,$dict);
+									$te = $xp->evaluate($this->globals,$this->dict);
 									
 									$r = swRelationImport($te);
 									$this->stack[] = $r;
@@ -619,7 +677,7 @@ class swRelationLineHandler
 
 				case 'include':		$xp = new swExpression();
 									$xp->compile($body);
-									$tn = $xp->evaluate($dict);
+									$tn = $xp->evaluate($this->dict);
 									if (!$this->assert($this>validFileName($tn),'Invalid name '.$tn,$il)) break;
 									
 									$tmp = swRelationInclude($tn);
@@ -706,7 +764,7 @@ class swRelationLineHandler
 										foreach($inputfields as $key)
 										{
 											$this->globals[$key] = @$_POST[$key];
-											$dict[$key] = @$_POST[$key];
+											$this->dict[$key] = @$_POST[$key];
 										}
 										//print_r($this->globals);
 									}
@@ -718,10 +776,9 @@ class swRelationLineHandler
 									break;
 				case 'insert':		if (!$this->assert(count($this->stack),'Insert stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->insert($body);
-									$this->stack[] = $r;
 									break;	
 									
 				case 'intersection':if (!$this->assert(count($this->stack)>1,'Intersection stack empty ',$il)) break;
@@ -735,7 +792,7 @@ class swRelationLineHandler
 				case 'join':		if (!$this->assert(count($this->stack)>1,'Join stack empty ',$il)) break;
 
 									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r->globals = $this->dict;
 									$r2 = array_pop($this->stack);
 									$r2->join($r,$body);
 									$this->stack[] = $r2;
@@ -743,20 +800,18 @@ class swRelationLineHandler
 																	
 				case 'label':		if (!$this->assert(count($this->stack),'Label stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->label($body);
-									$this->stack[] = $r;
 									break;
 													
 				case 'limit':		if (!$this->assert(count($this->stack),'Limit stack empty ',$il)) break;
 
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->limit($body);
-									$this->stack[] = $r;
 									break;
 
-				case 'logs':		$gl = array_merge($dict, $this->globals,$locals);
+				case 'logs':		$gl = array_merge($this->dict, $this->globals,$locals);
 									
 									global $swDebugRefresh;
 									
@@ -766,31 +821,28 @@ class swRelationLineHandler
 				case 'memory':	    break; 	
 				case 'order':		if (!$this->assert(count($this->stack),'Order stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->order($body);
-									$this->stack[] = $r;
 									break;	
 									
 				case 'parameter':	if (!$this->assert(count($internals),'Parameter stack empty ',$il)) break;
 									
 									$tx = trim(array_shift($internals));
 									$xp = $this->GetCompiledExpression($tx);
-									$dict[trim($body)] = $xp->evaluate($dict);
+									$this->dict[trim($body)] = $xp->evaluate($this->dict);
 									$parameteroffset++;
 									break;									
 				
 				case 'parse':		if (!$this->assert(count($this->stack),'Parse stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->parse($body);
-									$this->stack[] = $r;
 									break;	
 									
 				case 'pivot':		if (!$this->assert(count($this->stack),'Pivot stack empty ',$il)) break;
 
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->pivot($body);
-									$this->stack[] = $r;
 									break;	
 				
 				case 'pop':			if (!$this->assert(count($this->stack),'Pivot stack empty ',$il)) break;
@@ -801,23 +853,29 @@ class swRelationLineHandler
 										
 				case 'print':		if (!$this->assert(count($this->stack),'Print stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 
 									switch(trim($body))
 									{
-										case 'csv':		$this->result .= '<nowiki><textarea class="csv">'. $r->getCSV().'</textarea></nowiki>'; break;
+										case 'csv':		$this->result .= $this->decoration['csv']. $r->getCSV().$this->decoration['csvend']; break;
 										case 'fields':	$this->result .= $r->toFields(); break;
-										case 'json':	$this->result .= '<nowiki><textarea class="json">'. $r->getJSON().'</textarea></nowiki>'; break;
+										case 'json':	$this->result .= $this->decoration['json']. $r->getJSON().$this->decoration['jsonend']; break;
 										case 'space':	$this->result .= $r->getSpace(); break;
 
-										case 'tab':		$this->result .= '<nowiki><textarea class="tab">'. $r->getTab().'</textarea></nowiki>'; break;
+										case 'tab':		$this->result .= $this->decoration['tab']. $r->getTab().$this->decoration['tabend']; break;
 										case 'raw':		$this->result .= $r->getTab(); break;
 										
-										default: 		// pass limit as parameter
-														$this->result .= $r->toHTML($body); break;
+										case 'text':		$this->result .= $r->toText($body); break;
+										
+										default: 		switch($this->mode)
+														{
+															case 'text': $this->result .= $r->toText($body); break;
+															case 'html': 
+															default: 	$this->result .= $r->toHTML($body); break;
+														}
+														break;
 									}
 																		
-									$this->stack[] = $r;
 									break;	
 										
 				case 'program':		$line = str_replace('(',' (',$line);
@@ -834,43 +892,32 @@ class swRelationLineHandler
 								
 									if ($body != '')
 									{
-										$commafields = explode(',',$body);
-										$k = count($commafields);
-										for($j=0;$j<$k;$j++)
-										{
-											$plines[] = 'parameter '.trim($commafields[$j]);
-										}
+										$top = array();
+										$top['type'] = 'program';
+										$top['name'] = $key;
+										$top['lines'] = array();
+										foreach(explode(',',$body) as $commafield) $top['lines'][] = 'parameter '.trim($commafield);
 										
-										$this->assert(!array_key_exists($key, $this->offsets),'Warning : Symbol overwritten',$il);
+										$this->assert(!array_key_exists($key, $this->offsets),'Warning : Symbol "program '.$key.'" overwritten',$il);
 										
 										$this->offsets[$key] = $i+1;
 										$found = false;
-										while($i<$c && !$found)
-										{
-											$i++;
-											$line = trim($lines[$i]); 
-											if ($line != 'end program')
-												$plines[] = $line;
-											else
-												$found = true;											
-										}
-										if (!$this->assert($found,'Missing Program missing end '.$key,$il)) break;
+																			
+										array_push($this->statedict,$top);
 
-
-										$this->programs[$key] = join(PHP_EOL,$plines);
+										
 									}
 									break; 
 													
 				case 'project':		if (!$this->assert(count($this->stack),'Project stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack); //print_r($r);
+									$r = end($this->stack); //print_r($r);
 									$r->aggregators = $this->aggregators;
-									$r->globals = $dict;
+									$r->globals = $this->dict;
 									$r->project($body);
-									$this->stack[] = $r;
 									break;	
 									
-				case 'read':		$r = new swRelation('',$locals,$dict);
+				case 'read':		$r = new swRelation('',$locals,$this->dict);
 									$enc = 'utf8';
 									if (substr(trim($body),0,8)=='encoding')
 									{
@@ -882,7 +929,7 @@ class swRelationLineHandler
 									}
 									$xp = new swExpression();
 									$xp->compile($body);
-									$tn = $xp->evaluate($dict);
+									$tn = $xp->evaluate($this->dict);
 									$hooklink = '';
 									if ($tn == '') $tn = ' ';
 									if (function_exists('swVirtualLinkHook') 
@@ -893,7 +940,10 @@ class swRelationLineHandler
 
 										$file = $hooklink;
 									} 
-									if (!$this->assert($hooklink || $this->validFileName(str_replace('.csv','',str_replace('.txt','',str_replace('.json','',str_replace('.xml',' ',str_replace('.html',' ',$tn)))))),'Invalid filename ',$il)) break ;
+									
+									$tinfo = pathinfo($tn);
+									
+									if (!$this->assert($hooklink || $this->validFileName($tinfo['filename']),'Invalid filename',$il)) break ;
 									if (!$this->assert($tn,'Empty filename',$il)) break;
 									if (strpos($tn,'.')=== false)
 									{
@@ -912,7 +962,9 @@ class swRelationLineHandler
 									$file1 = 'site/files/'.$tn;
 									$file2 = 'site/cache/'.$tn;
 									
-									if(!$this->assert(file_exists($file1)|| file_exists($file2),'File does not exist',$il))
+									if (defined('SOFAWIKICLI')) $file1 = $file2 = getcwd().'/'.$tn;
+									
+									if(!$this->assert(file_exists($file1)|| file_exists($file2),'File does not exist '.$file1.' '.$file2,$il))
 									{
 										$stack[] = new swRelation('');
 										break;
@@ -928,82 +980,69 @@ class swRelationLineHandler
 									elseif (file_exists($file1)) $file = $file1;
 									else $file = $file2;
 									
+									// big files won't like this
 									
-									$tip = file_get_contents($file);
+									if(!$this->assert(filesize($file),'Empty file '.$file,$il)) break;
+									
 
-									switch($enc)
+									$r = new swRelation('',$this->dict);
+									switch($tinfo['extension'])
 									{
-										case 'macroman': $tip = iconv('macinstosh', 'UTF-8', $tip); break;
-										case 'windowslatin1': $tip = mb_convert_encoding($tip, 'UTF-8', 'Windows-1252', $tip); break;
-										case 'latin1': $tip = utf8_encode($tip); break;
-										case 'utd-8': break;
+										case 'csv': 	$r->setCSV($file,true,false,$enc); $this->stack[] = $r;
+														break;
+										case 'txt': 	$r->setTab($file,$enc); $this->stack[] = $r;
+														break;
+										case 'json':	// assume UTF-8
+														$tip = file_get_contents($file);
+														$r->setJSON($tip); $this->stack[] = $r;
+														break;
+										case 'xml':		$tip = file_get_contents($file);
+														$r->setXML($tip); $this->stack[] = $r;
+														break;
+										case 'html':	$tip = file_get_contents($file);
+														$r->setHtml($tip); $this->stack[] = $r;
+														break;
+										case 'rel':		if (!$this->assert(defined('SOFAWIKICLI'),'Not CLI',$il)) break;
+														$tip = file_get_contents($file);
+														$this->offsets[$tn] = -$i; // give only fixed number on error include
+														$this->run($tip,$tn,"", false);
+														break;
+										default:		$this->assert(false,'Invalid file format',$il);																				break;
 									}
 									
-									if(!$this->assert(strlen($tip),'Empty fil',$il)) break;
-
-									$r = new swRelation('',$dict);
-									switch(substr($file,-4))
-									{
-										case '.csv': 	$r->setCSV(explode(PHP_EOL,$tip));
-														break;
-										case '.txt': 	$r->setTab(explode(PHP_EOL,$tip));
-														break;
-										case 'json':	$r->setJSON($tip);
-														break;
-										case '.xml':		$r->setXML($tip);
-														break;
-										case 'html':		$r->setHtml($tip);
-														break;
-										default:		$this->assert(false,'Invalid filename',$il);																				break;
-									}
-									$this->stack[] = $r;
 									break;
 										
-				case 'relation':	$r = new swRelation($body, $dict);
+				case 'relation':	$r = new swRelation($body, $this->dict);
 									$this->stack[] = $r;
 									break;
 										
 				case 'rename':		if (!$this->assert(count($this->stack),'Rename stack empty ',$il)) break;
 									
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->rename1($body);
-									$this->stack[] = $r;
 									break;	
 																		
 				case 'repeat':		$repeatstack[] = $i;
 									$fields = explode(' ',$body);
 									
 									if(!$this->assert(count($fields)>1,'Repeat missing parameters',$il)) break;
-									if(!$this->assert(!array_key_exists($fields[0],$dict),'Repeat name '.$fields[0].' already used',$il)) break;
-									$repeatlabel[] = array_shift($fields);
+									if(!$this->assert(!array_key_exists($fields[0],$this->dict),'Repeat name '.$fields[0].' already used',$il)) break;
+									$key = array_shift($fields);
 									$body = join(' ',$fields);
 									$xp = $this->GetCompiledExpression($body);
-									$v = $xp->evaluate($dict);
-									$dict[end($repeatlabel)] = $v;
+									$v = $xp->evaluate($this->dict);
+									$this->dict[end($repeatlabel)] = $v;
 									
-									if ($v>0)
-									{
-										// do read following lines
-									}
-									else
-									{
-									$loopcounter = 1;
-										while($i<$c && $loopcounter >0)
-										{
-											$i++;
-											$mline = trim($lines[$i]);
-											if (strpos($mline,'// ')>-1)
-												$mline = trim(substr($mline,0,strpos($mline,'// ')));
-	
-											if (substr($mline,0,5)=='repeat')
-												$loopcounter++;
-											elseif (substr($mline,0,9)=='end repeat')
-												$loopcounter--;
-										}
-									}	
-									break; 
-										
+									$top = array();
+									$top['type'] = 'repeat';
+									$top['offset'] = $i+1;
+									$top['name'] = $key;
+									$top['counter'] = $v;
+									$top['lines'] = array();				
+									array_push($this->statedict,$top);
+									break;
+																			
 				case 'run':			// run pg(x) and run pg (x) are both valid
 									// so we split on paranthesis, not space
 									
@@ -1016,30 +1055,27 @@ class swRelationLineHandler
 									$tx = $this->programs[$key];	
 									$dict2 = array();
 									$dict0 = array();
-									foreach($dict as $k=>$v)
+									foreach($this->dict as $k=>$v)
 									{
 										$dict2[$k] = $v;
 									}
-									$dict0 = $dict;
+									$dict0 = array_slice($this->dict,0);
 									$body = substr($body,1,-1);
-									$this->result = $this->run2($tx,$key,$body,$dict); 
-									$dict = $dict0; 
+									$this->result = $this->run2($tx,$key,$body); 
+									$this->dict = array_slice($dict0,0); 
 									break; 
 									
 				case 'select':		if (!$this->assert(count($this->stack),'Select stack empty ',$il)) break;
 
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
-									// $r->locals = $locals;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->select1($body);
-									$this->stack[] = $r;
 									break;	
 									
 				case 'serialize':	if (!$this->assert(count($this->stack),'Serialize stack empty ',$il)) break;
 				
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$r->serialize1();
-									$this->stack[] = $r;
 									break;
 										
 				case 'set':			if (!$this->assert(count($fields)>2,'Set too short',$il)) break;
@@ -1050,41 +1086,51 @@ class swRelationLineHandler
 									if (!$this->assert(!in_array($key,$repeatlabel),'Set name '.$key .' already used',$il)) break;
 									if (!$this->assert($eq == '=','Set missing =',$il)) break;
 									
+									$xp = $this->GetCompiledExpression($body);
+									
+									
 									if (count($this->stack)>0)
 									{
 										$r = current($this->stack);
-										if (count($r->tuples)>0 && !$walkstart)
+										if (count($r->tuples)>0)
 										{
 											$tp = current($r->tuples);
+											foreach($tp->fields() as $k=>$v) $this->dict[$k] =$v;
+										}
+										
+										
 											
-											if($tp)
-											{
-												$tpfields = $tp->fields();
-												foreach($tpfields as $k=>$v)
-												{
-													$dict[$k] =$v;
-												}
-											}
+									}
+									$val = $this->dict[$key] = $xp->evaluate($this->dict);
+									
+									if (count($this->stack)>0 && $this->walking)
+									{
+										$r = current($this->stack);
+										if (in_array($key, $r->header) && count($r->tuples)>0)
+										{
+											$tp = array_pop($r->tuples);
+											$d = $tp->fields();
+											$d[$key] = $val;
+											$tp = new swTuple($d);
+											$r->tuples[$tp->hash()] = $tp;
 										}
 									}
-									$xp = $this->GetCompiledExpression($body);
-									$dict[$key] = $xp->evaluate($dict);
 									break; 
 									
-				case 'sql':			if (!$this->assert($currentdatabase,'No database',$il)) break;
+				case 'sql':			if (!$this->assert($this->currentdatabase,'No database',$il)) break;
 
 									$xp = new swExpression();
 									$xp->compile($body);
-									$q = $xp->evaluate($dict);
+									$q = $xp->evaluate($this->dict);
 									//$q = SQLite3::escapeString($q);
-									try	{ $query = $currentdatabase->query($q); }
+									try	{ $query = $this->currentdatabase->query($q); }
 									catch (Exception $err)
 									{
-										$this->assert(false,$currentdatabase->lastErrorMsg().': '.$q,$il); break;
+										$this->assert(false,$this->currentdatabase->lastErrorMsg().': '.$q,$il); break;
 									}
-									if (!$this->assert($query,$currentdatabase->lastErrorMsg().': '.$q,$il)) break;
+									if (!$this->assert($query,$this->currentdatabase->lastErrorMsg().': '.$q,$il)) break;
 									
-									$r = new swRelation('',$dict);
+									$r = new swRelation('',$this->dict);
 									while($fields = @$query->fetchArray(SQLITE3_ASSOC))
 									{
 										if (!$r->arity())
@@ -1096,7 +1142,7 @@ class swRelationLineHandler
 								    if ($r->arity() || substr($q,0,strlen('SELECT'))=='SELECT') $this->stack[] = $r;		
 									break;
 				
-				case 'stack':		$r = new swRelation('stack, cardinality, column', $dict);
+				case 'stack':		$r = new swRelation('stack, cardinality, column', $this->dict);
 									$sti = 0;
 									foreach($this->stack as $r2)
 									{
@@ -1121,14 +1167,13 @@ class swRelationLineHandler
 									
 				case 'template':	if (!$this->assert(count($this->stack),'Template stack empty ',$il)) break;
 				
-									$r = array_pop($this->stack);
+									$r = end($this->stack);
 									$xp = $this->GetCompiledExpression($body);
-									$tn = $xp->evaluate($dict);
+									$tn = $xp->evaluate($this->dict);
 									if (!$this->assert($this->validFileName($tn),'Invalid template name '.$tn,$il)) break;
 									
 									$tmp = swRelationTemplate($tn);
-									$this->result .= $r->toTemplate($tmp);											
-									$this->stack[] = $r;									
+									$this->result .= $r->toTemplate($tmp);																	
 									break;
 									
 				case 'transaction' :$this->transactionprefix = 'tmp-';
@@ -1147,82 +1192,64 @@ class swRelationLineHandler
 								
 				case 'update':		if (!$this->assert(count($this->stack),'Update stack empty ',$il)) break;
 
-									$r = array_pop($this->stack);
-									$r->globals = $dict;
+									$r = end($this->stack);
+									$r->globals = $this->dict;
 									$r->update($body);
-									$this->stack[] = $r;
 									break;	
 									
 				case 'virtual':		$xp = $this->GetCompiledExpression($body);
-									$te = $xp->evaluate($this->globals,$dict);
+									$te = $xp->evaluate($this->globals,$this->dict);
 									$r = swRelationVirtual($te);
 									$this->stack[] = $r;
 									break;
 				case 'walk' :		if (!$this->assert(count($this->stack),'Walk stack empty ',$il)) break;
-
-									$walkstart = $i;
-									$walkrelation1 = array_pop($this->stack);			
-									$walkrelation2 = new swRelation($walkrelation1->header);
-									$pairs = explode(',',$body);								
+				
+									$r = end($this->stack);			
+									$pairs = explode(',',$body);
+									$wc = array();								
 									foreach($pairs as $p)
-									{
-										if (!trim($p)) continue;
-										if (!in_array(trim($p),$walkrelation2->header))
-											$walkrelation2->addColumn(trim($p));
-									}
-									if (count($walkrelation1->tuples)>0)
-									{
-										$tp = current($walkrelation1->tuples);
-										$tpfields = $tp->fields();
-										foreach($tpfields as $k=>$v)
-										{
-											$dict[$k] =$v;
+										if (trim($p))
+										{  
+											$r->addColumn(trim($p));
+											$wc[] = trim($p);
 										}
-									}
-									$this->stack[] = $walkrelation1;
+									$top = array();
+									$top['type'] = 'walk';
+									$top['offset'] = $i+1;
+									$top['writablecolumns'] = $wc;
+									$top['lines'] = array();				
+									array_push($this->statedict,$top);
+																	
 									break;
 									
 												
-				case 'while':		$xp = $this->GetCompiledExpression($body);
-									if ($xp->evaluate($dict) != '0') // no locals
-									{
-										$whilestack[] = $i;
-									}
-									else
-									{
-										$loopcounter = 1;
-										while($i<$c && $loopcounter >0)
-										{
-											$i++;
-											$mline = trim($lines[$i]);
-											if (strpos($mline,'// ')>-1)
-												$mline = trim(substr($mline,0,strpos($mline,'// ')));
-
-											if (substr($mline,0,5)=='while')
-												$loopcounter++;
-											elseif (substr($mline,0,9)=='end while')
-												$loopcounter--;
-										}
-									}
-									break; 	
+				case 'while':		$top = array();
+									$top['type'] = 'while';
+									$top['offset'] = $i+1;
+									$top['expression'] = $body;
+									$top['lines'] = array();				
+									array_push($this->statedict,$top);
+									break;
 									
 				case 'write':		if (!$this->assert(count($this->stack),'Write stack empty ',$il)) break;
 
 									$r = end($this->stack);
 									
 									$xp = $this->GetCompiledExpression($body);
-									$tn = $xp->evaluate($dict);
+									$tn = $xp->evaluate($this->dict);
+									
+									
 									
 									if (substr($tn,0,strlen('database')) == 'database')
 									{
-										if (!$this->assert($currentdatabase,'No database ',$il)) break;
+										if (!$this->assert($this->currentdatabase,'No database ',$il)) break;
 										$table = trim(substr($tn,strlen('database')));
 										if (!$this->assert($r->validname($table),'Invalid table name '.$table,$il)) break;
 										
 										
 										$header = ' ('.join(', ',$r->header).') ';
-										$currentdatabase->query('DROP TABLE IF EXISTS '.$table.'; CREATE  TABLE '.$table.$header.';'); 
-										$currentdatabase->query('BEGIN TRANSACTION; ');
+										$this->currentdatabase->query('DROP TABLE IF EXISTS '.$table.'; CREATE  TABLE '.$table.$header.';'); 
+										$this->currentdatabase->query('BEGIN TRANSACTION; ');
 										foreach($r->tuples as $tuple)
 										{
 											$fields = $tuple->fields();
@@ -1233,9 +1260,9 @@ class swRelationLineHandler
 											$q = 'INSERT INTO '.$table.' '.$header.
 											' VALUES ('.join(',',$values).');';
 											// echo $q;
-											$currentdatabase->query($q); 
+											$this->currentdatabase->query($q); 
 										}
-										$currentdatabase->query('COMMIT; '); 
+										$this->currentdatabase->query('COMMIT; '); 
 										break;
 									}
 									
@@ -1245,18 +1272,26 @@ class swRelationLineHandler
 										$this->transactiondict[$tn]=$this->transactionprefix.$tn;
 										$tn = $this->transactionprefix.$tn;
 									}
-									if (!$this->assert($this->validFileName(str_replace('.csv', '',str_replace('.txt','',str_replace('.json','',str_replace('.xml','',$tn))))),'Invalid filename '.$tn,$il)) break;
+									
+									$tinfo = pathinfo($tn);
+									
+									if (!$this->assert($this->validFileName($tinfo['filename']),'Invalid filename '.$tn,$il)) break;
 									
 									$file = 'site/cache/'.$tn;
+									if (defined('SOFAWIKICLI')) $file = getcwd().'/'.$tn;
 									$written = 0;
-									switch(substr($file,-4))
+									switch($tinfo['extension'])
 									{
-										case '.csv': 	$written = file_put_contents($file,$r->getCSV()); 
+										case 'csv': 	$written = file_put_contents($file,$r->getCSV()); 
 														break;
-										case '.txt': 	$written = file_put_contents($file,$r->getTab()); 
+										case 'txt': 	$written = file_put_contents($file,$r->getTab()); 
 															break;
 										case 'json':	$written = file_put_contents($file,$r->getJSON()); 
 															break;
+															
+										case 'rel':	    if (!$this->assert(defined('SOFAWIKICLI'),'Not CLI',$il)) break;
+														file_put_contents($file,join(PHP_EOL,$this->history)); 																	break;
+															
 										default:		if (strpos($tn,'.') === false)
 														{
 															$this->globalrelations[$tn] = $r->doClone();
@@ -1264,14 +1299,14 @@ class swRelationLineHandler
 														}
 														else
 														{
-															$this->result .= $ptagerror.$ti.' Error : Invalid filename '.$tn.$ptagerrorend.$ptag2;
-															$this->errors[] = $il;
+															$this->assert(false,'Invalid filename '.$tn,$il);
+
 														}
 															break;
 									}
 									break;
 									
-				default: 			$this->assert($written,'Unhandled line '.$line,$il);
+				default: 			$this->assert(false,'Unhandled line '.$line,$il);
 			}
 			
 			
@@ -1283,9 +1318,7 @@ class swRelationLineHandler
 			}		
 		}
 		if (isset($lastcommand)) p_close($lastcommand); 
-		
-		if ($currentdatabase) $currentdatabase->close();
-			
+					
 		return $this->result;
 			
 			  
@@ -1336,12 +1369,11 @@ class swRelationLineHandler
 	
 	function assert($condition,$error,$il)
 	{
-		$ptag; $ptagerror; $ptag2;
-		$ptag = '';
-		$ptagerror = '<span class="error">';
-		$ptagerrorend = '</span>';
-		$ptag2 = PHP_EOL;
-		$ti = ($il+1).''; // to text
+		$ptag = $this->decoration['ptag'];
+		$ptagerror = $this->decoration['ptagerror'];
+		$ptagerrorend = $this->decoration['ptagerrorend'];
+		$ptag2 = $this->decoration['ptag2'];
+		$ti = (intval($il)+1).''; // to text
 		
 		if (!$condition)
 		{
@@ -1606,12 +1638,13 @@ class swRelation
 		//echo $s . "= ";
 		
 		//if ($s == '*') return '_all';
-		
 		$result; 
 		$i; $c; 
 		$ch; 
 		$list1 = '_abcdefghijklmnoprsqtuvwxyz';
 		$list = 'abcdefghijklmnoprsqtuvwxyz0123456789_';
+		
+		if (bin2hex(substr($s, 0, 3)) == 'efbbbf' ) $s = substr($s, 3);  // BOM UTF-8
 		
 		$c = strlen($s);
 		$ch = substr($s,0,1);
@@ -2817,32 +2850,63 @@ class swRelation
 		return join(PHP_EOL,$lines);
 	}
 	
-	function setCSV($lines,$pad = false)
+	function setCSV($file,$pad = true,$append = true,$encoding='utf-8')
 	{
-		$this->header = array();
-		$this->tuples = array();
+		if(!$append)
+		{
+			$this->header = array();
+			$this->tuples = array();
+		}
 		$separator = ';';
 		$firstline = true;
+		$retainline = '';
+		$filesize = filesize($file);
 		
-		$k = count($lines);
-		for($j=0;$j<$k;$j++)
+		if (defined('SOFAWIKICLI') && $filesize>1000000)
 		{
-			$line = $lines[$j];
+			echo str_repeat("----------",5).PHP_EOL; 
+			$offset = 1;
+			$stars = 0;
+		}
+		
+		
+		$j = 0;
+		foreach(swFileStreamLineGenerator($file, $encoding) as $line)
+		{
+			
+			$j++;
+			if (defined('SOFAWIKICLI') && $filesize>1000000 )
+			{
+				$offset += strlen($line);
+				if ($offset/$filesize*50>$stars) { echo "*"; $stars++; }	
+			}
+			
+			if ($retainline)  // should be eol
+			{
+				$line = $retainline.$line; // PHP_EOL included
+				//echo "retainline ".$line.PHP_EOL; 
+				$retainline = '';
+			}
 			if ($line == '') continue;
 			if ($firstline && substr($line,0,1)=='#') continue;
 			if ($firstline)
 			{
-				//echo $line; echo strpos($line,$separator); echo "k";
 				if (strpos($line,$separator)===FALSE) $separator = ','; 
 				$fields = explode($separator,$line);
-				foreach($fields as $field)
-					$this->addColumn($this->cleanColumn(trim($field)));
+				
+				if (!$append)
+				{
+					foreach($fields as $field)
+					{
+						$this->addColumn($this->cleanColumn(trim($field)));
+					}
+				}
 				$c = count($fields);
 				$firstline = false;				
 			}
 			else
 			{
-				$fields = array();
+				$fields = array(); 
 				$state = 'start';
 				$acc = '';
 				$quoted = false;
@@ -2886,54 +2950,65 @@ class swRelation
 					case 'start' : if($quoted) $fields[]=$acc;
 								   else $fields[]=trim($acc); break;
 					case 'quote' : // 'error missing end quote, we need to read the following line
-									if ($j<$k-1)
-									{
-										$lines[$j].=' '.@$lines[$j+1];
-										unset($lines[$j+1]);
-										$k -= 1;
-										$j -= 2;
-										continue 2; // for($j=0;$j<$k;$j++) PHP 7.3 needs argument
-									}
-									else
-									{
-										if($quoted) $fields[]=$acc;
-										else $fields[]=trim($acc); 
-									}
+									$retainline = $line;
+									
+									
+									
 									break;
 					case 'quotesuspend' : 	if($quoted) $fields[]=$acc;
 											else $fields[]=trim($acc); 
 				}
-				$c = count($fields);
-				$d = array();
-				//echo $line;
-				//print_r($fields);
-				//print_r($this->header);
-				if ($c == count($this->header))
+				
+				if (!$retainline)
 				{
-					for($i=0;$i<$c;$i++)
-						$d[$this->header[$i]] = swEscape($fields[$i]);
-				}
-				else
-				{
-					if (!$pad)
-						throw new swRelationError('Read CSV field count in row not header count (line: '.($j+1).'", header: '.$count($this->header).', fields:'.($c+1).')',99);
-					for($i=0;$i<count($this->header);$i++)
+				
+					$c = count($fields);
+					$d = array();
+	
+	
+					if ($c == count($this->header))
 					{
-						$d[$this->header[$i]] = '';
+						for($i=0;$i<$c;$i++)
+							$d[$this->header[$i]] = swEscape($fields[$i]);
 					}
-					for($i=0;$i<$c;$i++)
+					else
 					{
-						$d[$this->header[$i]] = $fields[$i];
+						if (!$pad)
+							throw new swRelationError('Read CSV field count in row not header count (line: '.($j+1).', header: '.count($this->header).', fields:'.($c+1).')',99);
+						
+						for($i=0;$i<count($this->header);$i++)
+						{
+							$d[$this->header[$i]] = '';
+						}
+						for($i=0;$i<min($c,count($this->header));$i++)
+						{
+							$d[$this->header[$i]] = $fields[$i];
+						}
 					}
+					$tp = new swTuple($d);
+					$this->tuples[$tp->hash()] = $tp;
+		
 				}
-				$tp = new swTuple($d);
-				$this->tuples[$tp->hash()] = $tp;
 			}
 		}
 		
+		if ($retainline)
+		{
+		 $this->setCSV(swString2File($retainline.'"'),true,true);
+		}
+		
+	
+		
+		if (defined('SOFAWIKICLI') && $filesize>1000000 )
+		{
+			echo PHP_EOL;
+		}
+		
+
+		
 	}
 	
-		function getTab()
+	function getTab()
 	{
 		$lines = array();
 		$c = count($this->header);
@@ -2949,9 +3024,9 @@ class swRelation
 				$test = $tp->value($f);
 				if (array_key_exists($f,$this->formats))
 				{
-					$fm = $this->formats($f);
+					$fm = $this->formats[$f];
 					if ($fm != '')
-						$test = $this->format2($floatval($test),$fm);
+						$test = $this->format2(floatval($test),$fm);
 				}
 				$fields[] = swUnescape($test);
 				
@@ -2976,9 +3051,9 @@ class swRelation
 				$test = $tp->value($f);
 				if (array_key_exists($f,$this->formats))
 				{
-					$fm = $this->formats($f);
+					$fm = $this->formats[$f];
 					if ($fm != '')
-						$test = $this->format2($floatval($test),$fm);
+						$test = $this->format2(floatval($test),$fm);
 				}
 				$fields[] = $test;
 				
@@ -2991,13 +3066,13 @@ class swRelation
 
 
 
-	function setTab($lines)
+	function setTab($file,$encoding='utf-8')
 	{
 		$this->header = array();
 		$this->tuples = array();
 		
 		$firstline = true;
-		foreach($lines as $line)
+		foreach(swFileStreamLineGenerator($file, $encoding) as $line)
 		{
 			$fields = explode("\t",$line);
 			if ($firstline)
@@ -3046,38 +3121,40 @@ class swRelation
 				$test = $tp->value($f);
 				if (array_key_exists($f,$this->formats))
 				{
-					$fm = $this->formats($f);
+					$fm = $this->formats[$f];
 					if ($fm != '')
-						$test = $this->format2($floatval($test),$fm);
+						$test = $this->format2(floatval($test),$fm);
 				}
-				if (is_numeric($test))
-					$pairs[] = '"'.$f.'" : '.$test;
-				else
-					$pairs[] = '"'.$f.'" : "'.str_replace('"','""', $test).'"';
+				$pairs[$f] = $test;
 				
 			}
-			$lines[] = '{'.join(',',$pairs).'}';
+			$lines[] = $pairs;
 		}
-		return '{ "relation" : ['.PHP_EOL.join(','.PHP_EOL,$lines).PHP_EOL.']}';
+		$j = array('relation' => $lines) ;
+		
+		return json_encode($j);
 	}
 	
 	function setJson($s)
 	{
-		$list = json_decode($s,true);
-		
-		$list = swFlattenArray($list);
-		
-		$this->header = array('path','value');
-		
-		foreach($list as $key=>$value)
+		if ($s)
 		{
-			$d = array(); 
-			$d['path'] = $key;
-			$d['value'] = $value;
-			$tp = new swTuple($d);
-			$this->tuples[$tp->hash()] = $tp;
-		}
+			$s = stripslashes(html_entity_decode($s));
+			$list = json_decode($s,true);
+	
+			$list = swFlattenArray($list);
 		
+			$this->header = array('path','value');
+		
+			foreach($list as $key=>$value)
+			{
+				$d = array(); 
+				$d['path'] = $key;
+				$d['value'] = $value;
+				$tp = new swTuple($d);
+				$this->tuples[$tp->hash()] = $tp;
+			}
+		}
 	}
 	
 	function setXml($s)
@@ -3180,7 +3257,10 @@ class swRelation
 			
 			foreach($d as $k=>$v)
 			{
-				$lines[] = '<leftsquare><leftsquare>'.$k.'::'.$v.'<rightsquare><rightsquare>';
+				if ($this->mode = 'text')
+					$lines[] = '[['.$k.'::'.$v.']]';
+				else
+					$lines[] = '<leftsquare><leftsquare>'.$k.'::'.$v.'<rightsquare><rightsquare>';
 			}
 			
 			$lines[] = '';
@@ -3541,6 +3621,128 @@ class swRelation
 		}
 		return $result;
 	}
+	
+	function toText($limit=0,$single=false)
+	{
+		if(!defined('BOLD')) define('BOLD','');
+		if(!defined('NORMAL')) define('NORMAL','');
+		if(!defined('INVERT')) define('INVERT','');
+		
+		
+		// if limit is a string, use it as filter
+		$filter = trim($limit);	
+		
+		if (strlen($filter) && !intval($filter)) $limit = 0; else $filter = '';
+		$filter = swNameURL($filter); 
+		
+		
+		$lines = array();
+		$c = count($this->header);
+		
+		if (!$c) return '';
+		
+		$fieldformats = array();
+		$padformats = array();
+		$widths= array();
+		$header = '       ';
+		
+		foreach($this->header as $h)
+		{
+			$widths[$h] = 0;
+		}
+		
+		foreach($this->tuples as $tp)
+		{
+			foreach($this->header as $h)
+			{
+				$widths[$h] = max(@$widths[$h],mb_strlen($tp->value($h),'UTF-8'));
+			}
+		}
+
+		foreach($this->header as $h)
+		{
+			$label = $h;
+			if (isset($this->labels[$h]) && $this->labels[$h]) 
+				$label = $this->labels[$h];
+						
+			$c = min(32,max($widths[$h],mb_strlen($label,'UTF-8')));
+			
+			if (@$this->formats[$h]) 
+			{
+				$fieldformats[$h] = $this->formats[$h];	
+				$c = mb_strlen($this->format2($label,$fieldformats[$h])); ;
+			}
+			else 
+				$fieldformats[$h] =  '"%-'.$c.'s"';	
+									
+			if (stristr($fieldformats[$h],'%-')) 
+				$padformats[$h] =  '"%-'.$c.'.'.$c.'w"';	
+			else
+				$padformats[$h] =  '"%'.$c.'.'.$c.'w"';	
+				
+			//if (substr($fieldformats[$h],-1,1) == 's') $padformats[$h] = $fieldformats[$h];
+	
+			$header .= $this->format2($label,$padformats[$h]).'   ';
+		}
+		
+		$header = substr($header,0,-2);
+		$lines[] = INVERT.BOLD.$header.NORMAL;
+		$r = 0;
+		$c = count($this->header);
+		foreach($this->tuples as $tp)
+		{
+			$r++; 
+			if ($limit && $r>$limit) break;
+			if ($single && $r<$limit) continue;
+			$row = ' ';
+			
+			$fields = array();
+			$linecount = 0;
+			
+			for($i=0;$i<$c;$i++)
+			{
+				$f = $this->header[$i];
+				$test = $tp->value($f);
+				$test = swUnescape($test);
+				$test = $this->format2($test,$fieldformats[$f]);
+				$test = $this->format2($test,$padformats[$f]);  
+				
+				$fields[$i] = explode(PHP_EOL,$test);
+				$linecount = max($linecount, count($fields[$i]));
+			}
+			$rows = array();
+			for ($j=0;$j<$linecount;$j++)
+			{
+				
+				$rows[$j] = '';
+				for($i=0;$i<$c;$i++)
+				{
+					if (isset($fields[$i][$j]))
+					{
+						$rows[$j] .= $fields[$i][$j].'   ';
+					}
+					else
+					{
+						$f = $this->header[$i];
+						$test = $this->format2('','%s');
+						$rows[$j] .= $this->format2($test,$padformats[$f]).'   ';  
+					}
+				}
+			}
+			
+			if ($filter && !stristr(swNameURL($row),$filter)) continue;
+			
+			$first = true;
+			foreach($rows as $row)
+			{
+				if ($first) $lines[] = INVERT.sprintf(' %3d ',$r).NORMAL.'  '.substr($row,0,-2);
+				else $lines[] = INVERT.sprintf(' %3s ','').NORMAL.'  '.substr($row,0,-2);
+				$first = false;
+			}
+		}
+		return join(PHP_EOL,$lines).PHP_EOL;
+	}
+
 	
 	
 	function union($r)
@@ -4069,82 +4271,6 @@ function array_clone($arr)
   else return array();
  }
 
-function swNumberformat($d,$f)
-{	
-	if ($d == '∞' || $d == '-∞' || $d === '⦵') { return $d; }
-	
-	if (substr($f,-1,1)=='n')
-	{
-		$f = substr($f,0,-1)."f";
-		$s = sprintf($f,$d);
-		$sign='';
-		if (substr($s,0,1)=='-')
-		{
-			$s = substr($s,1);
-			$sign='-';
-		}
-		if (stristr($s,'.'))
-		{
-			$prefix = substr($s,0,strpos($s,'.'));
-			$postfix = substr($s,strpos($s,'.'));
-		}
-		else
-		{
-			$prefix = $s;
-			$postfix = '';
-		}
-		
-		$prefix = strrev($prefix);
-		$prefix = chunk_split($prefix,3,' ');
-		$prefix = trim(strrev($prefix));
-		$s = $sign.$prefix.$postfix;
-		return $s;
-
-	}
-	if (substr($f,-1,1)=='N')
-	{
-		$f = substr($f,0,-1)."f";
-		$s = sprintf($f,$d);
-		$sign='';
-		if (substr($s,0,1)=='-')
-		{
-			$s = substr($s,1);
-			$sign="-";
-		}
-		if (stristr($s,'.'))
-		{
-			$prefix = substr($s,0,strpos($s,'.'));
-			$postfix = substr($s,strpos($s,'.'));
-		}
-		else
-		{
-			$prefix = $s;
-			$postfix = '';
-		}
-		
-		$prefix = strrev($prefix);
-		$prefix = chunk_split($prefix,3,"'");
-		$prefix = trim(strrev($prefix));
-		$s = $sign.$prefix.$postfix;
-		$s = str_replace("-'","-",$s); // strange bug
-		return $s;
-
-
-	}
-	if (substr($f,-1,1)=='p')
-	{
-		$f = substr($f,0,-1)."f";
-		$s = sprintf($f,$d*100);
-		return $s.'%';
-	}
-	if (substr($f,-1,1)=='P')
-	{
-		$f = substr($f,0,-1)."f";
-		$s = sprintf($f,$d*100);
-		return $s.' %';
-	}
-	return sprintf($f,$d); // waiting for excel style format
-}
 
 
 

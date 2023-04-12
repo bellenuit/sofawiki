@@ -69,6 +69,7 @@ class swDB extends swPersistance //extend may be obsolete
 	
 	function init($force = false) 
 	{
+		if (defined('SOFAWIKICLI')) return;
 		global $swRoot; 
 		global $swRamdiskPath;
 		global $swOvertime;

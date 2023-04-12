@@ -22,6 +22,7 @@ function echomem($s,$peak=false)
 
 function swNotify($action,$error,$label,$message,$receiver="",$plain=true)
 {
+	if (defined('SOFAWIKICLI')) return;
 	global $username;
 	global $name;
 	global $lang;
@@ -94,6 +95,7 @@ function swNotify($action,$error,$label,$message,$receiver="",$plain=true)
 
 function swLog($user,$name,$action,$query,$lang,$referer,$time,$error,$label,$message,$receiver)
 {
+	if (defined('SOFAWIKICLI')) return;
 	global $swRoot;
 	// write to log
 	$timestamp = date("Y-m-d H:i:s",time());

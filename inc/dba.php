@@ -63,14 +63,14 @@ function swDbaOpen($file, $mode, $handler='')
 function swDbaFirstKey($db)
 {
 	global $swDbaHandler;
-	if ($swDbaHandler == 'sqlite3') return $db->firstkey();
+	if ($db && $swDbaHandler == 'sqlite3') return $db->firstkey();
 	elseif ($swDbaHandler == 'persistance')
 	{
 		 reset($db->dict);
 		 return key($db->dict);
 	}
 		
-	return @dba_firstkey($db);
+	if ($db) return @dba_firstkey($db);
 }
 
 /**
@@ -82,14 +82,14 @@ function swDbaFirstKey($db)
 function swDbaNextKey($db)
 {
 	global $swDbaHandler;
-	if ($swDbaHandler == 'sqlite3') return $db->nextkey();
+	if ($db && $swDbaHandler == 'sqlite3') return $db->nextkey();
 	elseif ($swDbaHandler == 'persistance')
 	{
 		 next($db->dict);
 		 return key($db->dict);
 	}
 
-	return @dba_nextkey($db);
+	if ($db) return @dba_nextkey($db);
 }
 
 /**
@@ -102,14 +102,14 @@ function swDbaNextKey($db)
 function swDbaExists($key,$db)
 {
 	global $swDbaHandler;
-	if ($swDbaHandler == 'sqlite3') return $db->exists($key);
+	if ($db && $swDbaHandler == 'sqlite3') return $db->exists($key);
 	elseif ($swDbaHandler == 'persistance')
 	{
 		if ($db)	return array_key_exists($key, $db->dict);
 		else 		return false;
 	}
 
-	return @dba_exists($key,$db);
+	if ($db) return @dba_exists($key,$db);
 }
 
 /**
@@ -126,7 +126,7 @@ function swDbaFetch($key,$db)
 	{
 		try
 		{
-			return $db->fetch($key);
+			if ($db) return $db->fetch($key);
 		}
 		catch (swDbaError $err)
 		{
@@ -136,10 +136,10 @@ function swDbaFetch($key,$db)
 	}
 	elseif ($swDbaHandler == 'persistance')
 	{
-		 return @$db->dict[$key];
+		 if ($bd) return @$db->dict[$key];
 	}	
 	
-	return @dba_fetch($key,$db);
+	if ($db) return @dba_fetch($key,$db);
 }
 
 /**
@@ -187,7 +187,7 @@ function swDbaSync($db)
 	{
 		try
 		{
-			return $db->sync();
+			if ($db) return $db->sync();
 		}
 		catch (swDbaError $err)
 		{
@@ -200,7 +200,7 @@ function swDbaSync($db)
 		 $db->save();
 		 return true;
 	}	
-	return @dba_sync($db);
+	if ($db) return @dba_sync($db);
 }
 
 /**
