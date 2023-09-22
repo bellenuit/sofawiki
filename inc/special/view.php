@@ -25,6 +25,7 @@ if ($user->hasright("view", $wiki->name))
 	else
 	{
 		$name = $wiki->namewithoutlanguage();
+		$swParsedName = $name;
 		$wiki->parsers = $swParsers;
 		$swParsedContent = $wiki->parse();
 	}
@@ -80,6 +81,7 @@ else
 		$swFooter = "";
 	}
 }
+
 if (isset($wiki->displayname))
 	$swParsedName = $wiki->displayname;  // must be here, because the wiki can be redirected
 						

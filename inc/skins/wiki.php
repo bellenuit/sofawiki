@@ -68,7 +68,7 @@ echo PHP_EOL.'</div><!-- mobilemenu -->';
 
 echo PHP_EOL.'<div id="main">';
 echo PHP_EOL.'<div id="content">';
-echo PHP_EOL.'<div id="titl">';
+echo PHP_EOL.'<div id="title">';
 echo PHP_EOL.'<h1>'.$swParsedName.'</h1>';
 echo PHP_EOL.'</div><!-- title -->';
 echo PHP_EOL.'<div id="parsedcontent">';
