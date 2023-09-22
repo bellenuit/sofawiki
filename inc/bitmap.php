@@ -124,14 +124,17 @@ class swBitmap extends swPersistance
 	 */
 	function dehexit()
 	{
-		$this->maphex = str_replace('n','llllllll',$this->maphex);
-		$this->maphex = str_replace('l','jjjjjjjj',$this->maphex);
-		$this->maphex = str_replace('j','hhhhhhhh',$this->maphex);
-		$this->maphex = str_replace('h','ffffffff',$this->maphex);
-		$this->maphex = str_replace('m','kkkkkkkk',$this->maphex);
-		$this->maphex = str_replace('k','iiiiiiii',$this->maphex);
-		$this->maphex = str_replace('i','gggggggg',$this->maphex);
-		$this->maphex = str_replace('g','00000000',$this->maphex);
+		if ($this->maphex)
+		{
+			$this->maphex = str_replace('n','llllllll',$this->maphex);
+			$this->maphex = str_replace('l','jjjjjjjj',$this->maphex);
+			$this->maphex = str_replace('j','hhhhhhhh',$this->maphex);
+			$this->maphex = str_replace('h','ffffffff',$this->maphex);
+			$this->maphex = str_replace('m','kkkkkkkk',$this->maphex);
+			$this->maphex = str_replace('k','iiiiiiii',$this->maphex);
+			$this->maphex = str_replace('i','gggggggg',$this->maphex);
+			$this->maphex = str_replace('g','00000000',$this->maphex);
+		}
 		$this->map = pack("H*" , $this->maphex);
 		$this->maphex = '';	
 	}
@@ -313,7 +316,7 @@ class swBitmap extends swPersistance
 	{
 		// returns bit string in groups of 8
 		$result = '';
-		$c = strlen($this->map);
+		if ($this->map) $c = strlen($this->map); else $c = '';
 		if ($this->map == '') $this->dehexit();		
 		for($i=0;$i<$c;$i++)
 		{

@@ -1,5 +1,9 @@
 <?php
 	
+$sapi_type = php_sapi_name(); 
+if (substr($sapi_type, 0, 3) != 'cli') die('invalid acces '.$sapi_type);
+
+	
 ini_set('display_errors', 1); ini_set('display_startup_errors', 1); error_reporting(E_ALL);
 ini_set("memory_limit", "-1");
 set_time_limit(0);
@@ -20,7 +24,7 @@ $swMemoryLimit = 6000000000;
 
 function wikiterminal($s)
 {
-	$s = preg_replace("/=(=)+(.*?)(=)+=/",PHP_EOL.BOLD.'$2'.NORMAL.PHP_EOL,$s);
+	$s = preg_replace("/===(.*?)===/",PHP_EOL.BOLD.'$2'.NORMAL.PHP_EOL,$s);
 	$s = preg_replace("/'''''(.*?)'''''/",BOLD.ITALIC.'$1'.NORMAL,$s);
 	$s = preg_replace("/'''([^'].*?)[^']'''/",BOLD.'$1'.NORMAL,$s);
 	$s = preg_replace("/''([^'].*?)[^']'/",ITALIC.'$1'.NORMAL,$s);
@@ -342,8 +346,6 @@ readline_completion_function(function($Input, $Index){
 
 
 
-$sapi_type = php_sapi_name(); 
-if (substr($sapi_type, 0, 3) != 'cli') die('invalid acces '.$sapi_type);
 
 echo BOLD.'Relation CLI interactive mode'.NORMAL.PHP_EOL; 
 

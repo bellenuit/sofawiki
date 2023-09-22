@@ -106,7 +106,7 @@ foreach($list as $v)
 {
 	$k = $v['id'];
 	$k2 = str_replace('/','\/',@$v['operationid']);
-	if (preg_match('/'.$k2.'/',$q) && $user->hasright('view',@$v['namespace'].':')) // silently deny acess
+	if ($q && preg_match('/'.$k2.'/',$q) && $user->hasright('view',@$v['namespace'].':')) // silently deny acess
 	{
 		$found = true;
 				

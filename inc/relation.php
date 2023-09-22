@@ -289,12 +289,7 @@ class swRelationLineHandler
 										break;
 										
 					case 'if' :	    if ($line == 'end if')
-										{
-											if ($top['else'])
-												$top['elselines'][] = $line;
-											else
-												$top['lines'][] = $line;
-											array_push($this->statedict,$top);
+									    {
 											$xp = $this->GetCompiledExpression($top['expression']);
 											
 											if($xp->evaluate($this->dict) != '0')
@@ -687,7 +682,7 @@ class swRelationLineHandler
 									
 									
 				case 'input': 		$fieldgroup = explode(',',$body);
-									$this->result .=  $ptag.'<nowiki><div class="editzone relationinput">';
+									$this->result .=  '<nowiki><div class="editzone relationinput">';
 									$this->result .= '<div class="editheader">Input</div>';
 									
 									$this->result .='<form method="post" action="index.php?name=</nowiki>{{nameurl |{{currentname}} }}<nowiki>"></nowiki>';
@@ -947,7 +942,7 @@ class swRelationLineHandler
 									if (!$this->assert($tn,'Empty filename',$il)) break;
 									if (strpos($tn,'.')=== false)
 									{
-										if (!$this->assert(array_key_exists($tn, $this->globalrelations),'Warning: Saved relation does not exist',$il)) break;
+										if (!$this->assert(array_key_exists($tn, $this->globalrelations),'Warning: Saved relation "'.$tn.'" does not exist',$il)) break;
 										
 										$r = $this->globalrelations[$tn];
 										$this->stack[] = $r->doClone();
@@ -2219,7 +2214,7 @@ class swRelation
 				throw new swRelationError('Invalid label',121);
 			$f0 = trim(array_shift($fields));
 			$f0 = $this->validName($f0);
-			$f1 = str_replace('"','',join($fields,' '));
+			$f1 = str_replace('"','',join(' ',$fields));
 			if (!in_array($f0, $this->header))
 				throw new swRelationError('Unknown label '.$f0,122);
 			$this->labels[$f0] = $f1;
@@ -3272,6 +3267,7 @@ class swRelation
 	
 	function toHTML($limit = 0)
 	{
+		$limit = intval($limit);
 		
 		if (!count($this->header)) return '';
 				
@@ -3862,7 +3858,7 @@ class swOrderedDictionary
 		foreach($this->pairs as $p)
 		{
 			$fields = explode(' ',trim($p));
-			if (@count($fields < 2)) $fields[] = 'A';
+			if (count($fields)<2) $fields[] = 'A';
 			
 			if (! array_key_exists($fields[0],$tpfields) ) 
 				throw new swRelationError('Dict Compare missing field '. $fields[0],609);

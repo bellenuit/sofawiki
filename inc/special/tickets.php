@@ -198,7 +198,7 @@ if (isset($_POST['submitresolve']))
 	$oldtext = $w->content;
 	$oldtext = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $oldtext);
 	
-	print_r($_FILES);
+	
 	
 	if (isset($_FILES['uploadedfile']) && $_FILES['uploadedfile'] && $_FILES['uploadedfile']['size'])
 	{

@@ -33,6 +33,7 @@ function swTranslate($text,$source,$target)
 	curl_setopt($ch, CURLOPT_URL, $server);
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string 
+	curl_setopt($ch,CURLOPT_TIMEOUT,10000);
 	
 	$encoded = '';
 	$encoded .= 'auth_key='.urlencode($swDeeplKey).'&';
@@ -44,7 +45,7 @@ function swTranslate($text,$source,$target)
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	$result = curl_exec($ch);
 	
-	echo $target;
+	//echo $target;
 		
 	curl_close($ch);
 	

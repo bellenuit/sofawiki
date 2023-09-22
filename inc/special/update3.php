@@ -97,9 +97,10 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 			chmod($newfile, 0775);
 			echo '<p>mkdir '.$newfile;
 		}
-		elseif (chmod($f,0664) && rename($f,$newfile))
+		elseif (chmod($f,0644) && rename($f,$newfile))
 		{
 			echo '<p>rename '.$newfile;
+			chmod($newfile, 0644);  // seems to lose permission after move
 		}
 		else
 		{ 
@@ -112,11 +113,12 @@ if (swGetArrayValue($_REQUEST,'submitinstall',false))
 	$files = array('api.php', 'crom.php', 'index.php', 'imageapi.php');
 	foreach ($files as $file)
 	{
-		chmod($swRoot.'/install/sofawiki/'.$f, 0664);
+		chmod($swRoot.'/install/sofawiki/'.$f, 0644);
 		if (rename($swRoot.'/install/sofawiki/'.$f,$swRoot.'/'.$f))
 			echo '<p>rename '.$f;
 		else
 			echo '<p><b>error</b> rename '.$f;
+		chmod($swRoot.'/'.$f, 0644);  // seems to lose permission after move
 	}
 	
 	

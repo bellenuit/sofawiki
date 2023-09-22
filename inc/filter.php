@@ -1386,7 +1386,9 @@ function swMultifieldSort($a,$b) {
 
 if (is_array($a)) $a = join('::',$a);
 if (is_array($b)) $b = join('::',$b);
-return $a>$b;
+if ($a > $b) return 1;
+if ($a < $b) return -1;
+return 0;
 
 }
 

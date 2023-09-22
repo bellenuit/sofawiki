@@ -30,7 +30,7 @@ function swBackup($sitebackup, $logbackup, $revisionbackup, $filebackup, $listin
 	if (!is_dir($swRoot.'/bak/')) mkdir($swRoot.'/bak/',0777); 
 	$today = date('Ymd',time());
 	$result = 'Backup of SofaWiki site. <br/><br/>';
-	
+		
 	if ($sitebackup)
 	{
 		$zipfile = new ZipArchive; 
@@ -311,7 +311,7 @@ function swSnapShot($username)
 	swSemaphoreSignal();
 	
 	$result = 'Backup of SofaWiki code. Site-specific files will not be included<br/><br/>';	
-	
+		
 	$zipfile = new ZipArchive; 
 	$filename = 'snapshot.zip';
 	$zipfile->open($swRoot.'/site/files/'.$filename, ZipArchive::CREATE);

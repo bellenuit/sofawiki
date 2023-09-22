@@ -116,11 +116,11 @@ class swUser extends swRecord
 		{
 			$key = $this->pass;
 			//echo $key;
-			if (stristr($this->content, "[[_pass::$key]]")) return true;
+			if ($this->content && stristr($this->content, "[[_pass::$key]]")) return true;
 		}
 		
 		$kkey = $this->encryptpassword(); 
-		if (stristr($this->content, "[[_pass::$kkey]]")) 
+		if ($this->content && stristr($this->content, "[[_pass::$kkey]]")) 
 		{
 			// token not used
 			if (stristr($this->content, "[[_token::")) 
@@ -139,7 +139,7 @@ class swUser extends swRecord
 		
 		
 		// lost password
-		if (stristr($this->content, "[[_newpass::$kkey]]")) 
+		if ($this->content && stristr($this->content, "[[_newpass::$kkey]]")) 
 		{
 			$s = $this->content;
 			$s = preg_replace("/\[\[\_pass\:\:([^\]]*)\]\]/","",$s);

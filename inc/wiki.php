@@ -9,6 +9,7 @@ class swWiki extends swRecord
 	
 	var $originalName;
 	var $parsedContent;
+	var $displayName;
 	var $internalLinks=array();
 	var $interlanguageLinks=array();
 	var $internalcategories=array();
@@ -21,7 +22,7 @@ class swWiki extends swRecord
 		global $lang;
 		$this->originalName = $this->name;
 		$this->parsedContent = $this->content; 
-		$this->displayname = $this->localname($lang);
+		$this->displayName = $this->localname($lang);
 		
 		echotime('parse '.$this->name);
 		

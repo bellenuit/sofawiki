@@ -531,6 +531,7 @@ input[type="submit"]
 	font-family: Tahoma, Helvetica, Arial, Sans-Serif;
 	font-weight: bold;
 	font-size: 13px;
+	color: black;
 	background-color: white;
 	border: 1px solid black;
 	padding-right: 10px;
@@ -778,10 +779,8 @@ video.yfrog
 	
 	input[type="password"]      	{ display: block; margin-botton: 8px; width: calc(100% - 20px); font-size: 120%;}
 
-	input[type="submit"]    	{ border: 1px solid black; background-color: white; color: black; margin: 20px; min-width: calc(50% - 20px);} 
-	
-	input[type="submit"]:hover 	{ background-color: lightgray; cursor: pointer; }
-	
+	input[type="submit"]    	{ border: 1px solid black; margin: 20px; min-width: calc(50% - 20px);} 
+		
 	input.singlesearchfield 	{ width: 300px; font-size: 22px; margin-left: 8px; font-size: 22px;}
 	
 }

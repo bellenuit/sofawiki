@@ -105,22 +105,28 @@ For older versions, we use a wrapper class.
 */
 
 
-if (PHP_VERSION < '5.2.0')
+if (PHP_VERSION < '5.2.0' || !class_exists("ZipArchive"))
 {
 
 	include_once $swRoot.'/inc/zip4.php'; 
 
 	class ZipArchive
 	{
-		var $zip4file;
+		var $zipfile;
 		var $filename;
 		
-		function open ($filename, $flags)
+		
+		const CREATE = 1;
+		const OVERWRITE = 2;
+		const EXCL = 4;
+		const CHECKCONS = 8;
+		
+		function open($filename, $flags)
 		{
 			switch ($flags)
 			{
 				case ZIPARCHIVE::CREATE:
-						$this->zip4file = new zipfile;
+						$this->zipfile = new zipfile;
 						$this->filename = $filename;
 						return true;
 				
@@ -133,68 +139,157 @@ if (PHP_VERSION < '5.2.0')
 		
 		function addEmptyDir($dirname)
 		{
-			if (isset($this->zip4file))
+			if (isset($this->zipfile))
 			{
-				$this->zip4file->add_dir($dirname);
+				$this->zipfile->add_dir($dirname);
 				return true;
 			}
 			
 			return true;
 		}
 		
-		function addFile($filename) 
+		function addFile($filename, $fn) 
 		{
-			if (isset($this->zip4file))
+			if (isset($this->zipfile))
 			{
-				$data = file_get_contents($filename);
-				$this->zip4file->add_file($data, $filename); 
-				return true;
+				if (file_exists($filename))
+				{
+					$data = file_get_contents($filename);
+					$this->zipfile->add_file($data, $fn); 
+					return true;
+				}
 			}
 		}
 		
 		function close() 
 		{
-			if (isset($this->zip4file))
+			if (isset($this->zipfile))
 			{
 				$file = fopen($this->filename, "wb");
-				$out = fwrite ($file, $this->$zipfile -> file());
-				fclose ($file);
+				$s = $this->zipfile->file();
+				$out = fwrite($file, $s);
+				fclose($file);
 			}
 			return true;
 		}
 		
 	
 	}
+	
+	
 
 }
 
 function unzip($file,$destination)
 {
 	
-	$zip = zip_open($file);
-	if (is_resource($zip))
+	$zip = @zip_open($file);
+	if (is_resource($zip) || is_array($zip)) // polyfill
 	{
-	  while ($zip_entry = zip_read($zip)) 
+	  
+	  while ($zip_entry = @zip_read($zip)) 
 	  {
-		$name = zip_entry_name($zip_entry);
+		$name = @zip_entry_name($zip_entry);
 		if(strpos($name, '.'))
 		{
-			if (zip_entry_open($zip, $zip_entry, 'r')) 
+			if (@zip_entry_open($zip, $zip_entry, 'r')) 
 			{
-			  $fp = fopen($destination.'/'.zip_entry_name($zip_entry), 'w');
-			  $buf = zip_entry_read($zip_entry, zip_entry_filesize($zip_entry));
+			  $fp = fopen($destination.'/'.@zip_entry_name($zip_entry), 'w');
+			  $buf = @zip_entry_read($zip_entry, @zip_entry_filesize($zip_entry));
 			  fwrite($fp,$buf);
-			  zip_entry_close($zip_entry);
+			  @zip_entry_close($zip_entry);
 			  fclose($fp);
 			}
 		}
 		else
 			@mkdir($destination.'/'.$name);
 	  }
-	  zip_close($zip);
+	  @zip_close($zip);
 	}
 }	
 
+if (!function_exists('zip_open'))
+{
+	function ShellFix($s)
+	{
+	  return "'".str_replace("'", "'\''", $s)."'";
+	}
+	
+	function zip_open($s)
+	{
+	  $fp = @fopen($s, 'rb');
+	  if(!$fp) return false;
+	  
+	  $lines = Array();
+	  $cmd = 'unzip -v '.shellfix($s);
+	  exec($cmd, $lines);
+	  
+	  
+	  
+	  $contents = Array();
+	  $ok=false;
+	  foreach($lines as $line)  
+	  {
+	    if($line[0]=='-') { $ok=!$ok; continue; }
+	    if(!$ok) continue;
+	    
+	    $length = (int)$line;
+	    $fn = trim(substr($line,58));
+	    
+	    $contents[] = Array('name' => $fn, 'length' => $length);
+	  }
+	  
+	  return
+	    Array('fp'       => $fp,  
+	          'name'     => $s,
+	          'contents' => $contents,
+	          'pointer'  => -1);
+	}                           
+	function zip_read(&$fp)
+	{
+	  if(!$fp) return false; 
+	  
+	  $next = $fp['pointer'] + 1;
+	  if($next >= count($fp['contents'])) return false;
+	 
+	  $fp['pointer'] = $next;
+	  return $fp['contents'][$next];
+	}
+	function zip_entry_name(&$res)
+	{
+	  if(!$res) return false;
+	  return $res['name'];
+	}                           
+	function zip_entry_filesize(&$res)
+	{
+	  if(!$res) return false;
+	  return $res['length'];
+	}
+	function zip_entry_open(&$fp, &$res)
+	{
+	  if(!$res) return false;
+	
+	  $cmd = 'unzip -p '.shellfix($fp['name']).' '.shellfix($res['name']);
+	  
+	  $res['fp'] = popen($cmd, 'r');
+	  return !!$res['fp'];   
+	}
+	function zip_entry_read(&$res, $nbytes)
+	{
+	  return fread($res['fp'], $nbytes);
+	}
+	function zip_entry_close(&$res)
+	{
+	  fclose($res['fp']);
+	  unset($res['fp']);
+	}
+	function zip_close(&$fp)
+	{
+	  fclose($fp['fp']);
+	}
+
+
+}
 
 
 ?>

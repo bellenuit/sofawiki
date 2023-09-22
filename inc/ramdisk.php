@@ -248,10 +248,10 @@ function swIndexRamDiskDB()
 		$path2 = substr($path,$pos);
 		$swRamDiskJobs[$path2] = $s;
 		
-		if (count($swRamDiskJobs)>500) swUpdateRamDiskDB();
+		if ($swRamDiskJobs && count($swRamDiskJobs)>500) swUpdateRamDiskDB();
 				
 	}
-	if (is_array($swRamDiskJobs) && count($swRamDiskJobs)) $swOvertime = true;
+	if ($swRamDiskJobs && count($swRamDiskJobs)) $swOvertime = true;
 	swUpdateRamDiskDB();
 	return true;
 
@@ -263,11 +263,11 @@ function swUpdateRamDiskDB()
 	global $swRamDiskDBpath;
 	global $swRamDiskJobs;
 	
-	if (!@count($swRamDiskJobs)) return;
+	if (!$swRamDiskJobs || !@count($swRamDiskJobs)) return;
 	
 	if ($swRamDiskDB) swDbaClose($swRamDiskDB);
 	$swRamDiskDB = swDbaOpen($swRamDiskDBpath, 'wdt');
-	if ($swRamDiskDB)
+	if ($swRamDiskDB && is_array($swRamDiskJobs))
 	{
 		foreach($swRamDiskJobs as $k=>$v)
 		{	swDbaReplace($k,$v,$swRamDiskDB);

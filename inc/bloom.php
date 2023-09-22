@@ -22,7 +22,7 @@ function swOpenBloom()
 	$path = $swRoot.'/site/indexes/bloom.raw';
 	if (file_exists($path))
 	{
-		@fclose($swBloomIndex);
+		if ($swBloomIndex) @fclose($swBloomIndex);
 		$swBloomIndex = fopen($path,'r');
 	}	
 }

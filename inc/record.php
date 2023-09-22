@@ -92,12 +92,14 @@ class swRecord extends swPersistance
 			$this->open();
 			
 			// bug character 146 not displayed in UTF 8
-			$t146 = utf8_encode(chr(146));
+			// $t146 = utf8_encode(chr(146));
+			$t146 = mb_convert_encoding(chr(146),'UTF-8', 'ISO-8859-1');
 			$this->name = str_replace($t146, "'", $this->name);
 			$this->comment = str_replace($t146, "'", $this->comment);
 			$this->content = str_replace($t146, "'", $this->content);
 			// bug character 146 not displayed in UTF 8
-			$t156 = utf8_encode(chr(156));
+			// $t156 = utf8_encode(chr(156));
+			$t156 = mb_convert_encoding(chr(156),'UTF-8', 'ISO-8859-1');
 			$this->name = str_replace($t156, "oe", $this->name);
 			$this->comment = str_replace($t156, "oe", $this->comment);
 			$this->content = str_replace($t156, "oe", $this->content);
@@ -141,7 +143,7 @@ class swRecord extends swPersistance
 		$file = swGetPath($this->revision);
 		if(!file_exists($file)) return false;
 		if (phpversion()>"5.0.0")
-			$s = file_get_contents($file, NULL, NULL, 0, 1000);  // enough for header
+			$s = file_get_contents($file, false, NULL, 0, 1000);  // enough for header
 		else
 			$s = file_get_contents($file);
 		$this->revision = swGetValue($s,"_revision");
@@ -472,7 +474,7 @@ class swRecord extends swPersistance
 	
 	function wikinamespace()
 	{
-		$i=strpos($this->name,":");
+		if ($this->name) $i=strpos($this->name,":"); else $i=-1;
 		if ($i>-1)
 		{	
 			return substr($this->name,0,$i);

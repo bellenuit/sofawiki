@@ -7,7 +7,7 @@ if (!defined('SOFAWIKI')) die('invalid acces');
 
 function swSimpleSanitize($s)
 {
-	return filter_var($s, FILTER_SANITIZE_STRING);
+	return filter_var($s, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // FILTER_SANITIZE_STRING is depreciated
 }
 
 
@@ -708,7 +708,7 @@ function swFileStreamLineGenerator($file, $encoding = 'utf-8')
 		{
 			switch($encoding)
 			{
-				case 'macroman': $line = iconv('macinstosh', 'UTF-8', $line); break;
+				case 'macroman': $line = iconv('macintosh', 'UTF-8', $line); break;
 				case 'windowslatin1': $line = mb_convert_encoding($line, 'UTF-8', 'Windows-1252', $line); break;
 				case 'latin1': $line = utf8_encode($line); break;
 				default: break;
