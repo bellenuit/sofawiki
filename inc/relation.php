@@ -1268,13 +1268,14 @@ class swRelationLineHandler
 										$tn = $this->transactionprefix.$tn;
 									}
 									
-									$tinfo = pathinfo($tn);
+									$tinfo = pathinfo($tn); 
 									
 									if (!$this->assert($this->validFileName($tinfo['filename']),'Invalid filename '.$tn,$il)) break;
 									
 									$file = 'site/cache/'.$tn;
 									if (defined('SOFAWIKICLI')) $file = getcwd().'/'.$tn;
 									$written = 0;
+									if (!isset($tinfo['extension'])) $tinfo['extension'] = '';
 									switch($tinfo['extension'])
 									{
 										case 'csv': 	$written = file_put_contents($file,$r->getCSV()); 
