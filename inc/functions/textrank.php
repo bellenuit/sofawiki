@@ -140,7 +140,12 @@ class swTextRankFunction extends swFunction
 		//foreach($sentences as $k=>$v) echo $v['score'].' ';
 		//secho '<p>';
 		
-		usort($sentences,function ($a, $b) { return (floatval($a['score'])-floatval($b['score']) < 0); } );
+		usort($sentences,function ($a, $b) 
+		{
+			if (floatval($a['score']) < floatval($b['score'])) return 1;
+			if (floatval($a['score']) > floatval($b['score'])) return -1;
+			return 0;
+	    } );
 		
 		//foreach($sentences as $k=>$v) echo $v['score'].' ';
 		
@@ -160,7 +165,12 @@ class swTextRankFunction extends swFunction
 		unset($sentences);
 
 // output chronologically
-		usort($result, function ($a, $b) { return (floatval($a['offset'])-floatval($b['offset'])>0); } );
+		usort($result, function ($a, $b)
+		{ 
+			if (floatval($a['offset'])>floatval($b['offset'])) return 1;
+			if (floatval($a['offset'])<floatval($b['offset'])) return -1;
+			return 0;
+		} );
 		
 		//foreach($result as $k=>$v) echo $v['offset'].' ';
 		

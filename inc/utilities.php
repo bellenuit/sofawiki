@@ -5,30 +5,68 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 
+function array_clone($arr) 
+{ 
+  if (is_array($arr)) 
+	return array_slice($arr, 0, null, true);
+  else return array();
+ }
+ 
+function p_open($flag) {
+    global $p_times;
+    if (null === $p_times)
+        $p_times = [];
+    if (! array_key_exists($flag, $p_times))
+        $p_times[$flag] = [ 'total' => 0, 'open' => 0 ];
+    $p_times[$flag]['open'] = microtime(true);
+}
+
+function p_close($flag)
+{
+    global $p_times;
+    if (isset($p_times[$flag]['open'])) {
+        $p_times[$flag]['total'] += (microtime(true) - $p_times[$flag]['open']);
+        unset($p_times[$flag]['open']);
+    }
+}
+
+function p_dump()
+{
+    global $p_times;
+    $dump = [];
+    $sum  = 0;
+    if(!isset($p_times)) return $dump;
+    foreach ($p_times as $flag => $info) {
+        $dump[$flag]['elapsed'] = $info['total'];
+        $sum += $info['total'];
+    }
+    foreach ($dump as $flag => $info) {
+        $dump[$flag]['percent'] = $dump[$flag]['elapsed']/max($sum,1);
+    }
+    return $dump;
+}
+
+
+
 function swSimpleSanitize($s)
 {
-	return filter_var($s, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // FILTER_SANITIZE_STRING is depreciated
+	$s = preg_replace('/\x00|<[^>]*>?/', '', $s);
+    return str_replace(["'", '"'], ['&#39;', '&#34;'], $s);
+	// https://stackoverflow.com/questions/69207368/constant-filter-sanitize-string-is-deprecated
+	// return filter_var($s, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // FILTER_SANITIZE_STRING is depreciated
 }
 
 
 function swHTMLSanitize($s)
 {
 	// cleans database output to HTML stream
-	$s = str_replace("<","&lt;",$s);
-	$s = str_replace(">","&gt;",$s);
+	if ($s == '') return $s;
+	$s = str_replace('<','&lt;',$s);
+	$s = str_replace('>','&gt;',$s);
 	return $s;
 }
 
 
-function swLengthSort($a,$b)
-{
-	$sa = strlen($a);
-	$sb = strlen($b);
-	if ($sa == $sb)
-		return ($a > $b);
-	else
-		return ($sa < $sb); // longer first
-}
 
 function swEscape($s)
 {
@@ -49,110 +87,76 @@ function swEscape($s)
   		return $s;
 }
 
-function swUnescape($s)
+function swFileGetContents($url,$file)
 {
-	  	
-	  	if ($s && strpos($s, '<')===false) return $s;
-	  	
-	  	// used in expressions and on final renderings
-	  	// escape characters
-  		$s = str_replace('<colon>',':',$s);
-  		$s = str_replace('<leftsquare>','[',$s);
-  		$s = str_replace('<rightsquare>',']',$s);
-  		$s = str_replace('<leftcurly>','{',$s);
-  		$s = str_replace('<rightcurly>','}',$s);
-  		$s = str_replace('<pipe>','|',$s);
-  		$s = str_replace('<space>',' ',$s);
-  		$s = str_replace('<lt>','&lt;',$s);
-  		$s = str_replace('<gt>','&gt;',$s);
-  		$s = str_replace('<null>','',$s);
-  		$s = str_replace('<backslash>','\\',$s);
-  		//$s = str_replace("<gt>",">",$s); 
-  		//$s = str_replace("<lt>","<",$s);//security problem
-  		return $s;
+       	$c = curl_init();
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($c, CURLOPT_URL, $url);
+        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 0); 
+		curl_setopt($c, CURLOPT_TIMEOUT, 0);
+        $contents = curl_exec($c);
+        
+        if ($contents && strlen($contents))
+        {
+        	curl_close($c);
+        	if (isset($file)) file_put_contents($file,$contents);
+        	return $contents;
+        }
+        else 
+        {
+            echotime('swFileGetContents error: '.curl_error($c));
+            curl_close($c);
+            return false;
+         }
 }
 
-
-function swGetArrayValue($array,$key,$default='')
+function swFileStreamLineGenerator($file, $encoding = 'utf-8')
 {
-	if (array_key_exists($key,$array))
-		return $array[$key];
-	else
-		return $default;
-}
-
-
-function swQuerySplit($s)
-{
-	// split on space, but preserve [[field::value space]]
-	return explode(' ',$s);
-}
-
-function swStrReplace($pattern, $replace, $s)
-{
-	// use lowercase, uppercase and titlecase
-	$patterns = array();
-	$patterns[] = $pattern;
-	$patterns[] = strtoupper($pattern);
-	$patterns[] = strtolower($pattern);
-	$patterns[] = strtoupper(substr($pattern,0,1)).substr($pattern,1);
-
-	foreach ($patterns as $p)
+	$handle = fopen($file, "r");
+	if ($handle) 
 	{
-		$r = str_replace($pattern,$p,$replace);
-		$s = str_replace($p,$r,$s);
-	}
-	return $s;	
-}
-
-function swGetValue($s, $key, $getArray = false)
-{
-	// equivalent to fields parser
-		
-	// reject if invalid key
-	if (!preg_match('@[A-Za-z_][^\n\][|#<>{},:+\/]*@',$key))
-	
-// [A-Za-z_] First letter of field name must be a latin letter or underscore
-// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
-
-	{
-		// echo $key;
-		
-		if ($getArray)
-			return array();
-		else
-			return '';
-	}
-	
-	$result=array();
-	
-	$key = preg_quote($key);
-	preg_match_all('@\[\['.$key.'::((?:.|\n)*?)\]\]@', $s, $matches, PREG_SET_ORDER);
-
-// \[\[ two opening square braquets
-// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
-// :: The field separator
-// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
-// \]\]: Closing brackets
-
-	// print_r($matches);
-	
-	foreach ($matches as $v)
-	{
-		
-		$value = $v[1];
-				
-		$values = explode('::',$value);
-		
-		foreach($values as $v)
+		while (($line = fgets($handle)) !== false) 
 		{
-			if (!$getArray) return $v;
-			
-			$result[]=$v;
-		}	
+			switch($encoding)
+			{
+				case 'macroman': $line = iconv('macintosh', 'UTF-8', $line); break;
+				case 'windowslatin1': $line = mb_convert_encoding($line, 'UTF-8', 'Windows-1252', $line); break;
+				case 'latin1': $line = utf8_encode($line); break;
+				default: break;
+			}
+			yield $line;
+		}
 		
+		
+		fclose($handle);
 	}
-	if (!$getArray) return '';
+		
+}
+
+
+function swFlattenArray($arr)
+{
+	$result = array();
+	
+	if(!is_array($arr)) return $result;
+	
+	foreach($arr as $k=>$v)
+	{
+		if (is_array($v))
+		{
+			$arr2 = swFlattenArray($v);
+			foreach($arr2 as $k2=>$v2)
+			{
+				$result[$k.'/'.$k2] = $v2;
+			}	
+		}
+		else
+		{
+			$result[$k] = $v;
+		}
+	}
+	
 	return $result;
 	
 }
@@ -253,64 +257,6 @@ function swGetAllFields($s,$allowinternalvariables=false)
 	
 }
 
-function swReplaceFields($s,$fields,$options='')
-{
-	$fields0 = swGetAllFields($s);
-	
-	// options not implemented. default is replace existing fields, or create it if it exists
-	
-	
-	
-	if (stristr($options,'REMOVE_OLD'))
-	{
-		foreach($fields0 as $key=>$value)
-		{
-			if (substr($key,0,1) != '_')
-				$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
-		}
-		
-	}
-	
-	
-
-	
-	foreach($fields as $key=>$value)
-	{
-		// replace existing fields, with one or more instance
-		$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
-		// add new field
-		if (is_array($value))
-		{
-			
-			
-			
-			$s .= PHP_EOL.'[['.$key;
-			if (!count($value)) $s .= '::';
-			foreach($value as $v)
-			{
-				$s.= '::'.swEscape($v);
-			}
-			$s .= ']]';
-		}
-		elseif($value == '⦵') 
-			; // do nothing
-		else
-			$s .= PHP_EOL.'[['.$key.'::'.swEscape($value).']]';
-	}
-	
-	
-	// remove field lines that are empty;
-	$s = str_replace("[[::]]\n\r",'',$s);
-	$s = str_replace("[[::]]\r\n",'',$s);	
-	$s = str_replace("[[::]]\n",'',$s);	
-	$s = str_replace("[[::]]\r",'',$s);
-	$s = str_replace("[[::]]",'',$s);
-		
-	return $s;
-	
-}
-
-
 function swGetAllLinks($s)
 {
 
@@ -324,18 +270,76 @@ function swGetAllLinks($s)
 }
 
 
-
-function swValidate($v,$invalidcharacters)
+function swGetArrayValue($array,$key,$default='')
 {
-	$l = strlen($invalidcharacters);
-	$i=0;
-	for ($i==0;$i<$l;$i++)
-	{
-		if (strstr($v,substr($invalidcharacters,$i,1))) return false;
-	}
-	return true;
+	if (array_key_exists($key,$array))
+		return $array[$key];
+	else
+		return $default;
 }
 
+function swGetValue($s, $key, $getArray = false)
+{
+	// equivalent to fields parser
+		
+	// reject if invalid key
+	if (!preg_match('@[A-Za-z_][^\n\][|#<>{},:+\/]*@',$key))
+	
+// [A-Za-z_] First letter of field name must be a latin letter or underscore
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+
+	{
+		// echo $key;
+		
+		if ($getArray)
+			return array();
+		else
+			return '';
+	}
+	
+	$result=array();
+	
+	$key = preg_quote($key);
+	preg_match_all('@\[\['.$key.'::((?:.|\n)*?)\]\]@', $s, $matches, PREG_SET_ORDER);
+
+// \[\[ two opening square braquets
+// [^\s\][|#<>{},:+\/]*? The following character can be all except newline, braquets, pipes, tag, curly, comma and colon
+// :: The field separator
+// ((?:.|\n)*?) anything, but lazy, the first single character is not captured (?:)
+// \]\]: Closing brackets
+
+	// print_r($matches);
+	
+	foreach ($matches as $v)
+	{
+		
+		$value = $v[1];
+				
+		$values = explode('::',$value);
+		
+		foreach($values as $v)
+		{
+			if (!$getArray) return $v;
+			
+			$result[]=$v;
+		}	
+		
+	}
+	if (!$getArray) return '';
+	return $result;
+	
+}
+
+
+function swLengthSort($a,$b)
+{
+	$sa = strlen($a);
+	$sb = strlen($b);
+	if ($sa == $sb)
+		return ($a > $b);
+	else
+		return ($sa < $sb); // longer first
+}
 
 function swNameURL($name)
 {
@@ -408,7 +412,10 @@ function swNameURL($name)
 	'Ù'=>'U','Ú'=>'U','Û'=>'U','Ü'=>'U','Ý'=>'Y');
 
 	
-	$s = strtr($s,$swNameURLstrtable);
+	foreach($swNameURLstrtable as $k=>$v)
+	{
+		$s = str_replace($k, $v, $s);
+	}
 	
 	// now replace anything else left with hyphen
 	
@@ -441,113 +448,6 @@ function swNameURL($name)
 		
 	return $s;
 	
-}
-
-
-function swFileGetContents($url)
-{
-       	$c = curl_init();
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($c, CURLOPT_URL, $url);
-        $contents = curl_exec($c);
-        
-        //print_r($c);
-        
-
-        if ($contents)
-        {
-        	curl_close($c);
-        	return $contents;
-        }
-        else 
-        {
-            echotime('swFileGetContents error: '.curl_error($c));
-            curl_close($c);
-            return false;
-         }
-}
-
-// field writer uses rows separated by [[]] and having only one value by field
-
-function swRowToString($arr)
-{
-	$result = '';
-	foreach($arr as $primary=>$list)
-	{
-		//unescape tags
-		$result .= '[[_primary::'.$primary.']]'.PHP_EOL;
-		foreach($list as $key=>$value)
-		{
-			$value = str_replace(']','<rightsqare>',$value);
-			$value = str_replace('[','<leftsquare>',$value);
-			$value = str_replace('::','<colon><colon>',$value);
-		
-			$result .= '[['.$key.'::'.$value.']]'.PHP_EOL;
-		}
-		$result .= '[[]]'.PHP_EOL;
-	}
-	
-	return $result;
-}
-
-function swWriteRow($handle, $arr)
-{
-	fwrite($handle,swRowToString($arr));
-}
-
-function swReadField($handle)
-{
-	$result = array();
-	$state = 'S';
-	while(!feof($handle))
-	{
-		$c = fread($handle,1);
-		
-		switch($state)
-		{
-			case 'S':	$key = ''; $value = '';
-						switch($c)
-						{ 	case '[': $state = 'o'; break;
-							default: ;
-						} break;
-			case 'o':	switch($c)
-						{ 	case '[': $state = 'k'; break;
-							default: $state = 'S';
-						} break;
-			case 'k':	switch($c)
-						{ 	case ':': $state = 'h'; break;
-							case ']': $state = 'f'; break;
-							default:  $key .= $c;
-						} break;
-			case 'h':	switch($c)
-						{ 	case ':': $state = 'v'; break;
-							case ']': $state = 'S'; break;
-							default:  $state = 'S';
-						} break;
-			case 'v':	switch($c)
-						{ 	case ':': $state = 'vh'; $value .= $c; break;
-							case ']': $state = 'c'; break;
-							default:  $value .= $c;
-						} break;
-			case 'vh':	switch($c)
-						{ 	case ':': $state = 'S'; break; // we do not want multiple values
-							case ']': $state = 'S'; break;
-							default:  $state = 'v'; $value .= $c;
-						} break;
-			case 'c':	switch($c)
-						{ 	case ']': $result[$key] = $value; $state = 'S';
-							default:  $state = 'S';
-						} break;
-			case 'f':	switch($c)
-						{ 	case ']': return $result;
-							default:  $state = 'S';
-						} break;
-			}
-	}
-	return $result;
-
-
 }
 
 function swNumberformat($d,$f)
@@ -699,27 +599,146 @@ function swNumberformat($d,$f)
 }
 
 
-function swFileStreamLineGenerator($file, $encoding = 'utf-8')
+
+function swQuerySplit($s)
 {
-	$handle = fopen($file, "r");
-	if ($handle) 
+	// split on space, but preserve [[field::value space]]
+	return explode(' ',$s);
+}
+
+
+function swReadField($handle)
+{
+	$result = array();
+	$state = 'S';
+	while(!feof($handle))
 	{
-		while (($line = fgets($handle)) !== false) 
+		$c = fread($handle,1);
+		
+		switch($state)
 		{
-			switch($encoding)
-			{
-				case 'macroman': $line = iconv('macintosh', 'UTF-8', $line); break;
-				case 'windowslatin1': $line = mb_convert_encoding($line, 'UTF-8', 'Windows-1252', $line); break;
-				case 'latin1': $line = utf8_encode($line); break;
-				default: break;
+			case 'S':	$key = ''; $value = '';
+						switch($c)
+						{ 	case '[': $state = 'o'; break;
+							default: ;
+						} break;
+			case 'o':	switch($c)
+						{ 	case '[': $state = 'k'; break;
+							default: $state = 'S';
+						} break;
+			case 'k':	switch($c)
+						{ 	case ':': $state = 'h'; break;
+							case ']': $state = 'f'; break;
+							default:  $key .= $c;
+						} break;
+			case 'h':	switch($c)
+						{ 	case ':': $state = 'v'; break;
+							case ']': $state = 'S'; break;
+							default:  $state = 'S';
+						} break;
+			case 'v':	switch($c)
+						{ 	case ':': $state = 'vh'; $value .= $c; break;
+							case ']': $state = 'c'; break;
+							default:  $value .= $c;
+						} break;
+			case 'vh':	switch($c)
+						{ 	case ':': $state = 'S'; break; // we do not want multiple values
+							case ']': $state = 'S'; break;
+							default:  $state = 'v'; $value .= $c;
+						} break;
+			case 'c':	switch($c)
+						{ 	case ']': $result[$key] = $value; $state = 'S';
+							default:  $state = 'S';
+						} break;
+			case 'f':	switch($c)
+						{ 	case ']': return $result;
+							default:  $state = 'S';
+						} break;
 			}
-			yield $line;
+	}
+	return $result;
+
+
+}
+
+function swReplaceFields($s,$fields,$options='')
+{
+	$fields0 = swGetAllFields($s);
+	
+	// options not implemented. default is replace existing fields, or create it if it exists
+	
+	
+	
+	if (stristr($options,'REMOVE_OLD'))
+	{
+		foreach($fields0 as $key=>$value)
+		{
+			if (substr($key,0,1) != '_')
+				$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
 		}
 		
-		
-		fclose($handle);
 	}
+	
+	
+
+	
+	foreach($fields as $key=>$value)
+	{
+		// replace existing fields, with one or more instance
+		$s = preg_replace('@\[\['.$key.'::([^\]\|]*)\]\]@','[[::]]',$s);
+		// add new field
+		if (is_array($value))
+		{
+			
+			
+			
+			$s .= PHP_EOL.'[['.$key;
+			if (!count($value)) $s .= '::';
+			foreach($value as $v)
+			{
+				$s.= '::'.swEscape($v);
+			}
+			$s .= ']]';
+		}
+		elseif($value == '⦵') 
+			; // do nothing
+		else
+			$s .= PHP_EOL.'[['.$key.'::'.swEscape($value).']]';
+	}
+	
+	
+	// remove field lines that are empty;
+	$s = str_replace("[[::]]\n\r",'',$s);
+	$s = str_replace("[[::]]\r\n",'',$s);	
+	$s = str_replace("[[::]]\n",'',$s);	
+	$s = str_replace("[[::]]\r",'',$s);
+	$s = str_replace("[[::]]",'',$s);
 		
+	return $s;
+	
+}
+
+// field writer uses rows separated by [[]] and having only one value by field
+
+function swRowToString($arr)
+{
+	$result = '';
+	foreach($arr as $primary=>$list)
+	{
+		//unescape tags
+		$result .= '[[_primary::'.$primary.']]'.PHP_EOL;
+		foreach($list as $key=>$value)
+		{
+			$value = str_replace(']','<rightsqare>',$value);
+			$value = str_replace('[','<leftsquare>',$value);
+			$value = str_replace('::','<colon><colon>',$value);
+		
+			$result .= '[['.$key.'::'.$value.']]'.PHP_EOL;
+		}
+		$result .= '[[]]'.PHP_EOL;
+	}
+	
+	return $result;
 }
 
 function swString2File($s)
@@ -728,3 +747,69 @@ function swString2File($s)
 	file_put_contents($tmpfname,$s);		
 	return $tmpfname;
 }
+
+
+function swStrReplace($pattern, $replace, $s)
+{
+	// use lowercase, uppercase and titlecase
+	$patterns = array();
+	$patterns[] = $pattern;
+	$patterns[] = strtoupper($pattern);
+	$patterns[] = strtolower($pattern);
+	$patterns[] = strtoupper(substr($pattern,0,1)).substr($pattern,1);
+
+	foreach ($patterns as $p)
+	{
+		$r = str_replace($pattern,$p,$replace);
+		$s = str_replace($p,$r,$s);
+	}
+	return $s;	
+}
+
+function swUnescape($s)
+{
+	  	
+	  	if ($s && strpos($s, '<')===false) return $s;
+	  	
+	  	// used in expressions and on final renderings
+	  	// escape characters
+  		$s = str_replace('<colon>',':',$s);
+  		$s = str_replace('<leftsquare>','[',$s);
+  		$s = str_replace('<rightsquare>',']',$s);
+  		$s = str_replace('<leftcurly>','{',$s);
+  		$s = str_replace('<rightcurly>','}',$s);
+  		$s = str_replace('<pipe>','|',$s);
+  		$s = str_replace('<space>',' ',$s);
+  		$s = str_replace('<lt>','&lt;',$s);
+  		$s = str_replace('<gt>','&gt;',$s);
+  		$s = str_replace('<null>','',$s);
+  		$s = str_replace('<backslash>','\\',$s);
+  		//$s = str_replace("<gt>",">",$s); 
+  		//$s = str_replace("<lt>","<",$s);//security problem
+  		return $s;
+}
+
+
+
+function swValidate($v,$invalidcharacters)
+{
+	$l = strlen($invalidcharacters);
+	$i=0;
+	for ($i==0;$i<$l;$i++)
+	{
+		if (strstr($v,substr($invalidcharacters,$i,1))) return false;
+	}
+	return true;
+}
+
+
+function swWriteRow($handle, $arr)
+{
+	fwrite($handle,swRowToString($arr));
+}
+
+
+
+
+
+

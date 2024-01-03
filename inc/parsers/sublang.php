@@ -13,9 +13,10 @@ class swSublangParser extends swParser
 	
 	function dowork(&$wiki)
 	{
-		$s0 = $s = $wiki->parsedContent;		
+		$s0 = $s = $wiki->parsedContent;
 		
 		// if language version, replace {{}} with non-language version of same page
+		if (!$wiki->name) return '';
 		if (stristr($wiki->name,'/') && stristr($s, '{{}}'))
 		{
 			$myname2 = substr($wiki->name,0,-3);

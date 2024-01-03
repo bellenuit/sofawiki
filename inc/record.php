@@ -59,7 +59,7 @@ class swRecord extends swPersistance
 	function lookupLocalname()
 	{
 		global $lang;
-		if (!stristr($this->name,'/') && $lang)
+		if (!stristr(isset($this->name) ? $this->name : '','/') && $lang)
 		{
 			// try to find local version
 			$name0 = $this->name;
@@ -485,6 +485,7 @@ class swRecord extends swPersistance
 
 	function nameshort()
 	{	
+		if (!$this->name) return '';
 		$i=strpos($this->name,":");
 		if ($i>-1)
 		{	

@@ -71,8 +71,11 @@ switch ($wiki->status)
 							$s = $wiki->name;
 		
 							//clean up url
-							$s = str_replace("-"," ",$s);
-							$s = $s = strtoupper(substr($s,0,1)).substr($s,1);
+							if ($s)	
+							{
+								$s = str_replace("-"," ",$s);
+								$s = strtoupper(substr($s,0,1)).substr($s,1);
+							}
 							$wiki->name=$s;
 							
 							$swParsedName = ''; 
@@ -150,11 +153,18 @@ switch ($wiki->status)
 							
 							
 							if (count($wikis)>1) $swParsedContent .= '<p>'.$wikisub->name.'</p>';
-							$lines = explode("\n",$wikisub->content);
-							$rows = max(count($lines) + 2, strlen($wikisub->content)*count($wikis)/70, 3);
-							$rows = max(count($lines) + 2, strlen($wikisub->content)*1/70, 3);
-							$rows = min($rows,50);
-							if (strlen($wikisub->content)<2) $rows = 5;
+							if ($wikisub->content)
+							{   
+								$lines = explode("\n",$wikisub->content); 
+								$rows = max(count($lines) + 2, strlen($wikisub->content)*count($wikis)/70, 3);
+								$rows = max(count($lines) + 2, strlen($wikisub->content)*1/70, 3);
+								$rows = min($rows,50);
+								if (strlen($wikisub->content)<2) $rows = 5;
+							}
+							else
+							{
+								$rows = 5;
+							}
 							$cols = 100 / count($wikis);
 							$codecols = $cols;
 							if ($codecols==80) $codecols=100;

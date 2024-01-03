@@ -1044,6 +1044,7 @@ $swSearchMenu = '<div id="searchmenu">
 $swSingleSearchMenu = '<div id="singlesearchmenu">
 <form method="get" action="index.php">
 <input type="hidden" name="action" value="search" />
+<input type="hidden" name="lang" value="'.$lang.'" />
 <input type="text" class="singlesearchfield" name="query" placeholder="'.swSystemMessage('search',$lang).'..."value="'.$query.'"/>
 </form>
 </div><!-- searchmenu -->';

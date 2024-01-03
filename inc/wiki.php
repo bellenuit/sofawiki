@@ -203,6 +203,7 @@ class swWiki extends swRecord
 	{	
 		
 		$s= $this->name;
+		if (!$s) return '';
 		$i=strpos($s,"/");
 		if ($i>-1)
 		{	
@@ -219,6 +220,8 @@ class swWiki extends swRecord
 	{	
 		
 		$s= $this->name;
+		if(!$s)return '--';
+		
 		$i=strpos($s,"/");
 		if ($i>-1)
 		{	
@@ -245,7 +248,7 @@ class swWiki extends swRecord
 		else
 			$s = $this->nameshort();
 	
-		if (substr($s,-3,1) == "/")
+		if ($s != '' && substr($s,-3,1) == "/")
 		{
 			$s = substr($s,0,-3);
 		}
@@ -316,7 +319,8 @@ class swWiki extends swRecord
 		global $swSimpleURL;
 		global $swLangURL;
 		global $swMainName; 
-		if ($swSimpleURL && ($action =="" || $action =="view") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt")
+		
+		if ($this->name && ($swSimpleURL && ($action =="" || $action =="view") && substr($this->name,0,1) != "." && substr($this->name,-4) != ".txt"))
 		{
 			$result = swNameURL($this->namewithoutlanguage());
 			if (!$result) 
@@ -352,6 +356,7 @@ class swWiki extends swRecord
 	function contentclean()
 	{
 		$s = $this->content;
+		if (!$s) return '';
 		$s = htmlspecialchars($s);
 		$s = str_replace("&#039;","'",$s);
 		$s = str_replace("&amp;#039;","'",$s);

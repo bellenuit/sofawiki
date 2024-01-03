@@ -25,6 +25,12 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 	$width = '100%';
 	$opts = array();
 	$legend = 'top';
+	$aspectratio = 1.76;
+	$title = '';
+	$haslabels = false;
+	$labelset = array();
+	$haspng = false;
+
 	
 	$low = '';
 	$high = '';
@@ -37,6 +43,9 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 	{
 		switch ($a)
 		{
+			case '-aspectratio': $state = 'aspectratio'; break;
+			case '-title': $state = 'title'; break;
+			case '-labels': $haslabels = true; $state = 'labels'; break;
 			case '-colors': $state = 'colors'; break;
 			case '-width': $state = 'width'; break;
 			case '-tensions': $state = 'tensions'; break;
@@ -50,6 +59,7 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 			case '-high': $state = 'high'; break;
 			case '-legend': $state = 'legend'; break;
 			case '-gap': $gaps = true ; $state = ''; break;
+			case '-png': $haspng = true ; $state = ''; break;
 			case '-rough': 	$rough = true; $state = ''; break;
 			case '-stacks': $opts['scales']['xAxes']['stacked'] = $opts['scales']['yAxes']['stacked'] = true; $state = 'stacks'; break;
 			
@@ -59,6 +69,9 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 				
 			switch ($state)
 			{
+				case 'aspectratio': $aspectratio = floatval($a); $state = ''; break;
+				case 'title': $title = str_replace('_',' ',$a); $state = ''; break;
+				case 'labels': $labelset = explode(',',$a); $state = ''; break;
 				case 'colors': $colors = explode(',',$a); $state = ''; break;
 				case 'tensions': $tensions = explode(',',$a); $state = ''; break;
 				case 'steps': $steps = explode(',',$a); $state = ''; break;
@@ -89,6 +102,12 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 		$opts['ticks']['suggestedMax'] = $high;
 		$opts['ticks']['max'] = $high;
 	}
+	
+	if ($aspectratio)
+	{
+		$opts['aspectRatio'] = $aspectratio;
+	}
+
 	
 	
 	$datasets = array();
@@ -157,6 +176,17 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 			
 		}
 		
+		if ($haslabels && $labelset[$i])
+		{
+			$set['datalabels']['align'] = 'top';
+			$set['datalabels']['anchor'] = 'end';
+		}
+		else
+		{
+			$set['datalabels']['display'] = false;
+		}
+
+		
 		if ($type == 'mixed')
 		{
 			$set['type'] = $charttypes[min($i,count($charttypes)-1)];
@@ -169,7 +199,7 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 	
 	
 	$id = md5(rand());
-	$result = '<nowiki><script src="inc/skins/chart.min.js"></script><div class="linechart" style="width:'.$width.'"><canvas class="linechart" id="'.$id.'" style=" max-width:700px"></canvas></div></nowiki>';
+	$result = '<nowiki><script src="inc/skins/chart.min.js"></script><div class="linechart" style="width:'.$width.';"><canvas class="linechart" id="'.$id.'" style=" max-width:700px;"></canvas></div></nowiki>';
 	
 	if ($rough)
 	{
@@ -189,16 +219,36 @@ Chart.defaults.global.defaultFontSize = 14;</script></nowiki>';
 	
 	if ($type === 'mixed' ) $type = 'bar';
 	
-	$json = '{ type: "'.$type.'" '.
-	', data: {  labels: '.json_encode($categories).',  datasets: '.json_encode($datasets).', options: '.json_encode($opts).' }'; 
-	if ($rough)
-		$json .= ', plugins: [ChartRough] ';
-	$json .= ' }';	
 	
-	$json = preg_replace('/"(\w+)":/','$1:',$json); // remove quotes on keys
+	$json = array();
+	$json['type'] = $type;
+	$json['data']['labels'] = $categories;
+	$json['data']['datasets'] = $datasets;
+	$json['data']['options'] = $opts;
+	$jsonp = array();
+	if ($rough) $jsonp []= 'ChartRough';
+	if ($haslabels) $jsonp []= 'ChartDataLabels';
+	if ($title) $jsonp []= '{ title: { display: true,  text: "'.$title.'"  } }';
 	
+	//print_r($jsonp);
+	$json['plugins'] = '['.join(",",$jsonp).']'; // constants cannot be json_encoded
 
-	$result .= '<nowiki><script>new Chart("'.$id.'", '.$json.' );
+	
+	$json = '{ type: '.json_encode($json['type']).', data: '.json_encode($json['data']).', plugins:'.$json['plugins'].'}';
+	
+	$result .= '<nowiki><script>
+	c = document.getElementById("'.$id.'");
+	c.height = c.width / '.$aspectratio.';
+	ch = new Chart("'.$id.'", '.$json.' ); </script></nowiki>'.PHP_EOL;
+	
+	if ($haspng)
+	$result .= '<nowiki><script>
+	setTimeout(function() {
+	a = document.createElement("a"); 
+	a.setAttribute("href",c.toDataURL("image/png",1));
+	a.setAttribute("target","_blank");
+	a.innerHTML = "PNG";
+	c.parentNode.appendChild(a);},1000); 
 	</script></nowiki>'.PHP_EOL;
 	
 	

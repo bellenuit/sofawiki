@@ -13,7 +13,7 @@ class swCategoryParser extends swParser
 
 	function dowork(&$wiki)
 	{
-		
+		if (! $wiki->originalName) return;
 		if (substr($wiki->originalName,0,9) == 'Category:' || substr($wiki->originalName,0,9) == 'category:')
 		{
 			
