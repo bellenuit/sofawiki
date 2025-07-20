@@ -261,12 +261,12 @@ class swRecord extends swPersistance
 			}
 			
 			// bug character 146 not displayed in UTF 8
-			$t146 = utf8_encode(chr(146));
+			$t146 = mb_convert_encoding(chr(146), 'UTF-8', 'ISO-8859-1');
 			$this->name = str_replace($t146, "'", $this->name);
 			$this->comment = str_replace($t146, "'", $this->comment);
 			$this->content = str_replace($t146, "'", $this->content);
 			// bug character 146 not displayed in UTF 8
-			$t156 = utf8_encode(chr(156));
+			$t156 = mb_convert_encoding(chr(156), 'UTF-8', 'ISO-8859-1');
 			$this->name = str_replace($t156, "oe", $this->name);
 			$this->comment = str_replace($t156, "oe", $this->comment);
 			$this->content = str_replace($t156, "oe", $this->content);
@@ -604,7 +604,7 @@ $cp1252_map = array(
 
 function cp1252_to_utf8($str) {
         global $cp1252_map; 
-        return  strtr(utf8_encode($str), $cp1252_map);
+        return  strtr(mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1'), $cp1252_map);
 }
 
 

@@ -1494,12 +1494,13 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			$hits = 0;
 			$totaltime = 0;
 			
-			// how to deal with log files that are 500MB +?? We read only the first million lines
+			// how to deal with log files that are 500MB +?? We read only the first 100000 lines and extrapolate
+			$maxhits = 100000;
 			
-			
-			while($hits < 1000000 && $handle && ($line = fgets($handle, 4096)) !== false)
+			while($handle && ($line = fgets($handle, 4096)) !== false)
 			{
-				
+				$hits++;
+				if ($hits > $maxhits) continue;
 				
 				$values0 = swGetAllFields($line);
 				foreach($values0 as $k=>$v)
@@ -1507,6 +1508,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 					$values[$k] = $v[0];
 				}
 				unset($values0);
+				
 				$values['day'] = substr($values['timestamp'],0,10);
 				
 				$found = true;
@@ -1541,10 +1543,30 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 					}
 				}
 				
+				// fix internal path errors. there should not be a / in a path, except for language links
+
+				if ($values1['name']) 
+				{
+					$n = explode("/",$values1['name']);
+					if (count($n) > 1) 
+					{
+					   
+					   if (strlen($n[count($n)-1]) == 2) // language link	
+					   {
+						   $values1['name'] = $n[count($n)-2].'/'.$n[count($n)-1];
+					   }
+					   else
+					   {
+						   $values1['name'] = $n[count($n)-1];
+					   } 
+					   
+					}
+				}
+				
 				if ($found)
 				{
 					$rows[] = $values1;	
-					$hits++;
+					
 					$totaltime += intval($values['time']);
 				}
 				
@@ -1558,6 +1580,10 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				foreach($rows as $row)
 				{
 					$row['name'] = swNameURL($row['name']);
+					
+					
+					
+					
 					//$row['user'] = swNameURL($row['user']);
 					
 					if (isset($ud[$row['user']])) $ud[$row['user']]++; else $ud[$row['user']]=1;
@@ -1572,8 +1598,10 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 					$nd2[$k] = array_sum($v);
 				}
 				
-				$uc = count($ud);
-				$vp = array_sum($nd2); 
+				$maxhitscorrector = max(1, $hits / $maxhits);
+				$uc = round(count($ud) * $maxhitscorrector);
+				$vp = round(array_sum($nd2) * $maxhitscorrector); 
+				$totaltime = round($totaltime * $maxhitscorrector / 1000 );
 				
 				$fields = array('file','category','key','value');
 				
@@ -1581,7 +1609,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				
 				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'day','value'=>$day);
 				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'hits','value'=>$hits);
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'totaltime','value'=>round($totaltime/1000));
+				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'totaltime','value'=>$totaltime);
 				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'visited_pages','value'=>$vp);
 				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'unique_users','value'=>$uc);
 				
@@ -1606,6 +1634,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			}
 			
 			swDbaReplace($file,serialize($rows),$bdb);
+			$rows = [];
 			if (rand(0,1000)>990) swDbaSync($bdb);
 		}
 		
@@ -1618,6 +1647,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	}
 	
 	echotime('logs sync');
+	
 	
 	
 	if (! swDbaSync($bdb))
@@ -1642,20 +1672,27 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$globalrows['unique_users'] = array();
 	}
 	
+	
 	while($key)
 	{	
 		if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
 		$rows = @unserialize(swDbaFetch($key,$bdb));
+		
+	    
+        
 		
 		if (is_array($rows))
 		foreach($rows as $d)
 		{
 			if (!empty($d))
 			{
+				
+				
 				if (memory_get_usage()>$swMemoryLimit)
 				{
+					
 					echotime('overmemory logs '.memory_get_usage().' '.$filter);
-					throw new swExpressionError('overmemory logs');
+					throw new swExpressionError('overmemory logs '.memory_get_usage());
 				}
 				
 				$ignore = false;
@@ -1693,9 +1730,10 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				{
 					if (!in_array($k,$columns)) $columns[] = $k;
 				}
-				
-								
+				unset($d);
+							
 			}
+			unset($rows);
 		}
 		
 		

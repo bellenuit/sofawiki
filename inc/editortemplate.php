@@ -409,10 +409,13 @@ function swGetEditorTemplates()
 	$list = $w->internalfields;
 	if (is_array($list))
 	{
-		$list = $list['_link'];
-		if (is_array($list)) 
-		{	$list = array_map(function($elem) { return str_replace('Template:','',$elem); }, $list); 
-			return $list;
+		if (array_key_exists('_link', $list))
+		{
+			$list = $list['_link'];
+			if (is_array($list)) 
+			{	$list = array_map(function($elem) { return str_replace('Template:','',$elem); }, $list); 
+				return $list;
+			}
 		}
 
 	}

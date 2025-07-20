@@ -145,7 +145,7 @@ class swRelationLineHandler
 		
 		if ($usedivider)
 		
-			return PHP_EOL.'<div class="relation">'.PHP_EOL.$this->result.PHP_EOL.'</div>'.PHP_EOL;
+			return PHP_EOL.'<div class="relation">'.PHP_EOL.$this->result.'</div>'.PHP_EOL;
 		
 		else
 		

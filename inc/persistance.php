@@ -5,6 +5,7 @@
 if (!defined('SOFAWIKI')) die('invalid acces');
 
 
+#[AllowDynamicProperties]
 class swPersistance 
 { 
     var $persistance;

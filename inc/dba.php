@@ -494,7 +494,7 @@ class swDba
 	 	if (!$test) return;
 		
 		$this->journal[$key] = false;
-		if (count($this->journal) >= 1000) $this->sync();
+		if (count($this->journal) >= 100) $this->sync();
 	 	
 	}
 	
@@ -511,7 +511,7 @@ class swDba
 	 	
 	 	$this->journal[$key] = $value;
 	 	
-		if (count($this->journal) >= 1000) $this->sync();
+		if (count($this->journal) >= 100) $this->sync();
 		
 		return true;
 	}
@@ -529,8 +529,8 @@ class swDba
 		
 		echotime('sync '.$this->count().' + '.count($this->journal));
 		
-		$lines = array();
-		
+		$lines = [];
+		$codelength = 0;
 		
 		
 		foreach($this->journal as $k=>$v)
@@ -538,13 +538,17 @@ class swDba
 			$k = $this->db->escapeString($k);
 			$v = $this->db->escapeString($v);
 			if ($v === FALSE)
-				$lines[]= "DELETE FROM kv WHERE k = '$k' ;"; // use double quote because in sql it is single quote
+				$line = "DELETE FROM kv WHERE k = '$k' ;"; // use double quote because in sql it is single quote
 			else
-				$lines[]= "REPLACE INTO kv (k,v) VALUES ('$k','$v');";		
+				$line = "REPLACE INTO kv (k,v) VALUES ('$k','$v');";		
 			
 			// memory: query should not be too long	
+			$codelength += strlen($line);
+			
+			$lines[] = $line;
+			
 				
-			if (count($lines)>1000)
+			if (count($lines)>100 || $codelength > 1000000)
 			{
 				
 				if (!$this->db->busyTimeout(5000))  // sql tries to connect during 5000ms
@@ -559,10 +563,13 @@ class swDba
 				{
 					throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());
 				}
-				$lines = array();
+				$lines = [];
+				$codelength = 0;
 			}	
 						
 		}
+		//echo count($lines);
+		//echo $codelength;
 		
 		if (count($lines))
 		{
@@ -574,7 +581,7 @@ class swDba
 			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$lines).PHP_EOL.'COMMIT;';
 			@$this->db->exec($q); // warning locked will be error code
 		}
-
+		
 		if ($this->db->lastErrorCode())
 		{
 			throw new swDbaError('swDba sync error '.$this->db->lastErrorMsg());			
