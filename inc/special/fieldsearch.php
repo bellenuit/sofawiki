@@ -13,7 +13,7 @@ $swParsedName = 'Special:Field Search';
 
 echotime('fieldsearch start');
 
-$field = '';
+$field = '_name';
 if (isset($_REQUEST['field'])) $field = $_REQUEST['field'];
 
 
@@ -68,6 +68,7 @@ label _nameurl "Page"
 print grid 50
 
 ';
+
 
 
 $lh = new swRelationLineHandler;

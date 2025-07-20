@@ -3,15 +3,12 @@
 $skinstylesheet = ''; // default.css is always loaded. add the specific stylesheet	
 include 'header.php';
 
-
-
-
-
 echo PHP_EOL.'<div id="header">';
 echo PHP_EOL.swSystemMessage("skin-header",$lang, true);
 echo PHP_EOL.'</div><!-- header -->';
 
 echo PHP_EOL.'<div id="menu">';
+
 
 echo PHP_EOL.$swHomeMenu. '<br/>'; 
 foreach($swLangMenus as $item) {echo PHP_EOL.$item.'<br/>'; } 
@@ -63,5 +60,8 @@ echo PHP_EOL.$swFooter;
 echo PHP_EOL.swSystemMessage('skin-footer"',$lang, true);	
 echo PHP_EOL.'</div><!-- info -->';
 echo PHP_EOL.'</div><!-- content -->';
+
+
+
 
 include 'footer.php';

@@ -121,6 +121,9 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 	
 	$r = new swRelation('found, score, url, lang, revision, title, body');
 	
+	// escape quote
+	$query = str_replace("'","''",$query);
+	
 	if (!trim($query)) return $r; // empty
 	
 	$q = "SELECT '1' as found, score(offsets(pages)) as score, url, lang, revision, title, snippet(pages) as body FROM pages 

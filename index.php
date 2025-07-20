@@ -19,7 +19,7 @@ $swHasWritten = false;
 $swError = '';
 $swStatus = '';
 $swParseSpecial = '';
-$swUserCookieExpiration = 4*60*60;
+$swUserCookieExpiration = 24*60*60;
 $swBaseHrefFolder = '';
 $swBaseHrefFolder = @$_SERVER['SCRIPT_URI'];
 define('SOFAWIKIINDEX',true);
@@ -919,7 +919,7 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	{
 		if ($user->hasright('fields', $wiki->name))
 		{
-			$swEditMenus['editmenu-fields'] = '<a href="'.$wiki->link('fields','--').'" rel="nofollow">'.swSystemMessage('fields',$lang).'</a>';
+			$swEditMenus['editmenu-fields'] = '<a href="'.$wiki->link('fields','--').'" rel="nofollow">'.swSystemMessage('fields',$lang).'</a>'; 
 		}		
 		if ($user->hasright('protect', $editwiki->name))
 		{
@@ -940,6 +940,12 @@ if ($action != 'special' && $action != 'login' && $action != 'logout' && $action
 	}
 	if ($editwiki->status != 'ok' && $wiki->status == 'ok')
 	{
+		
+		if ($user->hasright('fields', $wiki->name))
+		{
+			$swEditMenus['editmenu-fields'] = '<a href="'.$wiki->link('fields','--').'" rel="nofollow">'.swSystemMessage('fields',$lang).'</a>'; 
+		}
+		
 		if ($user->hasright('rename', $editwiki->name))
 		{
 			$swEditMenus['editmenu-rename'] = '<a href="'.$wiki->link('rename','--').'" rel="nofollow">'.swSystemMessage('rename',$lang).' </a>';
@@ -964,18 +970,12 @@ if ($user->hasright('create', '*'))
 	else
 		$swEditMenus['newmenu-new'] = '<a href="index.php?action=new&lang='.$lang.'" rel="nofollow" accesskey="n">'.swSystemMessage('new-page',$lang).' </a>';
 	
-	$templatewiki = new swWiki;
-	$templatewiki->name = 'System:editortemplate';
-	$templatewiki->lookup();
-	$list = array();
-	if (isset($templatewiki->internalfields['_link'])) $list = $templatewiki->internalfields['_link'];
+	$list = swGetEditorTemplates();
 	
 	$menu = array();
 	
-	foreach($list as $elem)
+	foreach($list as $editor)
 	{
-		if (substr($elem,0,strlen('Template:'))!='Template:') continue;
-		$editor = str_replace('Template:','',$elem);
 		$swEditMenus['newmenu-'.$editor] = '<a href=index.php?action=new&editor='.$editor.'">'.swSystemMessage('new',$lang).' '.$editor.'</a>';
 	}
 }
@@ -1005,6 +1005,8 @@ if ($user->hasright('special','special') && $action != 'logout')
 		$swEditMenus[$m.$k] = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">'.$k.'</a>';
 
 	}
+	$linkwiki->name = 'Special:Special Pages';
+	$swSpecialmenu = '<a href="'.$linkwiki->link('view','').'&lang='.$lang.'" rel="nofollow">Special</a>';
 }
 
 

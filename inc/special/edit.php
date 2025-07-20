@@ -110,7 +110,9 @@ switch ($wiki->status)
 						
 						
 						
-						// search for editor template and display them before.
+						
+						
+												
 						
 						//$swParsedContent .= "\n<table class='blanktable'>\n";
 						//$swParsedContent .= '<tbody><tr>'; 
@@ -134,8 +136,7 @@ switch ($wiki->status)
 							
 						}
 						
-						$swParsedContent .= PHP_EOL.'<input type="'.$namefieldtype.'" name="name" value="'.$wiki->name.'" />';
-
+						$swParsedContent .= PHP_EOL.'<input type="'.$namefieldtype.'" id="name" name="name" value="'.$wiki->name.'" />';
 						
 						foreach ($wikis as $wikilang=>$wikisub)
 						{
@@ -211,6 +212,9 @@ switch ($wiki->status)
 						$swParsedContent .= PHP_EOL.'</form>';
 						
 						if ($helptext) $swParsedContent .= PHP_EOL.'<div class="editfooter help">'.$helptext.'</div><!-- editfooter -->';
+						
+						
+						
 
 						$swParsedContent .= PHP_EOL.'</div><!-- editzone -->';
 

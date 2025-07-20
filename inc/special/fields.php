@@ -100,9 +100,7 @@ else
 	$maxcols = 0;
 	foreach($wiki->internalfields as $key=>$valuelist)
 	{
-		if ($key == '_link') continue;
-		if ($key == '_template') continue;
-		if ($key == '_category') continue;
+		if (substr($key,0,1) == '_') continue;
 		$maxcols = max($maxcols,count($valuelist));
 	}
 	
@@ -124,9 +122,7 @@ else
 		$swParsedContent .= PHP_EOL.' <tr>';
 		foreach($wiki->internalfields as $key=>$valuelist)
 		{
-			if ($key == '_link') continue;
-			if ($key == '_template') continue;
-			if ($key == '_category') continue;
+			if (substr($key,0,1) == '_') continue;
 			
 			if (isset($_POST['fieldeditheader']))
 				$swParsedContent .= PHP_EOL.'   <th class="key"><input type="text" name="_newkey'.$key.'" value="'.$key.'"></th>';
@@ -145,9 +141,7 @@ else
 			$swParsedContent .= PHP_EOL.' <tr>';
 			foreach($wiki->internalfields as $key=>$valuelist)
 			{
-				if ($key == '_link') continue;
-				if ($key == '_template') continue;
-			    if ($key == '_category') continue;
+				if (substr($key,0,1) == '_') continue;
 
 				$j++;
 				if (isset($_POST['fieldeditheader']))

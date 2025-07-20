@@ -285,26 +285,28 @@ class swStyleParser extends swParser
 		//echo $s;
 		
 		// bugs
-		$s = str_replace("<p><div","<div",$s);
-		$s = str_replace("</div></p>","</div>",$s);
-		$s = str_replace('<td></td>','<td>&nbsp;</td>',$s);
-		$s = str_replace('<br></div>',"</div>",$s);
-		$s = str_replace('</div><br>',"</div>",$s);
-		$s = str_replace('<br><div>',"<div>",$s);
-		$s = str_replace('<div><br>',"<div>",$s);
-
+		if ($s)
+		{
+			$s = str_replace("<p><div","<div",$s);
+			$s = str_replace("</div></p>","</div>",$s);
+			$s = str_replace('<td></td>','<td>&nbsp;</td>',$s);
+			$s = str_replace('<br></div>',"</div>",$s);
+			$s = str_replace('</div><br>',"</div>",$s);
+			$s = str_replace('<br><div>',"<div>",$s);
+			$s = str_replace('<div><br>',"<div>",$s);
+		}
 				
 		// template block preserve
-		$s = str_replace('<nop>','',$s);
-		$s = str_replace('</nop>','',$s);
+		if ($s) $s = str_replace('<nop>','',$s);
+		if ($s) $s = str_replace('</nop>','',$s);
 
 		
 		// bold and italics
-		$s = str_replace("''''''","",$s);
-        $s = preg_replace("/'''''(.*)'''''/Um", '<b><i>$1</i></b>', $s);
-		$s = str_replace("''''","",$s);
-        $s = preg_replace("/'''(.*)'''/Um", '<b>$1</b>', $s);
-        $s = preg_replace("/''(.*)''/Um", '<i>$1</i>', $s);
+		if ($s) $s = str_replace("''''''","",$s);
+        if ($s) $s = preg_replace("/'''''(.*)'''''/Um", '<b><i>$1</i></b>', $s);
+		if ($s) $s = str_replace("''''","",$s);
+        if ($s) $s = preg_replace("/'''(.*)'''/Um", '<b>$1</b>', $s);
+        if ($s) $s = preg_replace("/''(.*)''/Um", '<i>$1</i>', $s);
         
         // detect pre
         //$s = preg_replace("/<p> (.*)<\/p>/Um", '<pre>$1</pre>', $s);
@@ -313,7 +315,7 @@ class swStyleParser extends swParser
         
 		$s = swUnescape($s);  		
 		
-		if ($this->domakepretty)
+		if ($this->domakepretty && $s)
 		{
 		
        		 // make pretty
@@ -373,7 +375,9 @@ class swStyleParser extends swParser
     	
     	}
 		
-		$wiki->parsedContent = trim($s);
+		if ($s) $s = trim($s);
+		
+		$wiki->parsedContent = $s;
 		
 	}
 	

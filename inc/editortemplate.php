@@ -29,7 +29,8 @@ function swParseEditorTemplate($editor, $wiki)
 	// handle fields
 	while(preg_match('/{template\|(.*?)\}/',$s, $match))
 	{
-		$s1 = str_replace($match[0],'<input type="hidden" name="template" value="'.$match[1].'">',$s);;
+		
+		$s1 = str_replace($match[0],'<input type="hidden" name="template" value="'.$match[1].'">',$s);
 		
 		if ($s1 == $s) break;
 		
@@ -40,7 +41,10 @@ function swParseEditorTemplate($editor, $wiki)
 	{
 		$v = $match[1];
 		if ($wiki->name) $v = $wiki->name;
-		$s1 = str_replace($match[0],'<input type="text" name="name" value="'.$v.'" ',$s);
+		if ($wiki->revision) // read-only
+			$s1 = str_replace($match[0],'<input type="text" name="name" value="'.$v.'" readonly>',$s);
+		else
+			$s1 = str_replace($match[0],'<input type="text" name="name" value="'.$v.'">',$s);
 		
 		if ($s1 == $s) break;
 		
@@ -58,7 +62,7 @@ function swParseEditorTemplate($editor, $wiki)
 		}
 			
 
-		$s1 = str_replace($match[0],'<input type="text" name="'.$match[1].'" value="'.$v.'" ',$s);
+		$s1 = str_replace($match[0],'<input type="text" name="'.$match[1].'" value="'.$v.'" >',$s);
 		
 		if ($s1 == $s) break;
 		
@@ -73,31 +77,26 @@ function swParseEditorTemplate($editor, $wiki)
 			
 			$v = $wiki->internalfields[$match[1]];
 		}
-		$f = '<div id="divplus'.$match[1].'">';
-		if (is_array($v))
-		{
+		$f = '<div id="textplus_'.$match[1].'">';
+		if (!is_array($v)) $v = array($v);
+		
 				$i=1;
 				foreach($v as $elem)
 				{
-					$f .= '<div id="'.$match[1].':'.$i.'"><input type="text" name="'.$match[1].':'.$i.'"  value="'.$elem.'" style="width:80%">'; 
-					if ($i>1 || true)
-					{
-						$f .= '<button type="button" onclick="textupfunction(\''.$match[1].':'.$i.'\')">↑</button>';
-					}
+					$f .= '<div id="div_'.$match[1].':'.$i.'">'; 
+
 					
+					
+					$f .= '<input type="text" name="'.$match[1].':'.$i.'" id="'.$match[1].':'.$i.'"  value="'.$elem.'" style="width:70%">'; 
 					$f .= '</div>';
 					$i++;
 					
 				}
 				
 				//$v = join('::',$v);
-		}
-		else
-		{
-				$f .= '<input type="text" name="'.$match[1].'" value="'.$v.'">';
-		}
 		
-		$f.= '</div><button type="button" id="plus'.$match[1].'" onclick="textplusfunction(\''.$match[1].'\')">+</button>';
+		$f .= '</div><script>showbuttons("textplus_'.$match[1].'")</script>';
+		
 
 
 		$s1 = str_replace($match[0],$f,$s);
@@ -187,9 +186,9 @@ function swParseEditorTemplate($editor, $wiki)
 		foreach($opts as $opt)
 		{
 			if (in_array($opt,$set)) 
-				$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" value="'.$opt.'" checked /> '.$opt.'</span>';
+				$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" id="'.$match[1].'"  value="'.$opt.'" checked /> '.$opt.'</span>';
 			else
-				$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" value="'.$opt.'" /> '.$opt.'</span>';
+				$list[] = ' <span style="white-space:nowrap;"><input type="radio" name="'.$match[1].'" id="'.$match[1].'"  value="'.$opt.'" /> '.$opt.'</span>';
 		}
 		$s1 = str_replace($match[0],join(' ',$list),$s);
 		
@@ -230,26 +229,56 @@ function swParseEditorTemplate($editor, $wiki)
 	
 	$script = "
 <script>
-function textplusfunction(id){
-theid = id.toString();
-div = document.getElementById('divplus'+theid);
-children = div.childNodes.length+1;
-s = div.innerHTML;
-s = s + '<div id=\"'+theid+':'+children+'\"><input type=\"text\" name=\"'+theid+':'+children+'\" value=\"\" style=\"width:80%\"><button type=\"button\" onclick=\"textupfunction(\''+theid+':'+children+'\')\">↑</button>';
-div.innerHTML = s;
+function showbuttons(id){ 
+div = document.getElementById(id);
+children = div.childNodes;
+children.forEach(function (ch){
+cns = []; 
+ch.childNodes.forEach(function(n) { if (n.tagName == 'BUTTON') cns.push(n) });
+cns.forEach(function(n)	{ ch.removeChild(n) }); // must do in 2 steps
+s = '';
+if (ch == div.lastChild) s = s + '<button onclick=\"textplusfunction(\''+ch.id+'\')\">+</button>';
+if (children.length > 1) s = s + '<button onclick=\"textminusfunction(\''+ch.id+'\')\">-</button>';
+if (ch !== div.firstChild) s = s + '<button onclick=\"textupfunction(\''+ch.id+'\')\">↑</button>';
+s = s + ch.innerHTML;
+ch.innerHTML = s;
+
+; });
 }
 
-function textupfunction(id){
-theid = id.toString();
-div = document.getElementById(theid);
+
+function textplusfunction(id){
+div = document.getElementById(id);
 parent = div.parentNode;
-parent.insertBefore(div,div.previousElementSibling);
+id2 = parent.id.replace('textplus_','')+':'+(parent.childNodes.length+1).toString();
+s = '<div id=\"div_'+id2+'\"><input type=\"text\" name=\"'+id2+'\"  id=\"'+id2+'\"  value=\"\" style=\"width:70%\"></div>';
+parent.innerHTML = parent.innerHTML + s;
+showbuttons(parent.id);
 }
+
+function textminusfunction(id){
+div = document.getElementById(id);
+parent = div.parentNode;
+parent.removeChild(div);
+showbuttons(parent.id);
+}
+
+function textupfunction(id){  
+div = document.getElementById(id);   
+inp = document.getElementById(id.replace('div_','')); 
+div2 = div.previousElementSibling;
+inp2 = document.getElementById(div2.id.replace('div_','')); 
+s = inp.value; 
+t = inp2.value; 
+
+
+}
+
 </script>";
 
 
 
-	$editorwiki->parsedContent = $s.$script;
+	$editorwiki->parsedContent = $script.$s;
 	
 	
 	
@@ -268,7 +297,7 @@ parent.insertBefore(div,div.previousElementSibling);
 	
 	$result .=	'<input type="hidden" name="editortemplate" value="'.$_REQUEST['editor'].'">';
 	
-	if ($wiki->revision)	$result .=	'<input type="hidden" name="revision" value="'.$wiki->revision.'">';
+	if ($wiki->revision)	$result .=	'<input type="hidden" name="currentrevision[--]" value="'.$wiki->revision.'">';
 	
 	
 	$foundfields = array_diff($foundfields,array('template','revision','editortemplate','_template','_link'));
@@ -276,6 +305,7 @@ parent.insertBefore(div,div.previousElementSibling);
 	if (count($foundfields)) $result .=	'<p><b>Warning unused fields:</b> '.join(', ',$foundfields) ; 
 		
 	$foundtext = $wiki->content;
+	if (!$foundtext) $foundtext = '';
 	$foundtext = preg_replace('/\[\[.+?::.*?\]\]/','', $foundtext);
 	$foundtext = preg_replace('/\{\{.+?\}\}/','', $foundtext);
 	
@@ -346,7 +376,7 @@ function swInsertFromEditorTemplate($post,$wiki)
 		{
 			$sublang = substr($k,strlen('sublang')+1);
 			$sublangwiki = new swWiki;
-			$sublangwiki->name = $wiki->namewithoulanguage().'/'.$sublang;
+			$sublangwiki->name = $wiki->namewithoutlanguage().'/'.$sublang;
 			$sublangwiki->lookup();
 			if ($sublangwiki->content != '{{}}'.PHP_EOL.$v)
 			{
@@ -368,4 +398,23 @@ function swInsertFromEditorTemplate($post,$wiki)
 	$content .= '[[editortemplate::'.$post['editortemplate'].']]'.PHP_EOL;
 	$wiki->content = $content;
 	$wiki->insert();
+}
+
+
+function swGetEditorTemplates()
+{
+	$w = new swWiki;
+	$w->name = 'System:editortemplate';
+	$w->lookup();
+	$list = $w->internalfields;
+	if (is_array($list))
+	{
+		$list = $list['_link'];
+		if (is_array($list)) 
+		{	$list = array_map(function($elem) { return str_replace('Template:','',$elem); }, $list); 
+			return $list;
+		}
+
+	}
+	return array();
 }

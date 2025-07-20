@@ -44,7 +44,7 @@ class swTidyParser extends swParser
 		$s = str_replace('< ','*SPECIALTAGWITHSPACE*',$s);
 		$s = str_replace('<>','*SPECIALTAGCLOSED*',$s);
 		// PHP 5.3.5 ignores self closing tags, so the normal syntax has been added
-        $s = strip_tags($s,'<b><i><u><s><pre><sup><sub><tt><code><span><br><hr><br/><hr/><small><big><div><colon><pipe><close><leftsquare><rightsquare><leftcurly><rightcurly><space><null><lt><gt><backslash>');
+        $s = strip_tags($s,'<a><b><i><u><s><pre><sup><sub><tt><code><span><br><hr><br/><hr/><small><big><div><colon><pipe><close><leftsquare><rightsquare><leftcurly><rightcurly><space><null><lt><gt><backslash><_>');
 		$s = str_replace('*SPECIALTAGWITHSPACE*','< ',$s);
 		$s = str_replace('*SPECIALDOUBLETAGWITHSPACE*', '<< ',$s);
 		$s = str_replace('*SPECIALTAGCLOSED*','<>',$s);

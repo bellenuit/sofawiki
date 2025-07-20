@@ -361,7 +361,7 @@ function swSnapShot($username)
 	
 	foreach($files as $file)
 	{
-		$zipfile->addFile($swRoot.'/'.$file, 'sofawiki/'.$file); 
+		if (file_exists($file)) $zipfile->addFile($swRoot.'/'.$file, 'sofawiki/'.$file); 
 		$result .= '&nbsp;'.$file.'<br/>';
 	}
 	

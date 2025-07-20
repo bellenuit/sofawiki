@@ -57,12 +57,13 @@ class swTemplateParser extends swParser
 			
 			if ($val0) // last {{ to end
 			{
-				
+				//echo "$startpos $endpos ";
 				
 				
 				// should not have {{ nor }}
 				
 				if (stristr($val0,"{{") || stristr($val0,"}}") ) { $wiki->parsedContent = $val0; return; } 
+				
 				
 								
 				$val0protected = preg_replace("@\[\[([^\]\|]*)([\|]?)(.*?)\]\]@",'[[$1&pipeprotected;$3]]',$val0);
@@ -95,9 +96,13 @@ class swTemplateParser extends swParser
 				
 				// echotime('template '.$vheader);
 				
+				//echo $vheader.'; ';
+				
 				
 				if (array_key_exists($vheader,$this->functions)) // template is function
 				{
+					//echo "fn ; ";
+					
 					$f = $this->functions[$vheader];
 					$c = $f->dowork($vals);
 									

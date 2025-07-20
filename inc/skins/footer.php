@@ -1,6 +1,8 @@
 <?php 
 	
 echo PHP_EOL.'</div><!-- page -->';
+
+include 'menu.php';
 echo PHP_EOL.'</body>';
 
 

@@ -51,7 +51,9 @@ function p_dump()
 function swSimpleSanitize($s)
 {
 	$s = preg_replace('/\x00|<[^>]*>?/', '', $s);
-    return str_replace(["'", '"'], ['&#39;', '&#34;'], $s);
+	$s = preg_replace('/"/', '&#34;', $s);
+    // $s = preg_replace(["'", '"'], ['&#39;', '&#34;'], $s); single quote is not a good idea, single quote is allowed in names
+    return $s;
 	// https://stackoverflow.com/questions/69207368/constant-filter-sanitize-string-is-deprecated
 	// return filter_var($s, FILTER_SANITIZE_FULL_SPECIAL_CHARS); // FILTER_SANITIZE_STRING is depreciated
 }
@@ -243,7 +245,7 @@ function swGetAllFields($s,$allowinternalvariables=false)
 		{
 // 			puts entire link. should we parse for | ?
 			$fields = explode('|',$elem);
-			$result['_links'][] = $fields[0];
+			$result['_link'][] = $fields[0];
 		}
 
 	}
@@ -769,6 +771,8 @@ function swStrReplace($pattern, $replace, $s)
 function swUnescape($s)
 {
 	  	
+	  	if (!$s) return $s;
+	  	
 	  	if ($s && strpos($s, '<')===false) return $s;
 	  	
 	  	// used in expressions and on final renderings
@@ -784,6 +788,7 @@ function swUnescape($s)
   		$s = str_replace('<gt>','&gt;',$s);
   		$s = str_replace('<null>','',$s);
   		$s = str_replace('<backslash>','\\',$s);
+  		$s = str_replace('<_>','',$s);
   		//$s = str_replace("<gt>",">",$s); 
   		//$s = str_replace("<lt>","<",$s);//security problem
   		return $s;

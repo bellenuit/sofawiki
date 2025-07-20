@@ -2,9 +2,15 @@
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
+$chartscriptinit = false;
+$chartscriptrawinit = false;
+
 
 function swChartJS($labels, $categories, $columns, $type, $options)
 { 
+	global $chartscriptinit;
+	global $chartscriptrawinit;
+	
 	if (!count($labels)) return '';
 
 	if (count($labels) != count($columns)) return 'swChart arity error (labels '.count($labels).', columns '.count($columns).')';
@@ -199,15 +205,22 @@ function swChartJS($labels, $categories, $columns, $type, $options)
 	
 	
 	$id = md5(rand());
-	$result = '<nowiki><script src="inc/skins/chart.min.js"></script><div class="linechart" style="width:'.$width.';"><canvas class="linechart" id="'.$id.'" style=" max-width:700px;"></canvas></div></nowiki>';
+	
+	$result = '';
+	
+	if (!$chartscriptinit) $result .= '<nowiki><script src="inc/skins/chart.min.js"></script></nowiki>'; $chartscriptinit = true;
+	
 	
 	if ($rough)
 	{
-		$result .= '<nowiki><script src="inc/skins/rough.js"></script>';
-		$result .= '<nowiki><script src="inc/skins/chartjs-plugin-rough.min.js"></script></nowiki>';
+		if (!$chartscriptrawinit) $result .= '<nowiki><script src="inc/skins/rough.js"></script></nowiki>';
+		if (!$chartscriptrawinit) $result .= '<nowiki><script src="inc/skins/chartjs-plugin-rough.min.js"></script></nowiki>';
+		$chartscriptrawinit = true;
 		$result .= '<nowiki><script>Chart.defaults.global.defaultFontFamily = "Comic Sans MS";
 Chart.defaults.global.defaultFontSize = 14;</script></nowiki>';		
 	}
+
+	$result .= '<nowiki><div class="linechart" style="width:'.$width.';"><canvas class="linechart" id="'.$id.'" style=" max-width:700px;"></canvas></div></nowiki>';
 	
 	// put in globals, as json does not seem to work
 	if (!$legend == 'none')
@@ -235,6 +248,8 @@ Chart.defaults.global.defaultFontSize = 14;</script></nowiki>';
 
 	
 	$json = '{ type: '.json_encode($json['type']).', data: '.json_encode($json['data']).', plugins:'.$json['plugins'].'}';
+	$json = str_replace('}}','} }',$json); // wiki template
+	$json = str_replace('{{','{ {',$json);
 	
 	$result .= '<nowiki><script>
 	c = document.getElementById("'.$id.'");
@@ -253,7 +268,6 @@ Chart.defaults.global.defaultFontSize = 14;</script></nowiki>';
 	
 	
 	
-
 	
 	
 	return $result;
@@ -608,6 +622,7 @@ class SwScatterChart extends swFunction
 	
 	function dowork($args)
 	{
+
 		$relation = @$args[1];
 		if (!$relation) return '';
 		$lines = explode(PHP_EOL,$relation);

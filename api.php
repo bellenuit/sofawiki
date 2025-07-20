@@ -26,7 +26,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '3.9.2';   
+$swVersion = '4.0.0';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -74,7 +74,6 @@ include_once $swRoot.'/inc/deepl.php';
 include_once $swRoot.'/inc/expressionoperator.php';
 include_once $swRoot.'/inc/expressionfunction.php';
 include_once $swRoot.'/inc/expression.php'; // last for unit tests
-include_once $swRoot.'/inc/filter.php';
 include_once $swRoot.'/inc/function.php';
 include_once $swRoot.'/inc/legacy.php';
 
@@ -123,7 +122,6 @@ include_once $swRoot.'/inc/functions/value.php';
 include_once $swRoot.'/inc/functions/resume.php';
 include_once $swRoot.'/inc/functions/firstvalue.php';
 include_once $swRoot.'/inc/functions/extvalue.php';
-include_once $swRoot.'/inc/functions/query.php';
 include_once $swRoot.'/inc/functions/sprintf.php';
 include_once $swRoot.'/inc/functions/nameurl.php';
 include_once $swRoot.'/inc/functions/prettydate.php';
@@ -140,6 +138,7 @@ include_once $swRoot.'/inc/functions/translate.php';
 include_once $swRoot.'/inc/functions/preventovertimesearchagain.php';
 include_once $swRoot.'/inc/functions/upload.php';
 include_once $swRoot.'/inc/functions/textrank.php';
+include_once $swRoot.'/inc/functions/tinyps.php';
 
 
 
@@ -182,7 +181,6 @@ $swSpecials['Categories'] = 'categories.php';
 $swSpecials['Images'] = 'images.php';
 $swSpecials['Upload'] = 'upload.php';
 $swSpecials['Upload Multiple'] = 'uploadmultiple.php';
-// does not work $swSpecials['Index PDF'] = 'indexpdf.php';
 $swSpecials['Templates'] = 'templates.php';
 $swSpecials['Users'] = 'users.php';
 $swSpecials['Passwords'] = 'passwords.php';
@@ -197,9 +195,8 @@ $swSpecials['Logs'] = 'logs.php';
 $swSpecials['Metrics'] = 'metrics.php';
 $swSpecials['Deny'] = 'deny.php';
 $swSpecials['Update'] = 'update.php';
-//$swSpecials['Fields'] = 'fields.php';
-$swSpecials['Query'] = 'query.php';
 $swSpecials['Relation'] = 'relation.php';
+$swSpecials['Tiny PS'] = 'tinyps.php';
 $swSpecials['Rest'] = 'rest.php';
 $swSpecials['Orphaned Pages'] = 'orphanedpages.php';
 $swSpecials['Dead End Pages'] = 'deadendpages.php';
@@ -285,6 +282,38 @@ else
 
 
 include_once $swRoot.'/inc/ramdisk.php';
+
+$rpnFontURLs['CMUSerif-Roman'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-Roman.ttf';
+$rpnFontURLs['CMUSerif-Italic'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-Italic.ttf';
+$rpnFontURLs['CMUSerif-Bold'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-Bold.ttf';
+$rpnFontURLs['CMUSerif-BoldItalic'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-BoldItalic.ttf';
+$rpnFontURLs['CMUSansSerif'] =  $swBaseHrefFolder.'inc/skins/CMUSansSerif.ttf';
+$rpnFontURLs['CMUSansSerif-Oblique'] =  $swBaseHrefFolder.'inc/skins/CMUSansSerif-Oblique.ttf';
+$rpnFontURLs['CMUSansSerif-Bold'] =  $swBaseHrefFolder.'inc/skins/CMUSansSerif-Bold.ttf';
+$rpnFontURLs['CMUSansSerif-BoldOblique'] =  $swBaseHrefFolder.'inc/skins/CMUSansSerif-BoldOblique.ttf';
+$rpnFontURLs['CMUTypewriter-Regular'] =  $swBaseHrefFolder.'inc/skins/CMUTypewriter-Regular.ttf';
+$rpnFontURLs['CMUTypewriter-Italic'] =  $swBaseHrefFolder.'inc/skins/CMUTypewriter-Italic.ttf';
+$rpnFontURLs['CMUTypewriter-Bold'] =  $swBaseHrefFolder.'inc/skins/CMUTypewriter-Bold.ttf';
+$rpnFontURLs['CMUTypewriter-BoldItalic'] =  $swBaseHrefFolder.'inc/skins/CMUTypewriter-BoldItalic.ttf';
+$rpnFontURLs['Europa-Mittelschrift'] =  $swBaseHrefFolder.'inc/skins/Europa-Mittelschrift.ttf';
+$rpnFontURLs['TGL017'] =  $swBaseHrefFolder.'inc/skins/TGL017.ttf';
+$rpnFontURLs['Nimbus-Roman'] =  $swBaseHrefFolder.'inc/skins/NimbusRomNo9L-Reg.ttf';
+$rpnFontURLs['Nimbus-Roman-Italic'] =  $swBaseHrefFolder.'inc/skins/NimbusRomNo9L-RegIta.ttf';
+$rpnFontURLs['Nimbus-Roman-Bold'] =  $swBaseHrefFolder.'inc/skins/NimbusRomNo9L-Med.ttf';
+$rpnFontURLs['Nimbus-Roman-BoldItalic'] =  $swBaseHrefFolder.'inc/skins/NimbusRomNo9L-MedIta.ttf';
+$rpnFontURLs['Nimbus-Sans'] =  $swBaseHrefFolder.'inc/skins/NimbusSanL-Reg.ttf';
+$rpnFontURLs['Nimbus-Sans-Italic'] =  $swBaseHrefFolder.'inc/skins/NimbusSanL-RegIta.ttf';
+$rpnFontURLs['Nimbus-Sans-Bold'] =  $swBaseHrefFolder.'inc/skins/NimbusSanL-Bol.ttf';
+$rpnFontURLs['Nimbus-Sans-BoldItalic'] =  $swBaseHrefFolder.'inc/skins/NimbusSanL-BolIta.ttf';
+$rpnFontURLs['Nimbus-Mono'] =  $swBaseHrefFolder.'inc/skins/NimbusMono-Regular.ttf';
+$rpnFontURLs['Nimbus-Mono-Oblique'] =  $swBaseHrefFolder.'inc/skins/NimbusMono-Oblique.ttf';
+$rpnFontURLs['Nimbus-Mono-Bold'] =  $swBaseHrefFolder.'inc/skins/NimbusMono-Bold.ttf';
+$rpnFontURLs['Nimbus-Mono-BoldOblique'] =  $swBaseHrefFolder.'inc/skins/NimbusMono-BoldOblique.ttf';
+
+
+
+
+
 
 
 if (defined('SOFAWIKIINDEX'))

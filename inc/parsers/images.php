@@ -23,9 +23,7 @@ class swImagesParser extends swParser
 		
 		if ($wiki->wikinamespace()=='Image')
 		{
-			
-			
-			
+		
 			
 			$wiki->name = $wiki->namewithoutlanguage();
 			$file = substr($wiki->name,6);
@@ -559,7 +557,10 @@ function drawHandles()
 		{
 			
 			
+			
 			$options = explode('|',$v[1]);
+			
+			
 			
 			$val = $options[0];
 			if (isset($options[1])) $width = intval($options[1]); else $width = 0;
@@ -567,7 +568,7 @@ function drawHandles()
 			if (isset($options[3])) $crop = $options[3]; else $crop = '';
 			if (isset($options[4])) $alttag = $options[4]; else $alttag = '';
 			
-			//print_r($options);
+			
 			
 			/*
 			$val = $v[1];
@@ -578,58 +579,60 @@ function drawHandles()
 			*/
 			
 			
-			if ($height!= '' && $height > 0 && $width != '' && $width>0 && $crop !='')
+			if ($height > 0 && $width > 0 && $crop !='')
 			{
+				
 				
 				$path = swImageDownscale($val,$width,$height,$crop);
 				
+				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'" >';
 				}
 			}
-			elseif ($height!= '' && $height > 0 && $width != '' && $width>0)
+			elseif ($height > 0 && $width > 0)
 			{
 				$path = swImageDownscale($val, $width,$height);
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  >';
 				}
 			}
-			elseif ($width != '' && $width>0)
+			elseif ($width > 0)
 			{
 				$path = swImageDownscale($val, $width,0);
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'" width ="'.$width.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="'.$path.'"  >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"  width ="'.$width.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'" src="site/files/'.$val.'"   >';
 				}
 			
 			}
-			elseif ($height!= '' && $height > 0)
+			elseif ($height > 0)
 			{
 				$path = swImageDownscale($val, 0,$height);
 				
 				if ($path)
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="'.$path.'"  height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="'.$path.'"   >';
 				}
 				else
 				{
-					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="site/files/'.$val.'"  height ="'.$height.'" >';
+					$link = '<img class="embeddimage" alt="'.$alttag.'"  src="site/files/'.$val.'"   >';
 				}
 				
 			}

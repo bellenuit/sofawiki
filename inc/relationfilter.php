@@ -880,6 +880,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						unset($fieldlist[$raw]);
 					
 				}
+				
+				
 
 				$fieldist0 = $fieldlist; //makes a copy
 				
@@ -893,11 +895,9 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 					$fieldlist['_url'][] = swNameURL($record->name);
 					$fieldlist['_user'][] = $record->user;
 					$fieldlist['_timestamp'][] = $record->timestamp;
-					
-					
-					// the following cost, so we do them only if they are in the query
-					
-					
+		
+					if (array_key_exists('_link',$fields) && array_key_exists('_link',$record->internalfields)) $fieldlist['_link'] = $record->internalfields['_link'];
+
 					if (array_key_exists('_content',$fields)) $fieldlist['_content'][] = $record->content;
 					if (array_key_exists('_length',$fields)) $fieldlist['_length'][] = strlen($record->content);
 					if (array_key_exists('_short',$fields)) $fieldlist['_short'][] = substr($record->content,0,160);
@@ -1031,13 +1031,12 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						
 					}
 	
-					$fieldlist2 = array();
+					$fieldlist2 = array(); 
 					foreach($fieldlist as $key=>$v)
 					{
-						if (array_key_exists($key,$fields) or in_array($key,array('_revision','_url'))
-						or ($getAllFields and substr($key,0,1) != '_') )
+						if (array_key_exists($key,$fields) || in_array($key,array('_revision','_url'))
+						|| ($getAllFields and substr($key,0,1) != '_') )
 						{
-						
 							for($fi=0;$fi<count($v);$fi++)
 							{
 								$fieldlist2[$fi][$key] = swUnescape($v[$fi]);
@@ -1120,6 +1119,7 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 						if ($found)
 						{
 							$rows[$revision.'-'.$fi] = $fieldlist2[$fi];
+							
 						}
 						
 
@@ -1273,8 +1273,8 @@ function swRelationFilter($filter, $globals = array(), $refresh = false)
 		{
 			$dnf =explode(':',$dn);
 			$dns = swNameURL(array_shift($dnf));
-			$nss = join(PHP_EOL,$ns);
-			if (!stristr($nss,$dns) && !$user->hasright('view',$dn))
+			$nss = join(PHP_EOL,$ns);			
+			if ($dns && (!stristr($nss,$dns) && !$user->hasright('view',$dn)))
 			{
 				$key = swDbaNextKey($bdb);
 				continue;
@@ -1506,6 +1506,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				{
 					$values[$k] = $v[0];
 				}
+				unset($values0);
 				$values['day'] = substr($values['timestamp'],0,10);
 				
 				$found = true;
@@ -2248,7 +2249,7 @@ function swRelationIndexSearch($filter, $globals = array())
 		
 		$dn = @$d['_name'];
 		
-		if (!$searcheverywhere && stristr($dn,':'))
+		if (!$searcheverywhere && $dn && stristr($dn,':'))
 		{
 			$dnf =explode(':',$dn);
 			$dns = swNameURL(array_shift($dnf));

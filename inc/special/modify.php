@@ -10,7 +10,7 @@ if (trim($name)=='') $swError = swSystemMessage('empty-name',$lang);
 if (!swValidate($name2,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name2)';
 if (!swValidate($name,"\"\\<>[]{}*")) $swError = swSystemMessage('invalid-characters',$lang).' (name)';
 
-if ($wiki->status == '' && ! $user->hasright('create', $wiki->name))
+if ($wiki->status == '' && !$user->hasright('create', $wiki->name))
 {
 	$swError = swSystemMessage('no-access-error',$lang);
 }
@@ -24,19 +24,19 @@ elseif ($user->hasright('modify', $wiki->name))
 		$swError = swSystemMessage('not-modify-without-post',$lang);
 	}
 	
-	if (!isset($_POST['currentrevision']) || !is_array($_POST['currentrevision']) || !is_array($content))
+	if (!isset($_POST['currentrevision']) || !is_array($_POST['currentrevision']) || ($action != 'modifyeditor' && !is_array($content)) )
 	{
-		print_r($_POST);
 		$swError = swSystemMessage('revision-or-content-not-array',$lang);
 	}
 	else
 	{
+		
 		foreach($_POST['currentrevision'] as $l=>$rev)
 		{
 			$subname = $wiki->namewithoutlanguage();
 			if ($l != '--') $subname .= '/'.$l;
 			else {
-				if (strstr($name,'/') && count($l)==1 ) $subname = $wiki->name; // submitted single revision with language.
+				if (strstr($name,'/') && count($_POST['currentrevision'])==1 ) $subname = $wiki->name; // submitted single revision with language.
 			}
 			
 			
@@ -82,6 +82,7 @@ elseif ($user->hasright('modify', $wiki->name))
 				if ($action=='modifyeditor')
 				{		
 					swInsertFromEditorTemplate($_POST,$w2);
+					$wiki = $w2;
 					
 				}
 				else
@@ -107,6 +108,15 @@ elseif ($user->hasright('modify', $wiki->name))
 		}
 		
 		$swParsedName = $wiki->name;
+		$newurl = swNameURL($wiki->name);
+		$requesturl = $_SERVER['REQUEST_URI'];
+		
+		// rewrite simple URL on changed page
+		// needs a relocation
+		if ( $swSimpleURL )
+		{		
+			header("Location: " . $swBaseHrefFolder . $newurl);
+		}
 			
 		$wiki->lookup();
 		$wiki->parsers = $swParsers;

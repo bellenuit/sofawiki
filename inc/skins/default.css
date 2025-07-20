@@ -421,11 +421,23 @@ div.editzone form textarea
 	z-index: 0;
 }
 
+div.editzone form button
+{
+	display: block;
+	float: right;
+	margin-left: 6px;
+}
+
 div.editzone form input[type="text"]
 {
 	margin-top: 4px;
 	margin-bottom: 4px;
 	width: 100%;
+}
+
+div.editzone form input:read-only
+{
+	border: 1px solid lightgray;
 }
 
 div.editzone form input[type="password"]
@@ -730,6 +742,22 @@ video.yfrog
 	width: 640px;
 	height: 360px;
 }
+
+::part(url) {
+	text-align: right; 
+}
+
+::part(canvasurl) {
+	margin-left: 4px;
+}
+::part(pdfurl) {
+	margin-left: 4px;
+}
+
+::part(svgurl) {
+	margin-left: 4px;
+}
+
 
 
 @media all and (min-width:641px)
