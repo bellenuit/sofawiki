@@ -1833,7 +1833,6 @@ rpnOperators.findfont = function(context) {
 	    const url = rpnFontURLs[n.value];
 	    if (!url) return context.error("invalidfont");
         rpnFonts[n.value] = new rpnTTF(url);
-        console.log(url);
     }
     if (!rpnFonts[n.value]) {
         return context.error("invalidfont" );
