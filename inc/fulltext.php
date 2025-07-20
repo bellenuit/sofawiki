@@ -254,14 +254,20 @@ function swQueryFulltextURL($query, $limit=500, $star = true)
 	
 	$r = new swRelation('found, score, url');
 	
+	// escape quote
+	$query = str_replace("'","''",$query);
 	if (!trim($query)) return $r; // empty
+	
+	
+	
 	
 	$q = "SELECT '1' as found, score(offsets(pages)) as score, url FROM pages 
   WHERE pages MATCH '$query'
   ORDER BY score DESC
   LIMIT $limit";
 	
-	//echo '<p>'.$q;
+	
+	
 	$result = $swFulltextIndex->query($q);
 	
 	if (NULL == $result->fetchArray(SQLITE3_ASSOC)) 

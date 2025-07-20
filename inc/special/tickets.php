@@ -15,7 +15,7 @@ $text = (array_key_exists('text', $_REQUEST) ? $_REQUEST['text'] : '' );
 $ticketaction = (array_key_exists('ticketaction', $_REQUEST) ? $_REQUEST['ticketaction'] : '' );
  
 
-$swParsedContent = '<nowiki><a href="index.php?name=special:tickets&ticketaction=new">New Ticket</a> <a href="index.php?name=special:tickets&status=open">Open Tickets</a> <a href="index.php?name=special:tickets&assigned='.$username.'">My Tickets</a> <a href="index.php?name=special:tickets&status=resolved">Resolved tickets</a> <a href="index.php?name=special:tickets&status=closed">Closed tickets</a>	<a href="index.php?name=special:tickets&ticketaction=activity">Activity</a> <a href="index.php?name=special:tickets&ticketaction=help">Help</a></nowiki>';
+$swParsedContent = '<nowiki><a href="index.php?name=special:tickets&ticketaction=new">New Ticket</a> <a href="index.php?name=special:tickets&status=open">Open Tickets</a> <a href="index.php?name=special:tickets&assigned='.$username.'">My Tickets</a> <a href="index.php?name=special:tickets&status=resolved">Resolved tickets</a> <a href="index.php?name=special:tickets&status=closed">Closed tickets</a>	<a href="index.php?name=special:tickets&ticketaction=activity">Activity</a> <a href="index.php?name=special:tickets&ticketaction=search">Search</a> <a href="index.php?name=special:tickets&ticketaction=help">Help</a></nowiki>';
 
 $priorities = array('1 high', '2 normal', '3 low');
 
@@ -88,7 +88,7 @@ project id max';
 	
 	
 	$activity = $username.' opened ticket #'.$id.' ('.$title.') and assigned to '.$assigned.' with priority '.substr($priority,2).'.';
-
+    $day = date('Y-m-d H:i',time());
 	$w = new swWiki;
 	$w->name = 'Ticket:'.$id;
 	$w->content = $username.': '.$text.PHP_EOL.
@@ -99,7 +99,7 @@ project id max';
 	'[[creator::'.$username.']]'.PHP_EOL.
 	'[[user::'.$username.']]'.PHP_EOL.
 	'[[status::open]]'.PHP_EOL.
-	'[[activity::'.date('Y-m-d H:i',time()).' '.$activity.']]';
+	'[[activity::'.$day.' '.$activity.']]';
 	$w->insert();
 
 	$link = '<nowiki><a href="index.php?name=special:tickets&id='.$id.'">ticket #'.$id.'</a></nowiki>';
@@ -168,8 +168,7 @@ if (isset($_POST['submitcomment']))
 	if (!$activity)
 		$activity = $username.' added an empty comment';
 	
-	$activity .= '.';
-		
+	$activity .= '.';	
 	$w->content = trim($oldtext).PHP_EOL.
 	'[[id::'.$id.']]'.PHP_EOL.
 	'[[title::'.@$fields['title'][0].']]'.PHP_EOL.
@@ -386,6 +385,28 @@ order activity z');
 		$assigned = '';
 		
 }
+if ($ticketaction == 'search' || array_key_exists('submitinput', $_REQUEST)) // hack
+{
+
+		$lines = swRelationToTable('filter _namespace "ticket", activity, id
+order activity z');
+
+		
+
+
+
+		$i=0;
+		$swParsedContent .= "\n".'===Search===';
+		$swParsedContent .= '{{relation | input content
+filter _name, _content content
+extend resume = substr(_content,1,140)
+extend link =  template("ticket",substr( _name,7))
+project resume, link
+print }}';
+		$mytickets = false;
+		$assigned = '';
+		
+}
 if ($ticketaction == 'help')
 {
 	$swParsedContent .= "\n".'===Tickets help===';
@@ -475,8 +496,10 @@ if ($id)
 <div class="editheader">Ticket #'.$id.': '.array_pop($fields['title']).'</div></nowiki>';
 		
 		
+		
 		$text = $w->content;
 		$text = preg_replace('/\[\[(.*)::(.*)\]\]/', '', $text);
+		
 		$lines = $fields['activity'];
 		$swParsedContent .= '<div class="ticketcontent" style="padding-left:10px; padding-right: 10px;">';
 		$swParsedContent .= "\n".trim($text);
@@ -541,7 +564,7 @@ if ($id)
 		$swParsedContent .= "\n".'Assigned to: '.@$fields['assigned'][0];
 		$swParsedContent .= "\n".'Priority: '.substr(@$fields['priority'][0],2);
 		$swParsedContent .= "\n".'Status: '.@$fields['status'][0];
-		$swParsedContent .= "\n".'<nowiki><a href="index.php?name=Ticket:'.$id.'&action=edit" target="_blank">Edit Ticket</a> </div></div></nowiki>';
+		$swParsedContent .= "\n".'<nowiki><a href="index.php?name=Ticket:'.$id.'&action=edit" target="_blank">Edit Ticket</a> </div></nowiki>';
 		
 }
 

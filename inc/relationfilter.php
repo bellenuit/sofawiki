@@ -1332,15 +1332,21 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	global $swOvertime;
 	
 	
+	
+	
 	if (!$filter)
 		throw new swExpressionError('Logs filter empty',88);
 		
 	$fields = array();
 	$pairs = explode(',',$filter);	
 	
-	if (substr($filter, 0, 5) == 'stats') $pairs = explode(',','file '.substr($filter,6));
+	if (substr($filter, 0, 5) == 'stats')
+	{
+		$pairs = explode(',','file '.substr($filter,6));
+	}
 	
 	$filters2 = array();
+	$filters3 = array();
 	foreach($pairs as $pair)
 	{
 		$words = explode(' ',trim($pair));
@@ -1357,7 +1363,15 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		}
 		$fields[$words[0]] = $words[1];	
 		$filters2[] = $words[0].' "'.$words[1].'"';
+		$filters3[] = $words[0];
 	}
+	
+	if (substr($filter, 0, 5) == 'stats')
+	{
+		$filters3 = [ "file", "day", "time", "name", "user"];
+	}
+	
+	// echo join(", ", $filters3);
 	
 	if (substr($filter, 0, 5) == 'stats') $dd = $fields['file'];
 
@@ -1658,7 +1672,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	
 	echotime('logs build');
 	
-	$result = new swRelation('');
+	$result = new swRelation(join(", ", $filters3));
 	$key = swDbaFirstKey($bdb);
 	
 	$columns = array();
@@ -1697,7 +1711,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				
 				$ignore = false;
 				
-				if (substr($filter, 0, 5) == 'stats')
+				if (substr($filter, 0, 5) == 'stats' && array_key_exists("category", $d))
 				{
 					
 				    switch($d['category'])
@@ -1738,7 +1752,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		
 		
 		
-		$result->header = $columns;
+		// $result->header = $columns;
 		$key = swDbaNextKey($bdb); 
 		
 	}
@@ -1803,6 +1817,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	echotime('logs done');
 	
 	if (memory_get_usage()>$swMemoryLimit/10) echomem('relationfilter');
+	
 	return $result;
 }
 
