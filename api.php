@@ -20,7 +20,6 @@
  * $w->insert();
  * 
  * Note that you work with wikitext. If you want to have HTML, you should parse it.
- * You can also use the swFilter function to search in the wiki.
  */
 
 define('SOFAWIKI',true);  // all included files will check for this variable
@@ -32,7 +31,6 @@ $swStartTime = microtime(true);
 $swSimpleURL = false;
 $swLangURL = false;
 $swOldStyle = false;
-$swOldSearch = false;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
 $swRamdiskPath = 'db';
@@ -63,7 +61,7 @@ include_once $swRoot.'/inc/persistance.php';
 include_once $swRoot.'/inc/bitmap.php';
 include_once $swRoot.'/inc/bloom.php';
 include_once $swRoot.'/inc/backup.php';
-include_once $swRoot.'/inc/chart.php';
+
 
 
 
@@ -125,7 +123,6 @@ include_once $swRoot.'/inc/functions/extvalue.php';
 include_once $swRoot.'/inc/functions/sprintf.php';
 include_once $swRoot.'/inc/functions/nameurl.php';
 include_once $swRoot.'/inc/functions/prettydate.php';
-include_once $swRoot.'/inc/functions/calc.php';
 include_once $swRoot.'/inc/functions/css.php';
 include_once $swRoot.'/inc/functions/familyname.php';
 include_once $swRoot.'/inc/functions/htmltabletofields.php';

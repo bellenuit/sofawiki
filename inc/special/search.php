@@ -22,12 +22,7 @@ foreach ($swLanguages as $v)
 }
 
 
-if (@$swOldSearch)
-{
-	include "inc/special/oldsearch.php";
-	$wiki->content = $swParsedContent;
-}
-elseif (@$swCustomSearch)
+if (@$swCustomSearch)
 {
 	$query = @$_REQUEST['query'];
 	$start = @$_REQUEST['start'];
@@ -46,10 +41,6 @@ elseif (@$swCustomSearch)
 	$wiki->content = str_replace("{{limit}}",$limit,$wiki->content);
 	$wiki->content = str_replace("{{previous}}",$previous,$wiki->content);
 	$wiki->content = str_replace("{{next}}",$next,$wiki->content);
-
-	
-	
-	
 
 	$swParseSpecial = true;
 	

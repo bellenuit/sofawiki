@@ -81,11 +81,6 @@ $swDefaultLang = "{{{swlang}}}";
  $swQuickSearchinTitle = true;
  // if $swQuickSearchinTitle is set and an exact match is found, the page is returned instead of a search result
  $swQuickSearchRedirect = false;
- // limits number of searching words for long search to avoid long searches
- $swSearchWordLimit = 4;
- // index only on cron job or Special:Recent Changes. swFilter may temporarily not show latest results.
- // set this true if you have more than 15'000 revisions.
- $swLazyIndexing = false;
  // max file size for upload
  // note that the PHP environment may limit the upload size (upload_max_filesize default 2M and post_max_size) 
  $swMaxFileSize = 8000000;
