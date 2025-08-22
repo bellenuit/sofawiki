@@ -223,7 +223,7 @@ class swRecord extends swPersistance
 				return;
 			}
 
-			$s = swFileGet($file);
+			$s = file_get_contents($file);
 			
 			$this->error = ''; 
 			
@@ -351,10 +351,9 @@ class swRecord extends swPersistance
 				$this->internalfields = swGetAllFields($this->content);
 				$this->persistance = $this->currentPath();
 				$this->save();
-				swFileGet($this->currentPath()); // force cache
+				file_get_contents($this->currentPath()); // force cache
 			}
 			$s = $this->source();
-			global $swRamdiskPath;
 			$db->updateIndexes($this->revision);
 		}
 		

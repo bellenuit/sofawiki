@@ -1,4 +1,10 @@
 <?php
+	
+/**
+ *	Relation database class
+ *
+ *  Usese swRelationhandler and the relationfilter functions
+ */
 
 if (!defined("SOFAWIKI")) die("invalid acces");
 
@@ -2491,6 +2497,7 @@ class swRelation
 				return $this->validName($this->globals[$s2]);
 	
 		}
+		if (strlen($s)>30) $s = substr($s,0,30);
 		if (strlen($s)< 31 and preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/',$s))
 			return $s; 
 		else

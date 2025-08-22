@@ -24,9 +24,10 @@ function swOpenMonogram()
 	$path = $swRoot.'/site/indexes/monogram.db';
 
 	if (file_exists($path))
-		$swMonogramIndex = swDbaOpen($path, 'wdt'); 
+		$swMonogramIndex = new swDba($path,'wdt');
 	else
-		$swMonogramIndex = swDbaOpen($path, 'c');	
+		$swMonogramIndex = new swDba($path,'c');
+
 	if ($swMonogramIndex)
 	{
 		$swMonogramIndexWritable = true;
@@ -34,7 +35,7 @@ function swOpenMonogram()
 	else
 	{
 		// try read only
-		$swMonogramIndex = swDbaOpen($path, 'rdt');
+		$swMonogramIndex = new swDba($path,'rdt');
 		
 		$swMonogramIndexWritable = false;
 		
@@ -84,7 +85,7 @@ function swIndexMonogram($numberofrevisions = 10000, $continue = false)
 		return;
 	}
 // return;
-	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
+	if ($s = $swMonogramIndex->fetch('_checkedbitmap'))
 	{	
 		//echo $s;
 		$checkedbitmap = unserialize($s);
@@ -189,7 +190,7 @@ function swIndexMonogram($numberofrevisions = 10000, $continue = false)
 // 	return;
 	foreach($bitmaps as $k=>$bm)
 	{
-		if ($s = swDbaFetch($k,$swMonogramIndex))
+		if ($s = $swMonogramIndex->fetch($k))
 		{
 			$bm0 = @unserialize($s);
 		}
@@ -200,13 +201,13 @@ function swIndexMonogram($numberofrevisions = 10000, $continue = false)
 		$bm = $bm->orop($bm0);
 		
 		$bm->hexit(); // save for db
-		swDbaReplace($k,serialize($bm),$swMonogramIndex);
+		$swMonogramIndex->replace($k,serialize($bm));
 	}
 // 	return;
 	$checkedbitmap->hexit(); // save for db
-	swDbaReplace('_checkedbitmap',serialize($checkedbitmap),$swMonogramIndex);
+	$swMonogramIndex->replace('_checkedbitmap',serialize($checkedbitmap));
 		
-	if (! swDbaSync($swMonogramIndex))
+	if (! $swMonogramIndex->sync())
 	{
 		echotime('dbasync failed');
 		// rollback
@@ -239,7 +240,7 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	//echo "($field) ($term)";
 	
 	
-	if ($s = swDbaFetch('_checkedbitmap',$swMonogramIndex))
+	if ($s = $swMonogramIndex->fetch('_checkedbitmap'))
 	{
 		$checkedbitmap = @unserialize($s);
 	}
@@ -262,7 +263,7 @@ function swGetMonogramBitmapFromTerm($field, $term)
 	
 	if ($term == '*' || !$term)
 	{
-		if ($s = swDbaFetch($field.' *',$swMonogramIndex))
+		if ($s = $swMonogramIndex->fetch($field.' *'))
 			{
 				$bc = unserialize($s);
 				$bc = $bc->orop($notchecked);
@@ -286,7 +287,7 @@ function swGetMonogramBitmapFromTerm($field, $term)
 		{
 			$c = substr($vu,$ci,2);
 			
-			if ($s = swDbaFetch($field.' '.$c,$swMonogramIndex))
+			if ($s = $swMonogramIndex->fetch($field.' '.$c))
 			{
 				$bc = unserialize($s);
 				//echo $bc->countbits().' ';
@@ -321,7 +322,7 @@ function swMonogramFields()
 
 	
 	$list = array();
- 	$key = swDbaFirstKey($swMonogramIndex);
+ 	$key = $swMonogramIndex->firstKey();
  	do 
  	{
 		 $ks = explode(' ',$key);
@@ -332,7 +333,7 @@ function swMonogramFields()
 			 $list[$ks[0]][] = $ks[1];
 		 }	
  	}
- 	while ($key = swDbaNextKey($swMonogramIndex));
+ 	while ($key = $swMonogramIndex->nextKey());
  	
 
  	return $list;

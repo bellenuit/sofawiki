@@ -102,6 +102,7 @@ class swTemplateParser extends swParser
 				if (array_key_exists($vheader,$this->functions)) // template is function
 				{
 					//echo "fn ; ";
+// 					echo $vheader;
 					
 					$f = $this->functions[$vheader];
 					$c = $f->dowork($vals);

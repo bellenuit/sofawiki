@@ -33,17 +33,22 @@ if (defined('CRON'))
 
 if ($m)
 {
-	$q = 
-	"
+	echotime('metrics m '.$m);
 	
-	set m = ".'"'. $m .'"'."
+	
+	$q = 
+	'
+	
+	set m = "'. $m .'"
+	 
 	
 	logs file
 	update file = substr(file,0,4)
 	order file z
-	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
+update file = "<nowiki><a href=\'index.php?name=special:metrics&year=".file."\'>".file."</a> </nowiki>"
+
 	project file concat
-	update file_concat = replace(file_concat,\"::\",\" \")
+	update file_concat = replace(file_concat,"::"," ")
 	rename file_concat Year
 	
 	print raw
@@ -56,9 +61,10 @@ if ($m)
 	update file = substr(file,0,7)
 	select file regex y
 	order file z
-	update file = \"<nowiki><a href='index.php?name=special:metrics&month=\".file.\"'>\".file.\"</a></nowiki>\"
+update file = "<nowiki><a href=\'index.php?name=special:metrics&month=".file."\'>".file."</a> </nowiki>"
+
 	project file concat
-	update file_concat = replace(file_concat,\"::\",\" \")
+	update file_concat = replace(file_concat,"::"," ")
 	rename file_concat Month
 	echo _space
 	print raw
@@ -66,13 +72,13 @@ if ($m)
 	
 	
 	
-	echo \" \"
-	echo \"'''\".m.\"'''\"
+	echo " "
+	echo "\'\'\'".m."\'\'\'"
 
 	logs stats m
 	// print
 	dup
-	select category == \"stat\" and file == m
+	select category == "stat" and file == m
 	project file, key, value
 	deserialize
 	// print
@@ -80,50 +86,52 @@ if ($m)
 	print
 	pop
 	dup
-	select category == \"stat\"
+	select category == "stat"
 	project file, key, value
 	deserialize
 	project day, hits, totaltime, visited_pages, unique_users
 	// print
-	write \"logs-\".m.\".csv\"
+	write "logs-".m.".csv"
 	select day !== m
 	project day, hits, visited_pages, unique_users
 	order day a
-	delegate \"barchart -tensions 0.3\"
+	delegate "barchart -tensions 0.3"
 	// print
 	
 	pop
 	dup
-	select category == \"name\"
+	select category == "name"
 	rename key name, value count
 	project name, count
-	order count 9
+// 	order count 9
 	limit 1 1000
 	print grid 20
-	write \"logs-names-\".m.\".csv\"
+	write "logs-names-".m.".csv"
 	pop
-	select category == \"user\"
+	select category == "user"
 	rename key user, value count
 	project user, count
-	order count 9
+// 	order count 9
 	limit 1 1000
 	print grid 20
-	write \"logs-users-\".m.\".csv\"
+	write "logs-users-".m.".csv"
 	
-	";
+	';
 }
 elseif ($y)
 {
+    echotime('metrics y '.$y);
+	
 	$q = 
-	"
-	set y =  \"".$y."\"
+	'
+	set y =  "'.$y.'"
 	
 	logs file
 	update file = substr(file,0,4)
 	order file z
-	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
+	update file = "<nowiki><a href=\'index.php?name=special:metrics&year=".file."\'>".file."</a> </nowiki>"
 	project file concat
-	update file_concat = replace(file_concat,\"::\",\" \")
+	update file_concat = replace(file_concat,"::"," ")
 	rename file_concat Year
 	
 	print raw
@@ -132,23 +140,23 @@ elseif ($y)
 	select file regex y
 	update file = substr(file,0,7)
 	order file z
-	update file = \"<nowiki><a href='index.php?name=special:metrics&month=\".file.\"'>\".file.\"</a></nowiki>\"
+	update file = "<nowiki><a href=\'index.php?name=special:metrics&month=".file."\'>".file."</a> </nowiki>"
 	project file concat
-	update file_concat = replace(file_concat,\"::\",\" \")
+	update file_concat = replace(file_concat,"::"," ")
 	rename file_concat Month
 	
-	echo \" \"
+	echo " "
 	print raw
 	
 	
-	echo \" \"
-	echo \"'''\".y.\"'''\"
+	echo " "
+	echo "\'\'\'\".y."\'\'\'"
 	
 	
 	relation day,hits,totaltime,visited_pages,unique_users
 	set i = 1
 	while i < 13
-	set file = \"logs-\".y.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	union
@@ -170,7 +178,7 @@ elseif ($y)
 	pop	
 	
 	project drop totaltime
-	delegate \"barchart -tension 0.3\"
+	delegate "barchart -tension 0.3"
 	pop
 	update totaltime = round(totaltime)
 	dup
@@ -180,7 +188,7 @@ elseif ($y)
 	relation name, count, month
 	set i = 1
 	while i < 13
-	set file = \"logs-names-\".y.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-names-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -197,7 +205,7 @@ elseif ($y)
 	relation user, count, month
 	set i = 1
 	while i < 13
-	set file = \"logs-users-\".y.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-users-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -211,19 +219,21 @@ elseif ($y)
 	limit 1 1000
 	print grid 20
 	
-	";
+	';
 }
 else
 {
+	
+	echotime('metrics else');
 	$q = 
-	"
+	'
 	
 	logs file
 	update file = substr(file,0,4)
 	order file z
-	update file = \"<nowiki><a href='index.php?name=special:metrics&year=\".file.\"'>\".file.\"</a></nowiki>\"
+	update file = "<nowiki><a href=\'index.php?name=special:metrics&year=".$file."\'>".$file."</a> </nowiki>" ;
 	project file concat
-	update file_concat = replace(file_concat,\"::\",\" \")
+	update file_concat = replace(file_concat,"::"," ")
 	rename file_concat Year
 	
 	print raw
@@ -234,7 +244,7 @@ else
 	set year = ".date("Y",time())." - k
 	set i = 1
 	while i < 13
-	set file = \"logs-\".year.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	union
@@ -249,14 +259,14 @@ else
 	rename hits_sum hits, totaltime_sum totaltime, name_count_sum visited_pages, user_count_sum unique_users
 	dup
 	project drop totaltime
-	delegate \"barchart -tension 0.3\"
+	delegate "barchart -tension 0.3"
 	pop
-	update totaltime = format(totaltime,\"%0d\")
+	update totaltime = format(totaltime,"%0d")
 	dup
 	project hits sum, totaltime sum, visited_pages sum, unique_users sum
 	
 	rename hits_sum hits, totaltime_sum totaltime, visited_pages_sum visited_pages, unique_users_sum unique_users
-	update totaltime = format(totaltime,\"%0d\")
+	update totaltime = format(totaltime,"%0d")
 	print
 	pop
 	print
@@ -268,7 +278,7 @@ else
 	
 	set i = 1
 	while i < 13
-	set file = \"logs-pages-\".year.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-pages-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -291,7 +301,7 @@ else
 	set year = ".date("Y",time())." - k
 	set i = 1
 	while i < 13
-	set file = \"logs-users-\".year.\"-\".substr(\"0\".i,-2,2).\".csv\" 
+	set file = "logs-users-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -307,10 +317,10 @@ else
 	limit 1 1000
 	print grid 20
 	
-	";
+	';
 }
 
-
+// echotime($q);
 $lh = new swRelationLineHandler;
 $swParsedContent = '<nowiki><p></nowiki>'.$lh->run($q);
 $swParseSpecial = true;

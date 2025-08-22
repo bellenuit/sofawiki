@@ -81,13 +81,23 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 	{
 		$t = file_get_contents($file);
 		$ts = explode(']]',$t);
-		natsort($ts);
-		$ts = array_filter($ts); // remove empry
-		$swParsedContent .= "<p>Denied: <br><b>".join(']]<br>',$ts)."]]</b>";
+		$ts2 = [];
+		foreach($ts as $v) {
+			$fs = explode('::',$v);
+			$origin = new DateTimeImmutable($fs[1]);
+			$target = new DateTimeImmutable(date('Y-m-d',time()));
+            $interval = $target->diff($origin);
+            if ($interval->days < 32)
+               $ts2 []= $v;
+		}
+		natsort($ts2);
+		$ts2 = array_filter($ts2); // remove empry
+		$swParsedContent .= "<p>Denied: <br><b>".join(']]<br>',$ts2)."]]</b>";
 	}
 	
 	
 	echotime('read deny logs');
+	echotime($datestart);
 	foreach($files as $file)
 	{
 		$file = str_replace($root,"",$file);
@@ -96,6 +106,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		
 		if ($file>=$datestart && $file<=$dateend)
 		{
+// 			echotime($file);
 			$handle = @fopen($root.$file.'.txt', 'r');
 			if ($handle)
 			 	while (($line = fgets($handle, 4096)) !== false)

@@ -25,7 +25,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '4.0.0';   
+$swVersion = '4.0.1';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -33,8 +33,6 @@ $swLangURL = false;
 $swOldStyle = false;
 $swLogAnonymizedIPNumber = true;
 $swEditZoneColor = true;
-$swRamdiskPath = 'db';
-$swDbaHandler = 'sqlite3'; // small sites: persistance. bigger site: sqlite3. alternative if sqlite3 not present: db4.
 $swWikiTextPre = false;
 
 
@@ -277,8 +275,6 @@ else
 	include_once $swRoot.'/inc/configuration-install.php';
 }
 
-
-include_once $swRoot.'/inc/ramdisk.php';
 
 $rpnFontURLs['CMUSerif-Roman'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-Roman.ttf';
 $rpnFontURLs['CMUSerif-Italic'] =  $swBaseHrefFolder.'inc/skins/CMUSerif-Italic.ttf';

@@ -77,9 +77,6 @@ function swCron()
 			  		  	return "cron metrics"; 
 			  		  	break; 
 			  		  	
-			case 8: 	echotime('cron IndexRamDiskDB'); 
-			  		  	swIndexRamDiskDB();	
-			  		  	break;
 			  		  
 			default:  	echotime( 'cron overtime');
 						swRelationFilterOvertimeRetake();
@@ -118,21 +115,21 @@ function swRelationFilterOvertimeRetake()
 			
 			if ($i>250) return; // only checks the 250 most recent
 			
-			$bdb = swDbaOpen($file, 'wdt'); // force write. don't open if used and therefore blocked
+			$bdb = new swDba($file,'wdt');	; // force write. don't open if used and therefore blocked
 			if (!$bdb) continue;
 			
-			$s = swDbaFetch('_overtime',$bdb);
+			$s = $bdb->fetch('_overtime');
 			$overtime = false;					
 			if ($s == 'b:1;' ) $overtime  = true; // unserialize does not work on a simple boolean, we hack	
 			
 			if (!$overtime)
 			{ 
-				swDbaClose($bdb);
+				$bdb->close();
 				continue;
 			}
 			
-			$filter = swDbaFetch('_filter',$bdb);
-			swDbaClose($bdb); 
+			$filter = $bdb->fetch('_filter');
+			$bdb->close(); 
 			if (!$filter) continue;
 			
 			echotime( 'cron overtime filter '.$filter );

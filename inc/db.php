@@ -71,12 +71,9 @@ class swDB extends swPersistance //extend may be obsolete
 	{
 		if (defined('SOFAWIKICLI')) return;
 		global $swRoot; 
-		global $swRamdiskPath;
 		global $swOvertime;
 
 // 		echotime('init '.$force);
-		
-		if (isset($swRamdiskPath) && $swRamdiskPath != '') swInitRamdisk();
 
 		if ($force)
 		{
@@ -165,11 +162,11 @@ class swDB extends swPersistance //extend may be obsolete
 		$urldbpath = $this->pathbase.'indexes/urls.db';
 		if (file_exists($urldbpath))
 		{
-			$this->urldb = swDbaOpen($urldbpath, 'wdt');
+			$this->urldb = new swDba($urldbpath,'wdt');
 		}
 		else
 		{
-			$this->urldb = swDbaOpen($urldbpath, 'c');	
+			$this->urldb = new swDba($urldbpath,'c');	
 		}
 
 		$lastwrite = $this->getLastRevisionFolderItem($force || $this->lastrevision < 200);
@@ -328,7 +325,7 @@ class swDB extends swPersistance //extend may be obsolete
 		}
 		
 		
-		if (!swDbaSync($this->urldb))
+		if (!$this->urldb->sync())
 		{
 			echotime('overtime INDEX sync errror');
 			$swOvertime = true;
@@ -348,7 +345,7 @@ class swDB extends swPersistance //extend may be obsolete
 		
 		if ($this->indexedbitmap->getbit($rev)) return true;  // do not twice in a request, cheaper than swDbaExists
 		
-		if (swDbaExists(' '.$rev,$this->urldb))
+		if ($this->urldb->exists(' '.$rev))
 		{ 
 			$this->indexedbitmap->setbit($rev);
 			return true;
@@ -371,9 +368,9 @@ class swDB extends swPersistance //extend may be obsolete
 		$url = swNameURL($r->name);		
 		$status = substr($r->status,0,1);
 
-		if (swDbaExists($url,$this->urldb))
+		if ($this->urldb->exists($url))
 		{
-			$line = swDbaFetch($url,$this->urldb);
+			$line = $this->urldb->fetch($url);
 			if ($line)
 			{
 				$revs = explode(' ',$line);
@@ -424,8 +421,8 @@ class swDB extends swPersistance //extend may be obsolete
 					
 // 					echotime('replace start', true);
 					
-					swDbaReplace($url, $line, $this->urldb);  // url index
-					swDbaReplace(' '.$rev, $url, $this->urldb);  // inverse index starts with space (possible because url cannot start with space)
+					$this->urldb->replace($url,$line);  // url index
+					$this->urldb->replace(' '.$rev, $url); // inverse index starts with space (possible because url cannot start with space)
 				}
 			}
 		}
@@ -434,8 +431,8 @@ class swDB extends swPersistance //extend may be obsolete
 			$line = $status.' '.$rev;
 			
 // 			echotime('replace2 start', true); 
-			swDbaReplace($url,$line, $this->urldb);
-			swDbaReplace(' '.$rev, $url, $this->urldb);
+			$this->urldb->replace($url,$line);
+			$this->urldb->replace(' '.$rev, $url);
 // 			echotime('replace2 end', true);
 		
 			if ($status == 'p') $this->protectedbitmap->setbit($rev);
@@ -466,10 +463,10 @@ class swDB extends swPersistance //extend may be obsolete
 		$this->protectedbitmap->init($this->lastrevision);
 		$this->fulltextbitmap->init($this->lastrevision);
 			
-		$key = swDbaFirstKey($this->urldb);		
+		$key = $this->urldb->firstKey();		
 		do 
 		{
-		  $line = swDbaFetch($key,$this->urldb);
+		  $line = $this->urldb->fetch($key);
 		  
 		  if (substr($line,0,1)==' ') continue; // is revision key
 		  
@@ -503,7 +500,7 @@ class swDB extends swPersistance //extend may be obsolete
 		  }
 	
 		  	
-		} while ($key = swDbaNextKey($this->urldb));
+		} while ($key = $this->urldb->nextKey());
 			
 		$this->touched = true;
 			
@@ -547,9 +544,9 @@ function swGetCurrentRevisionFromName($name)
 	
 	global $db;
 	
-	if (swDbaExists($url,$db->urldb))
+	if ($db->urldb->exists($url))
 	{
-		$s = swDbaFetch($url,$db->urldb);
+		$s = $db->urldb->fetch($url);
 		$revs = explode(' ',$s);
 		$status = $revs[0];
 		$current = $revs[1];
@@ -585,9 +582,9 @@ function swGetLastRevisionFromName($name)
 	
 	global $db;
 	
-	if (swDbaExists($url,$db->urldb))
+	if ($db->urldb->exists($url))
 	{
-		$s = swDbaFetch($url,$db->urldb);
+		$s = $db->urldb->fetch($url);
 		$revs = explode(' ',$s);
 		$status = $revs[0];
 		$current = $revs[1];
@@ -623,9 +620,9 @@ function swGetAllRevisionsFromName($name)
 	$revs = array();	
 	global $db;
 	
-	if (swDbaExists($url,$db->urldb))
+	if ($db->urldb->exists($url))
 	{
-		$s = swDbaFetch($url,$db->urldb);
+		$s = $db->urldb->fetch($url);
 		$revs = explode(' ',$s);
 		$status = array_shift($revs);
 		rsort($revs,SORT_NUMERIC);

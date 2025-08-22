@@ -164,7 +164,9 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 			if ($handle)
 			 	while (($line = fgets($handle, 4096)) !== false)
 			{
-				
+                // ignore multi lines
+                $test = trim($line);
+                if (substr($test,0,2) != "[[" || substr($test,-2,2) != "]]" ) continue;
 				
 				$found=false;
 				if ($regex)
@@ -270,6 +272,7 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		}
 	} 
 	echotime('analyse logs');
+// 	print_r($rawlines) ;
 	arsort($rawlines); 
 	if ($hits>0) 
 		$averagetime = sprintf("%04d",$totaltime/$hits);

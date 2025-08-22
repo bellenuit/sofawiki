@@ -18,7 +18,8 @@ $deleted = $db->deletedbitmap->toarray();
 
 $urldbpath = $db->pathbase.'indexes/urls.db';
 if (file_exists($urldbpath))
-		$urldb = swDbaOpen($urldbpath, 'rdt');
+		$urldb = new swDba($urldbpath,'rdt');
+
 if (!@$urldb)
 {
 	echotime('urldb failed');
@@ -26,14 +27,14 @@ if (!@$urldb)
 else
 {
 	$rel = new swRelation('_name');
-	$key = swDbaFirstKey($urldb);
+	$key = $urldb->firstKey();
 	$dw = new swWiki;
 	do 
 	{
 	  
 	  if (substr($key,0,1) != ' ')
 	  {
-		  $value = swDbaFetch($key,$urldb);
+		  $value = $urldb->fetch($key);
 		  if (!$value) continue;
 		  if (substr($value,0,1) == 'd')
 		  {
@@ -42,7 +43,7 @@ else
 		  }
 	  }
 		
-	} while ($key = swDbaNextKey($urldb));
+	} while ($key = $urldb->nextKey());
 	
 	$rel->label('_name ""');
 	$rel->update('_name = "<nowiki><a href="._quote."index.php?name="._name."&action=history"._quote.">"._name."</a></nowiki>" ');

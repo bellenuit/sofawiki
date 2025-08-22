@@ -5,7 +5,7 @@
  *	
  *  @author Matthias Bürcher 2010 matti@belle-nuit.com
  *  @link https://www.sofawiki.com
- *	@version 3.8.5
+ *	@version 4.0.1
  *  
  */
 
@@ -330,9 +330,14 @@ project _name';
 			swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
 		// log bots who are asking often for login without password
-		elseif (@$swStrongDeny>0 && $action == 'login')
+		elseif (isset($swStrongDeny) && $swStrongDeny>0 && $action == 'login')
 		{
 			if (rand(0,100) < $swStrongDeny) swLogWrongPassword($_SERVER['REMOTE_ADDR']);
+		}
+		
+		if(isset($swRateLimit) && $swRateLimit>0 && isset($swDenyCount) && $swDenyCount > 0) 
+		{
+			if (rand(0,100) < 100 * $swDenyCount / $swRateLimit) swLogWrongPassword($_SERVER['REMOTE_ADDR']);
 		}
 		
 		
@@ -1117,13 +1122,14 @@ $endtime = microtime(true);
 if ($endtime<$swStartTime) $endtime = $swStartTime;
 $usedtime = sprintf('%04d',($endtime-$swStartTime)*1000);
 
+$query = substr(str_replace('\n',' ', $query),0,64);
+$name = substr(str_replace('\n',' ', $name),0,64);
+
 if (function_exists('swLogHook')) 
 {
 	swLogHook($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 	
 }
-if (!isset($swOvertime))
-	swUpdateRamDiskDB();
 
 swLog($username,$name,$action,$query,$lang,$referer,$usedtime,$swError,'','','');
 

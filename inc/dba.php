@@ -20,6 +20,7 @@ define("TAB", "\t");
  *  @param $handler 'db', 'db4', 'sqlite3'
  */
 
+/*
 function swDbaOpen($file, $mode, $handler='')
 {
 	global $swDbaHandler;
@@ -59,7 +60,7 @@ function swDbaOpen($file, $mode, $handler='')
  * 
  *  @param $db
  */
-
+/*
 function swDbaFirstKey($db)
 {
 	global $swDbaHandler;
@@ -78,7 +79,7 @@ function swDbaFirstKey($db)
  * 
  *  @param $db
  */
-
+/*
 function swDbaNextKey($db)
 {
 	global $swDbaHandler;
@@ -98,7 +99,7 @@ function swDbaNextKey($db)
  *  @param $key
  *  @param $db
  */
-
+/*
 function swDbaExists($key,$db)
 {
 	global $swDbaHandler;
@@ -118,7 +119,7 @@ function swDbaExists($key,$db)
  *  @param $key
  *  @param $db
  */
-
+/*
 function swDbaFetch($key,$db)
 {
 	global $swDbaHandler;
@@ -149,7 +150,7 @@ function swDbaFetch($key,$db)
  *  @param $value
  *  @param $db
  */
-
+/*
 function swDbaReplace($key,$value,$db)
 {
 	global $swDbaHandler;
@@ -179,7 +180,7 @@ function swDbaReplace($key,$value,$db)
  *  Before sync, new rows live only in the journal.
  *  @param $db
  */
-
+/*
 function swDbaSync($db)
 {
 	global $swDbaHandler;
@@ -210,7 +211,7 @@ function swDbaSync($db)
  *  @param $db
  */
 
-
+/*
 function swDbaDelete($key,$db)
 {
 	global $swDbaHandler;
@@ -239,7 +240,7 @@ function swDbaDelete($key,$db)
  * 
  *  @param $db
  */
-
+/*
 function swDbaClose($db)
 {
 	global $swDbaHandler;
@@ -270,7 +271,7 @@ function swDbaClose($db)
  * 
  *  @param $db
  */
-
+/*
 function swDbaCount($db)
 {
 	global $swDbaHandler;

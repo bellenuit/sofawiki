@@ -39,7 +39,7 @@ foreach($files as $file)
 	
 	if (substr($file,0,1) != '.')
 	{
-		$s = swFileGet($file);
+		$s = file_get_contents($file);
 		$w = new swWiki;
 		$w->error = ''; 
 		

@@ -25,8 +25,6 @@ $swParsedContent = '
 <a href="index.php?name=special:indexes&index=protectedbitmap">protectedbitmap</a>
 <br><a href="index.php?name=special:indexes&index=urls">urls.db</a>
 ';
-if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-$swParsedContent .= ' <a href="index.php?name=special:indexes&index=records">records.db</a>';
 $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloom</a>
 <a href="index.php?name=special:indexes&index=monogram">monogram.db</a>
 <a href="index.php?name=special:indexes&index=fields">fields.db</a>
@@ -37,10 +35,8 @@ $swParsedContent .=  ' <a href="index.php?name=special:indexes&index=bloom">bloo
 <br>lastindex = '.$db->lastrevision .' ('.$db->indexedbitmap->countbits().')
 <br>current = '. $db->currentbitmap->countbits().'
 <br>bloom = '. $db->bloombitmap->countbits().'
-<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a>';
-if (isset($swRamdiskPath) && $swRamdiskPath=='db')
-// $swParsedContent .= ' <a href="index.php?name=special:indexes&index=indexdb">Index DB</a>';
-$swParsedContent .=  ' <a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
+<br><a href="index.php?name=special:indexes&index=rebuildindex">Rebuild Index</a> 
+<a href="index.php?name=special:indexes&index=indexbloom">Index Bloom</a> 
  <a href="index.php?name=special:indexes&index=indexmonogram">Index Monogram</a> 
 <a href="index.php?name=special:indexes&index=indexfields">Index Fields</a> 
 <a href="index.php?name=special:indexes&index=docron">Do Cron</a>';
@@ -66,7 +62,7 @@ You do not need bloom, monogram if you do not use filter or query. You do not ne
 $done = '';
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfields']))
 	{
-		swUnlink($swRoot.'/site/indexes/fields.db');
+		unlink($swRoot.'/site/indexes/fields.db');
 		//$swOvertime = true;
 		
 	}
@@ -74,7 +70,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	{
 		
 		
-		swUnlink($swRoot.'/site/indexes/fulltext.db');
+		unlink($swRoot.'/site/indexes/fulltext.db');
 		
 		
 		
@@ -83,14 +79,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 
 
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetcurrent']))
-	{
-		// delete all in ramdisk
-		$files = glob($swRamdiskPath.'*.txt');
-		if (is_array($files))
-			foreach($files as $file) { unlink($file); }
-
-		swUnlink($swRoot.'/site/indexes/records.db');
-		
+	{		
 		// delete all current
 		$path =$swRoot.'/site/current';
 		$dir = opendir($path);
@@ -99,7 +88,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
     	{
 			if($file != '..' && $file != '.')
 			{
-				swUnlink($swRoot.'/site/current/'.$file);
+				unlink($swRoot.'/site/current/'.$file);
 				$i++;
 			}
 		}
@@ -118,7 +107,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
     	{
 			if($file != '..' && $file != '.')
 			{
-				swUnlink($swRoot.'/site/queries/'.$file);
+				unlink($swRoot.'/site/queries/'.$file);
 			}
 		}
 		$done .= '<p>Deleted queries';
@@ -134,7 +123,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
     	{
 			if($file != '..' && $file != '.' && $file != '.htaccess')
 			{
-				swUnlink($swRoot.'/site/cache/'.$file);
+				unlink($swRoot.'/site/cache/'.$file);
 			}
 		}
 		$done .= '<p>Deleted caches';
@@ -143,15 +132,15 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
 	{
 	 	
-	 	swUnlink($swRoot.'/site/indexes/bloom.raw');
-	 	swUnlink($swRoot.'/site/indexes/bloombitmap.txt');
+	 	unlink($swRoot.'/site/indexes/bloom.raw');
+	 	unlink($swRoot.'/site/indexes/bloombitmap.txt');
 		
 		swClearBloom();	
 		
-		swUnlink($swRoot.'/site/indexes/bloom.raw');
-	 	swUnlink($swRoot.'/site/indexes/bloombitmap.txt');
+		unlink($swRoot.'/site/indexes/bloom.raw');
+	 	unlink($swRoot.'/site/indexes/bloombitmap.txt');
 	 	
-	 	swUnlink($swRoot.'/site/indexes/monogram.db');
+	 	unlink($swRoot.'/site/indexes/monogram.db');
 	
 		$done .= '<p>Deleted bloom and monogram';
 		
@@ -163,10 +152,10 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	{
 
 		// delete index folder
-		swUnlink($swRoot.'/site/indexes/indexedbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/currentbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/deletedbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/protectedbitmap.txt');
+		unlink($swRoot.'/site/indexes/indexedbitmap.txt');
+		unlink($swRoot.'/site/indexes/currentbitmap.txt');
+		unlink($swRoot.'/site/indexes/deletedbitmap.txt');
+		unlink($swRoot.'/site/indexes/protectedbitmap.txt');
 
 		$db->indexedbitmap = new swBitmap;
 		$db->currentbitmap = new swBitmap;
@@ -183,20 +172,17 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	{
 
 		// delete index folder
-		swUnlink($swRoot.'/site/indexes/indexedbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/currentbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/deletedbitmap.txt');
-		swUnlink($swRoot.'/site/indexes/protectedbitmap.txt');
+		unlink($swRoot.'/site/indexes/indexedbitmap.txt');
+		unlink($swRoot.'/site/indexes/currentbitmap.txt');
+		unlink($swRoot.'/site/indexes/deletedbitmap.txt');
+		unlink($swRoot.'/site/indexes/protectedbitmap.txt');
 
 		$db->indexedbitmap = new swBitmap;
 		$db->currentbitmap = new swBitmap;
 		$db->deletedbitmap = new swBitmap;
 		$db->protectedbitmap = new swBitmap;
-		swUnlink($swRoot.'/site/indexes/urls.txt');
-		//swUnlink($swRoot.'/site/indexes/short.txt');
-		//swUnlink($swRoot.'/site/indexes/shortbitmap.txt');
-		
-		swUnlink($swRoot.'/site/indexes/urls.db');
+		unlink($swRoot.'/site/indexes/urls.txt');
+		unlink($swRoot.'/site/indexes/urls.db');
 	
 		//$done .= '<p>Deleted urls, short and bitmaps';
 		$done .= '<p>Deleted urls and bitmaps';
@@ -257,14 +243,14 @@ switch($_REQUEST['index'])
 	case 'urls': 		$swParsedContent .= '<h3>urls.db</h3>';
 						$swParsedContent .= '<p>Contains a list of the URL-name and status of each revision.';
 	
-						$key = swDbaFirstKey($db->urldb);	
+						$key = $db->urldb->firstKey();	
 						$urlcount = 0;
 						$revisioncount = 0;
 						do 
 						{
 							if (substr($key,0,1)==' ') $revisioncount++; else $urlcount++;
 								
-						} while ($key = swDbaNextKey($db->urldb));
+						} while ($key = $db->urldb->nextKey());
 						
 						
 						$swParsedContent .= '<p>'.$urlcount.' urls (includes deleted)';
@@ -280,7 +266,7 @@ switch($_REQUEST['index'])
 						
 						if (@$_REQUEST['url'])
 						{
-							$line = swDbaFetch(swNameURL($_REQUEST['url']),$db->urldb);
+							$line = $db->urldb->fetch(swNameURL($_REQUEST['url']));
 							$swParsedContent .= '<p>'.$line.'<p>';
 							
 							$revs = explode(' ',$line);
@@ -304,56 +290,7 @@ switch($_REQUEST['index'])
 						  break;
 
 							break;*/
-	case 'indexdb' :  
-							swIndexRamDiskDB();	
-							
-								
-							// no break;	
-											
-
-	case 'records': 		$swParsedContent .= '<h3>records.db</h3>';
-							$swParsedContent .= '<p>Contains a copy of each record in one file for faster access when scanning revisions with filter or query (1ms/revision vs 20ms/revision with file access).';
-							
-						 // swInitRamdisk();
-						  //swDBA_close($swRamDiskDB);
-						  //$swRamDiskDB =_open($swRamDiskDBpath, 'rdt', 'db4');
-						 // $swRamDiskDB->readIndex();
-							// echotime(print_r($swRamDiskDB,true));
-						  if (isset($swRamDiskDB) && $swRamDiskDB)
-						  {
-							  
-							  $counter = 0;
-							  $bm = new swBitmap($db->lastrevision);
-							  $k = swDbaFirstKey($swRamDiskDB);
-							  if ($k === FALSE)
-							  	echotime($k);
-							  else
-							  	$counter = 1;
-							  	
-							  do
-							  {
-								  $k2 = substr($k,0,-4);
-								  $bm->setbit(intval($k2));
-								  $counter++;
-								  
-								  $k = swDbaNextKey($swRamDiskDB);
-								  
-								 // echotime('k' .$k);
-								  
-							  } while ($k !== FALSE && $k != '' && $k != 0);
-
-							  $swParsedContent .= '<p>length: '.$counter;
-							  $swParsedContent .= '<br>'.floor(filesize($swRoot.'/site/indexes/records.db')/1024/1024).' MB';
-							  $swParsedContent .= '<p>'.bitmap2canvas($bm, 0,rand(0,1000));
-							  $swParsedContent .= '<p>'.join(' ',$bm->toarray());
-							  
-							 
-							  
-						  }
-						  else
-						  	$swParsedContent .= '<p>not available';
-						  break;
-	
+												
 
 
 	case 'bloom':			 
@@ -506,7 +443,7 @@ project revision';
 						 	else
 						 	{
 							 	$list = array();
-							 	$key = swDbaFirstKey($swMonogramIndex);
+							 	$key = $swMonogramIndex->firstKey();
 							 	do 
 							 	{
 									 $ks = explode(' ',$key);
@@ -517,7 +454,7 @@ project revision';
 										 $list[$ks[0]][] = $ks[1];
 									 }	
 							 	}
-							 	while ($key = swDbaNextKey($swMonogramIndex));
+							 	while ($key = $swMonogramIndex->nextKey());
 							 	
 								foreach($list as $k=>$vs)
 							 	{
@@ -584,7 +521,7 @@ project revision';
 								$path = $_REQUEST['q'];
 								if (!stristr($path,'.db'))
 									$path = $path.'.txt';
-								swUnlink($querypath.$path);
+								unlink($querypath.$path);
 								$swParsedContent .= 'reset '.$path;
 								
 								break;
@@ -594,9 +531,9 @@ project revision';
 							{
 								$path = $querypath.$_REQUEST['q'];
 								$results = array();
-								if ($bdb = swDbaOpen($path, 'wdt'))
+								if ($bdb = new swDba($path,'rdt'))
 								{
-									$filter = swDbaFetch('_filter',$bdb);
+									$filter = $bdb->fetch('_filter');
 									swRelationFilter($filter);
 								}
 								
@@ -609,16 +546,16 @@ project revision';
 								{
 									$path = $querypath.$_REQUEST['q'];
 									$results = array();
-									if ($bdb = swDbaOpen($path, 'wdt'))
+									if ($bdb = new swDba($path,'rdt'))
 									{
-										$results['filter'] = swDbaFetch('_filter',$bdb);
-										$results['bitmapcount'] = swDbaFetch('_bitmapcount',$bdb);
-										$results['checkedbitmapcount'] = swDbaFetch('_checkedbitmapcount',$bdb);
-										$results['overtime'] = unserialize(swDbaFetch('_overtime',$bdb));
+										$results['filter'] = $bdb->fetch('_filter');
+										$results['bitmapcount'] = $bdb->fetch('_bitmapcount');
+										$results['checkedbitmapcount'] = $bdb->fetch('_checkedbitmapcount');
+										$results['overtime'] = unserialize($bdb->fetch('_overtime'));
 										$results['mode'] = 'relation';
 										$results['namespace'] = '-';
-										$results['bitmap'] = unserialize(swDbaFetch('_bitmap',$bdb));
-										$results['checkedbitmap'] = unserialize(swDbaFetch('_checkedbitmap',$bdb));
+										$results['bitmap'] = unserialize($bdb->fetch('_bitmap'));
+										$results['checkedbitmap'] = unserialize($bdb->fetch('_checkedbitmap'));
 										
 									}
 								}
@@ -684,17 +621,17 @@ project revision';
 								
 								if (stristr($_REQUEST['q'],'.db'))
 								{
-									if ($bm && $bm->countbits())
+									if ($bm && $bm->countbits() && $bdb = new swDba($path,'rdt'))
 									{
 									
-										$key = swDbaFirstKey($bdb);
+										$key = $bdb->firstKey();
 										$first = true;
 										$lines = array();
 										while($key)
 										{
-											if (substr($key,0,1)=='_') { $key = swDbaNextKey($bdb); continue;}
+											if (substr($key,0,1)=='_') { $key = $bdb->nextKey(); continue;}
 											
-											$fields = @unserialize(swDbaFetch($key,$bdb));
+											$fields = @unserialize($bdb->fetch($key));
 											
 											if ($first && is_array($fields))
 											{
@@ -704,7 +641,7 @@ project revision';
 											}
 											
 											
-											$values = unserialize(swDbaFetch($key,$bdb));
+											$values = unserialize($bdb->fetch($key));
 											if (is_array($values))
 												$fields = array_values($values);
 											
@@ -718,7 +655,7 @@ project revision';
 											
 											$lines[] = '<br>"'.join('", "',$fields2).'"';
 													
-											$key = swDbaNextKey($bdb);
+											$key = $bdb->nextKey();
 										}
 										//echo (join('',$lines));
 										
@@ -790,9 +727,9 @@ project revision';
 											}
 											else
 											{
-												$bdb = swDbaOpen($querypath.$v,'r');
+												$bdb = swDba($querypath.$v,'r');
 												if ($bdb)
-													$results['filter'] = swDbaFetch('_filter',$bdb);
+													$results['filter'] = $bdb->fetch('_filter');
 												
 												$lines[$d] = '<p><a href="index.php?name=special:indexes&index=queries&q='.$v.'">'.$v.'</a><br>' .$d.' '.$filesize.' kB <br>filter '.@$results['filter'];
 												

@@ -38,7 +38,7 @@ class swPersistance
     { 
         swSemaphoreSignal($this->persistance);
         $s = serialize(get_object_vars($this));
-        swUnlink($this->persistance);
+        unlink($this->persistance);
         if($f = @fopen($this->persistance,'w')) 
         { 
             @flock($f, LOCK_EX);

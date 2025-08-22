@@ -141,9 +141,9 @@ function swOpenTupleServer()
 	if (filesize($path) > 48*1024*1024) swClearTupleServer();
 
 	if (file_exists($path))
-		$swTupleServer = swDbaOpen($path, 'wdt'); 
+		$swTupleServer = new swDba($path,'wdt');
 	else
-		$swTupleServer = swDbaOpen($path, 'c');	
+		$swTupleServer = new swDba($path,'c');	
 		
 	if ($swTupleServer) return true;
 	
@@ -154,7 +154,7 @@ function swTupleServerGet($key)
 {
 	global $swTupleServer;
 	if (!$swTupleServer) return false;
-	return swDbaFetch($key,$swTupleServer);
+	return $swTupleServer->fetch($key);
 	
 }
 
@@ -162,7 +162,7 @@ function swTupleServerSet($key,$value)
 {
 	global $swTupleServer;
 	if (!$swTupleServer) return false;
-	return swDbaReplace($key,$value,$swTupleServer);	
+	return $swTupleServer->replace($key,$value);	
 }
 
 function swClearTupleServer()

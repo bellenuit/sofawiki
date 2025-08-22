@@ -144,7 +144,7 @@ function swIndexBloom($numberofrevisions = 20000, $continue = false)
 		//end check bloombitmap
 		
 				
-		$text = swFileGet($revisionpath.$rev.'.txt');
+		$text = file_get_contents($revisionpath.$rev.'.txt');
 		
 		$hashes = swGetHashesFromTerm($text);
 
