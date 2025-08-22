@@ -1622,8 +1622,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			
 			if (substr($filter, 0, 5) == 'stats')
 			{
-							echo('zstats');;
-				
+											
 				$ud = array();
 				$nd = array();
 				foreach($rows as $row)
