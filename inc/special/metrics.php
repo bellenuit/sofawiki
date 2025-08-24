@@ -74,31 +74,34 @@ update file = "<nowiki><a href=\'index.php?name=special:metrics&month=".file."\'
 	
 	echo " "
 	echo "\'\'\'".m."\'\'\'"
-
 	logs stats m
-	// print
 	dup
 	select category == "stat" and file == m
 	project file, key, value
 	deserialize
-	// print
-	project hits, totaltime, visited_pages, unique_users
+	dup
+	project hits, hits_error, hits_snowflake, hits_bot, hits_user
+	print
+	pop
+	project visited_pages, unique_users, totaltime
 	print
 	pop
 	dup
 	select category == "stat"
 	project file, key, value
 	deserialize
-	project day, hits, totaltime, visited_pages, unique_users
-	// print
-	write "logs-".m.".csv"
+	project day, hits, hits_user, totaltime, visited_pages, unique_users
+	write "logsv2-".m.".csv"
 	select day !== m
-	project day, hits, visited_pages, unique_users
-	order day a
+	project day, visited_pages, unique_users, totaltime
+	update day = substr(day, -2)
+	order day 1
 	delegate "barchart -tensions 0.3"
 	// print
 	
 	pop
+	dup
+	dup
 	dup
 	select category == "name"
 	rename key name, value count
@@ -106,7 +109,7 @@ update file = "<nowiki><a href=\'index.php?name=special:metrics&month=".file."\'
 // 	order count 9
 	limit 1 1000
 	print grid 20
-	write "logs-names-".m.".csv"
+	write "logsv2-names-".m.".csv"
 	pop
 	select category == "user"
 	rename key user, value count
@@ -114,7 +117,25 @@ update file = "<nowiki><a href=\'index.php?name=special:metrics&month=".file."\'
 // 	order count 9
 	limit 1 1000
 	print grid 20
-	write "logs-users-".m.".csv"
+	write "logsv2-users-".m.".csv"
+	pop
+	select category == "error"
+	rename key error, value count
+	project error, count
+	project error, count sum
+	rename count_sum count
+ 	order count 9
+	limit 1 1000
+	print grid 20
+	pop
+	select category == "userbot"
+	rename key bot, value count
+	project bot, count
+	project bot, count sum
+	rename count_sum count
+ 	order count 9
+	limit 1 1000
+	print grid 20
 	
 	';
 }
@@ -150,13 +171,13 @@ elseif ($y)
 	
 	
 	echo " "
-	echo "\'\'\'\".y."\'\'\'"
+	echo "\'\'\'".y."\'\'\'"
 	
 	
-	relation day,hits,totaltime,visited_pages,unique_users
+	relation day,hits,hits_user,totaltime,visited_pages,unique_users
 	set i = 1
 	while i < 13
-	set file = "logs-".y."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	union
@@ -170,14 +191,14 @@ elseif ($y)
 	rename hits_sum hits, totaltime_sum totaltime, visited_pages_sum visited_pages, unique_users_sum unique_users
 	dup
 	
-	project hits sum, totaltime sum, visited_pages sum, unique_users sum
+	project hits sum, visited_pages sum, unique_users sum, totaltime sum
 	
-	rename hits_sum hits, totaltime_sum totaltime, visited_pages_sum visited_pages, unique_users_sum unique_users
+	rename hits_sum hits, visited_pages_sum visited_pages, unique_users_sum unique_users, totaltime_sum totaltime 
 	update totaltime = round(totaltime)
 	print
 	pop	
 	
-	project drop totaltime
+	project month, visited_pages, unique_users, totaltime
 	delegate "barchart -tension 0.3"
 	pop
 	update totaltime = round(totaltime)
@@ -188,7 +209,7 @@ elseif ($y)
 	relation name, count, month
 	set i = 1
 	while i < 13
-	set file = "logs-names-".y."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-names-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -205,7 +226,7 @@ elseif ($y)
 	relation user, count, month
 	set i = 1
 	while i < 13
-	set file = "logs-users-".y."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-users-".y."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -244,7 +265,7 @@ else
 	set year = ".date("Y",time())." - k
 	set i = 1
 	while i < 13
-	set file = "logs-".year."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	union
@@ -278,7 +299,7 @@ else
 	
 	set i = 1
 	while i < 13
-	set file = "logs-pages-".year."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-pages-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file
@@ -301,7 +322,7 @@ else
 	set year = ".date("Y",time())." - k
 	set i = 1
 	while i < 13
-	set file = "logs-users-".year."-".substr("0".i,-2,2).".csv" 
+	set file = "logsv2-users-".year."-".substr("0".i,-2,2).".csv" 
 	if fileexists(file)
 	read file
 	extend month = file

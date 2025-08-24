@@ -1328,9 +1328,6 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	global $swStartTime;
 	global $swOvertime;
 	
-	
-	
-	
 	if (!$filter)
 		throw new swExpressionError('Logs filter empty',88);
 		
@@ -1368,31 +1365,20 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$filters3 = [ "file", "category", "key", "value"];
 	}
 	
-	// echo join(", ", $filters3);
-	$dd = '';
-	if (substr($filter, 0, 5) == 'stats') $dd = $fields['file'];
-
-	// print_r($fields);
+	$dd = $fields['file'];
 	
 	$filter2 = join(', ',$filters2);
 	
 	$root = $swRoot.'/site/logs/'.$dd;
 	
-// 		echotime('filter '.$filter);
-// 			echotime('filter2 '.$filter2);
-// 						echotime('filter3 '.$filter3);
-// 				echotime('dd '.$dd);
 	echotime('logs '.$filter2);
-	
 	
 	$files = glob($root.'*.txt');
 	rsort($files);
 	
-	$mdfilter = 'logs '.$filter2;
+	$mdfilter = 'logsv2 '.$filter2;
 	$cachefilebase = $swRoot.'/site/queries/'.md5($mdfilter);
 	$bdbfile = $cachefilebase.'.db';
-	
-	
 	
 	if ($refresh)
 	{
@@ -1401,7 +1387,6 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	}
 	if (file_exists($bdbfile))
 		$bdb = new swDba($bdbfile,'wdt');
-
 	else
 	{
 		$bdb = new swDba($bdbfile,'c');
@@ -1410,12 +1395,9 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	if (!$bdb)
 	{
 		// try read only
-		$bdb = new swDba($bdbfile,'rdt');
-		
-				
+		$bdb = new swDba($bdbfile,'rdt');				
 		if (!$bdb)
-			throw new swExpressionError('db failed '.md5($mdfilter),88);
-			
+			throw new swExpressionError('db failed '.md5($mdfilter),88);			
 		$bdbrwritable = false;
 		echotime("bdb readonly");
 	}
@@ -1429,12 +1411,13 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	$hintfunction = new XpHint;
 	$logstep = 1;
 	echotime('files '.count($files));
+
 	
 	foreach($files as $file)
 	{
 
 		$shortfile = $dd.str_replace($root,'',$file);
-		
+	
 		if (memory_get_usage()>$swMemoryLimit)
 		{ 
 			$swOvertime = true;
@@ -1457,8 +1440,6 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			break;
 		}
 		
-// 		echotime('.');
-		
 		if (substr($filter, 0, 5) == 'stats')
 		{	
 
@@ -1469,12 +1450,12 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$d = array();
 		
 		if (stristr($file,'/deny-')) continue;
-				
+		
+		// do not scan a file twice, but current day is not definitive		
 		if ($file !== $tdodayfile && $bdb->exists($file)) continue;
 		
-// 		echotime(',');
-
-		$foundfile = false;
+        // filters
+		$foundfile = false; 
 		if (array_key_exists('file',$fields))
 		{
 			if (!$fields['file'])
@@ -1484,12 +1465,11 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			else
 			{			
 				$stack = array();
-// 				echotime('hint');
 
 				$stack[] = $fields['file'];
 				$stack[] = $shortfile;
 				$foundfile = $hintfunction->run($stack);
-								$foundfile = true;
+				$foundfile = true;
 			}
 		}
 		else
@@ -1500,7 +1480,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		$rows = array();
 		if ($foundfile)
 		{
-// 			echotime('foundfile '.$file);
+ 			echotime('foundfile '.$file);
 			if ($filter == 'file') // only filelist
 			{
 				
@@ -1512,31 +1492,35 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				continue;
 			}
 			
-			
-			
-// 				echotime($filter.' '.$file);
-						
-			// echo $shortfile.' '.$fields['file'].' ';
 			$handle = @fopen($file, 'r');
 			$hits = 0;
 			$totaltime = 0;
+			$errorhits = 0;
+			$errorlist = [];
 			
-			// how to deal with log files that are 500MB +?? We read only the first 100000 lines and extrapolate
-			$maxhits = 100000;
 			$logoffset = 0;
+			$loghits = 0; 
+			
 			while($handle && ($line = fgets($handle, 4096)) !== false)
-			{
-				              
-				              
-				              
-				// ignore multi lines
+			{			              
+				// ignore multi lines error in logs
                 $test = trim($line);
                 if (substr($test,0,2) != "[[" || substr($test,-2,2) != "]]" ) continue;
+                
+                $values0 = swGetAllFields($line);
+				
+				$values = [];
+				foreach($values0 as $k=>$v)
+				{
+					$values[$k] = $v[0];
+				}
+				if (!isset($values0['timestamp'])) continue;
+
 				
 				$hits++;
 				
+				// skip lines on large files
 				$logstep = max(1,ceil(log($hits,2)-10));
-				
 				if ($logoffset) 
 				{
 					$logoffset--;
@@ -1546,17 +1530,16 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				{
 					$logoffset = $logstep;
 				}
+				$loghits++;
 				
-// 				if ($hits > $maxhits) continue;
+				// add fields				
+				$ts = $values0['timestamp'][0];
+			    $values['day'] = substr($ts,0,10);
+				$values['hour'] = substr($ts,11,2);
 				
-				$values0 = swGetAllFields($line);
-				foreach($values0 as $k=>$v)
-				{
-					$values[$k] = $v[0];
-				}
-				unset($values0);
-				
-				$values['day'] = substr($values['timestamp'],0,10);
+			    unset($values0);
+			    
+			    // apply filter
 				
 				$found = true;
 				$values1 = array(); 
@@ -1590,8 +1573,10 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 					}
 				}
 				
-				// fix internal path errors. there should not be a / in a path, except for language links
-
+				$values1['hour'] = $values['hour'];
+				
+				// fix internal path errors. 
+				// there should not be a / in a path, except for language links
 				if (isset($values1['name']) && $values1['name']) 
 				{
 					$n = explode("/",$values1['name']);
@@ -1610,11 +1595,24 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 					}
 				}
 				
+				if (isset($values['time'])) $totaltime += intval($values['time']) * $logstep;
+				
+				if (isset($values['error']) && $values['error'])
+				{						
+					$errorhits++;
+					if (isset($errorlist[$values['error']]))
+						$errorlist[$values['error']]++;
+					else
+						$errorlist[$values['error']] = 1;
+						
+					$found = false;
+							
+				}
+				
 				if ($found)
 				{
 					$rows[] = $values1;	
-					
-					$totaltime += intval($values['time']) * $logstep;
+
 				}
 				
 						
@@ -1622,66 +1620,220 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 			
 			if (substr($filter, 0, 5) == 'stats')
 			{
-											
+				// $rows = array();							
 				$ud = array();
+				$udh = array();
 				$nd = array();
+				$udrobots = array();
+				
+				$day = str_replace(".txt","",$shortfile);
+				
 				foreach($rows as $row)
 				{
 					$row['name'] = swNameURL($row['name']);
 					
-					
-					
-					
-					//$row['user'] = swNameURL($row['user']);
-					
-					if (isset($ud[$row['user']])) $ud[$row['user']]++; else $ud[$row['user']]=1;
+					if (isset($ud[$row['user']])) 
+						$ud[$row['user']]++; 
+					else 
+						$ud[$row['user']]=1;
+					if (isset($udh[$row['user']][$row['hour']])) 
+						$udh[$row['user']][$row['hour']]++;
+					else 
+						$udh[$row['user']][$row['hour']]=1;
 					
 					$nd[$row['name']][$row['user']]=1;
+					if ($row['name'] == "robots-txt") 
+					{
+						if (isset($udrobots[$row['user']])) 
+							$udrobots[$row['user']]++; 
+						else 
+							$udrobots[$row['user']]=1;
+					}
 						
-					$day = $row['day'];
-				}
-				$nd2 = array();
-				foreach($nd as $k=>$v)
-				{
-					$nd2[$k] = array_sum($v);
+					
 				}
 				
-				$maxhitscorrector = max(1, $hits / $maxhits);
-				$uc = round(count($ud) * $maxhitscorrector * $logstep);
-				$vp = round(array_sum($nd2) * $maxhitscorrector * $logstep); 
-				$totaltime = round($totaltime * $maxhitscorrector / 1000 );
+				// remove snowflakes
+				$snowflakehits = 0;
+
+				foreach($ud as $k=>$v)
+				{
+					if ($v == 1) 
+					{
+						unset($ud[$k]);
+						unset($udh[$k]);
+						$snowflakehits++;
+						
+						// we do not remove at names now (slow), but we check later
+					}
+				}
+				
+				
+				// score for bot detection
+				$uds = array();
+				
+				$scoresum = 0;
+				$scoresquaresum = 0;
+				$scorecount = 0;
+				
+				foreach($ud as $k=>$v)
+				{
+					$test = 0;
+					// number of hits
+					$score = log($v);
+					// shannon index over hours
+					$udh0 = $udh[$k];
+					for($i = 0; $i < 24; $i++)
+					{
+						if (isset($udh0[substr('0'.$i,-2)]))
+						{
+							$vh = $udh0[substr('0'.$i,-2)];
+							$test += $vh;
+							$vh /= $v;
+							$score -= $vh * log($vh);	
+						}
+						
+					}
+					// robots.txt calls
+			        if (isset($udrobots[$k]))
+			        {
+			  			 $score += 	$udrobots[$k];	
+			  		}	
+					$score = round($score*10)/10;
+					
+					$uds[$k] = $score;
+					
+					if ($score)
+					$rows []= array('file'=>$day, 'category'=>'score','key'=>$k,'value'=>$score);
+					
+					$scoresum += $score;
+					$scoresquaresum += $score * $score;
+					$scorecount++;
+					
+				}
+				
+				$score_avg = round($scoresum/max(1,$scorecount)*10)/10;
+				$score_stddev = round(sqrt($scoresquaresum / max(1,$scorecount) - $score_avg * $score_avg)*10)/10;
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'score_avg','value'=>$score_avg);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'score_stddev','value'=>$score_stddev);
+				
+				// now we flag all hits from users with $score > $score_avg + 2 * $score_avg
+				
+				$bothits = 0;
+				$botusers = 0;
+				foreach($ud as $k=>$v)
+				{
+					// bots are with high shore and not known users 
+					
+					if ($uds[$k] > $score_avg +  $score_stddev &&  preg_match('/\d+\.\d+\.\d+\.\d+/',$k))
+					{
+						$rows []= array('file'=>$day, 'category'=>'userbot','key'=>$k,'value'=>$v);
+						$bothits += $v;
+						$botusers++;
+						
+					}
+					else
+					{
+						$rows []= array('file'=>$day, 'category'=>'user','key'=>$k,'value'=>$v);
+						
+					}
+				
+				}			
+				$nd2 = array();
+				$nd2bots = array();
+				
+				foreach($nd as $k=>$v)
+				{
+				   
+					$nd2[$k] = 0;
+					$nd2bots[$k] = 0;
+					
+					foreach($v as $k2=>$v2)
+					{
+						if (true) 
+						{
+							if (isset($uds[$k2]) && $uds[$k2] > $score_avg +  $score_stddev &&  preg_match('/\d+\.\d+\.\d+\.\d+/',$k2)) 
+							{
+								$nd2bots[$k] += $v2;
+								
+							}
+							else
+							{
+								// no snowflakes
+								if (isset($ud[$k2])) $nd2[$k] += $v2;
+							}
+						}
+					}
+				}
+				
+				
+				
+				$userhits = $hits - $errorhits - $snowflakehits- $bothits ;
+				$totaltime = round($totaltime / 1000);
+				
+				$vp = 0;
+				foreach($nd2 as $k=>$v) $vp += $v;
+				
+				$uc = round(count($ud)-$botusers);
 				
 				$fields = array('file','category','key','value');
 				
-				$rows = array();
 				
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'day','value'=>$day);
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'hits','value'=>$hits);
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'totaltime','value'=>$totaltime);
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'visited_pages','value'=>$vp);
-				$rows []= array('file'=>$shortfile, 'category'=>'stat','key'=>'unique_users','value'=>$uc);
-				
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'day','value'=>$day);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'hits','value'=>$hits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'loghits','value'=>$loghits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'hits_error','value'=>$errorhits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'hits_snowflake','value'=>$snowflakehits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'hits_bot','value'=>$bothits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'hits_user','value'=>$userhits);
+				$rows []= array('file'=>$day, 'category'=>'stat','key'=>'totaltime','value'=>$totaltime);
+				 $rows []= array('file'=>$day, 'category'=>'stat','key'=>'visited_pages','value'=>$vp);
+				 $rows []= array('file'=>$day, 'category'=>'stat','key'=>'unique_users','value'=>$uc);
+				// echo "$day  $sf ";
 				
 				
 				foreach($nd2 as $k=>$v)
 				{
-					$rows []= array('file'=>$shortfile, 'category'=>'name','key'=>$k,'value'=>$v);
+					if ($v)
+					$rows []= array('file'=>$day, 'category'=>'name','key'=>$k,'value'=>$v);
 				}
 				
-				foreach($ud as $k=>$v)
+				foreach($nd2bots as $k=>$v)
 				{
-					$rows []= array('file'=>$shortfile, 'category'=>'user','key'=>$k,'value'=>$v);
-					
+					if ($v)
+					$rows []= array('file'=>$day, 'category'=>'namebot','key'=>$k,'value'=>$v);
 					
 				}
 				
+				foreach($errorlist as $k=>$v)
+				{
+					if ($v)
+					$rows []= array('file'=>$day, 'category'=>'error','key'=>$k,'value'=>$v);
+				}
 				
-// 				print_r($rows);
+								
+				foreach($rows as $k=>$v)
+				{
+					// if ($v['file'] == $shortfile) unset($rows[$k]);;
+				}
+				
+				
+ 				//print_r($rows);
 				
 				
 			}
-// 			echotime('rows '.count($rows));
+// 			
+
+			// remove .txt rows
+			if (substr($filter, 0, 5) == 'stats') 
+			foreach($rows as $k=>$v)
+			{
+				if (isset($v['file']) && stristr($v['file'],'.txt')) unset($rows[$k]);
+			}
+
+
 			$bdb->replace($file,serialize($rows));
+			// print_r($rows);
 			$rows = [];
 			if (rand(0,1000)>990) $bdb->sync();
 		}
@@ -1693,6 +1845,8 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		
 		
 	}
+	
+	
 	
 	echotime('logstep '.$logstep);
 	echotime('logs sync');
@@ -1716,9 +1870,15 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 	{
 		$globalrows = array();
 		$globalrows['hits']= 0;
+		$globalrows['loghits']= 0;
+		$globalrows['hits_error']= 0;
+		$globalrows['hits_snowflake']= 0;
+		$globalrows['hits_bot']= 0;
+		$globalrows['hits_user']= 0;
 		$globalrows['totaltime']= 0;
 		$globalrows['visited_pages'] = array();
 		$globalrows['unique_users'] = array();
+		
 	}
 	
 	
@@ -1753,6 +1913,12 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 				    switch($d['category'])
 					{
 						case 'stat':  if ($d['key']=='hits') $globalrows['hits']+=$d['value'];
+						              if ($d['key']=='loghits') $globalrows['loghits']+=$d['value'];
+						              if ($d['key']=='hits_error') $globalrows['hits_error']+=$d['value'];
+						              if ($d['key']=='hits_snowflake') $globalrows['hits_snowflake']+=$d['value'];
+
+						              if ($d['key']=='hits_bot') $globalrows['hits_bot']+=$d['value'];
+						              if ($d['key']=='hits_user') $globalrows['hits_user']+=$d['value'];
 									  if ($d['key']=='totaltime') $globalrows['totaltime']+=$d['value'];
 									  
 									  break; 
@@ -1801,19 +1967,38 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 
 		echotime('logs stats');
 		
+		//print_r($globalrows);
+		
 		$d = array('file'=>$dd, 'category'=>'stat','key'=>'day','value'=>$dd);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
 		$d = array('file'=>$dd, 'category'=>'stat','key'=>'hits','value'=>$globalrows['hits']);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
-		$d = array('file'=>$dd, 'category'=>'stat','key'=>'totaltime','value'=>$globalrows['totaltime']);
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'loghits','value'=>$globalrows['loghits']);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
-		$d = array('file'=>$dd, 'category'=>'stat','key'=>'visited_pages','value'=>array_sum($globalrows['visited_pages']));
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'hits_error','value'=>$globalrows['hits_error']);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
-		$d = array('file'=>$dd, 'category'=>'stat','key'=>'unique_users','value'=>count($globalrows['unique_users']));
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'hits_snowflake','value'=>$globalrows['hits_snowflake']);
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'hits_bot','value'=>$globalrows['hits_bot']);
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'hits_user','value'=>$globalrows['hits_user']);
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+$d = array('file'=>$dd, 'category'=>'stat','key'=>'totaltime','value'=>$globalrows['totaltime']);
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+		$vp = round(array_sum($globalrows['visited_pages']));
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'visited_pages','value'=>$vp);
+		$tp = new swTuple($d);
+		$result->tuples[$tp->hash()] = $tp;
+		$uu = round(count($globalrows['unique_users']));
+		$d = array('file'=>$dd, 'category'=>'stat','key'=>'unique_users','value'=>$uu);
 		$tp = new swTuple($d);
 		$result->tuples[$tp->hash()] = $tp;
 		
@@ -1844,7 +2029,7 @@ function swRelationLogs($filter, $globals = array(), $refresh = false)
 		foreach($globalrows['unique_users'] as $k=>$v)
 		{
 			$i++; 
-			if ($i>1000) break;
+			// if ($i>1000) break;
 			$d = array('file'=>$dd, 'category'=>'user','key'=>$k,'value'=>$v);
 			$tp = new swTuple($d, true);
 			$result->tuples[$tp->hash()] = $tp;
