@@ -23,7 +23,7 @@ $swParsedContent = '<nowiki>
 </form>
 </div><!-- editzone -->
 <tiny-ps id="ps" width="640" height="360" format="svg,svgurl,canvasurl" oversampling="4"></tiny-ps>
-<script src="inc/skins/tinyps112.js"></script>
+<script src="inc/skins/tinyps120.js"></script>
 <script src="inc/skins/tinyps-extensions.js"></script>
 <script>rpnFontURLs = '.json_encode($rpnFontURLs).';</script>
 <script>

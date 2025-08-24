@@ -15,6 +15,18 @@ Version 1.1.1 2025-07-14 new operators forall, pathbbox
 - fixed errors that did not stop code (always return with context.error!) 
 - fixed heap errors on arrays ans strings
 - download elements  with jtimestamp in filename
+Version 1.1.2 2025-07-20 
+- new operator selectfont 
+- rpnFontURLs replaces fontpaths (URLs works both for https and data protocol)
+- added white background rect on non transparent SVG
+- added graphics, dictionary and device to console.log on errors
+- fixed font substitution for PDF and added Nimbus fonts
+- fixed PNG height
+Version 1.2.0 2025-08-13
+- new default size 640 x 360
+- export to MP4 movie (MJPEG) and animated SVG
+- smaller SVG (path 1/100, color hex and alpha)
+- new atttributes zip, movie (options for canvasurl) and svgmovie (option for svgurl)
 
 Renders as subset PostScript to Canvas, SVG and PDF (as well as an obsucre raw rendering).
 The output can be displayed or proposed as downloadable link. It can be transparent.
@@ -64,11 +76,11 @@ if (typeof rpnExtensions  === 'undefined') {
 	rpnExtensions = "";
 }
 
-
 rpnFonts = {};
 rpnFiles = {};
 rpnFrames = {};
-
+rpnImageData = {};
+rpnSVGData = {};
 
 /* DATA TYPES */
 
@@ -203,7 +215,7 @@ rpnString = class {
 
 rpnRawDevice = class {
     constructor() {
-        this.clear(576, 324, 2, 0);
+        this.clear(640, 360, 2, 0);
 
     }
     finalize(context) {
@@ -437,7 +449,7 @@ rpnPDFDevice = class {
         this.imagestack = [];
         this.timer = null;
         this.finalround = false;
-        this.clear(576, 324, 1, 1);
+        this.clear(640, 360, 1, 1);
         
     }
     clear(width, height, oversampling, transparent) { 
@@ -691,7 +703,7 @@ rpnSVGDevice = class {
     constructor() {
         this.canshow = true;
         this.fonts = {};
-        this.clear( 576, 324, 1, 1);
+        this.clear( 640, 360, 1, 1);
     }
     clear(width, height, oversampling, transparent) {
         this.node = rpnDocument.createElement("svg");
@@ -734,12 +746,12 @@ rpnSVGDevice = class {
        if (!path.length) return "";
        for (let subpath of path) {
            if (!subpath.length) continue;
-           p.push("M " + (Math.round(subpath[0][1]*1000)/1000) + " " + (Math.round((this.height - subpath[0][2])*1000)/1000));
+           p.push("M " + (Math.round(subpath[0][1]*100)/100) + " " + (Math.round((this.height - subpath[0][2])*100)/100));
            for (let line of subpath) {
                if (line[0] == "C") {
-                   p.push("C " +(Math.round(line[3]*1000)/1000) + " " + (Math.round((this.height - line[4])*1000)/1000)+ " " + (Math.round(line[5]*1000)/1000) + " " + (Math.round((this.height - line[6])*1000)/1000) + " " + (Math.round((line[7])*1000)/1000) + " " + (Math.round((this.height - line[8])*1000)/1000));
+                   p.push("C " +(Math.round(line[3]*100)/100) + " " + (Math.round((this.height - line[4])*100)/100)+ " " + (Math.round(line[5]*100)/100) + " " + (Math.round((this.height - line[6])*100)/100) + " " + (Math.round((line[7])*100)/100) + " " + (Math.round((this.height - line[8])*100)/100));
                } else {
-                   p.push("L "+(Math.round(line[3]*1000)/1000) + " " + (Math.round((this.height - line[4])*1000)/1000));
+                   p.push("L "+(Math.round(line[3]*100)/100) + " " + (Math.round((this.height - line[4])*100 )/100));
                    if (line[0] == "Z") p.push("Z"); 
                 }
            }
@@ -776,8 +788,9 @@ rpnSVGDevice = class {
         node.setAttribute("id","fill"+Math.round(Math.random()*1000000));
         node.setAttribute("d", this.getPath(context.graphics.path));
         node.setAttribute("stroke","none");
-        node.setAttribute("fill", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")");
-        node.setAttribute("fill-opacity", context.graphics.color[3]/255.0);
+//         node.setAttribute("fill", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")");
+//         node.setAttribute("fill-opacity", context.graphics.color[3]/255.0);
+        node.setAttribute("fill", this.rgba2hex(context.graphics.color[0], context.graphics.color[1], context.graphics.color[2], context.graphics.color[3]));
         if (this.clippath) node.setAttribute("clip-path", "url(#"+this.clippath+")");
         if (zerowind) {
             node.setAttribute("fill-rule", "nonzero");
@@ -794,8 +807,9 @@ rpnSVGDevice = class {
         node.setAttribute("d", this.getPath(context.graphics.path, false));
         node.setAttribute("fill","none");
         node.setAttribute("stroke-width",context.graphics.linewidth);
-        node.setAttribute("stroke", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")");
-        node.setAttribute("stroke-opacity", context.graphics.color[3]/255.0);
+//         node.setAttribute("stroke", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")");
+//         node.setAttribute("stroke-opacity", context.graphics.color[3]/255.0);
+        node.setAttribute("stroke", this.rgba2hex(context.graphics.color[0], context.graphics.color[1], context.graphics.color[2], context.graphics.color[3]));
         if (this.clippath) node.setAttribute("clip-path", "url(#"+this.clippath+")");
         this.node.appendChild(node);
         return context;
@@ -810,9 +824,10 @@ rpnSVGDevice = class {
         node.setAttribute("y", "0");
         node.setAttribute("font-family", context.graphics.font);
         node.setAttribute("font-size", context.graphics.size);
-        node.setAttribute("fill", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")" );
-        node.setAttribute("fill-opacity", context.graphics.color[3]/255.0);
+//         node.setAttribute("fill", "rgb(" + Math.round(context.graphics.color[0]) + ", " + Math.round(context.graphics.color[1]) + ", " + Math.round(context.graphics.color[2]) + ")" );
+//         node.setAttribute("fill-opacity", context.graphics.color[3]/255.0);
         if (this.clippath) node.setAttribute("clip-path", "url(#"+this.clippath+")");
+        node.setAttribute("fill", this.rgba2hex(context.graphics.color[0], context.graphics.color[1], context.graphics.color[2], context.graphics.color[3]));
         const matrix = context.graphics.matrix.slice();
         const decomposed = rpnDecompose2dMatrix(matrix);
         const x = context.graphics.current[0];
@@ -843,6 +858,12 @@ rpnSVGDevice = class {
         this.clear(this.width, this.height, this.oversampling, this.transparent);
         return context;
     }
+    rgba2hex(r, g, b, a) {
+    	
+  		const hex =  "#" + (1 << 24 | r << 16 | g << 8 | b ).toString(16).slice(1) +(1 << 8 | a).toString(16).slice(1);
+
+  		return hex;
+    }
 };
 
 /* CONTEXT */
@@ -864,7 +885,7 @@ rpnContext = class {
         this.dictstack.push({});
         this.nodes = [];
         this.fontdict = {};
-        this.device = { canvas: 0, canvasurl: 0, console: 1, interval: 0, oversampling: 1, pdf: 0, pdfurl: 0, raw: 0, rawurl : 0, svg: 0, svgurl: 0, textmode: 0,  transparent: 0, width: 576, height: 324 };
+        this.device = { canvas: 0, canvasurl: 0, console: 1, interval: 0, zip: 0, movie: 0, svgmovie: 0, oversampling: 1, pdf: 0, pdfurl: 0, raw: 0, rawurl : 0, svg: 0, svgurl: 0, textmode: 0,  transparent: 0, width: 640, height: 360 };
         this.async = false;
         this.initgraphics();
     }
@@ -3981,6 +4002,509 @@ rpnZip = class {
 }
 
 
+/*
+ * mp4-mjpeg inspired from  <https://github.com/mi-g/mp4-mjpeg> by Michel Gutierrez
+ *
+ */
+/* jslint bitwise: true */
+
+WriteInt32 = function (data, offset, value) {
+	data[offset] = ((value >>> 24) & 0xff) >>> 0;
+	data[offset + 1] = ((value >>> 16) & 0xff) >>> 0;
+	data[offset + 2] = ((value >>> 8) & 0xff) >>> 0;
+	data[offset + 3] = (value & 0xff) >>> 0;
+}
+
+WriteInt24 = function (data, offset, value) {
+	data[offset] = ((value >>> 16) & 0xff) >>> 0;
+	data[offset + 1] = ((value >>> 8) & 0xff) >>> 0;
+	data[offset + 2] = (value & 0xff) >>> 0;
+}
+WriteInt16 = function (data, offset, value) {
+	data[offset] = ((value >>> 8) & 0xff) >>> 0;
+	data[offset + 1] = (value & 0xff) >>> 0;
+}
+
+WriteInt8 = function (data, offset, value) {
+	data[offset] = (value & 0xff) >>> 0;
+}
+
+
+
+mjpeg = class {
+
+	constructor(w = 1920, h = 1080, f = 25) {
+		var self = this;  
+		self.streams = {};
+		self.filePos = 0;
+		self.fps = f;
+		self.width = w;
+		self.height = h;
+		self.WriteFileHeader();
+	}
+
+	Box(boxType, data) {
+		var length = this.Length(data);
+		var boxLengthData = new Uint8Array(4);
+	    WriteInt32(boxLengthData, 0, 8 + length);
+		boxType = (boxType + "    ").substr(0, 4);
+		return [boxLengthData, this.String2Buffer(boxType), data]
+	}
+
+	BoxTkhd(esi) {
+		var self = this;
+		var data = new Uint8Array(84);
+		WriteInt24(data, 1, 0x3);
+		WriteInt32(data, 4, 0);
+
+		WriteInt32(data, 8, 0);
+
+		WriteInt32(data, 12, esi.streamId);
+		// reserved 4 bytes
+		var duration = Math.ceil(esi.dataOffsets.length * 1000 / self.fps); // fps 30, unit ms ?
+		WriteInt32(data, 20, duration);
+		// reserved 8 bytes
+
+		WriteInt16(data, 32, 0);
+		WriteInt16(data, 34, 0);
+		if (esi.streamType == "audio")
+			WriteInt16(data, 36, 0x0100);
+		WriteInt16(data, 38, 0);
+
+		self.MakeDefaultMatrix(data, 40);
+
+		if (esi.streamType == "video") {
+			WriteInt16(data, 76, self.width);
+			WriteInt16(data, 80, self.height);
+		}
+
+		return self.Box("tkhd", data);
+	}
+
+	BoxMdia(esi) {
+		var self = this;
+		var mdhdBox = self.BoxMdhd(esi);
+		var hdlrBox = self.BoxHdlr(esi);
+		var minfBox = self.BoxMinf(esi);
+		return self.Box("mdia", [mdhdBox, hdlrBox, minfBox]);
+	}
+
+	BoxMdhd(esi) {
+		var self = this;
+
+		var data = new Uint8Array(24);
+		var duration;
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0);
+		WriteInt32(data, 8, 0);
+		if (esi.streamType == "video") {
+			WriteInt32(data, 12, 1200000);
+			duration = Math.ceil(esi.dataOffsets.length * 1000 / self.fps); // fps 30, unit ms ?
+			WriteInt32(data, 16, duration * 1200);
+		} else {
+			WriteInt32(data, 12, 44000); // !!! fix this for audio
+			duration = esi.dataOffsets.length * 1024;
+			WriteInt32(data, 16, duration);
+		}
+		WriteInt16(data, 20, 0x55c4); // default lang
+		WriteInt16(data, 22, 0);
+
+		return self.Box("mdhd", data);
+	}
+
+	BoxHdlr(esi) {
+		var self = this;
+		var componentName = "VideoHandler";
+		var data = new Uint8Array(25 + componentName.length);
+		WriteInt32(data, 0, 0);
+		if (esi.streamType == 'audio')
+			self.String2Buffer("mhlr", data, 4);
+		if (esi.streamType == "audio")
+			self.String2Buffer("soun", data, 8);
+		else if (esi.streamType == "video")
+			self.String2Buffer("vide", data, 8);
+		WriteInt32(data, 12, 0);
+		WriteInt32(data, 16, 0);
+		WriteInt32(data, 20, 0);
+		self.String2Buffer(componentName, data, 24);
+		return self.Box("hdlr", data);
+	}
+
+	BoxMinf(esi) {
+		var self = this;
+		var vmhdBox = esi.streamType == "video" ? self.BoxVmhd(esi) : [];
+		var smhdBox = esi.streamType == "audio" ? self.BoxSmhd(esi) : []; // audio not implemented
+		var dinfBox = self.BoxDinf(esi);
+		var stblBox = self.BoxStbl(esi);
+
+		return self.Box("minf", [vmhdBox, smhdBox, dinfBox, stblBox]);
+	}
+
+	BoxVmhd(esi) {
+		var self = this;
+		var data = new Uint8Array(12);
+		WriteInt32(data, 0, 0x1);
+		WriteInt16(data, 4, 0);
+		WriteInt16(data, 6, 0);
+		WriteInt16(data, 8, 0);
+		WriteInt16(data, 10, 0);
+
+		return self.Box("vmhd", data);
+	}
+
+	BoxDref(esi) {
+		var self = this;
+		var data = new Uint8Array(8);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0x1);
+		var urlBox = self.BoxUrl(esi);
+		return self.Box("dref", [data, urlBox]);
+	}
+
+	BoxDinf(esi) {
+		var self = this;
+		var drefBox = self.BoxDref(esi);
+		return self.Box("dinf", drefBox);
+	}
+
+	BoxUrl(esi) {
+		var self = this;
+		var data = new Uint8Array(4);
+		WriteInt32(data, 0, 0x1);
+		return self.Box("url ", data);
+	}
+
+	BoxStbl(esi) {
+		var self = this;
+		var stsdBox = self.BoxStsd(esi);
+		var stszBox = self.BoxStsz(esi);
+		var sttsBox = self.BoxStts(esi);
+		var stscBox = self.BoxStsc(esi);
+		// only 32bits offsets for now
+		var stcoBox = self.BoxStco(esi);
+
+		return self.Box("stbl", [stsdBox, sttsBox, stscBox, stszBox, stcoBox]);
+	}
+
+	BoxStsd(esi) {
+		var self = this;
+		// mjpeg specific
+		var data = new Uint8Array(8);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0x1);
+
+		var sampDescr = [];
+		if (esi.streamType == "audio") { // audio not supported
+			if (esi.codec.strTag == "mp4a")
+				sampDescr = self.BoxMp4a(esi);
+		} else if (esi.streamType == "video") {
+			if (esi.codec && esi.codec.strTag == "avc1")
+				sampDescr = self.BoxAvc1(esi); // avc1 not supported
+			else
+				sampDescr = self.BoxMp4v(esi);
+		}
+		return self.Box('stsd', [data, sampDescr]);
+	}
+
+	BoxMp4v(esi) {
+		var self = this;
+		var data = new Uint8Array(78);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0x1);
+		WriteInt32(data, 8, 0);
+		WriteInt32(data, 12, 0);
+		WriteInt32(data, 16, 0);
+		WriteInt32(data, 20, 0);
+		WriteInt16(data, 24, self.width);
+		WriteInt16(data, 26, self.height);
+		WriteInt32(data, 28, 0x480000);
+		WriteInt32(data, 32, 0x480000);
+		WriteInt32(data, 36, 0);
+		WriteInt32(data, 40, 0x10000);
+		WriteInt32(data, 44, 0);
+		WriteInt32(data, 48, 0);
+		WriteInt32(data, 52, 0);
+		WriteInt32(data, 56, 0);
+		WriteInt32(data, 60, 0);
+		WriteInt32(data, 64, 0);
+		WriteInt32(data, 68, 0);
+		WriteInt32(data, 72, 0x18);
+		WriteInt16(data, 76, 0xffff);
+
+		var esds = self.BoxEsds(esi);
+
+		return self.Box('mp4v', [data, esds]);
+	}
+
+	BoxEsds(esi) {
+		var self = this;
+		var data = new Uint8Array(36);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0x03808080);
+		WriteInt32(data, 8, 0x1b000100);
+		WriteInt32(data, 12, 0x04808080);
+		WriteInt32(data, 16, 0x0d6c1100);
+		WriteInt32(data, 20, 0x00000040);
+		WriteInt32(data, 24, 0x4d620040);
+		WriteInt32(data, 28, 0x4d620680);
+		WriteInt32(data, 32, 0x80800102);
+
+		return self.Box('esds', [data]);
+	}
+
+	BoxStsz(esi) {
+		var self = this;
+		var sameSize = true;
+		var sampleSize = esi.sampleSizes[0];
+		for (var i = 1; i < esi.sampleSizes.length; i++)
+			if (esi.sampleSizes[i] != sampleSize) {
+				sameSize = false;
+				break;
+			}
+		var data;
+		if (sameSize) {
+			data = new Uint8Array(12);
+			WriteInt32(data, 4, sampleSize);
+		} else {
+			data = new Uint8Array(12 + 4 * esi.sampleSizes.length);
+			for (i = 0; i < esi.sampleSizes.length; i++)
+				WriteInt32(data, 12 + i * 4, esi.sampleSizes[i]);
+		}
+		WriteInt32(data, 8, esi.sampleSizes.length);
+		return self.Box('stsz', [data]);
+	}
+
+	BoxStts(esi) {
+		var self = this;
+		var data = new Uint8Array(16);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 1);
+		WriteInt32(data, 8, esi.dataOffsets.length);
+		WriteInt32(data, 12, 1200000 / self.fps ); // 30fps, unit 1200000
+		return self.Box("stts", data);
+	}
+
+	BoxStsc(esi) {
+		var self = this;
+		var data = new Uint8Array(20);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 0x1);
+		WriteInt32(data, 8, 0x1);
+		WriteInt32(data, 12, 0x1);
+		WriteInt32(data, 16, 0x1);
+		return self.Box('stsc', data);
+	}
+
+	BoxStco(esi) {
+		var self = this;
+		var data = new Uint8Array(8 + esi.dataOffsets.length * 4);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, esi.dataOffsets.length);
+		for (var i = 0; i < esi.dataOffsets.length; i++) {
+			WriteInt32(data, 8 + i * 4, esi.dataOffsets[i]);
+		}
+		return self.Box('stco', data);
+	}
+
+	BoxElst(esi) {
+		var self = this;
+		var data = new Uint8Array(20);
+		WriteInt32(data, 0, 0);
+		WriteInt32(data, 4, 1);
+		var duration = Math.ceil(self.streams[1].dataOffsets.length * 1000 / self.fps);
+		WriteInt32(data, 8, duration);
+		WriteInt32(data, 12, 0);
+		WriteInt16(data, 16, 1);
+		WriteInt16(data, 18, 0);
+
+		return self.Box("elst", data);
+	}
+
+	BoxEdts(esi) {
+		var self = this;
+		var elstBox = self.BoxElst(esi);
+		return self.Box("edts", elstBox);
+	}
+
+	BoxMvhd() {
+		var self = this;
+		var data = new Uint8Array(100);
+		WriteInt8(data, 0, 0);
+		WriteInt24(data, 1, 0);
+		WriteInt32(data, 4, 0);
+		WriteInt32(data, 8, 0);
+		WriteInt32(data, 12, 1000); // millisecs
+		var duration = Math.ceil(self.streams[1].dataOffsets.length * 1000 / self.fps);
+		WriteInt32(data, 16, duration);
+
+		WriteInt32(data, 20, 0x00010000);
+		WriteInt16(data, 24, 0x0100);
+		self.MakeDefaultMatrix(data, 36)
+		WriteInt32(data, 72, 0);
+		WriteInt32(data, 76, 0);
+		WriteInt32(data, 80, 0);
+		WriteInt32(data, 84, 0);
+		WriteInt32(data, 88, 0);
+		WriteInt32(data, 92, 0);
+
+		var nextTrackId = parseInt(Object.keys(self.streams).sort().reverse()[0]) + 1;
+		WriteInt32(data, 96, nextTrackId);
+
+		return self.Box("mvhd", data);
+	}
+
+	MakeDefaultMatrix(data, offset) {
+		[0x00010000, 0, 0, 0, 0x00010000, 0, 0, 0, 0x40000000].forEach(function (val, index) {
+			WriteInt32(data, offset + 4 * index, val);
+		});
+	}
+
+	String2Buffer(str, buffer, offset) {
+		buffer = buffer || new Uint8Array(str.length);
+		offset = offset || 0;
+		for (var i = 0, l = str.length; i < l; i++)
+			buffer[offset + i] = str.charCodeAt(i) & 0xff;
+		return buffer;
+	}
+
+	Length(data) {
+		if (Array.isArray(data)) {
+			var size = 0;
+			for (var i = 0, l = data.length; i < l; i++)
+				size += this.Length(data[i]);
+			return size;
+		} else
+			return data.length;
+	}
+
+	Flatten(data) {
+		if (Array.isArray(data)) {
+			var FlattenData = function (data) {
+				if (Array.isArray(data)) {
+					for (var i = 0, l = data.length; i < l; i++)
+						FlattenData(data[i]);
+				} else {
+					buffer.set(data, offset);
+					offset += data.length;
+				}
+			}
+			var buffer = new Uint8Array(this.Length(data));
+			var offset = 0;
+			FlattenData(data);
+			return buffer;
+		} else
+			return data;
+	}
+
+	AppendFrame(data, options) {
+		var self = this;
+		data = self.Flatten(data);
+		options = Object.assign({
+			stream: 1
+		}, options || {});
+// 		console.log(self);
+// 		console.log(self.streams);
+// 		console.log(options.stream)
+		self.streams[options.stream] = self.streams[options.stream] || {
+			dataOffsets: [],
+			sampleSizes: [],
+			streamId: options.stream,
+			streamType: "video",
+			identicalFrames: 0
+		}
+		var esi = self.streams[options.stream];
+
+		var reused = false;
+        
+		esi.sampleSizes.push(data.length);
+
+		if (reused) {
+			return Promise.resolve();
+		} else {
+			self.mdatSize += data.length;
+			esi.dataOffsets.push(self.filePos);
+			return self.WriteMulti(data);
+		}
+	}
+	
+	AppendImageBuffer(buffer) {
+		var self = this;
+		if (!self.width || !self.height) {
+			var dimensions = sizeOf(buffer);
+			self.width = dimensions.width;
+			self.height = dimensions.height;
+		}
+		return self.AppendFrame(buffer);
+	}
+	
+	AppendImageDataUrl(dataUrl) {
+		var base64image = dataUrl.split(";base64,").pop();
+		var buffer = new Buffer(base64image, 'base64');
+		return this.AppendImageBuffer(buffer);
+	}
+
+	WriteMulti(data) {
+		var self = this;
+		data = self.Flatten(data);
+		
+		/* new */
+		
+		self.file.push(data);
+	    self.filePos += data.length;
+ 	}
+
+	WriteFileHeader() {
+		var self = this;
+		var ftypExtra = new Uint8Array(4);
+		WriteInt32(ftypExtra, 0, 0x00000200);
+		var ftypBox = self.Box("ftyp", [self.String2Buffer("isom"), ftypExtra, self.String2Buffer("isomiso2mp41")]);
+		var freeBox = self.Box("free", []);
+		/* new */
+		self.file = [];
+		self.WriteMulti([ftypBox, freeBox]);
+		self.mdatLengthPos = self.filePos;
+		self.mdatSize = 8;
+	    var mdat = self.Box("mdat", []);
+		return  self.WriteMulti(mdat);
+	}
+
+	Destroy() {
+		var self = this;
+		var fd = self.fd;
+		self.fd = null;
+	}
+
+	finalize() { 
+		var self = this;
+
+			var lengthData = new Uint8Array(4);
+			WriteInt32(lengthData, 0, self.mdatSize);
+
+            self.file[1] = self.Flatten([lengthData, 'mdat']);
+            var traks = [];
+		    Object.keys(self.streams).sort().forEach(function (streamId) {
+				var esi = self.streams[streamId];
+				var tkhdBox = self.BoxTkhd(esi);
+				var mdiaBox = self.BoxMdia(esi);
+				var edtsBox = self.BoxEdts(esi);
+				var trakBox = self.Box('trak', [tkhdBox, edtsBox, mdiaBox]);
+				traks.push(trakBox);
+			});
+
+			var mvhdBox = self.BoxMvhd();
+			var moovBox = self.Box('moov', [mvhdBox, traks]);
+
+			var finalizeError = null;
+			self.WriteMulti(moovBox);
+			
+	    
+			
+            this.urldata = URL.createObjectURL(new Blob([...this.file],{type:'video/mp4'}));
+	}
+}
+
+
+
 /* TINYPS TAG */
 
 async function rpn2(code, context) {
@@ -4070,7 +4594,7 @@ class tinyPStag extends HTMLElement {
     this.nodes = {};
     this.ready = false;
     const elementToObserve = this;
-    this.observedAttributes = ["innerHTML", "width", "maxwidth", "height", "format", "oversampling", "textmode", "transparent", "interval", "error"];
+    this.observedAttributes = ["innerHTML", "width", "maxwidth", "height", "format", "oversampling", "textmode", "transparent", "interval", "movie", "zip", "svgmovie", "error"];
     this.observer = new MutationObserver(function(mutationsList, observer) {
     const target = mutationsList[0].target;
     target.attributeChangedCallback("innerText","",target.innerHTML);
@@ -4104,6 +4628,9 @@ class tinyPStag extends HTMLElement {
     context.device.textmode = this.getAttribute("textmode") ?? 0;
     context.device.transparent = this.getAttribute("transparent") ?? 0;
     context.device.interval = this.getAttribute("interval") ?? 0;
+    context.device.movie = this.getAttribute("movie") ?? 0;
+    context.device.svgmovie = this.getAttribute("svgmovie") ?? 0;
+    context.device.zip = this.getAttribute("zip") ?? 0;
 	const errorMode = this.getAttribute("error") ?? 0;
     var divnode = document.createElement("DIV");
     divnode.part = "output";
@@ -4123,7 +4650,7 @@ class tinyPStag extends HTMLElement {
     errornode.style.display = "none";
 
 	var node, node2, node3, node4;
-	var urlnode, urlnode2, urlnode3, urlnode4;
+	var urlnode, urlnode2, urlnode2m, urlnode2z, urlnode3, urlnode3a, urlnode4;
     
     if (formats.indexOf("raw") > -1 || formats.indexOf("rawurl") > -1) {
 	    console.log("Adding rawnode");
@@ -4182,10 +4709,30 @@ class tinyPStag extends HTMLElement {
             urlnode2.className = "jscanvasurl";
             urlnode2.innerHTML = "PNG";
             urlnode2.style.display = "inline";
-            rpnFrames[urlnode2.id] = [];
+            if (context.device.zip) {
+            	urlnode2z = document.createElement("A");
+            	urlnode2z.id = "canvasurlz" + this.id;
+            	urlnode2z.part = "canvasurlz";
+            	urlnode2z.className = "jscanvasurlz";
+            	urlnode2z.innerHTML = "";
+            	urlnode2z.style.display = "none";
+            	rpnFrames[urlnode2z.id] = [];
+            }
+            if (context.device.movie) {
+            	urlnode2m = document.createElement("A");
+            	urlnode2m.id = "canvasurlm" + this.id;
+            	urlnode2m.part = "canvasurlm";
+            	urlnode2m.className = "jscanvasurlm";
+            	urlnode2m.innerHTML = "";
+            	urlnode2m.style.display = "none";
+            	rpnImageData[urlnode2m.id] = [];
+            }
+
             context.device.canvasurl = 1;
             this.nodes.canvas = node2
             this.nodes.canvasurl = urlnode2;
+            this.nodes.canvasurlz = urlnode2z;
+            this.nodes.canvasurlm = urlnode2m;
         } else {
 	        this.nodes.canvas = node2;
         }
@@ -4219,8 +4766,18 @@ class tinyPStag extends HTMLElement {
             urlnode3.className = "svgurl";
             urlnode3.innerHTML = "SVG";
             urlnode3.style.display = "inline";
+            if (context.device.svgmovie) {
+            	urlnode3a = document.createElement("A");
+            	urlnode3a.id = "svgurla" + this.id;
+            	urlnode3a.part = "svgurla";
+            	urlnode3a.className = "svgurla";
+            	urlnode3a.innerHTML = "A..";
+            	urlnode3a.style.display = "none";
+            	rpnSVGData[urlnode3a.id] = [];
+            }
             this.nodes.svg = node3;
             this.nodes.svgurl = urlnode3;
+            this.nodes.svgurl = urlnode3a;
             context.device.svgurl = 1;
 	    } else {
 		    this.nodes.svg = node3;
@@ -4266,7 +4823,10 @@ class tinyPStag extends HTMLElement {
 	if (node4) divnode.appendChild(node4);
 	if (urlnode) divnurlode.appendChild(urlnode);
 	if (urlnode2) divnurlode.appendChild(urlnode2);
+	if (urlnode2z) divnurlode.appendChild(urlnode2z);
+    if (urlnode2m) divnurlode.appendChild(urlnode2m);
 	if (urlnode3) divnurlode.appendChild(urlnode3);
+    if (urlnode3a) divnurlode.appendChild(urlnode3a);
 	if (urlnode4) divnurlode.appendChild(urlnode4);
 	
     
@@ -4284,7 +4844,7 @@ class tinyPStag extends HTMLElement {
 		}
 		const [ action, id, data, contextstring ] = msg;
 		
-		var node, shadow, canvasnode, svgnode, pdfnode, urlnode, ctx, url, errornode;
+		var node, shadow, canvasnode, svgnode, pdfnode, urlnode, urlnodea, ctx, url, errornode;
 		
 		console.log("worker out: " + action + " " + id);
 		switch (action)
@@ -4299,30 +4859,9 @@ class tinyPStag extends HTMLElement {
 								url = ctx.canvas.toDataURL();
 								urlnode.href = url;
 								urlnode.setAttribute("download", "PS.png");
-								rpnFrames[urlnode.id].push(url);
 							}
 							break;
-			case "rawzip": node = document.getElementById(id);
-				              shadow = node.shadowRoot; 
-							  urlnode = shadow.querySelector('.jsrawurl');
-							  if (urlnode) {
-								  let z = new rpnZip('Frames');
-				                  var i = 0;
-				                  if (rpnFrames[urlnode.id].length > 1) {
-					                  for (let u of rpnFrames[urlnode.id]) {
-						                  if (u && u !== 'null') { 
-						                  	const b = atob(u.split(",")[1]);
-										  	z.binary2zip((1000+i)+".png",b,"");
-										  	i++;
-										  }
-										  
-					                  }	
-					                  rpnFrames[urlnode.id] = [];				                
-					                  z.makeZip(urlnode);
-					                  urlnode.innerHTML = "ZIP";
-					              }
-                              }
-                              break;
+			case "rawzip":  break;
 			case "canvas":  node = document.getElementById(id);
 				            shadow = node.shadowRoot; 
 							canvasnode = shadow.querySelector('.jscanvas');
@@ -4331,36 +4870,79 @@ class tinyPStag extends HTMLElement {
 							urlnode = shadow.querySelector('.jscanvasurl');
 							if (urlnode) {
 								let url = ctx.canvas.toDataURL();
+								let oc = document.createElement("CANVAS");
+								oc.width = context.width*2;
+								oc.height = context.height*2;
+								let ctxo = oc.getContext("2d"); 
+                                ctxo.drawImage(canvasnode, 0, 0, oc.width, oc.height);
+								let urljpg = oc.toDataURL("image/jpeg", 0.8);
 								urlnode.href = url;
                                 let d = new Date();
 	                            let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".png";
                                 urlnode.setAttribute("download", fn);
-								rpnFrames[urlnode.id].push(url);
+                                if (context.device.zip) {
+                                		let urlnodez = shadow.querySelector('.jscanvasurlz');
+								    rpnFrames[urlnodez.id].push(url);
+								}
+								if (context.device.movie) {
+                                		let urlnodem = shadow.querySelector('.jscanvasurlm');
+								    rpnImageData [urlnodem.id].push(urljpg);
+								}
 							}
 							break;
 							
-			case "canvaszip": node = document.getElementById(id);
-				              shadow = node.shadowRoot; 
-							  urlnode = shadow.querySelector('.jscanvasurl');
-							  if (urlnode) {
-							  	  let d = new Date();
-	                              let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13);
-								  let z = new rpnZip(fn);
-				                  var i = 0;
-				                  if (rpnFrames[urlnode.id].length > 1) {
-					                  for (let u of rpnFrames[urlnode.id]) {
-						                  if (u && u !== 'null') { 
-						                  	const b = atob(u.split(",")[1]);
-										  	z.binary2zip((1000+i)+".png",b,"");
-										  	i++;
-										  }
-										  
-					                  }	
-					                  rpnFrames[urlnode.id] = []; 			                
-					                  z.makeZip(urlnode);
-					                  urlnode.innerHTML = "ZIP";
-					              }
-                              }
+			case "canvaszip": 	node = document.getElementById(id);
+				              	shadow = node.shadowRoot; 
+
+								if (context.device.zip) {
+									let urlnodez = shadow.querySelector('.jscanvasurlz');
+									if (rpnFrames[urlnodez.id].length > 1) {
+								    let d = new Date();
+									let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13);
+								    let z = new rpnZip(fn);
+								    var i = 0;
+												                  	
+								    for (let u of rpnFrames[urlnodez.id]) {
+									     if (u && u !== 'null') { 
+										      const b = atob(u.split(",")[1]);
+											  z.binary2zip(("0000"+i).slice(-4)+".png",b,"");
+											  i++;
+									     }
+																		  
+								     }
+									z.makeZip(urlnodez);
+								    urlnodez.innerHTML = "ZIP";
+								    urlnodez.style.display = "inline";
+								}}
+													                  
+								if (context.device.movie) {
+									let urlnodem = shadow.querySelector('.jscanvasurlm');
+								if (rpnImageData[urlnodem.id].length > 1) {
+								     const recorder = new mjpeg(context.width*2, context.height*2 , 1000/context.device.interval);                                 		     	for (let u of rpnImageData[urlnodem.id]) {
+									    if (u && u !== 'null') {
+									        var base64image = u.split(";base64,").pop();
+										    var stream = atob(base64image)
+										    var bytes = Object.keys(stream).length;
+								            var myArr = new Uint8Array(bytes)
+											for(var i = 0; i < bytes; i++){
+								    			myArr[i] = stream[i].charCodeAt(0);
+											}
+								             recorder.AppendFrame (  myArr, {} )
+								        } 
+								    }
+								    recorder.finalize();
+								    urlnodem.href = recorder.urldata;
+								    let d = new Date();
+									let fn = "PS" + '_' + d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".mp4";
+								    urlnodem.setAttribute("download", fn);
+									urlnodem.innerHTML = "MP4";				
+									urlnodem.style.display = "inline";
+									
+								}}
+                                					                  								
+					              
+                              
+                               
                               break;
 		
 			case "svg":     node = document.getElementById(id);
@@ -4376,14 +4958,50 @@ class tinyPStag extends HTMLElement {
 	                            let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".svg";
                                 urlnode.setAttribute("download", fn);
 							}
+							if (context.device.svgmovie) {
+								urlnodea =  shadow.querySelector('.svgurla');
+								rpnSVGData[urlnodea.id].push(data);
+							}
 							break;
 			
 			
 			case "svgfinal": node = document.getElementById(id);
 				            shadow = node.shadowRoot; 
 				            svgnode = shadow.querySelector('.divsvg');
-				            svgnode.outerHTML = 				            svgnode.outerHTML + " ";
-				            break;
+				            svgnode.outerHTML = svgnode.outerHTML + " ";
+				           
+							if (context.device.svgmovie) {
+								
+						    urlnodea = shadow.querySelector('.svgurla');
+								
+							if (rpnSVGData[urlnodea.id].length > 1) {				            
+							    let globalnode = document.createElement("SVG");
+							    for (let t in rpnSVGData[urlnodea.id]) {
+							    	let gnode = document.createElement("G");
+							    	gnode.innerHTML = rpnSVGData[urlnodea.id][t] ; 
+							    	let un = gnode.firstChild;
+							    	un.setAttribute("width","0px");
+							    	let s = document.createElement("SET");
+							    	s.setAttribute("attributeName", "width")
+							    	s.setAttribute("to", context.width + "px")
+							    	s.setAttribute("begin", t*context.device.interval+"ms")
+							    	if (t < rpnSVGData[urlnodea.id].length -1)
+							    	s.setAttribute("dur", context.device.interval + "ms")
+							    	un.appendChild(s);
+							    	globalnode.appendChild(gnode);
+							
+							    }
+								let file = rpnStartTag + "?xml version='1.0' encoding='UTF-8'?" + rpnEndTag + globalnode.outerHTML;
+							    url = "data:image/svg+xml;base64," + rpnBbtoaUnicode(file);
+							    
+                                urlnodea.href = url;
+                                let d = new Date();
+	                            let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".svg";
+                                urlnodea.setAttribute("download", fn);
+						        urlnodea.innerHTML = "ASVG";
+						        urlnodea.style.display = "inline";
+							}}				            
+											            break;
 			
 			case "pdf":     node = document.getElementById(id);
 				            shadow = node.shadowRoot; 
@@ -4485,7 +5103,7 @@ workeronmessage = function (e) {
 	switch (action)
 	{
 		case "rpn": context = rpn(data, context, true); 
-		            if (context.lasterror) postMessage(["error", context.id, "!" + context.lasterror + '<p>' + "Stack: " + context.stack.reduce((acc,v) => acc + v.dump + " " , " ") + '<p>' + "Code executed: " + context.currentcode, null]);
+		            if (context.lasterror) postMessage(["error", context.id, "!" + context.lasterror + '<p>' + "Stack: " + context.stack.reduce((acc,v) => acc + v.dump + " " , " ").slice(-140) + '<p>' + "Code executed: " + context.currentcode, null]);
 					break;
 		default : handleMessageExtended(e);
 	}
@@ -4494,8 +5112,7 @@ workeronmessage = function (e) {
 
 
 
-function rpnWorker() { 
-	console.log("worker");
+function rpnWorker() {
 	const workercode = []
 	workercode.push('rpnFonts = ' + JSON.stringify(rpnFonts));
 	workercode.push('rpnFiles = ' + JSON.stringify(rpnFiles));
@@ -4551,8 +5168,6 @@ rpnDocument = new xmlDoc();
 	{
 		workercode.push('rpnOperators.' + key + ' = ' + rpnOperators[key].toString());
 	}
-	console.log("worker fonts");
-	console.log(rpnFontURLs);
 	workercode.push('rpnFontURLs = {};');
 	for (key in rpnFontURLs)
 	{
