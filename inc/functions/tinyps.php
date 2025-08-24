@@ -22,7 +22,7 @@ class swTinyPS extends swFunction
 	{
 		$id = rand(0,1000);
 		
-		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="576" height="324" format="svg" textmode="1">'.@$args[1].'</tiny-ps>';
+		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="640" height="360" format="svg" textmode="1">'.@$args[1].'</tiny-ps>';
 		
 		// get all tables
 		
@@ -31,14 +31,18 @@ class swTinyPS extends swFunction
         
         global $swTinyPSimported;
         global $rpnFontURLs;
+        
+        $fonts = json_encode($rpnFontURLs);
+        
         if (!$swTinyPSimported)
  			$result .= '
+
+<script>rpnFontURLs = '.$fonts.'</script>
 <script src="inc/skins/tinyps112.js"></script>
-<script src="inc/skins/tinyps-extensions.js"></script>
-<script>rpnFontURLs = '.json_encode($rpnFontURLs).';</script>';
+<script src="inc/skins/tinyps-extensions.js"></script>';
  		else 
  		    $result .= '
- <script>tag = document.getElementById("tinyps'.$id.'"); tag.outerHTML = tag.outerHTML;</script>';
+<script>tag = document.getElementById("tinyps'.$id.'"); tag.outerHTML = tag.outerHTML;</script>';
  		$swTinyPSimported = true;
  		$result .= '</nowiki>';
 		

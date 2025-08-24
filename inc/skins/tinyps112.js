@@ -53,12 +53,22 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 var ENVIRONMENT_IS_WORKER = typeof importScripts === 'function';
 
-rpnFontURLs = {};
+if (typeof rpnFontURLs  === 'undefined') {
+	console.log("fonts not defined");
+	rpnFontURLs = {};
+}
+if (typeof rpnOperators  === 'undefined') {
+	rpnOperators = {};
+}
+if (typeof rpnExtensions  === 'undefined') {
+	rpnExtensions = "";
+}
+
+
 rpnFonts = {};
 rpnFiles = {};
-rpnOperators = {};
 rpnFrames = {};
-rpnExtensions = "";
+
 
 /* DATA TYPES */
 
@@ -4484,7 +4494,8 @@ workeronmessage = function (e) {
 
 
 
-function rpnWorker() {
+function rpnWorker() { 
+	console.log("worker");
 	const workercode = []
 	workercode.push('rpnFonts = ' + JSON.stringify(rpnFonts));
 	workercode.push('rpnFiles = ' + JSON.stringify(rpnFiles));
@@ -4540,6 +4551,8 @@ rpnDocument = new xmlDoc();
 	{
 		workercode.push('rpnOperators.' + key + ' = ' + rpnOperators[key].toString());
 	}
+	console.log("worker fonts");
+	console.log(rpnFontURLs);
 	workercode.push('rpnFontURLs = {};');
 	for (key in rpnFontURLs)
 	{
