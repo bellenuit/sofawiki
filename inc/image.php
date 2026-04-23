@@ -35,20 +35,12 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 	
 	if (!file_exists($path0)) return;
 		
-	switch (substr($name,-4))
-	{
-		case '.jpg' : ;
-		case 'jpeg' : $img = @ImageCreateFromJpeg($path0); 
-					  if (!$img) //png labelled as jpg
-					  	$img = @ImageCreateFromPNG($path0); 
-					  	break;
-		case '.png' : $img = @ImageCreateFromPNG($path0); break;
-		case '.gif' : $img = @ImageCreateFromGIF($path0); break;
-		
-		case '.pdf' : return false;
-		default: return false;
-	}
-	echotime('...');
+	$img = @imagecreatefromjpeg($path0); 
+	if (!$img) $img = @imagecreatefrompng($path0); 
+	if (!$img) $img = @imagecreatefromgif($path0); 
+	if (!$img) $img = @imagecreatefromwebp($path0); 
+    if (!$img) echotime('imageformat not valid');
+	
 	
 	if ($img)
 	{
@@ -123,7 +115,7 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 		}
 		else
 		{
-			$back = ImageCreateTrueColor($destw,$desth);
+			$back = ImageCreateTrueColor(round($destw),round($desth));
 			swImageCopyResampled($back, $img,0 ,0 , $l, $t, $destw, $desth, $sourcew, $sourceh);  //echo 'normal';
 		}
 
@@ -442,7 +434,7 @@ function swImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $des
 	if ($scalexy > 1 || true) // bicubic rescale not ready yet
 	{
 
-		ImageCopyResampled($back,$img,$destx, $desty,$sourcex, $sourcey, $destw, $desth, $sourcew, $sourceh);
+		ImageCopyResampled($back,$img,round($destx),round($desty),round($sourcex),round($sourcey), round($destw),round($desth), round($sourcew),round($sourceh));
 	}
 	else
 	{

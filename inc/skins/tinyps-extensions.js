@@ -1,4 +1,26 @@
 
+rpnOperators.imagedata = function (context) {
+	const [id] = context.pop("string");	
+	const imagedata = dataimages[id.value];
+	
+	context.stack.push(new rpnNumber(imagedata.width));
+	context.stack.push(new rpnNumber(imagedata.height));
+	
+    const binary = imagedata.data;
+    const arr = new Array(binary.length);
+    for (var i = 0; i < binary.length; i++) {
+        arr[i] = String.fromCharCode(binary[i])
+    }
+
+    const ar = new rpnString(arr.join(''),context.heap)
+    ar.reference.inc();
+    context.stack.push(ar);	
+
+	
+	return context;
+}
+
+
 rpnOperators.numberformat = function(context) {
     const [r] = context.pop("number");
     if (!r) return context;
@@ -26,8 +48,7 @@ grestore end newpath
 
 rpnOperators.preparechart = function(context) {
     const code = `
-/TGL017 findfont 16 scalefont setfont
-/chartrect [ 0 0 576 576 16 div 9 mul ] def
+/chartrect [ 0 0 640 640 16 div 9 mul ] def
 /chartmargins [ 100 80 5 60 ] def
 /xlimits [ 0 0.2 1 ] def
 /ylimits [ 0 0.2 1 ] def
@@ -36,16 +57,17 @@ rpnOperators.preparechart = function(context) {
 /round1 { log 0.5 sub round 10 exch exp } def
 
 % preparechart
+/ymax 0 def
 /alpha exch def /db exch def db length {
-/data db alpha table def data 
+/data db alpha table def 
 /ymin data 1 get alpha get def 
-/ymax ymin def ymax 
+/ymax ymin def  
 alpha 1 data 0 get length 1 sub { /col exch def
 1 1 data length 1 sub { /row exch def
 /y data row get col get def
 /ymax y ymax max def
-/ymin y ymin min def
-} for
+/ymin y ymin min def 
+} for 
 } for 
 /ystep ymax ymin sub round1 def
 ystep 0 eq { /ystep 1 def } if
@@ -53,8 +75,10 @@ ystep 0 eq { /ystep 1 def } if
 /ymax ymax ystep div 0.5 add round ystep mul def
 ymax ymin div 2 gt { /ymin 0 def } if
 /ylimits [ ymin ystep ymax ] def 
-/xlimits [ 0 1 data length 1 sub ] def
-chartmargins 0 ymax numberformat stringwidth pop 10 add put } if
+/xlimits [ 0 1 data length 1 sub ] def } if
+
+/xlog 0 def
+/ylog 0 def
 
 
 /square {
@@ -62,8 +86,12 @@ chartmargins 0 ymax numberformat stringwidth pop 10 add put } if
 chartmargins 2 chartrect 2 get chartmargins 0 get sub h sub put
 } def
 
-/chartproj { ylimits 0 get sub ylimits 2 get ylimits 0 get sub div chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub mul chartrect 1 get add chartmargins 1 get add exch 
+/chartproj { 
+ylog { 10 ylimits 0 get exp max log  } if
+ylimits 0 get sub ylimits 2 get ylimits 0 get sub div chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub mul chartrect 1 get add chartmargins 1 get add exch 
+xlog { 10 xlimits 0 get exp max log  } if
 xlimits 0 get sub xlimits 2 get xlimits 0 get sub div chartrect 2 get chartmargins 0 get sub chartmargins 2 get sub mul chartrect 0 get add chartmargins 0 get add exch } def
+
 
 /hchartproj { ylimits 0 get sub ylimits 2 get ylimits 0 get sub div chartrect 2 get chartmargins 0 get sub chartmargins 2 get sub mul chartrect 0 get add chartmargins 0 get add exch 
 xlimits 2 get exch sub xlimits 2 get xlimits 0 get sub div chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub mul chartrect 1 get add chartmargins 1 get add exch   exch } def
@@ -76,7 +104,11 @@ preparepatterns
 { 0.902 0.196 0.157 setrgbcolor fill }
 { 0.941 0.549 0.157 setrgbcolor fill }
 { 0.427 0.224 0.545 setrgbcolor fill }
-{ 0.941 0.784 0 setrgbcolor fill } ] def 
+{ 0.941 0.784 0 setrgbcolor fill } 
+{ 0.75 setgray fill } 
+{ 0.50 setgray fill } 
+{ 0.25 setgray fill } 
+{ 0.00 setgray fill } ] def 
 
 /colors [ {}
 { 0.078 0.431 0.667 setrgbcolor  }
@@ -84,17 +116,33 @@ preparepatterns
 { 0.902 0.196 0.157 setrgbcolor  }
 { 0.941 0.549 0.157 setrgbcolor  }
 { 0.427 0.224 0.545 setrgbcolor  }
-{ 0.941 0.784 0 setrgbcolor  } ] def 
+{ 0.941 0.784 0 setrgbcolor  } 
+{ 0.75 setgray } 
+{ 0.50 setgray } 
+{ 0.25 setgray } 
+{ 0.00 setgray } ] def 
 
-/legendstyle [ {} {} {} {} {} {} {} ] def
+/legendstyle [ {} {} {} {} {} {} {} {} {} {} {}] def
 
-/xaxis { 0 setgray 1 setlinewidth xlimits 
-xlimits 0 get 0 chartproj moveto xlimits 2 get 0 chartproj lineto stroke } def
+/textsizes { /titlesize exch def /bodysize exch def 
+/TGL017 bodysize selectfont
+chartmargins 0 ymax numberformat stringwidth pop 10 add put } def
+16 20 textsizes
+
+/xaxis { 0 setgray 1 setlinewidth  
+xlimits 0 get xlog { 10 exch exp } if
+0 chartproj moveto 
+xlimits 2 get xlog { 10 exch exp } if
+0 chartproj lineto stroke } def
+
 /hxaxis { 0 setgray 1 setlinewidth xlimits 
 xlimits 0 get 0 hchartproj moveto xlimits 2 get 0 hchartproj lineto stroke } def
 
 /yaxis { 0 setgray 1 setlinewidth
-0 ylimits 0 get chartproj moveto 0 ylimits 2 get chartproj lineto stroke } def
+0 ylimits 0 get ylog { 10 exch exp } if
+chartproj moveto 0 ylimits 2 get ylog { 10 exch exp } if
+chartproj lineto stroke } def
+
 /hyaxis { 0 setgray 1 setlinewidth
 xlimits 2 get ylimits 0 get hchartproj moveto xlimits 2 get ylimits 2 get hchartproj lineto stroke } def
 
@@ -108,18 +156,24 @@ xlimits 2 get ylimits 2 get chartproj lineto
 xlimits 0 get ylimits 2 get chartproj lineto closepath stroke
 } def
 
-/xticks { 0 setgray 0.5 setlinewidth
+/xticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
+xlog { /x x 10 exch exp def } if
 x { x 0 ylimits 0 get max chartproj moveto 0 -5 rlineto stroke
 x 0 ylimits 0 get max chartproj exch x numberformat stringwidth pop 2 div sub exch 20 sub moveto x numberformat show} if
 } for } def 
-/yticks { 0 setgray 0.5 setlinewidth
-ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
+
+/yticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
+ylimits 0 get ylimits 1 get ylimits 2 get {
+/y exch def
+ylog { /y y 10 exch exp def } if
 y { 0 xlimits 0 get max y chartproj moveto -5 0 rlineto stroke
-0 xlimits 0 get max y chartproj exch y numberformat stringwidth pop sub 7 sub exch 5 sub moveto y numberformat show} if
+0 xlimits 0 get max y chartproj exch y numberformat stringwidth pop sub 7 sub exch 5 sub moveto y 
+numberformat show} if
 } for } def
+
 /ticks { xticks yticks } def
-/hyticks { 0 setgray 0.5 setlinewidth
+/hyticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
 y { xlimits 2 get y hchartproj moveto 0 -5 rlineto stroke
 xlimits 2 get y hchartproj exch y numberformat stringwidth pop 2 div sub exch 20 sub moveto y numberformat show} if
@@ -127,19 +181,28 @@ xlimits 2 get y hchartproj exch y numberformat stringwidth pop 2 div sub exch 20
 
 /xgrid { 0.5 setlinewidth
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
-x { x ylimits 0 get chartproj moveto x ylimits 2 get chartproj lineto stroke
+xlog { /x 10 x exp def } if
+x { x ylimits 0 get ylog { 10 exch exp } if
+chartproj moveto x ylimits 2 get ylog { 10 exch exp } if
+chartproj lineto stroke
 } if
 } for } def 
+
 /hxgrid { 0.5 setlinewidth
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
 x { x ylimits 0 get hchartproj moveto x ylimits 2 get hchartproj lineto stroke
 } if
 } for } def 
+
 /ygrid { 0.5 setlinewidth
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
-y { xlimits 0 get y chartproj moveto xlimits 2 get y chartproj lineto stroke
+ylog { /y 10 y exp def } if
+y { xlimits 0 get xlog { 10 exch exp } if
+y chartproj moveto xlimits 2 get xlog { 10 exch exp } if
+y chartproj lineto stroke
 } if
 } for } def
+
 /hygrid { 0.5 setlinewidth
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
 y { xlimits 0 get y hchartproj moveto xlimits 2 get y hchartproj lineto stroke
@@ -148,12 +211,15 @@ y { xlimits 0 get y hchartproj moveto xlimits 2 get y hchartproj lineto stroke
 /grid { xgrid ygrid } def
 /hgrid { hxgrid hygrid } def
 
-/description { 0 chartrect 3 get chartmargins 3 get sub 20 add moveto show } def
-/credits { chartrect 0 get chartrect 1 get chartmargins 1 get add 40 sub moveto show } def
-/xlabel { /s exch def xlimits 0 get xlimits 2 get add 2 div 0 chartproj 40 sub exch s stringwidth pop 2 div sub exch moveto s show } def
-/ylabel { /s exch def 20 chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub 2 div chartrect 0 get add chartmargins 1 get add moveto 90 rotate s stringwidth pop 2 div neg 0 rmoveto s show -90 rotate } def
-/title { /s exch def gsave 
-/TGL017 findfont 20 scalefont setfont 
+/description { /TGL017 bodysize selectfont
+0 chartrect 3 get chartmargins 3 get sub 20 add moveto show } def
+/credits { /TGL017 bodysize selectfont
+chartrect 0 get chartrect 1 get chartmargins 1 get add 40 sub moveto show } def
+/xlabel { /s exch def /TGL017 bodysize selectfont
+xlimits 0 get xlimits 2 get add 2 div 0 chartproj 40 sub exch s stringwidth pop 2 div sub exch moveto s show } def
+/ylabel { /s exch def /TGL017 bodysize selectfont
+20 chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub 2 div chartrect 0 get add chartmargins 1 get add moveto 90 rotate s stringwidth pop 2 div neg 0 rmoveto s show -90 rotate } def
+/title { /s exch def gsave /TGL017 titlesize selectfont
 0 chartrect 3 get chartmargins 3 get sub 40 add moveto s show grestore } def
 
 
@@ -170,6 +236,29 @@ x d add ylimits 0 get 0 max chartproj lineto
 x d add y chartproj lineto 
 x y chartproj lineto 
 closepath patterns col get exec 0 setgray
+legendstyle col { 
+0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
+patterns col get exec } put 
+} for 
+} for 
+} def
+
+/barvalues {  /b exch def 
+1 1 data length 1 sub { /row exch def
+0 1 b length 1 sub { /i exch def b i get /col exch def
+/y data row get col get def
+/d 1 b length 1 add div def
+/x row 1 sub i d mul add d 2 div add def
+x ylimits 0 get 0 max chartproj moveto
+x d add ylimits 0 get 0 max chartproj lineto 
+x d add y chartproj lineto 
+x y chartproj lineto 
+closepath patterns col get exec 
+y 0 gt { 
+1 setgray
+x d 2 div add y chartproj moveto 0 y round cvs dup stringwidth pop 2 div neg bodysize neg rmoveto show
+} if
+0 setgray
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
 patterns col get exec } put 
@@ -213,7 +302,8 @@ patterns col get exec } put
 } for 
 } for 
 } def
-/hvotebar { /b exch def 
+
+/hvotebar { /b exch def /TGL017 bodysize selectfont
 /ylimits [ 0 20 100 ] def
 1 1 data length 1 sub { /row exch def 
 /tot 0 def
@@ -231,8 +321,12 @@ x 0.5 add  y0 hchartproj lineto
 x 0.5 add  y hchartproj lineto 
 x y hchartproj lineto 
 closepath patterns col get exec 0 setgray
+y y0 gt {
 /s y y0 sub round cvs def
-x y0 y add 2 div hchartproj moveto y y0 s stringwidth pop 2 div neg -36 rmoveto s show
+x 0.25 add y0 y add 2 div hchartproj moveto y y0 s stringwidth pop 2 div neg -6 rmoveto
+1 setgray s show 
+} if
+0 setgray
 /y0 y def
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
@@ -357,7 +451,9 @@ colors col get exec fill } put
 0 setgray
 } def
 
-/labelxydot { /b exch def /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def
+/labelxydot { /b exch def 
+/TGL017 bodysize selectfont
+/lcol b 0 get def /xcol b 1 get def /ycol b 2 get def
 1 1 data length 1 sub {/row exch def
 /x data row get xcol get def
 /y data row get ycol get def
@@ -369,7 +465,9 @@ colors col get exec fill } put
 0 setgray
 } def
 
-/bubbledot { /sc exch def /b exch def /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def /rcol b 3 get def
+/bubbledot { /sc exch def /b exch def 
+/TGL017 bodysize selectfont
+/lcol b 0 get def /xcol b 1 get def /ycol b 2 get def /rcol b 3 get def
 1 1 data length 1 sub { /row exch def
 /x data row get xcol get def
 /y data row get ycol get def
@@ -398,6 +496,7 @@ p1 pstep add pstep p2 { fn chartproj lineto } for
 } def
 
 /bottomlegend { /b exch def
+/TGL017 bodysize selectfont
 0 chartmargins 1 get 60 sub /y exch def /x exch def x y
 b { /col exch def
 gsave
@@ -411,6 +510,7 @@ grestore
 } def
 
 /toplegend { /b exch def /s exch def
+/TGL017 bodysize selectfont
 0 chartrect 3 get chartmargins 3 get sub 20 add /y exch def /x exch def x y
 x y moveto s show
 /x x s stringwidth pop add 12 add def 
@@ -426,12 +526,14 @@ grestore
 } def
 
 /category { 0 setgray
+/TGL017 bodysize selectfont
 1 1 data length 1 sub { /row exch def
 row 0.5 sub 0 chartproj 20 sub moveto data row get 0 get stringwidth pop 2 div neg 0 rmoveto data row get 0 get show
 } for 
 } def
 
 /hcategory { 0 setgray
+/TGL017 bodysize selectfont
 1 1 data length 1 sub { /row exch def
 row 0.5 sub 0 hchartproj 8 sub moveto data row get 0 get stringwidth pop neg 8 sub 0 rmoveto data row get 0 get show
 } for 
@@ -499,9 +601,20 @@ rpnOperators.preparepatterns = function(context) {
 
 
 
+
+
+
 rpnOperators.table = function(context) {
+	function parseNumber(s) {
+    if (typeof s == 'unefined') return 0;
+	if (s ==  '') return 0;
+	s = s.toString().replaceAll(/[^0-9-.]/g,"");
+	return parseFloat(s);
+}
+	
     const [haslabel, tablename] = context.pop("number", "string");
-    if (!tablename) return context; console.log("table " +tablename.value )
+    if (!tablename) return context; 
+    console.log("table " +tablename.value )
 	results = rpnTables[tablename.value];	
 	list = [];
 	list.push('[');
@@ -516,7 +629,8 @@ rpnOperators.table = function(context) {
 			   
 			   list.push('[');
 			   for(key in first) {
-				   list.push('(' + key + ')');
+				   // remove pretty format
+				   list.push('(' + key.replace(/^"/,"").replace(/"$/,"").replace(/^'/,"").replace(/'$/,"").replace(/^__/,"").replace(/__$/,"") + ')');
 			   }
 			   list.push(']');
 			   
@@ -527,8 +641,10 @@ rpnOperators.table = function(context) {
 				   for(key in row) {
 					   if (k < haslabel.value)
 						   list.push('(' + row[key] + ')');
-					   else
-					       if (row[key]) list.push(row[key]); else list.push('0');
+					   else {
+						   list.push(parseNumber(row[key]).toString());
+					   }
+					       
 			           k++;
 				   }
 				   list.push(']');
