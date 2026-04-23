@@ -25,6 +25,7 @@ foreach ($swLanguages as $v)
 if (@$swCustomSearch)
 {
 	$query = @$_REQUEST['query'];
+	$query = str_replace('"','""',$query);
 	$start = @$_REQUEST['start'];
 	if (!$start) $start = 1;
 	$limit = 500;

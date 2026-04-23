@@ -127,7 +127,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 	if (!trim($query)) return $r; // empty
 	
 	$q = "SELECT '1' as found, score(offsets(pages)) as score, url, lang, revision, title, snippet(pages) as body FROM pages 
-  WHERE pages MATCH '$query'
+  WHERE pages MATCH '".str_replace("'","''",$query)."'
   ORDER BY score DESC
   LIMIT $limit";
 	
@@ -143,7 +143,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 
 		
 		$q = "SELECT '0' as found, score(offsets(pages)) as score, url, lang, revision, title, body FROM pages 
-  WHERE soundex MATCH '$query'
+  WHERE soundex MATCH '".str_replace("'","''",$query)."'
   ORDER BY score DESC
   LIMIT $limit";
   		$result = $swFulltextIndex->query($q);
@@ -243,7 +243,7 @@ function swQueryFulltext($query, $limit=1000, $star = true)
 
 function swQueryFulltextURL($query, $limit=500, $star = true)
 {
-	$query = htmlentities($query,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE); 
+	$query = htmlentities($query,ENT_SUBSTITUTE|ENT_HTML5,'UTF-8',FALSE);
 	$query0 = $query;
 	if ($star) $query = swQueryStar($query);
 	echotime('queryfulltexturl "'.$query.'"');
@@ -254,20 +254,14 @@ function swQueryFulltextURL($query, $limit=500, $star = true)
 	
 	$r = new swRelation('found, score, url');
 	
-	// escape quote
-	$query = str_replace("'","''",$query);
 	if (!trim($query)) return $r; // empty
 	
-	
-	
-	
 	$q = "SELECT '1' as found, score(offsets(pages)) as score, url FROM pages 
-  WHERE pages MATCH '$query'
+  WHERE pages MATCH '".str_replace("'","''",$query)."'
   ORDER BY score DESC
   LIMIT $limit";
 	
-	
-	
+	//echo '<p>'.$q;
 	$result = $swFulltextIndex->query($q);
 	
 	if (NULL == $result->fetchArray(SQLITE3_ASSOC)) 

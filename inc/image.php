@@ -34,13 +34,15 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 	echotime('renderimage '.$name);
 	
 	if (!file_exists($path0)) return;
-		
-	$img = @imagecreatefromjpeg($path0); 
-	if (!$img) $img = @imagecreatefrompng($path0); 
-	if (!$img) $img = @imagecreatefromgif($path0); 
-	if (!$img) $img = @imagecreatefromwebp($path0); 
-    if (!$img) echotime('imageformat not valid');
 	
+	if (stristr('jpg,jpeg,png,gif,webp', substr($path0,-4)))
+    {		
+		$img = @imagecreatefromjpeg($path0); 
+		if (!$img) $img = @imagecreatefrompng($path0); 
+		if (!$img) $img = @imagecreatefromgif($path0); 
+		if (!$img) $img = @imagecreatefromwebp($path0); 
+	    if (!$img) echotime('imageformat not valid');
+	}
 	
 	if ($img)
 	{
