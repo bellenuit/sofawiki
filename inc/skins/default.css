@@ -758,14 +758,16 @@ video.yfrog
 	margin-left: 4px;
 }
 
-
+tiny-ps {
+	max-width: 100%;
+}
 
 @media all and (min-width:641px)
 {
 	
 	#appmenu  					{ height: 26px; }
 	
-	#content  					{ position: absolute; top: 120px; left: 160px; width: 600px; }
+	#content  					{ position: absolute; top: 120px; left: 160px; width: 660px; }
 
 	#menu     					{ position: absolute; top: 120px; left: 10px; width: 120px; }
 

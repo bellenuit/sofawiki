@@ -134,7 +134,7 @@ include_once $swRoot.'/inc/functions/preventovertimesearchagain.php';
 include_once $swRoot.'/inc/functions/upload.php';
 include_once $swRoot.'/inc/functions/textrank.php';
 include_once $swRoot.'/inc/functions/tinyps.php';
-
+include_once $swRoot.'/inc/functions/pscharts.php';
 
 
 
