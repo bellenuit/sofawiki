@@ -45,15 +45,23 @@ Version 1.2.4 2026-02-01
 - added test files
 Version 1.2.5 2026-02-14
 - new operator currentpagedevice
+Version 1.2.6 2026-03-03
+- SVG uses RGB color for non transparent SVG (for compatibility with MS Word)
+- Transparent text is overlaid on SVG paths if textmode is off. This makes SVG searchable and selectable
+Version 1.2.7 2026-05-07
+- new operator cvn
+- improved path precision (1/1000 pt)
+Version 1.2.8 2026-06-07
+- error exits for and forall loops
 
 
-Renders as subset PostScript to Canvas, SVG and PDF (as well as an obsucre raw rendering).
+Renders a subset of PostScript to Canvas, SVG and PDF (as well as an obsucre raw rendering).
 The output can be displayed or proposed as downloadable link. It can be transparent.
 The code is in the innerHMTL of the tiny-ps tag. 
 The tag supports the attributes width, height, format, transparent, interval and oversampling.
 The display is block by default, biut can be set to inline-block witch CSS.
 
-The code is self contained and does not have dependencies. It is small (~ 150 KB).
+The code is self contained and does not have dependencies. It is small (~ 200 KB).
 Just add it at the end of the page. Everything is declarative.
 
 If you want to display text, you need to place TrueType fonts in the same folder as the script.
@@ -767,12 +775,12 @@ rpnSVGDevice = class {
        if (!path.length) return "";
        for (let subpath of path) {
            if (!subpath.length) continue;
-           p.push("M " + (Math.round(subpath[0][1]*100)/100) + " " + (Math.round((this.height - subpath[0][2])*100)/100));
+           p.push("M " + (Math.round(subpath[0][1]*1000)/1000) + " " + (Math.round((this.height - subpath[0][2])*1000)/1000));
            for (let line of subpath) {
                if (line[0] == "C") {
-                   p.push("C " +(Math.round(line[3]*100)/100) + " " + (Math.round((this.height - line[4])*100)/100)+ " " + (Math.round(line[5]*100)/100) + " " + (Math.round((this.height - line[6])*100)/100) + " " + (Math.round((line[7])*100)/100) + " " + (Math.round((this.height - line[8])*100)/100));
+                   p.push("C " +(Math.round(line[3]*1000)/1000) + " " + (Math.round((this.height - line[4])*1000)/1000)+ " " + (Math.round(line[5]*1000)/1000) + " " + (Math.round((this.height - line[6])*1000)/1000) + " " + (Math.round((line[7])*1000)/1000) + " " + (Math.round((this.height - line[8])*1000)/1000));
                } else {
-                   p.push("L "+(Math.round(line[3]*100)/100) + " " + (Math.round((this.height - line[4])*100 )/100));
+                   p.push("L "+(Math.round(line[3]*1000)/1000) + " " + (Math.round((this.height - line[4])*1000 )/1000));
                    if (line[0] == "Z") p.push("Z"); 
                 }
            }
@@ -1811,6 +1819,15 @@ rpnUnitTest("100 90 50 90 50 50 curveto","!nocurrentpoint");
 rpnUnitTest("(a) 100 90 50 90 50 curveto","!typeerror");
 rpnUnitTest("100 90 50 90 50 curveto","100 90 50 90 50 !stackunderflow");
 
+
+rpnOperators.cvn = function(context) {
+    const [x] = context.pop("string");
+    if (!x) return context;
+    const result = x.value;
+    context.stack.push(new rpnName(result));
+    return context;
+};
+
 rpnOperators.cvr = function(context) {
     const [x] = context.pop("any");
     if (!x) return context;
@@ -2027,7 +2044,9 @@ rpnOperators.for = function(context) {
                 context.lasterror = "";
                 context.stack.pop();
                 return context;
-            }
+            } else if (context.lasterror) {
+                return context;
+            } 
 
         }
     } else {
@@ -2037,6 +2056,8 @@ rpnOperators.for = function(context) {
             if (context.lasterror == "exit") {
                 context.lasterror = "";
                 context.stack.pop();
+                return context;
+            } else if (context.lasterror) {
                 return context;
             }
        }
@@ -2051,6 +2072,13 @@ rpnOperators.forall = function(context) {
         	if (elem.reference) elem.reference.inc();
             context.stack.push(elem);
             context = rpn(proc.value, context);
+            if (context.lasterror == "exit") {
+                context.lasterror = "";
+                context.stack.pop();
+                return context;
+            } else if (context.lasterror) {
+                return context;
+            }
         }
     return context;
 };

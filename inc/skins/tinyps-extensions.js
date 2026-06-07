@@ -1,3 +1,49 @@
+rpnOperators.combsort = function(context) {
+    const code = `10 dict begin /arr exch def
+/d arr length 1 sub def
+{ /sorted 1 def
+  /lastround d 1 eq def
+  0 1 arr length d sub 1 sub { /i exch def
+     /v1 arr i get def
+     /v2 arr i d add get def
+     v1 v2 compare not { /sorted 0 def
+        arr i v2 put
+        arr i d add v1 put
+     } if
+  } for
+  /d d 1.3 div floor 1 max def
+  lastround sorted mul { exit } if
+} loop
+end`;
+    context =  rpn(code, context);
+    return context;
+};
+
+
+rpnOperators.compare = function(context) {
+    const code = `lt`;
+    context =  rpn(code, context);
+    return context;
+};
+
+rpnOperators.concat = function(context) {
+    const code = `
+3 dict begin /b exch def /a exch def
+/c a length b length add string def
+c 0 a putinterval
+c a length b putinterval
+c end } def`;
+    context =  rpn(code, context);
+    return context;
+};
+
+
+rpnOperators.cshow = function(context) {
+    const code = `
+dup stringwidth pop 2 div neg 0 rmoveto show`;
+    context =  rpn(code, context);
+    return context;
+};
 
 rpnOperators.imagedata = function (context) {
 	const [id] = context.pop("string");	
@@ -29,6 +75,7 @@ rpnOperators.numberformat = function(context) {
     return context;
 };
 
+
 rpnOperators.patternfill = function(context) {
     const code = `
 10 dict begin /p exch def
@@ -54,7 +101,7 @@ rpnOperators.preparechart = function(context) {
 /ylimits [ 0 0.2 1 ] def
 /data [ [(k) (v) (x) (y)] [ (foo) 0.5 0.4 0.3 ] [ (bar) 0.7 0.8 0.9] ] def 
 
-/round1 { log 0.5 sub round 10 exch exp } def
+/round1 { 1.5 div log 2 mul round 2 div dup dup floor sub 0.1 exch gt { 2.5  } { 10 } ifelse exch 1 sub floor 10 exch exp mul } def
 
 % preparechart
 /ymax 0 def
@@ -125,8 +172,11 @@ preparepatterns
 /legendstyle [ {} {} {} {} {} {} {} {} {} {} {}] def
 
 /textsizes { /titlesize exch def /bodysize exch def 
-/TGL017 bodysize selectfont
-chartmargins 0 ymax numberformat stringwidth pop 10 add put } def
+/textfont (TGL017) def
+textfont cvn bodysize selectfont
+chartmargins 0 ymax numberformat stringwidth pop 10 add put
+chartmargins 3 titlesize bodysize add 24 add put
+ } def
 16 20 textsizes
 
 /xaxis { 0 setgray 1 setlinewidth  
@@ -156,14 +206,14 @@ xlimits 2 get ylimits 2 get chartproj lineto
 xlimits 0 get ylimits 2 get chartproj lineto closepath stroke
 } def
 
-/xticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
+/xticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
 xlog { /x x 10 exch exp def } if
 x { x 0 ylimits 0 get max chartproj moveto 0 -5 rlineto stroke
 x 0 ylimits 0 get max chartproj exch x numberformat stringwidth pop 2 div sub exch 20 sub moveto x numberformat show} if
 } for } def 
 
-/yticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
+/yticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
 ylimits 0 get ylimits 1 get ylimits 2 get {
 /y exch def
 ylog { /y y 10 exch exp def } if
@@ -173,7 +223,7 @@ numberformat show} if
 } for } def
 
 /ticks { xticks yticks } def
-/hyticks { 0 setgray 0.5 setlinewidth /TGL017 bodysize selectfont
+/hyticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
 y { xlimits 2 get y hchartproj moveto 0 -5 rlineto stroke
 xlimits 2 get y hchartproj exch y numberformat stringwidth pop 2 div sub exch 20 sub moveto y numberformat show} if
@@ -211,16 +261,16 @@ y { xlimits 0 get y hchartproj moveto xlimits 2 get y hchartproj lineto stroke
 /grid { xgrid ygrid } def
 /hgrid { hxgrid hygrid } def
 
-/description { /TGL017 bodysize selectfont
-0 chartrect 3 get chartmargins 3 get sub 20 add moveto show } def
-/credits { /TGL017 bodysize selectfont
+/description { textfont cvn bodysize selectfont
+0 chartrect 3 get chartmargins 3 get sub bodysize 4 add add moveto show } def
+/credits { textfont cvn bodysize selectfont
 chartrect 0 get chartrect 1 get chartmargins 1 get add 40 sub moveto show } def
-/xlabel { /s exch def /TGL017 bodysize selectfont
+/xlabel { /s exch def textfont cvn bodysize selectfont
 xlimits 0 get xlimits 2 get add 2 div 0 chartproj 40 sub exch s stringwidth pop 2 div sub exch moveto s show } def
-/ylabel { /s exch def /TGL017 bodysize selectfont
+/ylabel { /s exch def textfont cvn bodysize selectfont
 20 chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub 2 div chartrect 0 get add chartmargins 1 get add moveto 90 rotate s stringwidth pop 2 div neg 0 rmoveto s show -90 rotate } def
-/title { /s exch def gsave /TGL017 titlesize selectfont
-0 chartrect 3 get chartmargins 3 get sub 40 add moveto s show grestore } def
+/title { /s exch def gsave textfont cvn titlesize selectfont
+0 chartrect 3 get chartmargins 3 get sub bodysize 2 mul 4 add add moveto s show grestore } def
 
 
 
@@ -303,7 +353,7 @@ patterns col get exec } put
 } for 
 } def
 
-/hvotebar { /b exch def /TGL017 bodysize selectfont
+/hvotebar { /b exch def textfont cvn bodysize selectfont
 /ylimits [ 0 20 100 ] def
 1 1 data length 1 sub { /row exch def 
 /tot 0 def
@@ -452,7 +502,7 @@ colors col get exec fill } put
 } def
 
 /labelxydot { /b exch def 
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def
 1 1 data length 1 sub {/row exch def
 /x data row get xcol get def
@@ -466,7 +516,7 @@ colors col get exec fill } put
 } def
 
 /bubbledot { /sc exch def /b exch def 
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def /rcol b 3 get def
 1 1 data length 1 sub { /row exch def
 /x data row get xcol get def
@@ -496,7 +546,7 @@ p1 pstep add pstep p2 { fn chartproj lineto } for
 } def
 
 /bottomlegend { /b exch def
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 0 chartmargins 1 get 60 sub /y exch def /x exch def x y
 b { /col exch def
 gsave
@@ -510,7 +560,7 @@ grestore
 } def
 
 /toplegend { /b exch def /s exch def
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 0 chartrect 3 get chartmargins 3 get sub 20 add /y exch def /x exch def x y
 x y moveto s show
 /x x s stringwidth pop add 12 add def 
@@ -526,18 +576,65 @@ grestore
 } def
 
 /category { 0 setgray
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 1 1 data length 1 sub { /row exch def
 row 0.5 sub 0 chartproj 20 sub moveto data row get 0 get stringwidth pop 2 div neg 0 rmoveto data row get 0 get show
 } for 
 } def
 
 /hcategory { 0 setgray
-/TGL017 bodysize selectfont
+textfont cvn bodysize selectfont
 1 1 data length 1 sub { /row exch def
 row 0.5 sub 0 hchartproj 8 sub moveto data row get 0 get stringwidth pop neg 8 sub 0 rmoveto data row get 0 get show
 } for 
 } def
+
+/treemap {  15 dict begin /col exch def gsave
+/flip 1 def
+chartrect 0 get chartmargins 0 get add
+chartrect 1 get chartmargins 1 get add translate
+/scx chartrect 2 get chartmargins 2 get sub chartmargins 0 get sub def
+/scy chartrect 3 get chartmargins 3 get sub chartmargins 1 get sub def
+/x1 0 def
+/x2 scx def
+/y1 scy def
+/y2 0 def
+/vsum 0 def
+1 1 data length 1 sub { /i exch def
+/vsum vsum data i get col get add def
+} for
+/vrest vsum def
+textfont cvn bodysize selectfont
+2 setlinewidth
+1 1 data length 1 sub { /i exch def
+  colors i get exec
+  /v data i get col get def
+  flip {
+  /x2 x1 v vrest div scx x1 sub mul add def
+  /y2 0 def
+  x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
+  gsave fill grestore 1 setgray stroke
+  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
+  x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
+  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto data vsum 100 eq { v cvs show (%) show } { v numberformat show } ifelse
+   } if
+  /x1 x2 def
+  /x2 scx def
+  } {
+  /y2 y1 v vrest div y1 mul sub def
+  x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
+  gsave fill grestore 1 setgray stroke
+  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
+  x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
+  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto data vsum 100 eq { v cvs show (%) show } { v numberformat show } ifelse
+  } if
+  /y1 y2 def
+  /y2 0 def
+  } ifelse 
+  /vrest vrest v sub def
+  /flip 1 flip sub def
+} for
+grestore end  } def
 
 `;
     context =  rpn(code, context);
@@ -599,15 +696,64 @@ rpnOperators.preparepatterns = function(context) {
     return context;
 };
 
+rpnOperators.quicksort = function(context) {
+    const code = `dup length 1 sub 0 exch quicksort0`;
+    context =  rpn(code, context);
+    return context;
+};
+
+rpnOperators.quicksort0 = function(context) {
+    const code = `10 dict begin /right exch def /left exch def /arr exch def
+/pivot arr left get def
+/i left def
+left 1 right 1 sub { /j exch def
+   /v arr j get def 
+   v pivot compare {  
+      i j ne { 
+      /v2 data i get def
+      data i v put
+      data j v2 put } if
+      /i i 1 add def
+   } if
+} for
+  /v2 data i get def
+  data i pivot put
+  data right v2 put
+  left i 1 sub lt { arr left i 1 sub quicksort0 } if
+  i 1 add right lt { arr i 1 add right quicksort0 } if
+end`;
+    context =  rpn(code, context);
+    return context;
+};
 
 
+rpnOperators.rshow = function(context) {
+    const code = `
+dup stringwidth pop 2 neg 0 rmoveto show`;
+    context =  rpn(code, context);
+    return context;
+};
 
+rpnOperators.sort = function(context) {
+    const code = `10 dict begin /arr exch def
+/c 0 def
+0 1 arr length 2 sub { /i exch def
+  /c c arr i get arr i 1 add get compare add def
+} for
+/c c arr length div
+c 0.25 gt c 0.75 lt and { arr quicksort } { arr combsort } ifelse
+end`;
+    context =  rpn(code, context);
+    return context;
+};
 
 
 rpnOperators.table = function(context) {
 	function parseNumber(s) {
     if (typeof s == 'unefined') return 0;
 	if (s ==  '') return 0;
+	if (s ==  '.') return 0;
+	if (s == null) return 0;
 	s = s.toString().replaceAll(/[^0-9-.]/g,"");
 	return parseFloat(s);
 }

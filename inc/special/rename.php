@@ -14,7 +14,7 @@ if (swGetArrayValue($_REQUEST,'submitrename',false) &&  swGetArrayValue($_REQUES
 	$wiki->user = $user->name;
 	$wiki->lookup();
 	
-	if (count($_REQUEST['subpage'])) $swStatus = 'Renamed: ';
+    if (isset($_REQUEST['subpage']) && count($_REQUEST['subpage'])) $swStatus = 'Renamed: ';
 	
 	if ($wiki->status == 'ok')
 	{
