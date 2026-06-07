@@ -1,8 +1,10 @@
 rpnOperators.combsort = function(context) {
     const code = `10 dict begin /arr exch def
 /d arr length 1 sub def
+d d mul %max executions in bubble mode
 { /sorted 1 def
   /lastround d 1 eq def
+  lastround { /t t 1 sub def } if
   0 1 arr length d sub 1 sub { /i exch def
      /v1 arr i get def
      /v2 arr i d add get def
@@ -13,7 +15,8 @@ rpnOperators.combsort = function(context) {
   } for
   /d d 1.3 div floor 1 max def
   lastround sorted mul { exit } if
-} loop
+  t 0 eq { exit } if %timeout
+} repeat
 end`;
     context =  rpn(code, context);
     return context;
@@ -21,7 +24,7 @@ end`;
 
 
 rpnOperators.compare = function(context) {
-    const code = `lt`;
+    const code = `le`;
     context =  rpn(code, context);
     return context;
 };
@@ -704,21 +707,21 @@ rpnOperators.quicksort = function(context) {
 
 rpnOperators.quicksort0 = function(context) {
     const code = `10 dict begin /right exch def /left exch def /arr exch def
-/pivot arr left get def
+/pivot arr right get def
 /i left def
 left 1 right 1 sub { /j exch def
    /v arr j get def 
    v pivot compare {  
       i j ne { 
-      /v2 data i get def
-      data i v put
-      data j v2 put } if
+      /v2 arr i get def
+      arr i v put
+      arr j v2 put } if
       /i i 1 add def
    } if
 } for
-  /v2 data i get def
-  data i pivot put
-  data right v2 put
+  /v2 arr i get def
+  arr i pivot put
+  arr right v2 put
   left i 1 sub lt { arr left i 1 sub quicksort0 } if
   i 1 add right lt { arr i 1 add right quicksort0 } if
 end`;
@@ -740,7 +743,7 @@ rpnOperators.sort = function(context) {
 0 1 arr length 2 sub { /i exch def
   /c c arr i get arr i 1 add get compare add def
 } for
-/c c arr length div
+/c c arr length div def
 c 0.25 gt c 0.75 lt and { arr quicksort } { arr combsort } ifelse
 end`;
     context =  rpn(code, context);

@@ -2722,7 +2722,9 @@ rpnOperators.repeat = function(context) {
             context.lasterror = "";
             context.stack.pop();
             return context;
-       }
+       } else if (context.lasterror) {
+            return context;
+       } 
     }
     return context;
 };
