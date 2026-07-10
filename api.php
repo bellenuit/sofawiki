@@ -25,7 +25,7 @@
 define('SOFAWIKI',true);  // all included files will check for this variable
 $swError = "";
 $swDebug = "";
-$swVersion = '4.0.4';   
+$swVersion = '4.0.3';   
 $swMainName = 'Main';
 $swStartTime = microtime(true);
 $swSimpleURL = false;
@@ -134,7 +134,7 @@ include_once $swRoot.'/inc/functions/preventovertimesearchagain.php';
 include_once $swRoot.'/inc/functions/upload.php';
 include_once $swRoot.'/inc/functions/textrank.php';
 include_once $swRoot.'/inc/functions/tinyps.php';
-include_once $swRoot.'/inc/functions/pscharts.php';
+
 
 
 
@@ -144,6 +144,7 @@ $swParsers = array();
 include_once $swRoot.'/inc/parsers/cache.php';
 include_once $swRoot.'/inc/parsers/redirection.php';
 include_once $swRoot.'/inc/parsers/displayname.php';
+include_once $swRoot.'/inc/parsers/usefunction.php';
 include_once $swRoot.'/inc/parsers/tidy.php';
 include_once $swRoot.'/inc/parsers/category.php';
 include_once $swRoot.'/inc/parsers/sublang.php';

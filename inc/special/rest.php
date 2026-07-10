@@ -182,12 +182,24 @@ foreach($list as $v)
 				}
 			}
 			$result2[] = $row2;
-		}		
+		}	
+		
+		
+		// SPECIAL CASE REST API RETURN RESSOURCE - 2026-07-05
+		if (count($result2) == 1 && isset($result2[0]["_"])) { 
+		echo $result2[0]["_"];
+		exit();
+	}
+		
 		
 		$json = json_encode($result2);
 		break;
 	}
 }
+
+
+
+
 if (!$found)
 {
 	if ($q)
@@ -239,14 +251,24 @@ if (!$found)
 				
 	}
 	
+	
+	
 	$json = json_encode($result);
 }
+
+
 
 if (isset($_REQUEST['q']))
 {
 
 	header('Content-Type: application/json; charset=utf-8');
+	
+	
+	
+	
 	echo $json;
+	
+	
 	$endtime = microtime(true);
 
 	if ($endtime<$swStartTime) $endtime = $swStartTime;

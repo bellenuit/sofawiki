@@ -4,7 +4,6 @@ rpnOperators.combsort = function(context) {
 d d mul %max executions in bubble mode
 { /sorted 1 def
   /lastround d 1 eq def
-  lastround { /t t 1 sub def } if
   0 1 arr length d sub 1 sub { /i exch def
      /v1 arr i get def
      /v2 arr i d add get def
@@ -15,7 +14,6 @@ d d mul %max executions in bubble mode
   } for
   /d d 1.3 div floor 1 max def
   lastround sorted mul { exit } if
-  t 0 eq { exit } if %timeout
 } repeat
 end`;
     context =  rpn(code, context);
@@ -35,7 +33,7 @@ rpnOperators.concat = function(context) {
 /c a length b length add string def
 c 0 a putinterval
 c a length b putinterval
-c end } def`;
+c end `;
     context =  rpn(code, context);
     return context;
 };
@@ -73,7 +71,7 @@ rpnOperators.imagedata = function (context) {
 rpnOperators.numberformat = function(context) {
     const [r] = context.pop("number");
     if (!r) return context;
-    const x = new Intl.NumberFormat('en-US',{maximumFractionDigits: 2}).format(r.value).replaceAll(","," ");
+    const x = new Intl.NumberFormat('en-US',{maximumFractionDigits: 2}).format(r.value).replaceAll(","," ").replace(/^-0$/,"0");
     context.stack.push(new rpnString(x,context.heap));
     return context;
 };
@@ -99,7 +97,7 @@ grestore end newpath
 rpnOperators.preparechart = function(context) {
     const code = `
 /chartrect [ 0 0 640 640 16 div 9 mul ] def
-/chartmargins [ 100 80 5 60 ] def
+/chartmargins [ 100 30 5 60 ] def
 /xlimits [ 0 0.2 1 ] def
 /ylimits [ 0 0.2 1 ] def
 /data [ [(k) (v) (x) (y)] [ (foo) 0.5 0.4 0.3 ] [ (bar) 0.7 0.8 0.9] ] def 
@@ -174,111 +172,152 @@ preparepatterns
 
 /legendstyle [ {} {} {} {} {} {} {} {} {} {} {}] def
 
-/textsizes { /titlesize exch def /bodysize exch def 
+/textsizes { /titlesize exch def /bodysize exch def /labelsize exch def
 /textfont (TGL017) def
 textfont cvn bodysize selectfont
-chartmargins 0 ymax numberformat stringwidth pop 10 add put
-chartmargins 3 titlesize bodysize add 24 add put
+chartmargins 0 ymax numberformat stringwidth pop bodysize add put
+chartmargins 1 bodysize 4 mul put 
+chartmargins 2 bodysize 2 div put
+chartmargins 3 titlesize 1.2 mul bodysize 2.2 mul add bodysize 2 mul add put
  } def
-16 20 textsizes
+13 16 20 textsizes
 
-/xaxis { 0 setgray 1 setlinewidth  
+
+/gridlinewidth 1.5 def
+/axislinewidth 1.5 def
+/borderlinewidth 1.5 def
+/boldlinewidth 3 def
+/gridcolor { 0.7 setgray } def
+/axiscolor { 0 setgray } def
+/bordercolor { 0 setgray } def
+/labelcolor { 0 setgray } def
+/invertedlabelcolor { 1 setgray } def
+/labelformat { numberformat } def
+/zeroticks 1 def 
+/tickmark 0 def
+1 setlinecap
+1 setlinejoin
+
+/dotsize 4 def
+
+/xaxis { axiscolor axislinewidth setlinewidth  
 xlimits 0 get xlog { 10 exch exp } if
 0 chartproj moveto 
 xlimits 2 get xlog { 10 exch exp } if
 0 chartproj lineto stroke } def
 
-/hxaxis { 0 setgray 1 setlinewidth xlimits 
+/hxaxis { axiscolor axislinewidth setlinewidth xlimits 
 xlimits 0 get 0 hchartproj moveto xlimits 2 get 0 hchartproj lineto stroke } def
 
-/yaxis { 0 setgray 1 setlinewidth
+/yaxis { axiscolor axislinewidth setlinewidth
 0 ylimits 0 get ylog { 10 exch exp } if
 chartproj moveto 0 ylimits 2 get ylog { 10 exch exp } if
 chartproj lineto stroke } def
 
-/hyaxis { 0 setgray 1 setlinewidth
+/hyaxis { axiscolor axislineswidth setlinewidth
 xlimits 2 get ylimits 0 get hchartproj moveto xlimits 2 get ylimits 2 get hchartproj lineto stroke } def
 
 /axis { xaxis yaxis } def
 /haxis { hxaxis hyaxis } def
 
-/border { 0 setgray 1 setlinewidth 
+/border { bordercolor borderlinewidth setlinewidth 
 xlimits 0 get ylimits 0 get chartproj moveto 
 xlimits 2 get ylimits 0 get chartproj lineto
 xlimits 2 get ylimits 2 get chartproj lineto
 xlimits 0 get ylimits 2 get chartproj lineto closepath stroke
 } def
 
-/xticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
+/externalborder { bordercolor borderlinewidth setlinewidth 
+chartrect 0 get chartrect 1 get moveto 
+chartrect 2 get 0 rlineto
+0 chartrect 3 get rlineto 
+chartrect 2 get neg 0 rlineto closepath stroke
+} def
+
+
+/xticks { gridlinewidth setlinewidth textfont cvn bodysize selectfont
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
 xlog { /x x 10 exch exp def } if
-x { x 0 ylimits 0 get max chartproj moveto 0 -5 rlineto stroke
-x 0 ylimits 0 get max chartproj exch x numberformat stringwidth pop 2 div sub exch 20 sub moveto x numberformat show} if
+x zeroticks or { labelcolor 
+tickmark { x 0 ylimits 0 get max chartproj moveto 0 bodysize 4 div rlineto stroke } if
+labelcolor x 0 ylimits 0 get max chartproj exch x labelformat stringwidth pop 2 div sub exch bodysize sub moveto x labelformat show} if
 } for } def 
 
-/yticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
+
+/yticks { gridlinewidth setlinewidth textfont cvn bodysize selectfont
 ylimits 0 get ylimits 1 get ylimits 2 get {
 /y exch def
 ylog { /y y 10 exch exp def } if
-y { 0 xlimits 0 get max y chartproj moveto -5 0 rlineto stroke
-0 xlimits 0 get max y chartproj exch y numberformat stringwidth pop sub 7 sub exch 5 sub moveto y 
-numberformat show} if
+y zeroticks or { labelcolor 
+tickmark { 0 xlimits 0 get max y chartproj moveto bodysize 4 div 0 rlineto stroke } if
+labelcolor 0 xlimits 0 get max y chartproj exch y labelformat stringwidth pop sub bodysize 2 div sub exch 0 sub moveto y labelformat show} if
 } for } def
 
 /ticks { xticks yticks } def
-/hyticks { 0 setgray 0.5 setlinewidth textfont cvn bodysize selectfont
+
+/hyticks { gridlinewidth setlinewidth textfont cvn bodysize selectfont
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
-y { xlimits 2 get y hchartproj moveto 0 -5 rlineto stroke
-xlimits 2 get y hchartproj exch y numberformat stringwidth pop 2 div sub exch 20 sub moveto y numberformat show} if
+y { labelcolor 
+tickmark { xlimits 2 get y hchartproj moveto 0 -5 rlineto stroke } if
+labelcolor xlimits 2 get y hchartproj exch y labelformat stringwidth pop 2 div sub exch 20 sub moveto y labelformat show} if
 } for } def
 
-/xgrid { 0.5 setlinewidth
+/xgrid { gridcolor gridlinewidth setlinewidth
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
 xlog { /x 10 x exp def } if
-x { x ylimits 0 get ylog { 10 exch exp } if
+x zeroticks or { x ylimits 0 get ylog { 10 exch exp } if
 chartproj moveto x ylimits 2 get ylog { 10 exch exp } if
 chartproj lineto stroke
 } if
 } for } def 
 
-/hxgrid { 0.5 setlinewidth
+/hxgrid { gridcolor gridlinewidth setlinewidth
 xlimits 0 get xlimits 1 get xlimits 2 get { /x exch def
-x { x ylimits 0 get hchartproj moveto x ylimits 2 get hchartproj lineto stroke
+x zeroticks or { x ylimits 0 get hchartproj moveto x ylimits 2 get hchartproj lineto stroke
 } if
 } for } def 
 
-/ygrid { 0.5 setlinewidth
+/ygrid { gridcolor gridlinewidth setlinewidth
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
 ylog { /y 10 y exp def } if
-y { xlimits 0 get xlog { 10 exch exp } if
+y zeroticks or { xlimits 0 get xlog { 10 exch exp } if
 y chartproj moveto xlimits 2 get xlog { 10 exch exp } if
 y chartproj lineto stroke
 } if
 } for } def
 
-/hygrid { 0.5 setlinewidth
+/hygrid { gridcolor gridlinewidth setlinewidth
 ylimits 0 get ylimits 1 get ylimits 2 get { /y exch def
-y { xlimits 0 get y hchartproj moveto xlimits 2 get y hchartproj lineto stroke
+y zeroticks or { xlimits 0 get y hchartproj moveto xlimits 2 get y hchartproj lineto stroke
 } if
 } for } def
 /grid { xgrid ygrid } def
 /hgrid { hxgrid hygrid } def
 
-/description { textfont cvn bodysize selectfont
-0 chartrect 3 get chartmargins 3 get sub bodysize 4 add add moveto show } def
-/credits { textfont cvn bodysize selectfont
-chartrect 0 get chartrect 1 get chartmargins 1 get add 40 sub moveto show } def
-/xlabel { /s exch def textfont cvn bodysize selectfont
+/description { labelcolor textfont cvn bodysize selectfont
+chartrect 0 get bodysize 2 div add
+chartrect 1 get chartrect 3 get add chartmargins 3 get sub bodysize 2 mul add 
+moveto show } def
+
+/credits { labelcolor textfont cvn bodysize selectfont
+chartrect 0 get bodysize 2 div add
+chartrect 1 get chartmargins 1 get add bodysize 2.5 mul sub
+moveto show } def
+
+/xlabel { /s exch def labelcolor textfont cvn bodysize selectfont
 xlimits 0 get xlimits 2 get add 2 div 0 chartproj 40 sub exch s stringwidth pop 2 div sub exch moveto s show } def
-/ylabel { /s exch def textfont cvn bodysize selectfont
+
+/ylabel { /s exch def labelcolor textfont cvn bodysize selectfont
 20 chartrect 3 get chartmargins 1 get sub chartmargins 3 get sub 2 div chartrect 0 get add chartmargins 1 get add moveto 90 rotate s stringwidth pop 2 div neg 0 rmoveto s show -90 rotate } def
-/title { /s exch def gsave textfont cvn titlesize selectfont
-0 chartrect 3 get chartmargins 3 get sub bodysize 2 mul 4 add add moveto s show grestore } def
 
-
+/title { /s exch def gsave labelcolor textfont cvn titlesize selectfont
+chartrect 0 get bodysize 2 div add 
+chartrect 1 get chartrect 3 get add chartmargins 3 get sub bodysize 3.5 mul add
+moveto s show grestore } def
 
 
 /bar {  /b exch def 
+gsave
 1 1 data length 1 sub { /row exch def
 0 1 b length 1 sub { /i exch def b i get /col exch def
 /y data row get col get def
@@ -294,9 +333,12 @@ legendstyle col {
 patterns col get exec } put 
 } for 
 } for 
+grestore 
 } def
 
 /barvalues {  /b exch def 
+gsave
+textfont cvn labelsize selectfont
 1 1 data length 1 sub { /row exch def
 0 1 b length 1 sub { /i exch def b i get /col exch def
 /y data row get col get def
@@ -308,18 +350,19 @@ x d add y chartproj lineto
 x y chartproj lineto 
 closepath patterns col get exec 
 y 0 gt { 
-1 setgray
-x d 2 div add y chartproj moveto 0 y round cvs dup stringwidth pop 2 div neg bodysize neg rmoveto show
+labelcolor
+x d 2 div add y chartproj moveto 0 y round labelformat dup stringwidth pop 2 div neg 4 rmoveto show
 } if
-0 setgray
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
 patterns col get exec } put 
 } for 
 } for 
+grestore
 } def
 
 /stackedbar { /b exch def 
+gsave
 1 1 data length 1 sub { /row exch def
 0 1 b length 1 sub { /i exch def b i get /col exch def
 /y0 ylimits 0 get 0 max 0 1 i 1 sub { /j exch def data row get b j get get add} for def
@@ -330,15 +373,17 @@ x y0 chartproj moveto
 x d add y0 chartproj lineto 
 x d add y chartproj lineto 
 x y chartproj lineto 
-closepath patterns col get exec 0 setgray
+closepath patterns col get exec
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
 patterns col get exec } put 
 } for 
 } for 
+grestore
 } def
 
 /hbar { /b exch def 
+gsave
 1 1 data length 1 sub { /row exch def
 0 1 b length 1 sub { /i exch def b i get /col exch def
 /y data row get col get def
@@ -348,15 +393,46 @@ x ylimits 0 get 0 max hchartproj moveto
 x d add ylimits 0 get 0 max hchartproj lineto 
 x d add y hchartproj lineto 
 x y hchartproj lineto 
-closepath patterns col get exec 0 setgray
+closepath patterns col get exec 
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
 patterns col get exec } put 
 } for 
 } for 
+grestore
+} def
+
+/hbarvalues { /b exch def 
+gsave
+textfont cvn labelsize selectfont
+1 1 data length 1 sub { /row exch def
+0 1 b length 1 sub { /i exch def b i get /col exch def
+/y data row get col get def
+/d 1 b length 1 add div def
+/x row 1 sub i d mul add d 2 div add def
+x ylimits 0 get 0 max hchartproj moveto
+x d add ylimits 0 get 0 max hchartproj lineto 
+x d add y hchartproj lineto 
+x y hchartproj lineto 
+closepath patterns col get exec 
+y 0 gt { 
+labelcolor
+x d add y hchartproj moveto
+bodysize 2 div
+2 rmoveto
+y round labelformat show
+} if
+legendstyle 
+legendstyle col { 
+0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
+patterns col get exec } put 
+} for 
+} for 
+grestore
 } def
 
 /hvotebar { /b exch def textfont cvn bodysize selectfont
+gsave
 /ylimits [ 0 20 100 ] def
 1 1 data length 1 sub { /row exch def 
 /tot 0 def
@@ -375,21 +451,24 @@ x 0.5 add  y hchartproj lineto
 x y hchartproj lineto 
 closepath patterns col get exec 0 setgray
 y y0 gt {
+invertedlabelcolor
 /s y y0 sub round cvs def
 x 0.25 add y0 y add 2 div hchartproj moveto y y0 s stringwidth pop 2 div neg -6 rmoveto
-1 setgray s show 
+s show 
 } if
-0 setgray
 /y0 y def
 legendstyle col { 
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath 
 patterns col get exec } put 
 } for 
 } for 
+grestore
 } def
 
-/line { 3 setlinewidth
+/line { 
 { /col exch def
+gsave
+boldlinewidth setlinewidth
 /y data 1 get col get def
 /x 0.5 def
 x y chartproj moveto
@@ -397,17 +476,21 @@ x y chartproj moveto
 /y data row get col get def
 /x row 0.5 sub def
 x y chartproj lineto 
-legendstyle col { 3 setlinewidth
-0 5 moveto 8 5 lineto  
+legendstyle col { boldlinewidth setlinewidth
+0 bodysize 3 div moveto bodysize 2 div bodysize 3 div lineto  
 colors col get exec stroke } put 
 } for 
 colors col get exec stroke
 } forall
-0 setgray
+grestore
 } def
 
-/spline { 3 setlinewidth
+
+
+/spline { 
 { /col exch def
+gsave
+boldlinewidth setlinewidth
 /y data 1 get col get def
 /x 0.5 def
 x y chartproj moveto
@@ -420,8 +503,8 @@ x y chartproj
 x 0.33 sub y y2 y0 sub 6 div sub chartproj
 x y chartproj curveto 
 x 0.33 add y y2 y0 sub 6 div add chartproj
-legendstyle col { 3 setlinewidth
-0 5 moveto 8 5 lineto  
+legendstyle col { boldlinewidth setlinewidth
+0 bodysize 3 div moveto bodysize 2 div bodysize 3 div lineto  
 colors col get exec stroke } put 
 } for 
 /y data data length 1 sub get col get def
@@ -430,12 +513,84 @@ x y chartproj
 x y chartproj curveto
 colors col get exec stroke
 } forall
-0 setgray
+grestore
+} def
+
+/linelabel { 10 dict begin
+textfont cvn labelsize selectfont
+dup length /cols exch def /collist cols array def 
+/i 0 def
+{ /col exch def
+        collist i [ col 
+             data data length 1 sub get col get
+             data 0 get col get ] put
+        /i i 1 add def
+} forall
+/compare { 1 get exch 1 get gt } def
+collist quicksort
+/ymin 0 def
+collist { /c exch def
+  colors c 0 get get exec
+  data length 1 sub 0.5 sub
+  c 1 get chartproj  
+  ymin labelsize add max dup /ymin exch def
+  moveto ( ) show c 2 get show   
+} forall
+grestore end
+} def
+
+/linevalue { 10 dict begin
+textfont cvn labelsize selectfont
+dup length /cols exch def /collist cols array def 
+/i 0 def
+{ /col exch def
+        collist i [ col 
+             data data length 1 sub get col get
+             data 0 get col get ] put
+        /i i 1 add def
+} forall
+/compare { 1 get exch 1 get gt } def
+collist quicksort
+/ymin 0 def
+collist { /c exch def
+  colors c 0 get get exec
+  data length 1 sub 0.5 sub
+  c 1 get chartproj  
+  ymin labelsize add max dup /ymin exch def
+  moveto ( ) show c 1 get labelformat show   
+} forall
+grestore end
+} def
+
+/linevaluelabel { 10 dict begin
+textfont cvn labelsize selectfont
+dup length /cols exch def /collist cols array def 
+/i 0 def
+{ /col exch def
+        collist i [ col 
+             data data length 1 sub get col get
+             data 0 get col get ] put
+        /i i 1 add def
+} forall
+/compare { 1 get exch 1 get gt } def
+collist quicksort
+/ymin 0 def
+collist { /c exch def
+  colors c 0 get get exec
+  data length 1 sub 0.5 sub
+  c 1 get chartproj  
+  ymin labelsize add max dup /ymin exch def
+  moveto ( ) show c 1 get labelformat show ( ) show c 2 get show   
+} forall
+grestore end
 } def
 
 
-/area { 3 setlinewidth
+
+/area { 
 { /col exch def
+gsave
+boldlinewidth setlinewidth
 /y 0 def
 /x 0 def
 x y chartproj moveto
@@ -443,7 +598,7 @@ x y chartproj moveto
 /y data row get col get def
 /x row 0.5 sub def
 x y chartproj lineto 
-legendstyle col { 3 setlinewidth
+legendstyle col { boldlinewidth setlinewidth
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath
 patterns col get exec stroke } put 
 } for 
@@ -452,10 +607,12 @@ patterns col get exec stroke } put
 x y chartproj lineto 
 patterns col get exec stroke
 } forall
-0 setgray
+grestore
 } def
 
-/stackedarea { /b exch def 3 setlinewidth
+/stackedarea { /b exch def 
+gsave
+boldlinewidth setlinewidth
 0 1 b length 1 sub { /i exch def b i get /col exch def
 xlimits 0 get 0 max ylimits 0 get 0 max chartproj moveto 
 1 1 data length 1 sub { /row exch def
@@ -463,7 +620,7 @@ xlimits 0 get 0 max ylimits 0 get 0 max chartproj moveto
 /y y0 data row get col get add def
 /x row 0.5 sub def
 x y0 chartproj lineto
-legendstyle col { 3 setlinewidth
+legendstyle col { boldlinewidth setlinewidth
 0 0 moveto 8 0 lineto 8 8 lineto 0 8 lineto closepath
 patterns col get exec stroke } put 
 } for 
@@ -477,119 +634,138 @@ x y chartproj lineto
 closepath
 patterns col get exec stroke
 } for
-0 setgray
+grestore
 } def
 
 /dot {  
+gsave
 { /col exch def
 1 1 data length 1 sub { /row exch def
 /y data row get col get def
 /x row 0.5 sub def
-x y chartproj 4 0 360 arc colors col get exec fill
-legendstyle col { 4 5 4 0 360 arc 
+newpath x y chartproj dotsize 0 360 arc colors col get exec fill
+legendstyle col { newpath bodysize 3 div bodysize 3 div dotsize 0 360 arc 
 colors col get exec fill } put 
 } for 
 } forall
-0 setgray
+grestore
 } def
 
 /xydot { /b exch def /xcol b 0 get def /ycol b 1 get def
+gsave
 1 1 data length 1 sub {/row exch def
 /x data row get xcol get def
 /y data row get ycol get def
-x y chartproj 4 0 360 arc colors xcol get exec fill
-legendstyle xcol { 4 5 4 0 360 arc 
+newpath x y chartproj dotsize 0 360 arc colors xcol get exec fill
+legendstyle xcol { newpath bodysize 3 div bodysize 3 div dotsize 0 360 arc 
 colors col get exec fill } put 
 } for  
-0 setgray
+grestore
 } def
 
 /labelxydot { /b exch def 
+gsave
 textfont cvn bodysize selectfont
 /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def
 1 1 data length 1 sub {/row exch def
 /x data row get xcol get def
 /y data row get ycol get def
-x y chartproj 4 0 360 arc colors xcol get exec fill
+newpath x y chartproj 4 0 360 arc colors xcol get exec fill
 x y chartproj exch 6 add exch 5 sub moveto data row get lcol get show
-legendstyle xcol { 4 5 4 0 360 arc 
+legendstyle xcol { newpath bodysize 3 div bodysize 3 div dotsize 0 360 arc 
 colors col get exec fill } put 
 } for  
-0 setgray
+grestore
 } def
 
 /bubbledot { /sc exch def /b exch def 
+gsave
 textfont cvn bodysize selectfont
 /lcol b 0 get def /xcol b 1 get def /ycol b 2 get def /rcol b 3 get def
 1 1 data length 1 sub { /row exch def
 /x data row get xcol get def
 /y data row get ycol get def
-x y chartproj data row get rcol get sqrt sc mul 0 360 arc colors xcol get 
+newpath x y chartproj data row get rcol get sqrt sc mul 0 360 arc colors xcol get 
 exec fill
 x y chartproj exch data row get rcol get sqrt sc mul add 2 add exch 5 sub moveto data row get lcol get show
-legendstyle xcol { 4 5 4 0 360 arc 
+legendstyle xcol { newpath bodysize 3 div bodysize 3 div dotsize 0 360 arc 
 colors col get exec fill } put 
 } for  
-0 setgray
+grestore
 } def
 
 /map { /p exch def /b exch def /lcol b 0 get def /pcol b 1 get def  /rcol b 2 get def
+gsave
 1 1 data length 1 sub { /row exch def
 data row get pcol get cvx exec
 data row get lcol get 
 data row get rcol get p
 } for  
-0 setgray
+grestore
 } def
 
 /plot { /fn exch def /p2 exch def /pstep exch def /p1 exch def 
 p1 fn chartproj moveto
 p1 pstep add pstep p2 { fn chartproj lineto } for 
-0 setgray 
 } def
 
 /bottomlegend { /b exch def
+gsave
 textfont cvn bodysize selectfont
-0 chartmargins 1 get 60 sub /y exch def /x exch def x y
+chartrect 0 get bodysize 2 div add
+chartrect 1 get chartmargins 1 get add bodysize 2.5 mul sub 
+/y exch def /x exch def x y
 b { /col exch def
 gsave
 x y translate
 legendstyle col get exec
 12 0 moveto
-0 setgray data 0 get col get show
+labelcolor data 0 get col get show
 grestore
 /x x data 0 get col get stringwidth pop add 20 add def 
 } forall
+grestore
 } def
 
 /toplegend { /b exch def /s exch def
-textfont cvn bodysize selectfont
-0 chartrect 3 get chartmargins 3 get sub 20 add /y exch def /x exch def x y
+gsave
+labelcolor textfont cvn bodysize selectfont
+chartrect 0 get bodysize 2 div add
+chartrect 1 get chartrect 3 get add chartmargins 3 get sub bodysize 2 mul add
+ /y exch def /x exch def x y
 x y moveto s show
 /x x s stringwidth pop add 12 add def 
 b { /col exch def
 gsave
 x y translate
 legendstyle col get exec
-12 0 moveto
-0 setgray data 0 get col get show
+bodysize 4 div 3 mul 0 moveto
+labelcolor data 0 get col get show
 grestore
 /x x data 0 get col get stringwidth pop add 24 add def 
 } forall
+grestore
 } def
 
-/category { 0 setgray
-textfont cvn bodysize selectfont
+/category { 
+gsave
+labelcolor textfont cvn bodysize selectfont
 1 1 data length 1 sub { /row exch def
-row 0.5 sub 0 chartproj 20 sub moveto data row get 0 get stringwidth pop 2 div neg 0 rmoveto data row get 0 get show
+row 0.5 sub ylimits 0 get 0 max chartproj 20 sub moveto data row get 0 get stringwidth pop 2 div neg 0 rmoveto data row get 0 get show
 } for 
+grestore
 } def
 
-/hcategory { 0 setgray
-textfont cvn bodysize selectfont
+/hcategory { 
+gsave
+labelcolor textfont cvn bodysize selectfont
 1 1 data length 1 sub { /row exch def
-row 0.5 sub 0 hchartproj 8 sub moveto data row get 0 get stringwidth pop neg 8 sub 0 rmoveto data row get 0 get show
+row 0.5 sub ylimits 0 get 0 max hchartproj moveto
+data row get 0 get stringwidth pop neg
+bodysize 2 div sub 0 bodysize 2 div sub rmoveto 
+data row get 0 get show
 } for 
+grestore
 } def
 
 /treemap {  15 dict begin /col exch def gsave
@@ -608,28 +784,29 @@ chartrect 1 get chartmargins 1 get add translate
 } for
 /vrest vsum def
 textfont cvn bodysize selectfont
-2 setlinewidth
+boldlinewidth setlinewidth
 1 1 data length 1 sub { /i exch def
   colors i get exec
   /v data i get col get def
+  /vlabel vsum 100 eq { v cvs (%) concat } { v labelformat } ifelse def
   flip {
   /x2 x1 v vrest div scx x1 sub mul add def
   /y2 0 def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
-  gsave fill grestore 1 setgray stroke
+  gsave fill grestore invertedlabelcolor stroke
   y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
-  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto data vsum 100 eq { v cvs show (%) show } { v numberformat show } ifelse
+  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
    } if
   /x1 x2 def
   /x2 scx def
   } {
   /y2 y1 v vrest div y1 mul sub def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
-  gsave fill grestore 1 setgray stroke
+  gsave fill grestore invertedlabelcolor stroke
   y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
-  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto data vsum 100 eq { v cvs show (%) show } { v numberformat show } ifelse
+  x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
   } if
   /y1 y2 def
   /y2 0 def
@@ -732,7 +909,7 @@ end`;
 
 rpnOperators.rshow = function(context) {
     const code = `
-dup stringwidth pop 2 neg 0 rmoveto show`;
+dup stringwidth pop neg 0 rmoveto show`;
     context =  rpn(code, context);
     return context;
 };
@@ -763,35 +940,32 @@ rpnOperators.table = function(context) {
 	
     const [haslabel, tablename] = context.pop("number", "string");
     if (!tablename) return context; 
-    console.log("table " +tablename.value )
-	results = rpnTables[tablename.value];	
+	data = rpnTables[tablename.value];	
 	list = [];
 	list.push('[');
-	elem = results;
-	console.log(rpnTables);
 	  
-	   if (Array.isArray(elem)) {
-		   let first = elem[0];
+	   if (Array.isArray(data)) {
+		   let first = data[0];
 		   if (typeof first === 'object') {
-			   let cols = Object.keys(first);
 			   let values = [];
-			   
+			   columns = Object.keys(first);
 			   list.push('[');
-			   for(key in first) {
+			   for(key of columns) {
 				   // remove pretty format
 				   list.push('(' + key.replace(/^"/,"").replace(/"$/,"").replace(/^'/,"").replace(/'$/,"").replace(/^__/,"").replace(/__$/,"") + ')');
 			   }
 			   list.push(']');
 			   
-			   for(row of elem) {
+			   for(row of data) {
 				   list.push('[');
 				   let fields = [];
 				   var k = 0;
-				   for(key in row) {
+				   for(key of columns) {
+				   	   let v = row[key] ?? '.';
 					   if (k < haslabel.value)
-						   list.push('(' + row[key] + ')');
+						   list.push('(' + v + ')');
 					   else {
-						   list.push(parseNumber(row[key]).toString());
+						   list.push(parseNumber(v).toString());
 					   }
 					       
 			           k++;

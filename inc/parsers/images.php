@@ -121,6 +121,8 @@ class swImagesParser extends swParser
 				$path = $swRoot.'/site/files/'.$file;
 				switch($fileextension)
 				{
+					
+					
 					case 'jpg':
 					case 'jpeg': $img = @imagecreatefromjpeg($path); break;
 					case 'png': $img = @Imagecreatefrompng($path); break;
@@ -537,7 +539,16 @@ function drawHandles()
 			}
 			else
 			{
+				
 				$s ='<a href="site/files/'.$file.'">'.$file.'</a><p>'.$s;
+				
+				
+				if (in_array($fileextension, array('json','csv','txt','js','ps','html','px','svg'))) 
+				{
+				    $path2 = $swRoot.'/site/files/'.$file;
+				    $s.= '<textarea cols=80 rows=30>'.file_get_contents($path2).'</textarea>';
+				}
+				
 			}
 			
 			

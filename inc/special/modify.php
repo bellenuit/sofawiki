@@ -89,8 +89,10 @@ elseif ($user->hasright('modify', $wiki->name))
 				{
 					$oldcontent = $w2->content;
 					
-					$w2->content = str_replace("\\",'',$content[$l]);
-					$w2->comment = str_replace("\\",'',$comment);
+					// $w2->content = str_replace("\\",'',$content[$l]);
+					$w2->content = $content[$l]; // we try not to escape
+					// $w2->comment = str_replace("\\",'',$comment);
+					$w2->comment = $comment;
 					
 					if (!$w2->revision || $w2->content !== $oldcontent)
 					{
