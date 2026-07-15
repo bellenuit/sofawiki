@@ -22,8 +22,8 @@ $swParsedContent = '<nowiki>
 <textarea id="shadoweditor" name="q" rows=8>100 100 moveto 200 100 lineto 150 166 lineto closepath fill showpage</textarea>
 </form>
 </div><!-- editzone -->
-<tiny-ps id="ps" width="640" height="360" format="svg,svgurl,canvasurl" oversampling="4"></tiny-ps>
-<script src="inc/skins/tinyps126.js"></script>
+<tiny-ps id="ps" width="640" height="360" format="svg,svgurl,canvasurl,gcodeurl" oversampling="4"></tiny-ps>
+<script src="inc/skins/tinyps131.js"></script>
 <script src="inc/skins/tinyps-extensions.js"></script>
 <script>rpnFontURLs = '.json_encode($rpnFontURLs).';</script>
 <script>

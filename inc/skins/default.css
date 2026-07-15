@@ -758,6 +758,10 @@ video.yfrog
 	margin-left: 4px;
 }
 
+::part(gcodeurl) {
+	margin-left: 4px;
+}
+
 tiny-ps {
 	max-width: 100%;
 }

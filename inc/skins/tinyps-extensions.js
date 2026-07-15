@@ -28,6 +28,7 @@ rpnOperators.compare = function(context) {
 };
 
 rpnOperators.concat = function(context) {
+
     const code = `
 3 dict begin /b exch def /a exch def
 /c a length b length add string def
@@ -794,7 +795,9 @@ boldlinewidth setlinewidth
   /y2 0 def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
   gsave fill grestore invertedlabelcolor stroke
-  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
+  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub
+  data i get 0 get stringwidth pop 
+  vlabel stringwidth pop max gt and {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
   x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
    } if
@@ -804,7 +807,9 @@ boldlinewidth setlinewidth
   /y2 y1 v vrest div y1 mul sub def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
   gsave fill grestore invertedlabelcolor stroke
-  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop gt and {
+  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop
+  vlabel stringwidth pop max 
+   gt and {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
   x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
   } if
