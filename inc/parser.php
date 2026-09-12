@@ -6,6 +6,7 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 class swParser
 {
+	var $lastparser = false;
 	
 	function info()
 	{

@@ -44,7 +44,7 @@ function swImageDownscale($name, $destw=0, $desth=0, $crop='')
 	    if (!$img) echotime('imageformat not valid');
 	}
 	
-	if ($img)
+	if (@$img)
 	{
 		echotime('haveimage '.$name);
 		

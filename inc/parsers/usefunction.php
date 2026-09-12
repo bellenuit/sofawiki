@@ -4,12 +4,11 @@ if (!defined("SOFAWIKI")) die("invalid acces");
 
 class swUseFunctionParser extends swParser
 {
+	
 	function info()
 	{
 	 	return "Handles keyword #USEFUNCTION to apply a function to the entire page";
 	}
-
-	
 	
 	function dowork(&$wiki)
 	{
@@ -41,7 +40,8 @@ class swUseFunctionParser extends swParser
 					$f = $swFunctions[$template];
 					$s = $f->dowork($vals);
 
-					$wiki->parsedContent = "<nowiki>".$s."</nowiki>";
+					$wiki->parsedContent = $s;
+					$this->lastparser = true;
 
 									
 			}

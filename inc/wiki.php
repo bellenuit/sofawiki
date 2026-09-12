@@ -111,6 +111,10 @@ class swWiki extends swRecord
 								
 								echotime('parse '.$key);
 								$parser->dowork($this); 
+								
+								if ($parser->lastparser) break;
+								
+								
 								//echotime('parse done');
 								
 								//echo $key.' '.strlen($s);
@@ -125,7 +129,7 @@ class swWiki extends swRecord
 							
 							$s = $this->parsedContent; 
 							
-							if (strstr($s,'NOWIKI('))
+							if ($s && strstr($s,'NOWIKI('))
 							{
 								$lines = [];
 								$offset = 0;
