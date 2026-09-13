@@ -46,8 +46,19 @@ class swResumeFunction extends swFunction
 
 function swResumeFromText($s,$length,$raw)
 {
+	//remove directives 
+    
+    // json sql notebook, take first wiki
+    $json = false;
+    $s = preg_replace("/^#USEFUNCTION .*/", "", $s);
+    $t = @json_decode($s,true);
+    if (is_array($t)) {
+	   $t = $t[0];
+	   if (is_array($t)) $s =  $t['source'];
+	   $s = preg_replace("/^==.*==/", "", $s);
+	   $json = true;
+    }
 	
-
 					
 	//remove nowiki tag
 	$s = str_replace('<nowiki>','',$s);
@@ -68,7 +79,7 @@ function swResumeFromText($s,$length,$raw)
 	$s = preg_replace("/^!.*?!/", "", $s);
 	$s = preg_replace("/^\|\}.*/", "", $s);
 	
-	if ($raw)
+	if ($raw || $json)
 	{
 		$s = preg_replace('#\[\[(.*?)::(.*?)\]\]#m','',$s);
 		$s = preg_replace('#\[\[\w\w:(.*?)\]\]#m','',$s);
