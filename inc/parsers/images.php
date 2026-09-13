@@ -24,9 +24,12 @@ class swImagesParser extends swParser
 		if ($wiki->wikinamespace()=='Image')
 		{
 		
-			
 			$wiki->name = $wiki->namewithoutlanguage();
 			$file = substr($wiki->name,6);
+			
+			
+			
+			
 			// show all subsampled images
 			if (isset($_GET['imagecacherefresh']))
 			{
@@ -115,7 +118,19 @@ class swImagesParser extends swParser
 			$fileinfo = pathinfo($file);
 			$fileextension = strtolower($fileinfo['extension']);
 			
-			if (in_array($fileextension, array('jpg','jpeg','png','gif')))
+				
+			if (in_array($fileextension, array('json','csv','txt','js','ps','html','px','svg'))) 
+			{
+				    $s ='<a href="site/files/'.$file.'">'.$file.'</a><p>'.$s;
+				    $path2 = $swRoot.'/site/files/'.$file;
+				    $s.= '<textarea cols=80 rows=30>'.file_get_contents($path2).'</textarea>';
+				    $this->lastparser = 1;
+				    $wiki->parsedContent = $s;
+				    return;
+			}
+
+			
+			elseif (in_array($fileextension, array('jpg','jpeg','png','gif')))
 			{
 				
 				$path = $swRoot.'/site/files/'.$file;
@@ -542,12 +557,14 @@ function drawHandles()
 				
 				$s ='<a href="site/files/'.$file.'">'.$file.'</a><p>'.$s;
 				
-				
+				/*
 				if (in_array($fileextension, array('json','csv','txt','js','ps','html','px','svg'))) 
 				{
 				    $path2 = $swRoot.'/site/files/'.$file;
 				    $s.= '<textarea cols=80 rows=30>'.file_get_contents($path2).'</textarea>';
+				    $this->lastparser = 1;
 				}
+				*/
 				
 			}
 			
