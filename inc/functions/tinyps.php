@@ -24,7 +24,7 @@ class swTinyPS extends swFunction
 		
 		
 		
-		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="640" height="360" format="svg" transparent="0" textmode="0"></tiny-ps>';
+		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="640" height="360" format="svg" transparent="1" textmode="1"></tiny-ps>';
 		
 		// get all tables
 			           
@@ -38,7 +38,7 @@ class swTinyPS extends swFunction
  			$result .= '
 
 <script>rpnFontURLs = '.$fonts.'</script>
-<script src="inc/skins/tinyps131.js"></script>
+<script src="inc/skins/tinyps134.js"></script>
 <script src="inc/skins/tinyps-extensions.js"></script>';
 
  		    $result .= '
@@ -74,7 +74,7 @@ class swTinyPS2 extends swFunction
 		
 		
 		
-		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="640" height="360" format="'.$args[1].'" transparent="0" textmode="0"></tiny-ps>';
+		$result = '<nowiki><tiny-ps id="tinyps'.$id.'" width="640" height="360" format="'.$args[1].'" transparent="1" textmode="1"></tiny-ps>';
 		
 		// get all tables
 			           
