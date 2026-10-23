@@ -38,7 +38,7 @@ class swTinyPS extends swFunction
  			$result .= '
 
 <script>rpnFontURLs = '.$fonts.'</script>
-<script src="inc/skins/tinyps134.js"></script>
+<script src="inc/skins/tinyps135.js"></script>
 <script src="inc/skins/tinyps-extensions.js"></script>';
 
  		    $result .= '

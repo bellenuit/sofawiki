@@ -62,7 +62,7 @@ You do not need bloom, monogram if you do not use filter or query. You do not ne
 $done = '';
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfields']))
 	{
-		unlink($swRoot.'/site/indexes/fields.db');
+		if (file_exists($swRoot.'/site/indexes/fields.db')) unlink($swRoot.'/site/indexes/fields.db');
 		//$swOvertime = true;
 		
 	}
@@ -70,7 +70,7 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	{
 		
 		
-		unlink($swRoot.'/site/indexes/fulltext.db');
+		if (file_exists($swRoot.'/site/indexes/fulltext.db'))  unlink($swRoot.'/site/indexes/fulltext.db');
 		
 		
 		
@@ -132,15 +132,15 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 	if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetbloom']))
 	{
 	 	
-	 	unlink($swRoot.'/site/indexes/bloom.raw');
-	 	unlink($swRoot.'/site/indexes/bloombitmap.txt');
+	 	if (file_exists($swRoot.'/site/indexes/bloom.raw'))  unlink($swRoot.'/site/indexes/bloom.raw');
+	 	if (file_exists($swRoot.'/site/indexes/bloombitmap.txt'))  unlink($swRoot.'/site/indexes/bloombitmap.txt');
 		
 		swClearBloom();	
 		
-		unlink($swRoot.'/site/indexes/bloom.raw');
-	 	unlink($swRoot.'/site/indexes/bloombitmap.txt');
+		if (file_exists($swRoot.'/site/indexes/bloom.raw')) unlink($swRoot.'/site/indexes/bloom.raw');
+	 	if (file_exists($swRoot.'/site/indexes/bloombitmap.txt'))  unlink($swRoot.'/site/indexes/bloombitmap.txt');
 	 	
-	 	unlink($swRoot.'/site/indexes/monogram.db');
+	 	if (file_exists($swRoot.'/site/indexes/monogram.txt'))  unlink($swRoot.'/site/indexes/monogram.db');
 	
 		$done .= '<p>Deleted bloom and monogram';
 		
@@ -181,8 +181,8 @@ if (isset($_REQUEST['submitreset'])||isset($_REQUEST['submitresetfulltext']))
 		$db->currentbitmap = new swBitmap;
 		$db->deletedbitmap = new swBitmap;
 		$db->protectedbitmap = new swBitmap;
-		unlink($swRoot.'/site/indexes/urls.txt');
-		unlink($swRoot.'/site/indexes/urls.db');
+		if (file_exists($swRoot.'/site/indexes/urls.txt')) unlink($swRoot.'/site/indexes/urls.txt');
+		if (file_exists($swRoot.'/site/indexes/urls.db')) unlink($swRoot.'/site/indexes/urls.db');
 	
 		//$done .= '<p>Deleted urls, short and bitmaps';
 		$done .= '<p>Deleted urls and bitmaps';
@@ -727,7 +727,7 @@ project revision';
 											}
 											else
 											{
-												$bdb = swDba($querypath.$v,'r');
+												$bdb = new swDba($querypath.$v);
 												if ($bdb)
 													$results['filter'] = $bdb->fetch('_filter');
 												
@@ -773,6 +773,17 @@ function querylist()
 	 foreach($files as $file)
 	 {
 	  	$key = sprintf('%05d',filesize($file));
+	  	
+	  	// delete queries older than 365 days
+	  	$t = filemtime($file);
+		$d = date('Y-m-d H:i',$t);
+		if (time() - $t > 60*60*24*365) 
+		{ 
+			unlink($file);
+			continue;
+		}
+	  	
+	  	
 	   	$fn = str_replace($querypath,'',$file);
 		if (stristr($fn,'-')) continue;
 	   	// $fn = substr($fn,0,-4);
@@ -780,18 +791,35 @@ function querylist()
 	 }
 	 
 	 $files = glob($querypath.'*.db');
+	 
 	  
 	 foreach($files as $file)
 	 {
 	  	$key = sprintf('%05d',filesize($file));
+	  	
+	  	// ignore queries older than 365 days
+	  	$t = filemtime($file);
+		$d = date('Y-m-d H:i',$t);
+		if (time() - $t > 60*60*24*365) 
+		{ 
+			unlink($file);
+			continue;
+		}
+	  	
 	   	$fn = str_replace($querypath,'',$file);
 		if (stristr($fn,'-')) continue;
 	   	// $fn = substr($fn,0,-4);
 	   	$list[$key.' '.$fn] = $fn;
 	 }
+	 
+	 
+	 
 	 krsort($list);
 	 return $list;
 }
+
+
+
 function bitmap2canvas($bm,$listrevisions=0,$id='1')
 {
 	$h = ceil($bm->length /512);

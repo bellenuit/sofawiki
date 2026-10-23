@@ -333,7 +333,7 @@ function swQueryStar($q)
 			case 'or':
 			case 'not':
 			case 'near':
-			case '(';
+			case '(':
 			case ')': $list[] = $w; break;
 			case '': break;
 			default: if (substr($w,-1) == '*') $list[] = $w; else $list[] = $w.'*';
@@ -355,7 +355,7 @@ function swQuerySoundex($q)
 			case 'or':
 			case 'not':
 			case 'near':
-			case '(';
+			case '(':
 			case ')': $list[] = $w; break;
 			case '': break;
 			default: $list[] = soundex(str_replace('*','',$w));

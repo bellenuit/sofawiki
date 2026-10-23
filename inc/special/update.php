@@ -30,7 +30,7 @@ curl_setopt($Channel, CURLOPT_SSL_VERIFYHOST, $VerifyHost);
 curl_exec($Channel);
  
 // Close the CURL channel
-curl_close($Channel);
+// curl_close($Channel); depreceated in PHP 8
  
 // Close file handle
 fclose($File);

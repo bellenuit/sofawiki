@@ -431,7 +431,7 @@ preparepatterns
 /legendstyle [ {} {} {} {} {} {} {} {} {} {} {}] def
 
 /textsizes { /titlesize exch def /bodysize exch def /labelsize exch def
-/textfont (KugiRegular) def
+/textfont (TGL017) def
 textfont cvn bodysize selectfont
 chartmargins 0 ymax numberformat stringwidth pop bodysize add put
 chartmargins 1 bodysize 4 mul put 
@@ -444,7 +444,7 @@ chartmargins 3 titlesize 1.2 mul bodysize 2.2 mul add bodysize 2 mul add put
 /gridlinewidth 1.5 def
 /axislinewidth 1.5 def
 /borderlinewidth 1.5 def
-/segmentborderlinewidth 1.5 def
+/segmentborderlinewidth 0 def
 /boldlinewidth 3 def
 
 /gridcolor { 0.7 setgray } def
@@ -816,7 +816,7 @@ gsave patterns col get exec grestore segmentborderlinewidth setlinewidth 1 setgr
 
 y y0 sub labellimit gt {
 invertedlabelcolor 
-/s y y0 sub round cvs def
+/s data row get col get cvs def
 
 xcenter y y0 add 2 div cos r1 r2 add 2 div mul add 
 ycenter y y0 add 2 div sin r1 r2 add 2 div mul add moveto
@@ -1203,10 +1203,10 @@ boldlinewidth setlinewidth
   /x2 x1 v vrest div scx x1 sub mul add def
   /y2 0 def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
-  gsave fill grestore invertedlabelcolor stroke
+  gsave fill grestore invertedlabelcolor segmentborderlinewidth setlinewidth  stroke
   y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub
   data i get 0 get stringwidth pop 
-  vlabel stringwidth pop max gt and {
+  vlabel stringwidth pop max gt and  {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
   x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
    } if
@@ -1215,10 +1215,10 @@ boldlinewidth setlinewidth
   } {
   /y2 y1 v vrest div y1 mul sub def
   x1 y1 moveto x2 y1 lineto x2 y2 lineto x1 y2 lineto
-  gsave fill grestore invertedlabelcolor stroke
-  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub data i get 0 get stringwidth pop
-  vlabel stringwidth pop max 
-   gt and {
+  gsave fill grestore invertedlabelcolor segmentborderlinewidth setlinewidth  stroke
+  y1 y2 sub bodysize 2.7 mul gt x2 x1 sub 5 sub
+  data i get 0 get stringwidth pop
+  vlabel stringwidth pop max gt and {
   x1 y1 moveto 5 bodysize 1.3 mul neg rmoveto data i get 0 get show
   x1 y1 moveto 5 bodysize 2.5 mul neg rmoveto vlabel show
   } if

@@ -12,7 +12,7 @@ Version 1.1.1 2025-07-14 new operators forall, pathbbox
 - added worker messages (svgfilnal, device)
 - proper exit for for and repeat operators
 - imroved error messages (currentcode limited in length for speed)
-- fixed errors that did not stop code (always return with context.error!) 
+- fixed errors that did not stop code (always return  with context.error!) 
 - fixed heap errors on arrays ans strings
 - download elements  with jtimestamp in filename
 Version 1.1.2 2025-07-20 
@@ -59,6 +59,28 @@ Version 1.2.9 2026-06-30
 - new operator setlinejoin
 Version 1.3.0 2026-07-05
 - textmode 2: create smaller SVG using defs for paths
+Version 1.3.1 2026-07-16
+- GCODE device
+Version 1.3.2 2026-08-12
+- kshow, kwidthshow, print operator
+- moved non standard charpath operator to extensions
+- refactored show operator for type3mode
+- implemented type3mode in stringwidth and widthshow
+Version 1.3.3 2026-09-12
+- refactored GCODE (set pen up only when moveto is actually different from current point
+- component creates URL nodes for all devices, but keeps then not displayed (allows setpagedevice to add a device on the fly).
+Version 1.3.4 2026-09-12
+- new operator showfile can export multiple named PDFs
+- fixed numberFormat bug in rpnPDFdevice
+- fixed bugs in PDF font substitution
+- arc path segmnents now play nicely within mixed paths
+- arc angles can now go downwards.
+- fixed positioning of TrueType fonts with 1000 geometry instead of 2024
+- PostScript strings can properly escape ) and ( with backslash
+- fixed nonbreaking hyphen bug in macRoman encoding
+Version 1.3.5 2026-10-13
+- Replaced Data URL with Blob URL (Safari 27 blocks Data URL)
+
 
 Renders a subset of PostScript to Canvas, SVG and PDF (as well as an obsucre raw rendering).
 The output can be displayed or proposed as downloadable link. It can be transparent.
@@ -111,13 +133,15 @@ if (typeof rpnExtensions  === 'undefined') {
 rpnFonts = {};
 rpnFiles = {};
 rpnFrames = {};
+rpnPDFs = {};
+rpnPDFfilename = {};
 rpnImageData = {};
 rpnSVGData = {};
 
 /* DATA TYPES */
 
 rpnHeapElement = class {
-    constructor(x, type, heap) {
+    constructor(x, type, heap) {     // console.log("heap* " + heap);
        this.value = x;
        this.type = type;
        this.counter = 0;
@@ -223,7 +247,8 @@ rpnName = class {
 
 
 rpnNumber = class {
-   constructor(x) { this.value = x;}
+   constructor(x) { this.value = x; if (Math.abs(this.value) < 0.0000000001) this.value = 0;
+   }
    get type() { return "number"; }
    get dump() {
        if (Math.abs(this.value) < 0.0000000001) return "0";
@@ -241,7 +266,7 @@ rpnProcedure = class {
 rpnString = class {
    constructor(x, heap) {
       if (typeof x != "string") throw "nostring";
-      this.reference = new rpnHeapElement(x, "array", heap);
+      this.reference = new rpnHeapElement(x, "string", heap);
    }
    get type() { return "string"; }
    get dump() { return "(" + this.value + ")"; }
@@ -254,9 +279,11 @@ rpnString = class {
 rpnRawDevice = class {
     constructor() {
         this.clear(640, 360, 2, 0);
+        this.canfiles = false;
 
     }
     finalize(context) {
+       if (context.device.raw || context.device.rawurl)  postMessage(["rawzip", context.id, null, null]);
         postMessage(["rawzip", context.id, null, null]);
     }
 
@@ -367,7 +394,7 @@ rpnRawDevice = class {
     }
     showpage(context) {
         const data = new ImageData(this.data, context.width * context.device.oversampling);
-        postMessage(["raw", context.id, data, null]);       
+        if (context.device.raw || context.device.rawurl)  postMessage(["raw", context.id, data, null]);       
         this.clear(this.width, this.height, this.oversampling, this.transparent);
         return context;
     }
@@ -381,10 +408,12 @@ rpnCanvasDevice = class {
         this.finalround = false;
         this.frames = [];
         this.clear(640,360,1,0);
+        this.canshow = false;
+        this.canfiles = false;
 
     }
     finalize(context) {
-        postMessage(["canvaszip", context.id, null, null]);
+        if (context.device.canvas || context.device.canvasurl) postMessage(["canvaszip", context.id, null, null]);
     }
     clear(width, height, oversampling, transparent) {
 	    this.width = width;
@@ -471,7 +500,7 @@ rpnCanvasDevice = class {
     showpage(context) {
 	    const data = this.ctx.getImageData(0, 0, this.node.width, this.node.height);
 	    
-	    postMessage(["canvas", context.id, data, null]);  		
+	    if (context.device.canvas || context.device.canvasurl) postMessage(["canvas", context.id, data, null]);  		
 	         
         this.ctx = null;
         return context;
@@ -485,14 +514,15 @@ rpnPDFDevice = class {
     constructor() {
         
         this.canshow = true;
+        this.canfiles = true;
         this.catalog = {};
         this.pageslist = {};
         this.pages = [];
         this.streams = [];
         this.alphas = [];
         this.elements = [];
-        this.usedfonts = {};
-        this.currentfont = {};
+        this.usedfonts = [];
+        this.currentfont = '';
         this.imagestack = [];
         this.timer = null;
         this.finalround = false;
@@ -503,7 +533,10 @@ rpnPDFDevice = class {
         if (Number.isFinite(width*1)) this.width = width;
         if (Number.isFinite(height*1)) this.height = height;
     }
-    finalize(context) {
+    finalize(context, intern = false) {
+	    postMessage(["log", context.id, "intern " + intern, null]);
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+	    
         const objects = [];
         this.catalog.Type = "/Catalog";
         this.catalog.Pages = "2 0 R ";
@@ -568,12 +601,22 @@ rpnPDFDevice = class {
         file += 'startxref'+ rpnEOL;
         file += startxref + rpnEOL;
         file +='%%EOF' + rpnEOL;
-        const url = "data:application/pdf;base64," + btoa(file);
-        postMessage(["pdf", context.id, url, null]);
+        
+        // const url = "data:application/pdf;base64," + btoa(file);
+         postMessage(["log", context.id, "intern2 " + intern, null]);
+
+        if (intern)  postMessage(["pdffile", context.id, file+":"+intern, null]);
+        else postMessage(["pdf", context.id, file, null]);
+        
+       //  if (intern)  postMessage(["pdffile", context.id, url + "," + intern, null]);
+       //  else postMessage(["pdf", context.id, url, null]);
+        
+        return context;
 
     } 
+    
     numberFormat(z) {
-        return Intl.NumberFormat('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(z);
+        return Intl.NumberFormat('en-IN', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(z).replace(",","");
     }
     asciiHexEncode(buffer) {
        const data = new Array(buffer.length);
@@ -612,6 +655,8 @@ rpnPDFDevice = class {
         return p.join(" ");
     }
     clip(context) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+
         this.elements.push("q");
         for (let clip of context.graphics.clip) {
             this.elements.push(this.getPath(clip));
@@ -620,10 +665,14 @@ rpnPDFDevice = class {
         return context;
     }
     eofill (context) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+
         return this.fill(context, false);
     }
     fill(context, zerowind = true) {
-	    if (context.showmode) return context;
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+
+	    if (context.showmode && context.device.textmode > 0) return context;
         if (context.graphics.clip.length) context = this.clip(context);
         this.elements.push(this.getPath(context.graphics.path));
         this.setcolor(context);
@@ -652,28 +701,39 @@ rpnPDFDevice = class {
         this.elements.push("/GS"+gs+" gs");
     }
     setfont(context) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+
         const f = {};
         f.Type = "/Font";
         f.Subtype = "/Type1";
-        f.Encoding = "/rpnMacRomanEncoding";
+        f.Encoding = "/MacRomanEncoding";
         f.BaseFont = "/" + context.graphics.font;
- 
- const key = f.BaseFont;
- var k;
-  
- if (Object.prototype.hasOwnProperty(this.usedfonts, key)) {
-     k = this.usedfonts[key].key;
-        } else {
-     k = Object.keys(this.usedfonts).length + 1;
-     f.key = k;
-     this.usedfonts[key] = f;
+        
+        const substitute = rpnFontSubstitution(f.BaseFont);
+        postMessage(["log", context.id, "font "+ f.BaseFont + "  " +substitute , null])
+        f.BaseFont = substitute;
+
+        
+        var k = 0;
+        for (let i = 0; i < this.usedfonts.length; i++) {
+	        let uf = this.usedfonts[i];
+	        if (uf.BaseFont == f.BaseFont) {
+		        k = i;
+	        }
         }
- if (f != this.currentfont) {
-     this.currentfont = f;
-     this.elements.push("BT /F" + k + "  " + this.numberFormat(context.graphics.size) + " Tf ET"); }
+        if (!k) {
+	        this.usedfonts.push(f);
+	        k = this.usedfonts.length-1;
+        }
+ 
+        if (context.graphics.font != this.currentfont) {
+        this.currentfont = context.graphics.font;
+        this.elements.push("BT /F" + (k+1) + "  " + this.numberFormat(context.graphics.size) + " Tf ET"); }
 
     }
     show(s, context, targetwidth = 0, extraspace = 0) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+
         if (context.graphics.clip.length) context = this.clip(context);
         this.setfont(context);
         this.setcolor(context);
@@ -697,18 +757,41 @@ rpnPDFDevice = class {
         
         return context;
     }
+    showfile(context, filename) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
+	    
+	    context = this.finalize(context, filename) ;
+	    
+	    this.catalog = {};
+        this.pageslist = {};
+        this.pages = [];
+        this.streams = [];
+        this.alphas = [];
+        this.elements = [];
+        this.usedfonts = [];
+        this.currentfont = '';
+        this.imagestack = [];
+        this.timer = null;
+        this.finalround = false;
+        
+	    return context;
+	    
+    }
     showpage(context) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
          const dict = {};
         dict.Type = "/Page";
         dict.Parent = "2 0 R";
         const ressourcesdict = {};
         const fontdict= {};
+        // postMessage(["log", context.id, "usedfonts "+ JSON.stringify(this.usedfonts) , null])
         for (let k in this.usedfonts) {    
-     const f = this.usedfonts[k];
-            const substitute = rpnFontSubstitution(f.BaseFont);
-            f.BaseFont = substitute;
-            fontdict["F" + f.key] = f;
+            const f = this.usedfonts[k];
+            let key = k * 1 + 1.0;
+            fontdict["F" + key] = f;
         }
+        this.usedfonts = [];
+        this.currentfont = '';
         ressourcesdict.Font = fontdict;
         const alphadict = {};
         ressourcesdict.ExtGState = alphadict;
@@ -736,6 +819,7 @@ rpnPDFDevice = class {
         return context;
     }
     stroke(context) {
+	    if (!(context.device.pdf || context.device.pdfurl)) return context;
         if (context.graphics.clip.length) context = this.clip(context);
         this.elements.push(this.getPath(context.graphics.path, false));
         this.setcolor(context);
@@ -753,6 +837,7 @@ rpnSVGDevice = class {
     constructor() {
         this.canshow = true;
         this.cannofill = true;
+        this.canfiles = false;
         this.fonts = {};
         this.glyphs = {};
         this.clear( 640, 360, 1, 0);
@@ -784,7 +869,7 @@ rpnSVGDevice = class {
 
     }
     finalize(context) {
-    	postMessage(["svgfinal", context.id, null, null])
+    	if (context.device.svg || context.device.svgurl) postMessage(["svgfinal", context.id, null, null])
     }
     getPath(path, close = true) {
        const p = [];
@@ -798,14 +883,17 @@ rpnSVGDevice = class {
            for (let line of subpath) {
                if (line[0] == "C") {
                    p.push("C " + (Math.round(line[3]*precision)/precision) + " " + (Math.round((this.height - line[4])*precision)/precision)+ " " + (Math.round(line[5]*precision)/precision) + " " + (Math.round((this.height - line[6])*precision)/precision) + " " + (Math.round((line[7])*precision)/precision) + " " + (Math.round((this.height - line[8])*precision)/precision));
-               } else {
+               } else if (line[0] == "Z") {
+               	    p.push("Z"); 
+                }
+                 else
+                {
                    if (line[3] == current[0]) {
 	                    p.push("V " + (Math.round((this.height - line[4])*precision)/precision));
                    } else if (line[3] == current[0]) {
 	                    p.push("H " + (Math.round(line[3]*precision)/precision));
                    } else {
                         p.push("L "+ (Math.round(line[3]*precision)/precision) + " " + (Math.round((this.height - line[4])*precision)/precision));
-				   		if (line[0] == "Z") p.push("Z"); 
 				   }
                    current = [line[3],line[4]];
                 }
@@ -876,7 +964,7 @@ rpnSVGDevice = class {
             node.setAttribute("stroke", this.rgb2hex(context.graphics.color[0], context.graphics.color[1], context.graphics.color[2]));
         if (this.clippath) node.setAttribute("clip-path", "url(#"+this.clippath+")");
         this.node.appendChild(node);
-        console.log(node.innerHTML);
+        // console.log(node.innerHTML);
         return context;
     }
     show(s, context, targetwidth = 0, cx=0, ch = 32) { 
@@ -910,6 +998,7 @@ rpnSVGDevice = class {
         const y = this.height - context.graphics.current[1];
         node.setAttribute("text-anchor","start");
         node.setAttribute("transform", "translate(" + (Math.round(x*1000)/1000) + " " + (Math.round(y*1000)/1000)  +") scale(" + decomposed.scale[0] + " " +  decomposed.scale[1]  + ") rotate(" +  -decomposed.rotation*180/Math.PI + ")" );
+
         if (targetwidth) {
             node.setAttribute("textLength", targetwidth);
             node.setAttribute("lengthAdjust", "spacing");
@@ -924,9 +1013,13 @@ rpnSVGDevice = class {
 	        const font = rpnFonts[context.graphics.font];
 	        const fontid = Object.keys(rpnFonts).indexOf(context.graphics.font);
 	        let scale = context.graphics.size / font.head.unitsPerEm;
+	        let korr = 2048 / font.head.unitsPerEm ;
 	        const glyphtextnode = rpnDocument.createElement("g");
 	        glyphtextnode.setAttribute("text",s);
-            glyphtextnode.setAttribute("transform", "translate(" + (Math.round(x*1000)/1000) + " " + (Math.round((y-context.height*scale)*1000)/1000) +") scale(" + decomposed.scale[0]*scale + " " +  decomposed.scale[1]*scale  + ") rotate(" +  -decomposed.rotation*180/Math.PI + ")" );
+	        let m = context.graphics.matrix; 
+	        // experimental baseline correction magic
+	        //postMessage(["status",context.id,"descent "+font.hhea.descent,null])
+            glyphtextnode.setAttribute("transform", "translate(" + (Math.round(x*1000)/1000) + " " + (Math.round((y-decomposed.scale[1]*context.graphics.size/6 * korr)*1000)/1000) +") scale(" + Math.round(decomposed.scale[0]*scale*100000)/100000 + " " +  Math.round(decomposed.scale[1]*scale*100000)/100000  + ") rotate(" + decomposed.rotation*180/Math.PI + ") " );
             if (context.device.transparent == 1)
             glyphtextnode.setAttribute("fill", this.rgba2hex(context.graphics.color[0], context.graphics.color[1], context.graphics.color[2], context.graphics.color[3]));
         else 
@@ -993,7 +1086,7 @@ rpnSVGDevice = class {
         
         
         
-        postMessage(["svg", context.id, this.node.outerHTML(), null])
+        if (context.device.svg || context.device.svgurl) postMessage(["svg", context.id, this.node.outerHTML(), null])
         this.clear(this.width, this.height, this.oversampling, this.transparent);
         return context;
     }
@@ -1007,7 +1100,145 @@ rpnSVGDevice = class {
     	
   		const hex =  "#" + (1 << 24 | r << 16 | g << 8 | b ).toString(16).slice(1);
 
-  		return hex;
+        return hex;
+    }
+};
+
+ rpnGCODEDevice = class {
+    constructor() {
+        this.canshow = false;
+        this.cannofill = false;
+        this.canfiles = false;
+        this.clear( 640, 360, 1, 0);
+        this.currentcolor = {};
+    }
+    clear(width, height, oversampling, transparent) {
+        this.node = rpnDocument.createElement("TEXTAREA");
+        this.width = width;
+        this.height = height;       
+        this.node.setAttribute("width", width + "px");
+        this.node.setAttribute("height", height + "px");
+        this.oversampling = oversampling;
+        this.ctx = true;
+        this.lines = [];
+        this.lines.push("; GCODE creator TinyPS");
+        this.lines.push("; init");
+        this.lines.push("G21"); // mm units
+        this.lines.push("G92 X0 Y0"); // current position is 0,0
+        this.lines.push("F1500"); // current position is 0,0
+        this.lines.push("G0 Z0"); // pen up
+        this.color = [];
+    
+
+    }
+    finalize(context) {
+    	if (!(context.device.gcode || context.device.gcodeurl)) return context;
+    	postMessage(["gcodefinal", context.id, null, null])
+    }
+    getPath(path, context, close = true) {
+       const p = [];
+       if (!path.length) return "";
+
+       function tf(p, dev) {
+           var [linetype, x0, y0, x, y] = p;
+           const precision = 10;
+           const point2mm = 25.4/96; // use modern scale
+// rpnLineIntersection = function(x1, y1, x2, y2, x3, y3, x4, y4)
+           if (x < 0) 
+               [x, y] = rpnLineIntersection(x0,y0,x,y,0,0,0,dev.height);
+           if (x >= dev.width)
+               [x, y] = rpnLineIntersection(x0,y0,x,y,dev.width-1,0,dev.width-1,dev.height);
+           if (y < 0) 
+               [x, y] = rpnLineIntersection(x0,y0,x,y,0,0,dev.width,0);
+           if (y >= dev.height)
+               [x, y] = rpnLineIntersection(x0,y0,x,y,0,dev.height-1,dev.width,dev.height-1);
+           const xlimited = Math.min(dev.width,Math.max(0,x)) ; 
+           const ylimited = Math.min(dev.height,Math.max(0,y)) ; 
+           const xscaled = Math.round(xlimited*point2mm*precision)/precision;        
+           const yscaled = Math.round(ylimited*point2mm*precision)/precision; 
+           return [xscaled,yscaled];       
+       }
+       
+       var [lastx, lasty] = [-1,-1];
+       
+       for (let subpath of path) {
+           if (!subpath.length) continue;
+
+
+           var x, y;
+
+           [x, y] = tf(["M",context.width/2,context.height/2,subpath[0][1],subpath[0][2]],context);
+
+           p.push(";");
+           
+           if (lastx != x || lasty != y) {
+               p.push("G0 Z0"); // pen up 
+               p.push(`G0 X${ x } Y${ y  }`)
+               p.push("G0 Z8"); // pen down 
+           }
+
+           for (let line of subpath) {
+               if (line[0] == "C") {
+                   let bezierpath = rpnBezier(line);
+
+                   for (let bline of bezierpath) {
+                        [x, y] = tf(bline,context);
+                        p.push(`G1 X${ x } Y${ y  }`);
+                        [lastx, lasty] = [x, y];
+                   }
+
+                } else {
+                        [x, y] = tf(line,context);
+                        p.push(`G1 X${ x } Y${ y  }`);
+                        [lastx, lasty] = [x, y];
+                }
+           }
+          
+        } 
+        
+        p.push("G0 Z0"); // pen up 
+        
+        return p;
+    }
+    clip(context) {
+        
+        // not supported
+       
+        return context;
+    }
+    eofill (context) {
+        // not supported
+        if (!(context.device.gcode || context.device.gcodeurl)) return context;
+        return context;
+    }
+    fill(context, zerowind = true) {
+        // not supported
+        return context;
+    }
+    stroke(context) {
+	    if (!(context.device.gcode || context.device.gcodeurl)) return context;
+        context = this.clip(context);
+        if (this.color.length && this.color.toString() !== context.graphics.color.toString()) {
+            this.lines.push(`; color changes from ${ this.color.toString()} to ${ context.graphics.color.toString()}`); 
+            this.lines.push("M06"); // tool change
+        }
+        this.color = context.graphics.color.slice();
+        const p = this.getPath(context.graphics.path, context, false);
+        for(let line of p) this.lines.push(line);
+        return context;
+    }
+    show(s, context, targetwidth = 0, cx=0, ch = 32) { 
+	    // not supported
+        return context;
+    }
+    showpage(context) {
+        if (!(context.device.gcode || context.device.gcodeurl)) return context;
+        this.lines.push("; clean up");
+        this.lines.push("G0 X0 Y0"); // go to origin       
+        this.lines.push("M2"); // end
+        if (context.device.gcode || context.device.gcodeurl) postMessage(["gcode", context.id, this.lines, null])
+        this.clear(this.width, this.height, this.oversampling, this.transparent);
+        return context;
     }
 };
 
@@ -1030,7 +1261,7 @@ rpnContext = class {
         this.dictstack.push({});
         this.nodes = [];
         this.fontdict = {};
-        this.device = { canvas: 0, canvasurl: 0, console: 1, interval: 0, zip: 0, movie: 0, svgmovie: 0, oversampling: 1, pdf: 0, pdfurl: 0, raw: 0, rawurl : 0, svg: 0, svgurl: 0, textmode: 2,  transparent: 0, width: 640, height: 360 };
+        this.device = { canvas: 0, canvasurl: 0, console: 1, gcode: 0, gcodeurl: 1, interval: 0, zip: 0, movie: 0, svgmovie: 0, oversampling: 1, pdf: 0, pdfurl: 0, raw: 0, rawurl : 0, svg: 0, svgurl: 0, textmode: 2,  transparent: 0, width: 640, height: 360 };
         this.async = false;
         this.initgraphics();
     }
@@ -1298,7 +1529,7 @@ rpn = function(s, context = null, outerContext = false, silent = false ) {
                    current += elem;
                }
                break;
-           case "string":
+           case "string": // console.log(elem); console.log(elem.charCodeAt(0));
                if (elem == ")") {
                    if (depth) {
                       depth--;
@@ -1313,10 +1544,17 @@ rpn = function(s, context = null, outerContext = false, silent = false ) {
                } else if (elem == "(") {
                   depth++;
                   current += elem;
+               } else if (elem.charCodeAt(0) == 92)  {
+	               postMessage(["print",context.id,"stringescape",null]);
+	               state = "stringescape";
                } else {
                    current += elem;
                }
                break;
+           case "stringescape":
+               current += elem;
+               state = "string";
+               break; 
            case "comment":
              if (elem == rpnEOL ) {
                 state = "start";
@@ -1581,35 +1819,67 @@ rpnOperators.arc = function(context) {
     if (!centerx) return context;
 
     // assure angle2 > angle1!
-    while (angle2.value <= angle1.value) angle2.value += 360;
+//    while (angle2.value <= angle1.value) angle2.value += 360;
     
     // approximation works for 90 dregrees max, we split
     var first = true;
-    var target = angle1.value;
     const subpath = [];
+    var a1 = angle1.value;
+    var a2 = angle2.value;
+    const reverse = (a2 < a1);
+    const existingpath = context.graphics.current.length;
+    var subpath0;
+    if (existingpath) {
+        subpath0 = context.graphics.path.pop();
+    } else {
+    	subpath0 = [];
+    }
     
-    while(angle1.value < angle2.value) {
+    const [existingx, existingy] = [context.graphics.current[0],context.graphics.current[1]];
+    if (reverse) [a1, a2] = [a2, a1];
+    var target = a1;
+    
+    const r = radius.value;
+    const cx = centerx.value;
+    const cy = centery.value;
+    
+    while(a1 < a2) {
          
-        target = angle1.value + Math.min(90, angle2.value - target);   // starting point
-        let [x1, y1] = [centerx.value + radius.value * Math.cos(angle1.value * Math.PI/180), centery.value + radius.value * Math.sin(angle1.value * Math.PI/180)];
+        target = a1 + Math.min(90, a2 - target);   // starting point 
+        console.log(target);
+        let [x1, y1] = [cx + r * Math.cos(a1 * Math.PI/180), cy + r * Math.sin(a1 * Math.PI/180)];
         // end point
-        let [x4, y4] = [centerx.value + radius.value * Math.cos(target * Math.PI/180), centery.value + radius.value * Math.sin(target * Math.PI/180)];
+        let [x4, y4] = [cx + r * Math.cos(target * Math.PI/180), cy + r * Math.sin(target * Math.PI/180)];
+        // if (reverse) [x1, y1, x4, y4] = [x4, y4, x1, y1];       
         // control points
-        let lt = radius.value * (target-angle1.value)/90 * 4 /3 * (Math.sqrt(2)-1) ;
-        let [x2, y2] = [x1 + lt * Math.cos((angle1.value + 90)*Math.PI/180), y1 + lt * Math.sin((angle1.value + 90)*Math.PI/180)];
+        let lt = r * (target-a1)/90 * 4 /3 * (Math.sqrt(2)-1) ;
+        let [x2, y2] = [x1 + lt * Math.cos((a1 + 90)*Math.PI/180), y1 + lt * Math.sin((a1 + 90)*Math.PI/180)];
         let [x3, y3] = [x4 + lt * Math.cos((target - 90)*Math.PI/180), y4 + lt * Math.sin((target - 90)*Math.PI/180)];
         let [x1t, y1t] = context.transform(x1, y1);
         let [x2t, y2t] = context.transform(x2, y2);
         let [x3t, y3t] = context.transform(x3, y3);
         let [x4t, y4t] = context.transform(x4, y4);
-        if (context.graphics.current.length) {
-            subpath.push(["L", context.graphics.current[0], context.graphics.current[1], x1t, y1t]);
-        }
-        subpath.push(["C", x1t, y1t, x2t, y2t, x3t, y3t, x4t, y4t]);
-        angle1.value += 90;
-        context.graphics.current = [ x4t, y4t ];
+        if (reverse)
+            subpath.push(["C", x4t, y4t, x3t, y3t, x2t, y2t, x1t, y1t]);
+        else 
+			subpath.push(["C", x1t, y1t, x2t, y2t, x3t, y3t, x4t, y4t]);
+        a1 += 90;
+        if (reverse)
+            context.graphics.current = [ x1t, y1t ];
+        else 
+        	context.graphics.current = [ x4t, y4t ];
     }
-    context.graphics.path.push(subpath);
+    if (reverse) subpath.reverse();
+    if (existingpath && subpath.length) {
+    	let [firstx,firsty] = [subpath[0][1],subpath[0][2]];
+    	subpath.unshift(["L",existingx,existingy,firstx,firsty])
+    };
+    
+    for(let p of subpath) {
+    	subpath0.push(p);
+    }
+    
+    context.graphics.path.push(subpath0);
     return context;
 };
 
@@ -1703,31 +1973,7 @@ rpnOperators.ceil = function(context) {
     return context;
 };
 
-rpnOperators.charpath = function(context) {
-    const [s] = context.pop("string");
-    if (!context.graphics.current.length) {
-       return context.error("nocurrentpoint");
-    }
-    if (!context.graphics.font) {
-       return context.error("nocurrentfont");
-    }
-    if (!s) return context;
-    const font = rpnFonts[context.graphics.font];
-    if (!font) {
-       return context.error("nocurrentfont");
-    }
-    const scale = context.graphics.size / font.head.unitsPerEm;
-    var ps = " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale ";
-    for (let i = 0; i < s.value.length; i++) {
-        const c = s.value.charCodeAt(i);
-        const gi = font.glyphIndex(c); 
-        ps += font.glyphPath(gi);
-        ps += font.glyphWidth(gi) + " 0 translate ";
-    }
-    ps += " setmatrix neg exch neg exch translate ";
-    context = rpn(ps, context);
-    return context;
-};
+
 
 rpnOperators.clear = function(context) {
     context.stack = [];
@@ -1806,16 +2052,16 @@ rpnOperators.currentalpha = function(context) {
     return context;
 };
 
-rpnOperators.currentflat = function(context) {
-	// not implemented
-    context.stack.push(new rpnNumber(1));
-    return context;
-};
-
 rpnOperators.currentdict = function(context) {
     const d = new rpnDictionary(1);
     d.value = context.dict;
     context.stack.push(d);
+    return context;
+};
+
+rpnOperators.currentflat = function(context) {
+	// not implemented
+    context.stack.push(new rpnNumber(1));
     return context;
 };
 
@@ -1858,6 +2104,8 @@ rpnOperators.currentpagedevice = function(context) {
 	d.value.canvasurl = new rpnNumber(context.dict.canvasurl ? 1 : 0);
 	d.value.color = new rpnNumber(context.dict.color ? 1 : 0);
 	d.value.console = new rpnNumber(context.dict.console ? 1 : 0);
+    d.value.gcode = new rpnNumber(context.dict.gcode ? 1 : 0);
+    d.value.gcodeurl = new rpnNumber(context.dict.gcodeurl ? 1 : 0);
     d.value.height = new rpnNumber(context.height);
     d.value.interval = new rpnNumber(context.dict.interval ? context.dict.interval : 0);
     d.value.oversampling = new rpnNumber(context.dict.oversampling ? context.dict.oversampling : 0);
@@ -1947,8 +2195,9 @@ rpnOperators.cvr = function(context) {
 rpnOperators.cvs = function(context) {
     const [x] = context.pop("any");
     if (!x) return context;
-    const result = x.dump
-    context.stack.push(new rpnString(result, context.heap));
+    const result = new rpnString(x.dump, context.heap);
+    result.reference.inc();
+    context.stack.push(result);
     return context;
 };
 
@@ -2120,6 +2369,8 @@ rpnOperators.findfont = function(context) {
     context.stack.push(dict);
     return context;
 };
+
+
 
 
 rpnOperators.fill = function(context) {
@@ -2410,6 +2661,206 @@ rpnOperators.known = function(context) {
 rpnUnitTest("/foo 1 def currentdict /foo known", "1");
 rpnUnitTest("/foo 1 def 1 dict /foo known", "0");
 
+rpnOperators.kshow = function(context) {
+    const [s, p ] = context.pop("string", "procedure");
+    if (!context.graphics.current.length) {
+       return context.error("nocurrentpoint");
+    }
+    if (!context.graphics.font) {
+       return context.error("nocurrentfont");
+    }
+    if (!s) return context;
+    const font = rpnFonts[context.graphics.font];
+    if (!font) {
+       return context.error("invalidfont");
+    }
+    const type3mode = font.value && font.value.FontType.value == 3;
+    var ps = "";
+    var scale = 1;
+    var targetwidth = 0;
+    let [currentx0, currenty0] = context.graphics.current;
+    if (type3mode) { 
+        context.stack.push(font);
+    	ps += " /currentfontdict exch def ";
+//         ps += " (START) print currentfontdict /FontName get print"
+        ps += " currentpoint currentpoint translate ";
+        ps += " currentmatrix ";
+        ps += " currentfontdict /FontMatrix get 0 get currentfontdict /FontMatrix get 3 get  scale ";
+        ps +=  context.graphics.size + " " + context.graphics.size + " scale  ";
+        for (let i = 0; i < s.value.length; i++) {
+        	 let c = rpnMacRomanChar(s.value,i); // s.value.charCodeAt(i)
+//         	 % ps += " (CHAR) print currentfontdict /FontName get print "
+             ps += " currentfontdict " + c + " currentfontdict begin BuildChar end 0 translate ";
+             if (i+1 < s.value.length)
+             ps += " " +c + " " + rpnMacRomanChar(s.value,i+1) + " " + p.dump + " exec ";
+        
+    	}
+    } else {
+    	scale = context.graphics.size / font.head.unitsPerEm;
+
+    	ps += " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale ";
+    	for (let i = 0; i < s.value.length; i++) {
+        	const c = s.value.charCodeAt(i);
+        	const gi = font.glyphIndex(c);
+        	ps += font.glyphPath(gi);
+        	ps += " fill ";
+        	ps += font.glyphWidth(gi) + " 0 translate ";
+        	targetwidth +=  font.glyphWidth(gi) ;
+       	 	// ttf kerning not implented
+       	 	 if (i+1 < s.value.length)
+             	ps += " " + c + " " + s.value.charCodeAt(i+1)+ " " + p.dump + " exec ";
+
+    	}
+
+    }
+
+    ps += " setmatrix neg exch neg exch translate ";   
+    context.showmode = false;
+    context = rpn(ps, context);
+    context.showmode = false;
+    
+    if (context.device.textmode == 1 && !type3mode) {    
+        targetwidth *= scale;
+        context.graphics.current = [currentx0, currenty0];
+        for (let n of context.nodes) { 
+           if (n.canshow) context = n.show(s.value, context, targetwidth);
+        }
+    }
+    return context;
+};
+
+rpnOperators.kstringwidth = function(context) {
+    const [s, p] = context.pop("string", "procedure");
+    if (!context.graphics.font) {
+       return context.error("nocurrentfont");
+    }
+    if (!s) return context;
+    const font = rpnFonts[context.graphics.font];
+    if (!font) {
+       return context.error("invalidfont");
+    }
+    const type3mode = font.value && font.value.FontType.value == 3;
+    var width = 0;
+    if (type3mode) {
+    	let scale = context.graphics.size * font.value.FontMatrix.value[0].value;
+    	for (let i = 0; i < s.value.length; i++) {
+        	const c = rpnMacRomanChar(s.value,i);
+    		let gn = font.value.Encoding.value[c].value;
+    		// postMessage(["log",context.id,"code " + gn,null]);
+    		width += font.value.Metrics.value[gn].value * scale;
+    	}
+    	
+    } else {
+    
+    	let scale = context.graphics.size / font.head.unitsPerEm;
+    	for (let i = 0; i < s.value.length; i++) {
+        	let c = s.value.charCodeAt(i);
+        	let gi = font.glyphIndex(c);
+        	width += font.glyphWidth(gi) * scale;
+    	}
+    }
+    
+    // remove kerning
+    var ps = "/"+ context.graphics.font + " " + context.graphics.size + " selectfont ";
+    ps += " 0 ";
+    for (let i = 0; i+1 < s.value.length; i++) {
+    	if (type3mode)
+    	   ps += " " + rpnMacRomanChar(s.value,i) + " " + rpnMacRomanChar(s.value,i+1) + " ";
+    	else 
+			ps += " " + s.value.charCodeAt(i) + " " + s.value.charCodeAt(i+1) + " ";
+			
+		ps += " {" + p.value + "} exec add ";
+     }
+     // postMessage(["status",context.id,ps,null])
+    context2 = new rpnContext;
+    context2.showmode = false;
+    context2 = rpn(ps, context2);
+    context2.showmode = false;
+	let kern = context2.stack.pop().value;
+	let scale = (type3mode) ? context.graphics.size / 1000 : context.graphics.size / font.head.unitsPerEm;
+	
+	
+	width -= kern * scale;
+    
+    context.stack.push(new rpnNumber(width));
+    context.stack.push(new rpnNumber(0));
+    return context;
+};
+
+
+rpnOperators.kwidthshow = function(context) {
+    const [s, ch, cy, cx, p ] = context.pop("string", "number", "number", "number", "procedure");
+    if (!context.graphics.current.length) {
+       return context.error("nocurrentpoint");
+    }
+    if (!context.graphics.font) {
+       return context.error("nocurrentfont");
+    }
+    if (!s) return context;
+    const font = rpnFonts[context.graphics.font];
+    if (!font) {
+       return context.error("invalidfont");
+    }
+    const type3mode = font.value && font.value.FontType.value == 3;
+    var ps = "";
+    var scale = 1;
+    var targetwidth = 0;
+    let [currentx0, currenty0] = context.graphics.current;
+    if (type3mode) { 
+        context.stack.push(font);
+    	ps += " /currentfontdict exch def ";
+//         ps += " (START) print currentfontdict /FontName get print"
+        ps += " currentpoint currentpoint translate ";
+        ps += " currentmatrix ";
+        ps += " currentfontdict /FontMatrix get 0 get currentfontdict /FontMatrix get 3 get  scale ";
+        ps +=  context.graphics.size + " " + context.graphics.size + " scale  ";
+        for (let i = 0; i < s.value.length; i++) {
+        	 let c = rpnMacRomanChar(s.value,i); // s.value.charCodeAt(i)
+//         	 % ps += " (CHAR) print currentfontdict /FontName get print "
+             ps += " currentfontdict " + c + " currentfontdict begin BuildChar end 0 translate ";
+             if (i+1 < s.value.length)
+             ps += " " +c + " " + rpnMacRomanChar(s.value,i+1) + " " + p.dump + " exec ";
+             if (c == ch.value)
+                 ps += cx.value + " currentfontdict /FontMatrix get 0 get div " + context.graphics.size + " div " + cy.value + "  currentfontdict /FontMatrix get 3 get div " + context.graphics.size + " div translate ";
+
+    	}
+    } else {
+    	scale = context.graphics.size / font.head.unitsPerEm;
+    	let [cx0, cy0] = [cx.value / scale, cy.value / scale];
+    	ps += " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale ";
+    	for (let i = 0; i < s.value.length; i++) {
+        	const c = s.value.charCodeAt(i);
+        	const gi = font.glyphIndex(c);
+        	ps += font.glyphPath(gi);
+        	ps += " fill ";
+        	ps += font.glyphWidth(gi) + " 0 translate ";
+        	targetwidth +=  font.glyphWidth(gi) ;
+       	 	// ttf kerning not implented
+       	 	 if (i+1 < s.value.length)
+             	ps += " " + c + " " + s.value.charCodeAt(i+1)+ " " + p.dump + " exec ";
+            if (c == ch.value) {
+           		ps += cx0 + " " + cy0 + " translate ";
+           		targetwidth +=  cx0 ;
+        	}
+    	}
+
+    }
+
+    ps += " setmatrix neg exch neg exch translate ";   
+    context.showmode = false;
+    context = rpn(ps, context);
+    context.showmode = false;
+    
+    if (context.device.textmode == 1 && !type3mode) {    
+        targetwidth *= scale;
+        context.graphics.current = [currentx0, currenty0];
+        for (let n of context.nodes) { 
+           if (n.canshow) context = n.show(s.value, context, targetwidth);
+        }
+    }
+    return context;
+};
+
 rpnOperators.le = function(context) {
     const [b, a] = context.pop("number,string", "number,string");
     if (!b) return context;
@@ -2697,6 +3148,12 @@ rpnOperators.pathbbox = function(context) {
     return context;
 };
 
+rpnOperators.print = function(context) {
+	const [a] = context.pop("any");
+	if (!a) return context;
+	postMessage(["status",context.id,a.dump+"<br>",null])
+	return context;
+}
 
 
 rpnOperators.put = function(context) {
@@ -2718,11 +3175,15 @@ rpnOperators.put = function(context) {
 };
 
 rpnOperators.putinterval = function(context) {
+
     const [c, b, a] = context.pop("string,array", "number", "array,string");
+    
+    // postMessage(["log",context.id,[a,b,c],null]) 
+    
     if (!a) return context;
     if (b.value < 0) return context.error("rangerror");
     if (b.value + c.value.length > a.value.length) return context.error("rangerror");
-    if (a.type !== c.type) return context.error("rangerror");
+    if (a.type !== c.type) return context.error("typeerror");
     if (a.type == "array") {
        const s = a.value.slice(0, b.value).concat(c.value).concat(a.value.slice(b.value + c.value.length, a.value.length));
        a.replace(s);
@@ -3047,6 +3508,7 @@ rpnOperators.setdash = function(context) {
 rpnOperators.setfont = function(context) {
     const [font] = context.pop("dictionary");
     context.graphics.font =  font.value.FontName.value;
+    // postMessage(["log",context.id,"setfont " + context.graphics.font,null]);
     return context;
 };
 
@@ -3143,6 +3605,8 @@ rpnOperators.setpagedevice = function(context) {
     if (dict.canvasurl) context.device.canvasurl = dict.canvasurl.value;
     if (dict.color)  context.device.color = dict.color.value;
     if (dict.console)  context.device.console = dict.console.value;
+    if (dict.gcode) context.device.gcode = dict.gcode.value;
+    if (dict.gcodeurl) context.device.gcodeurl = dict.gcodeurl.value;
     if (dict.height) context.height = context.device.height = dict.height.value;
     if (dict.oversampling) {
         const oversampling = Math.min(16,Math.max(1, dict.oversampling.value));
@@ -3182,6 +3646,7 @@ rpnOperators.setrgbcolor = function(context) {
 
 
 rpnOperators.show = function(context) {
+
     const [s] = context.pop("string");
     // postMessage(["log",context.id,"show : "+s.value,null])
     if (!s) return context;
@@ -3191,63 +3656,94 @@ rpnOperators.show = function(context) {
     if (!context.graphics.font.length) {
        return context.error("nocurrentfont");
     }
+    
     const font = rpnFonts[context.graphics.font];
-    if (context.device.textmode && (!font || !font.value)) { // postMessage(["log",context.id,"show textmode : "+s.value,null])
-        for (let n of context.nodes) { 
-           if (n.canshow) context = n.show(s.value, context);
-        }
-    } else  if (!font) {
-	     return context.error("nocurrentfont");
+    if (!font) {
+       return context.error("invalidfont");
     }
-    else { // postMessage(["log",context.id,"show else : "+s.value,null])
-	    for (let n of context.nodes) {
-           if (n.cannofill) { 
-	           context.nofill = true;
-	           context = n.show(s.value, context);
-	           context.nofill = false;
-	       }
+    
+    const type3mode = font.value && font.value.FontType.value == 3;
+//     postMessage(["log",context.id,"FONTVALUE "+font.value,null]);
+//    if (font.value) postMessage(["log",context.id,"FONTVALUE "+Object.keys(font.value),null]);
+//     postMessage(["log",context.id,"type 3 "+type3mode,null]);
+    if (!type3mode) {
+    	if (context.device.textmode) { 
+        	for (let n of context.nodes) { 
+           		if (n.canshow) context = n.show(s.value, context);
+        	}
         }
+    	else { 
+	    	for (let n of context.nodes) {
+           		if (n.cannofill) { 
+	           		context.nofill = true;
+	           		context = n.show(s.value, context);
+	           		context.nofill = false;
+	       		}
+        	}
+    	}
     }
 
-        var ps = "";
-    var type3mode = false;
-    if (font.value && font.value.FontType.value == 3) {
-        type3mode = true;
-//        postMessage(["status",context.id,"type 3",null]);
+    var ps = "10 dict begin";
+    if (type3mode) {
         context.stack.push(font);
+
         ps += " /currentfontdict exch def ";
+//         ps += " (START) print currentfontdict /FontName get print"
         ps += " currentpoint currentpoint translate ";
         ps += " currentmatrix ";
         ps += " currentfontdict /FontMatrix get 0 get currentfontdict /FontMatrix get 3 get  scale ";
         ps +=  context.graphics.size + " " + context.graphics.size + " scale  ";
         for (let i = 0; i < s.value.length; i++) {
-             ps += " currentfontdict " + s.value.charCodeAt(i) + " currentfontdict begin BuildChar end 0 translate";
+        	 let c = rpnMacRomanChar(s.value,i); // s.value.charCodeAt(i)
+//         	 % ps += " (CHAR) print currentfontdict /FontName get print "
+             ps += " currentfontdict " + c + " currentfontdict begin BuildChar end 0 translate";
         }
     } else {
-    let scale = context.graphics.size / font.head.unitsPerEm;
-    ps += " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale  ";
-    for (let i = 0; i < s.value.length; i++) {
-        const c = s.value.charCodeAt(i);
-        const gi = font.glyphIndex(c);
-		// if (c > 127) console.log("encoding " + s.value.substr(i,1) + " " + c + " " + gi);
-        ps += font.glyphPath(gi);
-        ps += " fill ";
-        ps += font.glyphWidth(gi) + " 0 translate ";
+    	ps += " currentpoint currentpoint translate ";
+
+
+    	ps += " currentmatrix ";
+
+ 
+    	ps +=  1/ font.head.unitsPerEm + " " + 1/ font.head.unitsPerEm + " scale  ";
+    	ps +=  context.graphics.size + " " + context.graphics.size + " scale  ";
+    	// ps += " currentmatrix print "
+    	
+    	for (let i = 0; i < s.value.length; i++) {
+        	// const c = s.value.charCodeAt(i);
+        	let c = s.value.charCodeAt(i);
+        	const gi = font.glyphIndex(c);
+
+        	ps += " " + font.glyphPath(gi) + " ";        	
+        	
+        	ps += " fill ";
+        	
+        	/*
+        	ps += "  (" + font.glyphPath(gi) + ") print ";
+        	ps += "gsave 0 0 1 setrgbcolor 194 729 moveto 194 729 lineto 194 0 lineto 100 0 lineto 100 729 lineto closepath stroke grestore " 
+        	*/
+        	ps += font.glyphWidth(gi) + " 0 translate ";
+    	}
     }
-    }
-    ps += " 0 0 moveto setmatrix neg exch neg exch translate ";
+    ps += " 0 0 moveto setmatrix neg exch neg exch translate end ";
     context.showmode = !type3mode;
+ 
     context = rpn(ps, context);
+    // postMessage(["status",context.id,"showend dstack " + context.dictstack.length,null]);
     context.showmode = false;
+    return context;
+};
+
+rpnOperators.showfile = function(context) {
+	const [filename] = context.pop("string");
+    for (let n of context.nodes) 
+    if (n.canfiles) context = n.showfile(context, filename.value);
     return context;
 };
 
 rpnOperators.showpage = function(context) {
     for (let n of context.nodes) context = n.showpage(context);
-    // context.refresh();
     context.initgraphics();
-//   console.log("SHOWPAGE")
-// context.error("refreshpage");
     return context;
 };
 
@@ -3290,14 +3786,27 @@ rpnOperators.stringwidth = function(context) {
     if (!s) return context;
     const font = rpnFonts[context.graphics.font];
     if (!font) {
-       return context.error("nocurrentfont");
+       return context.error("invalidfont");
     }
-    const scale = context.graphics.size / font.head.unitsPerEm;
+    const type3mode = font.value && font.value.FontType.value == 3;
     var width = 0;
-    for (let i = 0; i < s.value.length; i++) {
-        const c = s.value.charCodeAt(i);
-        const gi = font.glyphIndex(c);
-        width += font.glyphWidth(gi) * scale;
+    if (type3mode) {
+    	let scale = context.graphics.size * font.value.FontMatrix.value[0].value;
+    	for (let i = 0; i < s.value.length; i++) {
+        	const c = rpnMacRomanChar(s.value,i);
+    		let gn = font.value.Encoding.value[c].value;
+    		// postMessage(["log",context.id,"code " + gn,null]);
+    		width += font.value.Metrics.value[gn].value * scale;
+    	}
+    	
+    } else {
+    
+    	let scale = context.graphics.size / font.head.unitsPerEm;
+    	for (let i = 0; i < s.value.length; i++) {
+        	let c = s.value.charCodeAt(i);
+        	let gi = font.glyphIndex(c);
+        	width += font.glyphWidth(gi) * scale;
+    	}
     }
     context.stack.push(new rpnNumber(width));
     context.stack.push(new rpnNumber(0));
@@ -3399,31 +3908,56 @@ rpnOperators.widthshow = function(context) {
     if (!s) return context;
     const font = rpnFonts[context.graphics.font];
     if (!font) {
-       return context.error("nocurrentfont");
+       return context.error("invalidfont");
     }
-    const scale = context.graphics.size / font.head.unitsPerEm;
-    const [cx0, cy0] = [cx.value / scale, cy.value / scale];
-    const [currentx0, currenty0] = context.graphics.current;
+    const type3mode = font.value && font.value.FontType.value == 3;
+    var ps = "";
+    var scale = 1;
     var targetwidth = 0;
-    var ps = " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale ";
-    for (let i = 0; i < s.value.length; i++) {
-        const c = s.value.charCodeAt(i);
-        const gi = font.glyphIndex(c);
-        ps += font.glyphPath(gi);
-        ps += " fill ";
-        ps += font.glyphWidth(gi) + " 0 translate ";
-        targetwidth +=  font.glyphWidth(gi) ;
-        if (c == ch.value) {
-           ps += cx0 + " " + cy0 + " translate ";
-           targetwidth +=  cx0 ;
-        }
+    let [currentx0, currenty0] = context.graphics.current;
+    if (type3mode) { 
+        context.stack.push(font);
+    	ps += " /currentfontdict exch def ";
+//         ps += " (START) print currentfontdict /FontName get print"
+        ps += " currentpoint currentpoint translate ";
+        ps += " currentmatrix ";
+        ps += " currentfontdict /FontMatrix get 0 get currentfontdict /FontMatrix get 3 get  scale ";
+        ps +=  context.graphics.size + " " + context.graphics.size + " scale  ";
+        for (let i = 0; i < s.value.length; i++) {
+        	 let c = rpnMacRomanChar(s.value,i); // s.value.charCodeAt(i)
+//         	 % ps += " (CHAR) print currentfontdict /FontName get print "
+             ps += " currentfontdict " + c + " currentfontdict begin BuildChar end 0 translate ";
+                if (c == ch.value)
+                     ps += cx.value + " currentfontdict /FontMatrix get 0 get div " + context.graphics.size + " div " + cy.value + "  currentfontdict /FontMatrix get 3 get div " + context.graphics.size + " div translate ";
+        
+    	}
+    } else {
+    	scale = context.graphics.size / font.head.unitsPerEm;
+    	let [cx0, cy0] = [cx.value / scale, cy.value / scale];
+
+
+    	ps += " currentpoint currentpoint translate currentmatrix " + scale + " " + scale + " scale ";
+    	for (let i = 0; i < s.value.length; i++) {
+        	const c = s.value.charCodeAt(i);
+        	const gi = font.glyphIndex(c);
+        	ps += font.glyphPath(gi);
+        	ps += " fill ";
+        	ps += font.glyphWidth(gi) + " 0 translate ";
+        	targetwidth +=  font.glyphWidth(gi) ;
+       	 	if (c == ch.value) {
+           		ps += cx0 + " " + cy0 + " translate ";
+           		targetwidth +=  cx0 ;
+        	}
+    	}
+
     }
+
     ps += " setmatrix neg exch neg exch translate ";   
-    context.showmode = true;
+    context.showmode = !type3mode;
     context = rpn(ps, context);
     context.showmode = false;
     
-    if (context.device.textmode) {
+    if (context.device.textmode && !type3mode) {    
         targetwidth *= scale;
         context.graphics.current = [currentx0, currenty0];
         for (let n of context.nodes) { 
@@ -4195,18 +4729,37 @@ rpnRomanMapping = `0x20    0x0020    # SPACE
 0xFF    0x02C7    # CARON`;
 
 rpnRomanDict = {};
-for (let lines of rpnRomanMapping.split(rpnEOL)) {
-    rpnRomanDict[parseInt(lines.substr(5, 6))] = parseInt(lines.substr(0, 4));
+rpnInverseRomanDict = {};
+for (let line of rpnRomanMapping.split(rpnEOL)) {
+//	console.log(line)
+//	console.log(line.substr(8, 6)); console.log(parseInt(line.substr(8, 6),16));
+//	console.log(line.substr(0, 4)); console.log(parseInt(line.substr(0,4),16));
+	if (parseInt(line.substr(0, 4),16)) {
+    	rpnRomanDict[parseInt(line.substr(8, 6),16)] = parseInt(line.substr(0, 4),16);
+    	rpnInverseRomanDict[parseInt(line.substr(0, 4),16)] = parseInt(line.substr(8, 6),16) ;
+    }
+}
+// console.log("rpnRomanDict")
+// console.log(JSON.stringify(rpnRomanDict))
+
+rpnMacRomanChar = function(s,i) {
+	let u = s.codePointAt(i);
+	   if (u == 8209) u = 45; // nonbreaking hyphen
+       var r = rpnRomanDict[u];
+       if (!r) r = 32;
+       return r;
 }
 
 rpnMacRomanEncoding = function(s) {
    const chars = [];
    for (let i = 0; i < s.length; i++) {
-       const u = s.codePointAt(i);
+	   let ch = s.substr(i, 1);
+       let u = s.codePointAt(i);
        var r = rpnRomanDict[u];
        if (!r) r = 32;
+       if (u == 8209) { r=45; ch = '-'; } // nonbreaking hyphen
        if (r < 128) {
-          chars.push(s.substr(i, 1));
+          chars.push(ch);
        } else {
           chars.push(rpnBackSlash + r.toString(8));
        }
@@ -4243,6 +4796,19 @@ rpnSubstitutionDict["/Nimbus-Mono-Regular"] = "/Courier";
 rpnSubstitutionDict["/Nimbus-Mono-Oblique"] = "/Courier-Oblique";
 rpnSubstitutionDict["/Nimbus-Mono-Bold"] = "/Courier-Bold";
 rpnSubstitutionDict["/Nimbus-Mono-BoldOblique"] = "/Courier-BoldOblique";
+rpnSubstitutionDict["/NimbusRoman"] = "/Times-Roman";
+rpnSubstitutionDict["/NimbusRomanItalic"] = "/Times-Italic";
+rpnSubstitutionDict["/NimbusRomanBold"] = "/Times-Bold";
+rpnSubstitutionDict["/NimbusRomanBoldItalic"] = "/Times-BoldItalic";
+rpnSubstitutionDict["/NimbusSans"] = "/Helvetica";
+rpnSubstitutionDict["/NimbusSansRegular"] = "/Helvetica";
+rpnSubstitutionDict["/NimbusSansItalic"] = "/Helvetica-Oblique";
+rpnSubstitutionDict["/NimbusSansBold"] = "/Helvetica-Bold";
+rpnSubstitutionDict["/NimbusSansBoldItalic"] = "/Helvetica-BoldOblique";
+rpnSubstitutionDict["/NimbusMonoRegular"] = "/Courier";
+rpnSubstitutionDict["/NimbusMonoOblique"] = "/Courier-Oblique";
+rpnSubstitutionDict["/NimbusMonoBold"] = "/Courier-Bold";
+rpnSubstitutionDict["/NimbusMonoBoldOblique"] = "/Courier-BoldOblique";
 
 
 
@@ -5082,13 +5648,14 @@ class tinyPStag extends HTMLElement {
 	const errorMode = this.getAttribute("error") ?? 0;
 	var test = this.shadow.querySelector(".output");
 	var divnode = test ? test: document.createElement("DIV");
-	
+	var testurl = this.shadow.querySelector(".outputurl");
+	var divurlnode = testurl ? testurl : document.createElement("DIV");
 	
 	    divnode.part = "output";
 	    divnode.className = "output";
 	    divnode.style.height = "100%";
 	    divnode.style.width = "100%";
-	    var divurlnode = document.createElement("DIV");
+	    divurlnode.className = "outputurl";
 	    divurlnode.part = "url";
 	    test = this.shadow.querySelector(".divsvg");
 	    var divsvgnode = test ? test : document.createElement("DIV");
@@ -5103,7 +5670,7 @@ class tinyPStag extends HTMLElement {
 	    errornode.className = "error";
 	    errornode.style.display = "none";
 	
-		var node, node2, node3, node4;
+		var node, node2, node3, node4, node5, urlnode5;
 		var urlnode, urlnode2, urlnode2m, urlnode2z, urlnode3, urlnode3a, urlnode4;
 	    
 	    if (formats.indexOf("raw") > -1 || formats.indexOf("rawurl") > -1) {
@@ -5228,6 +5795,7 @@ class tinyPStag extends HTMLElement {
 	            urlnode3.className = "svgurl";
 	            urlnode3.innerHTML = "SVG";
 	            urlnode3.style.display = "inline";
+                this.nodes.svgurl = urlnode3;
 	            if (context.device.svgmovie) {
 	            	urlnode3a = document.createElement("A");
 	            	urlnode3a.id = "svgurla" + this.id;
@@ -5236,10 +5804,11 @@ class tinyPStag extends HTMLElement {
 	            	urlnode3a.innerHTML = "A..";
 	            	urlnode3a.style.display = "none";
 	            	rpnSVGData[urlnode3a.id] = [];
+
 	            }
 	            this.nodes.svg = node3;
-	            this.nodes.svgurl = urlnode3;
-	            this.nodes.svgurl = urlnode3a;
+	            
+	           
 	            context.device.svgurl = 1;
 		    } else {
 			    this.nodes.svg = node3;
@@ -5268,7 +5837,7 @@ class tinyPStag extends HTMLElement {
 	            urlnode4.part = "pdfurl";
 	            urlnode4.className = "pdfurl";
 	            urlnode4.innerHTML = "PDF";
-	            urlnode4.style.display = "inline";
+	            urlnode4.style.display = "none";
 	            this.nodes.pdf = node4;
 	            this.nodes.pdfurl = urlnode4;
 	            context.device.pdfurl = 1;
@@ -5278,26 +5847,66 @@ class tinyPStag extends HTMLElement {
 		    }
 		}
 		
+        if (formats.indexOf("gcode") > -1 || formats.indexOf("gcodeurl") > -1) {        
+            console.log("Adding gcodenode");
+            
+            let test = divnode.querySelector(".jsgcode");
+            node5 = test ? test : document.createElement("TEXTAREA");
+            node5.setAttribute("COLS","80");
+            node5.setAttribute("ROWS","30");
+            node5.id = "gcode" + this.id;
+            if (!test) node5.className = "jsgcode";
+            node5.part = "gcode";
+            node5.style.display = "none";
+            if (!test) node5.width = context.width;
+            if (!test) node5.height = context.height;
+            context.device.gcode = 1;
+            
+            if (formats.indexOf("gcode") > -1)  {
+                node5.style.display = "block";
+                node5.style.width = "100%";
+            }
+            
+            if (formats.indexOf("gcodeurl") > -1) { console.log("gcodeurl")
+                urlnode5 = document.createElement("A");
+                urlnode5.id = "gcodeurl" + this.id;
+                urlnode5.part = "gcodeurl";
+                urlnode5.className = "gcodeurl";
+                urlnode5.innerHTML = "GCODE";
+                urlnode5.style.display = "none";
+                this.nodes.gcode = node5;
+                this.nodes.gcodeurl = urlnode5;
+                context.device.gcodeurl = 1;
+            } else {
+                this.nodes.gcode = node5;
+            }
+        } 
+
+
 		if (node) divnode.appendChild(node);
 		if (node2) divnode.appendChild(node2);
 		if (node3) { divsvgnode.appendChild(node3); divnode.appendChild(divsvgnode) }
-		if (node4) divnode.appendChild(node4);
+        if (node4) divnode.appendChild(node4);
+        if (node5) divnode.appendChild(node5);
 		if (urlnode) divurlnode.appendChild(urlnode);
-		if (urlnode2) divurlnode.appendChild(urlnode2);
+		if (urlnode2 && !this.shadow.querySelector(".jscanvasurl")) divurlnode.appendChild(urlnode2);
 		if (urlnode2z) divurlnode.appendChild(urlnode2z);
 	    if (urlnode2m) divurlnode.appendChild(urlnode2m);
-		if (urlnode3) divurlnode.appendChild(urlnode3);
+		if (urlnode3 && !this.shadow.querySelector(".svgurl")) divurlnode.appendChild(urlnode3);
 	    if (urlnode3a) divurlnode.appendChild(urlnode3a);
-		if (urlnode4) divurlnode.appendChild(urlnode4);
+        if (urlnode4 && !this.shadow.querySelector(".pdfurl")) divurlnode.appendChild(urlnode4);
+        if (urlnode5 && !this.shadow.querySelector(".gcodeurl")) divurlnode.appendChild(urlnode5); 
 		
 		
 	    // while (this.shadow.lastChild) this.shadow.removeChild(this.shadow.lastChild);
-	    if (this.shadow.childNodes.length != 3) {
+	    if (this.shadow.childNodes.length != 3) { 
 	    this.shadow.appendChild(divnode);
 	    this.shadow.appendChild(divurlnode);
 	    this.shadow.appendChild(errornode);
 	   }
-    
+	   
+    this.shadowRoot.querySelector('.error').innerHTML = "";
+        
     const worker = rpnWorker(this.innerHTML, context);
     
     worker.onmessage = function (e) {
@@ -5308,7 +5917,7 @@ class tinyPStag extends HTMLElement {
 		}
 		const [ action, id, data, contextstring ] = msg;
 		
-		var node, shadow, canvasnode, svgnode, pdfnode, urlnode, urlnodea, ctx, url, errornode;
+		var node, shadow, canvasnode, gcodenode, svgnode, pdfnode, urlnode, urlnodea, ctx, url, errornode;
 		
 		// console.log("worker out: " + action + " " + id);
 		switch (action)
@@ -5320,10 +5929,12 @@ class tinyPStag extends HTMLElement {
 							ctx.putImageData(data,0,0);
 							urlnode = shadow.querySelector('.jsrawurl');
 							if (urlnode) {
-								url = ctx.canvas.toDataURL();
-								urlnode.href = url;
+								// url = ctx.canvas.toDataURL();
+								// urlnode.href = url;
 								urlnode.setAttribute("download", "PS.png");
+								ctx.canvas.toBlob( (blob) => { urlnode.href = URL.createObjectURL(blob); } );
 							}
+							
 							break;
 			case "rawzip":  break;
 			case "canvas":  node = document.getElementById(id);
@@ -5335,17 +5946,22 @@ class tinyPStag extends HTMLElement {
 							ctx.putImageData(data,0,0);
 							urlnode = shadow.querySelector('.jscanvasurl');
 							if (urlnode) {
-								let url = ctx.canvas.toDataURL();
+								let url = ctx.canvas.toDataURL(); // we need that for zip later
+																
 								let oc = document.createElement("CANVAS");
 								oc.width = context.width*2;
 								oc.height = context.height*2;
 								let ctxo = oc.getContext("2d"); 
                                 ctxo.drawImage(canvasnode, 0, 0, oc.width, oc.height);
-								let urljpg = oc.toDataURL("image/jpeg", 0.8);
-								urlnode.href = url;
+								let urljpg = oc.toDataURL("image/png", 0.8);
                                 let d = new Date();
 	                            let fn = "PS" + '_' + d.toISOString().replaceAll("-", "").replaceAll(":", "").replaceAll("T", "_").substr(0, 13) + ".png";
                                 urlnode.setAttribute("download", fn);
+                                
+                                ctx.canvas.toBlob( (blob) => { urlnode.href = URL.createObjectURL(blob); } );
+                                
+                                
+                                
                                 if (context.device.zip) {
                                 	let urlnodez = shadow.querySelector('.jscanvasurlz');
 								    //rpnFrames[urlnodez.id].push(url);
@@ -5406,7 +6022,11 @@ class tinyPStag extends HTMLElement {
 							urlnode = shadow.querySelector('.svgurl');
 							if (urlnode) {
 								let file = rpnStartTag + "?xml version='1.0' encoding='UTF-8'?" + rpnEndTag + data;
-                                url = "data:image/svg+xml;base64," + rpnBbtoaUnicode(file);
+                               //  url = "data:image/svg+xml;base64," + rpnBbtoaUnicode(file);
+                                
+                                let blob = new Blob([file], { type: 'image/svg' });
+								url = URL.createObjectURL(blob);
+                                                                
                                 urlnode.href = url;
                                 let d = new Date();
 	                            let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".svg";
@@ -5446,7 +6066,10 @@ class tinyPStag extends HTMLElement {
 							
 							    }
 								let file = rpnStartTag + "?xml version='1.0' encoding='UTF-8'?" + rpnEndTag + globalnode.outerHTML;
-							    url = "data:image/svg+xml;base64," + rpnBbtoaUnicode(file);
+							    // url = "data:image/svg+xml;base64," + rpnBbtoaUnicode(file);
+							    
+							    let blob = new Blob([file], { type: 'image/svg' });
+								url = URL.createObjectURL(blob);
 							    
                                 urlnodea.href = url;
                                 let d = new Date();
@@ -5454,25 +6077,83 @@ class tinyPStag extends HTMLElement {
                                 urlnodea.setAttribute("download", fn);
 						        urlnodea.innerHTML = "ASVG";
 						        urlnodea.style.display = "inline";
-							}}				            
-											            break;
+							}}		 		            
+							break;
+
+            case "gcode":   node = document.getElementById(id);
+                            shadow = node.shadowRoot; 
+                            gcodenode = shadow.querySelector('.jsgcode');
+                            if (gcodenode) {
+                                gcodenode.innerHTML = data.join("\n");
+                                urlnode = shadow.querySelector('.gcodeurl');
+                                if (urlnode) { console.log("gcodeurl setting")
+                                    let file =  data.join("\n");
+                                    // url = "data:text/x-gcode;base64," + rpnBbtoaUnicode(file);
+                                    let blob = new Blob([file], { type: 'text/x-gcode' });
+								    url = URL.createObjectURL(blob);
+
+                                    urlnode.href = url;
+                                    let d = new Date();
+                                    let fn = "PS" + '_'+d.toISOString().replaceAll("-","").replaceAll(":","").replaceAll("T","_").substr(0,13)+".gcode";
+                                    urlnode.setAttribute("download", fn);
+                                    urlnode.style.display = "inline";
+                                }
+                            }
+                            break;
+            
+            
+            case "gcodefinal": node = document.getElementById(id);
+                            shadow = node.shadowRoot; 
+                            gcodenode = shadow.querySelector('.jsgcode');
+                            if (gcodenode)
+                                gcodenode.outerHTML = gcodenode.outerHTML + " ";
+                            break;
+
 			
-			case "pdf":     node = document.getElementById(id);
+			case "pdf":     console.log("pdf");
+			                node = document.getElementById(id);
 				            shadow = node.shadowRoot; 
 							pdfnode = shadow.querySelector('.pdf');
 			                pdfnode.src = data;
 							urlnode = shadow.querySelector('.pdfurl');
-							urlnode.href = data;
-			                urlnode.setAttribute("download", "PS.pdf");
+							
+							if (rpnPDFs[id]) {
+								console.log("zip");
+								rpnPDFs[id].makeZip(urlnode);
+								urlnode.setAttribute("download", "PS-PDF.zip");
+								rpnPDFs[id] = null;
+
+							} else {
+								let blob = new Blob([data], { type: 'application/pdf' });
+								url = URL.createObjectURL(blob);
+								urlnode.href = url;
+								urlnode.setAttribute("download", "PS.pdf");
+							}
+			                
+			                urlnode.style.display = "inline";
 			                break;
+			
+			case "pdffile":  
+			                let blist = data.split(":");
+				            let filename = blist.pop().replaceAll(/[^A-Za-z0-9]/g,"-").toLowerCase();
+				            let b = blist.join(":");
+				            console.log("pdffile "+filename);
+				            
+				            if (!rpnPDFs[id]) {
+				            	let z = new rpnZip("PDF.zip");
+								rpnPDFs[id] = z;
+				            }
+				            rpnPDFs[id].binary2zip(filename+".pdf",b);
+							break;
+							
 			                
 			case "device":  node = document.getElementById(id);
 			                node.setAttribute("width", data.width);
 			                node.setAttribute("height", data.height);
 			                node.parentNode.setAttribute("width", data.width);
-			                node.parentNode.setAttribute("height", data.height + 20);
+			                // node.parentNode.setAttribute("height", data.height + 20);
 			                node.parentNode.style.width = (data.width) + "px"; 
-			                node.parentNode.style.height = (data.height + 20) + "px"; 
+			                // node.parentNode.style.height = (data.height + 20) + "px"; 
 			                shadow = node.shadowRoot; 
 							svgnode = shadow.querySelector('.divsvg');
 							if (svgnode) {
@@ -5499,7 +6180,7 @@ class tinyPStag extends HTMLElement {
 			                errornode.style.color = "#00825A";
 			                errornode.width = context.width;
 			                errornode.height = context.height;
-                            errornode.innerHTML = data;
+                            errornode.innerHTML += data;
                             break;
                             
             case "log":     console.log(data);
@@ -5509,8 +6190,12 @@ class tinyPStag extends HTMLElement {
     
     };
 
+
+let rpnMessage = this.innerHTML.replaceAll("&amp;","&").replaceAll("&gt;",">").replaceAll("&lt;","<");
     
-    worker.postMessage(["rpn",this.id, this.innerHTML,JSON.stringify(context)])
+worker.postMessage(["rpn",this.id,rpnMessage,JSON.stringify(context) ]);
+    
+
     
     /*
     context = rpn(this.innerHTML, context, true);
@@ -5557,6 +6242,9 @@ workeronmessage = function (e) {
 		if(context.device.pdf || context.device.pdfurl) {
 		context.nodes.push(new rpnPDFDevice());
 	}
+    if(context.device.gcode || context.device.gcodeurl) {
+        context.nodes.push(new rpnGCODEDevice());
+    }
 
 	context.id = id;
 	
@@ -5565,10 +6253,11 @@ workeronmessage = function (e) {
 	}
 	
 	console.log("worker in: " + action + " " + id)
-	
+		
 	switch (action)
 	{
-		case "rpn": console.log("rpn " + data);
+		case "rpn": 
+		            // postMessage(["log", context.id,data,null])
 		            if (data.slice(0,1)=="!") {
 			            data += " currentpointexists { 0 0 1 setrgbcolor 1 setalpha gsave currentpoint newpath 4 0 360 arc fill grestore stroke showpage } if ";
 			            
@@ -5600,7 +6289,7 @@ workeronmessage = function (e) {
 
 function rpnWorker() {
 	const workercode = []
-	workercode.push('rpnFonts = ' + JSON.stringify(rpnFonts));
+	workercode.push('rpnFonts = {}'); // + JSON.stringify(rpnFonts));
 	workercode.push('rpnFiles = ' + JSON.stringify(rpnFiles));
 	workercode.push('rpnOperators = ' + JSON.stringify(rpnOperators));
 	workercode.push('rpnHeapElement = ' + rpnHeapElement.toString());
@@ -5616,6 +6305,7 @@ function rpnWorker() {
 	workercode.push('rpnCanvasDevice = ' + rpnCanvasDevice.toString());
 	workercode.push('rpnPDFDevice = ' + rpnPDFDevice.toString());
 	workercode.push('rpnSVGDevice = ' + rpnSVGDevice.toString());
+    workercode.push('rpnGCODEDevice = ' + rpnGCODEDevice.toString());
 	workercode.push('rpnContext = ' + rpnContext.toString()); 
 	workercode.push('rpn = ' + rpn.toString());
 	workercode.push('rpnBezier = ' + rpnBezier.toString());
@@ -5638,6 +6328,7 @@ function rpnWorker() {
 	workercode.push('rpnBinary = ' + rpnBinary.toString());
 	workercode.push('rpnTTF = ' + rpnTTF.toString());
 	workercode.push('rpnRomanDict = ' + JSON.stringify(rpnRomanDict));
+   workercode.push('rpnMacRomanChar = ' + rpnMacRomanChar.toString());
 	workercode.push('rpnMacRomanEncoding = ' + rpnMacRomanEncoding.toString());
 	workercode.push('rpnSubstitutionDict = ' + JSON.stringify(rpnSubstitutionDict));
 	workercode.push('rpnBbtoaUnicode = ' + rpnBbtoaUnicode.toString());
@@ -5654,8 +6345,10 @@ rpnDocument = new xmlDoc();
 	{
 		workercode.push('rpnOperators.' + key + ' = ' + rpnOperators[key].toString());
 	}
-	const baseURL = location.origin + ((location.pathname.substr(0,1)=="/") ? "" : "/") + location.pathname.split("/").slice(0,-1).join("/")+"/";
-	console.log(baseURL)
+    const origin = (location.origin === null || location.origin == "null") ? "file://" : location.origin ;
+	const baseURL = origin + ((location.pathname.substr(0,1)=="/") ? "" : "/") + location.pathname.split("/").slice(0,-1).join("/")+"/";
+	// console.log(origin);
+    // console.log(baseURL);
 	workercode.push('rpnBaseURL = ' + '"' + baseURL + '"');
 	workercode.push('rpnFontURLs = {};');
 	for (key in rpnFontURLs)

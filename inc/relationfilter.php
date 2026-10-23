@@ -2382,7 +2382,10 @@ function swRelationIndexSearch($filter, $globals = array())
 		if (count($journal)>10000)
 		{
 			$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.'COMMIT;';
-			$fielddb->exec($q);
+			if (!$fielddb->exec($q))
+			{
+			    throw new swDbaError('swDba fielddb commit error1 '.$fielddb->lastErrorMsg());
+			}
 			echotime('synced '.count($journal));
 			$journal = array();
 		}
@@ -2417,6 +2420,7 @@ function swRelationIndexSearch($filter, $globals = array())
 				foreach($list as $v)
 				{
 					$lastv = $v = $fielddb->escapeString($v);
+					$key = $fielddb->escapeString($key);
 					$journal[]= "INSERT INTO fields (revision,row,key,value) VALUES ('$i','$j','$key','$v');";
 					$j++;
 				}
@@ -2450,8 +2454,12 @@ function swRelationIndexSearch($filter, $globals = array())
 	
 	if (count($journal))
 	{
-		$q = 'BEGIN;'.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.'COMMIT;';
-		$fielddb->exec($q);
+		$q = 'BEGIN; '.PHP_EOL.join(PHP_EOL,$journal).PHP_EOL.' COMMIT;';
+	    if (!$fielddb->exec($q))
+		{
+		   throw new swDbaError('swDba fielddb commit error2 '.$fielddb->lastErrorMsg()." ".$q);
+		}		
+		
 		echotime('synced '.count($journal));
 	}
 	

@@ -82,16 +82,20 @@ if (swGetArrayValue($_REQUEST,'submit',false) || swGetArrayValue($_REQUEST,'subm
 		$t = file_get_contents($file);
 		$ts = explode(']]',$t);
 		$ts2 = [];
-		foreach($ts as $v) {
+		foreach($ts as $v)
+		{
 			$fs = explode('::',$v);
-			$origin = new DateTimeImmutable($fs[1]);
-			$target = new DateTimeImmutable(date('Y-m-d',time()));
-            $interval = $target->diff($origin);
-            if ($interval->days < 32)
-               $ts2 []= $v;
+			if (is_array($fs) and count($fs) > 1 && $fs[1] && DateTime::createFromFormat('Y-m-d', $fs[1]) !== false) 
+			{   
+				$origin = new DateTimeImmutable($fs[1]);
+				$target = new DateTimeImmutable(date('Y-m-d',time()));
+				$interval = $target->diff($origin);
+				if ($interval->days < 32)
+				$ts2 []= $v;
+			}
 		}
 		natsort($ts2);
-		$ts2 = array_filter($ts2); // remove empry
+		$ts2 = array_filter($ts2); // remove empty
 		$swParsedContent .= "<p>Denied: <br><b>".join(']]<br>',$ts2)."]]</b>";
 	}
 	

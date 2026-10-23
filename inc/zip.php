@@ -194,11 +194,11 @@ function unzip($file,$destination)
 		{
 			if (@zip_entry_open($zip, $zip_entry, 'r')) 
 			{
-			  $fp = fopen($destination.'/'.@zip_entry_name($zip_entry), 'w');
+			  $fp = @fopen($destination.'/'.@zip_entry_name($zip_entry), 'w');
 			  $buf = @zip_entry_read($zip_entry, @zip_entry_filesize($zip_entry));
-			  fwrite($fp,$buf);
+			  if ($fp) fwrite($fp,$buf);
 			  @zip_entry_close($zip_entry);
-			  fclose($fp);
+			  if ($fp) fclose($fp);
 			}
 		}
 		else
